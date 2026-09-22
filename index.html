@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BeeHuman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #F6F5F1; --surface: #FFFFFF; --surface-2: #EFEEE8; --text: #21262B;
+    --text-secondary: #5B6169; --text-muted: #8B9098; --accent: #0F6E56;
+    --accent-soft: #E1F5EE; --accent-text: #085041; --border: #DEDCD3;
+    --danger: #A32D2D; --danger-soft: #FCEBEB; --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17191B; --surface: #1F2225; --surface-2: #262A2D; --text: #E7E6E1;
+      --text-secondary: #A9AEB3; --text-muted: #787E84; --accent: #5DCAA5;
+      --accent-soft: #133029; --accent-text: #9FE1CB; --border: #34383B;
+      --danger: #F09595; --danger-soft: #3A1E1E;
+    }
+  }
+  html { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  .shell { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+  header.top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+  .brand { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand span { color: var(--accent); }
+  .tag { font-size: 12px; color: var(--text-muted); background: var(--surface-2); padding: 4px 10px; border-radius: 999px; }
+  #conn-status { font-size: 12px; margin-bottom: 20px; padding: 8px 12px; border-radius: 8px; display: none; }
+  #conn-status.ok { background: var(--accent-soft); color: var(--accent-text); display: block; }
+  #conn-status.err { background: var(--danger-soft); color: var(--danger); display: block; }
+  nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 24px; overflow-x: auto; }
+  nav.tabs button { background: none; border: none; padding: 10px 16px; font-size: 14px; font-family: inherit; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  nav.tabs button.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  h2 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+  p.hint { font-size: 13px; color: var(--text-secondary); margin: 0 0 18px; line-height: 1.5; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
+  input, select { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 14px; font-family: inherit; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.primary { background: var(--accent); color: var(--surface); border: none; border-radius: 8px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 16px; }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .toast { margin-top: 12px; padding: 9px 12px; border-radius: 8px; font-size: 13px; display: none; }
+  .toast.ok { background: var(--accent-soft); color: var(--accent-text); }
+  .toast.err { background: var(--danger-soft); color: var(--danger); }
+  .filters { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filters select { width: auto; min-width: 150px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th { text-align: left; font-weight: 500; color: var(--text-secondary); font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:hover { background: var(--surface-2); }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; background: var(--surface-2); color: var(--text-secondary); }
+  .table-wrap { overflow-x: auto; }
+  .inline-select { padding: 5px 8px; font-size: 13px; border-radius: 6px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .stat { background: var(--surface-2); border-radius: 8px; padding: 14px; }
+  .stat .num { font-size: 24px; font-weight: 700; }
+  .stat .lbl { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .breakdown-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .breakdown-row:last-child { border-bottom: none; }
+  .empty, .loading { color: var(--text-muted); font-size: 13px; padding: 20px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">Bee<span>Human</span></div>
+    <div class="tag">Conectado a Supabase</div>
+  </header>
+  <div id="conn-status"></div>
+
+  <nav class="tabs">
+    <button class="active" data-tab="alta">Alta de personal</button>
+    <button data-tab="lista">Personal</button>
+    <button data-tab="resumen">Resumen</button>
+  </nav>
+
+  <section class="panel active" id="panel-alta">
+    <div class="card">
+      <h2>Dar de alta a una persona</h2>
+      <p class="hint">Se guarda directamente en tu base de datos de Supabase.</p>
+      <form id="form-alta">
+        <div class="grid">
+          <div>
+            <label for="f-nombre">Nombre completo</label>
+            <input id="f-nombre" type="text" required>
+          </div>
+          <div>
+            <label for="f-empresa">Empresa / razón social</label>
+            <select id="f-empresa"></select>
+          </div>
+          <div>
+            <label for="f-tipopago1">Tipo de pago</label>
+            <select id="f-tipopago1">
+              <option>Efectivo</option><option>Cheque</option><option>Transferencia</option><option>Nómina IMSS</option>
+            </select>
+          </div>
+          <div>
+            <label for="f-proyecto">Proyecto / centro de costo</label>
+            <select id="f-proyecto"></select>
+          </div>
+          <div>
+            <label for="f-coordinador">Coordinador a cargo</label>
+            <input id="f-coordinador" type="text" required>
+          </div>
+        </div>
+        <button type="submit" class="primary" id="btn-alta">Dar de alta</button>
+        <div class="toast" id="toast-alta"></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-lista">
+    <div class="card">
+      <h2>Personal registrado</h2>
+      <p class="hint">Cambia proyecto o coordinador directamente en la fila — se guarda al momento en Supabase.</p>
+      <div class="filters">
+        <select id="filtro-empresa"><option value="">Todas las empresas</option></select>
+        <select id="filtro-proyecto"><option value="">Todos los proyectos</option></select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Empresa</th><th>Pago</th><th>Proyecto</th><th>Coordinador</th></tr></thead>
+          <tbody id="tabla-personal"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="lista-vacia" style="display:none;">Sin personal registrado todavía.</div>
+      <div class="loading" id="lista-cargando">Cargando…</div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-resumen">
+    <div class="card">
+      <h2>Resumen</h2>
+      <div class="summary-grid" id="summary-stats"></div>
+    </div>
+    <div class="card"><h2>Por esquema de pago</h2><div id="breakdown-esquema"></div></div>
+    <div class="card"><h2>Por proyecto / centro de costo</h2><div id="breakdown-proyecto"></div></div>
+  </section>
+</div>
+
+<script>
+// ---- CONFIGURACIÓN: datos de tu proyecto Supabase ----
+const SUPABASE_URL = 'https://vovyvvpwtjdlswerfjqb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvdnl2dnB3dGpkbHN3ZXJmanFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMzMyNTcsImV4cCI6MjEwNTYwOTI1N30.R3RS3J83pqyKpWSHdZRWp4YbY82p6_obxp-2pSzgYo4';
+// --------------------------------------------------------
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let empresas = [];
+let proyectos = [];
+let personal = [];
+
+function setStatus(msg, type) {
+  const el = document.getElementById('conn-status');
+  el.textContent = msg;
+  el.className = type;
+}
+
+function fillSelect(sel, items, placeholder) {
+  sel.innerHTML = (placeholder ? `<option value="">${placeholder}</option>` : '') +
+    items.map(i => `<option value="${i.id}">${i.nombre}</option>`).join('');
+}
+
+async function cargarCatalogos() {
+  const { data: e, error: ee } = await sb.from('empresas').select('*').order('nombre');
+  const { data: p, error: pe } = await sb.from('proyectos').select('*').order('nombre');
+  if (ee || pe) { setStatus('No se pudieron cargar empresas/proyectos. Revisa la consola.', 'err'); console.error(ee, pe); return; }
+  empresas = e || [];
+  proyectos = p || [];
+  fillSelect(document.getElementById('f-empresa'), empresas, null);
+  fillSelect(document.getElementById('f-proyecto'), proyectos, null);
+  fillSelect(document.getElementById('filtro-empresa'), empresas, 'Todas las empresas');
+  fillSelect(document.getElementById('filtro-proyecto'), proyectos, 'Todos los proyectos');
+
+  if (empresas.length === 0) {
+    setStatus('Conectado, pero no hay empresas ni proyectos cargados todavía. Agrega al menos una fila en las tablas "empresas" y "proyectos" desde el Table Editor de Supabase.', 'err');
+  } else {
+    setStatus('Conectado a Supabase correctamente.', 'ok');
+  }
+}
+
+async function cargarPersonal() {
+  document.getElementById('lista-cargando').style.display = 'block';
+  const { data, error } = await sb.from('personal').select('*').order('created_at', { ascending: false });
+  document.getElementById('lista-cargando').style.display = 'none';
+  if (error) { setStatus('Error al cargar personal: ' + error.message, 'err'); console.error(error); return; }
+  personal = data || [];
+  renderTabla();
+  renderResumen();
+}
+
+function empresaNombre(id) { const e = empresas.find(x => x.id === id); return e ? e.nombre : '—'; }
+function proyectoNombre(id) { const p = proyectos.find(x => x.id === id); return p ? p.nombre : '—'; }
+
+function renderTabla() {
+  const fe = document.getElementById('filtro-empresa').value;
+  const fp = document.getElementById('filtro-proyecto').value;
+  const rows = personal.filter(p => (!fe || p.empresa_id === fe) && (!fp || p.proyecto_id === fp));
+  const tbody = document.getElementById('tabla-personal');
+  document.getElementById('lista-vacia').style.display = rows.length ? 'none' : 'block';
+
+  tbody.innerHTML = rows.map(p => `
+    <tr>
+      <td>${p.nombre_completo}</td>
+      <td>${empresaNombre(p.empresa_id)}</td>
+      <td><span class="pill">${p.tipo_pago_1 || '—'}</span></td>
+      <td>
+        <select class="inline-select" onchange="actualizarCampo('${p.id}','proyecto_id',this.value,'${(proyectoNombre(p.proyecto_id)||'').replace(/'/g,"")}')">
+          ${proyectos.map(pr => `<option value="${pr.id}" ${pr.id === p.proyecto_id ? 'selected' : ''}>${pr.nombre}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <input class="inline-select" style="width:140px" value="${p.coordinador || ''}"
+          onchange="actualizarCampo('${p.id}','coordinador',this.value,'${(p.coordinador||'').replace(/'/g,"")}')">
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function actualizarCampo(id, campo, valorNuevo, valorAnterior) {
+  const { error } = await sb.from('personal').update({ [campo]: valorNuevo }).eq('id', id);
+  if (error) { alert('No se pudo guardar el cambio: ' + error.message); console.error(error); return; }
+  await sb.from('movimientos').insert({ personal_id: id, campo, valor_anterior: valorAnterior, valor_nuevo: valorNuevo, usuario: 'admin' });
+  const p = personal.find(x => x.id === id);
+  if (p) p[campo] = valorNuevo;
+  renderResumen();
+}
+
+function renderResumen() {
+  const total = personal.length;
+  const empresasActivas = new Set(personal.map(p => p.empresa_id)).size;
+  const proyectosActivos = new Set(personal.map(p => p.proyecto_id)).size;
+
+  document.getElementById('summary-stats').innerHTML = `
+    <div class="stat"><div class="num">${total}</div><div class="lbl">Personas registradas</div></div>
+    <div class="stat"><div class="num">${empresasActivas}</div><div class="lbl">Empresas con personal</div></div>
+    <div class="stat"><div class="num">${proyectosActivos}</div><div class="lbl">Proyectos activos</div></div>
+  `;
+
+  const porEsquema = {};
+  personal.forEach(p => { const k = p.tipo_pago_1 || 'Sin definir'; porEsquema[k] = (porEsquema[k] || 0) + 1; });
+  document.getElementById('breakdown-esquema').innerHTML = Object.entries(porEsquema).map(([k, v]) =>
+    `<div class="breakdown-row"><span>${k}</span><span>${v}</span></div>`).join('') || '<div class="empty">Sin datos</div>';
+
+  const porProyecto = {};
+  personal.forEach(p => { const n = proyectoNombre(p.proyecto_id); porProyecto[n] = (porProyecto[n] || 0) + 1; });
+  document.getElementById('breakdown-proyecto').innerHTML = Object.entries(porProyecto).map(([k, v]) =>
+    `<div class="breakdown-row"><span>${k}</span><span>${v}</span></div>`).join('') || '<div class="empty">Sin datos</div>';
+}
+
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+document.getElementById('filtro-empresa').addEventListener('change', renderTabla);
+document.getElementById('filtro-proyecto').addEventListener('change', renderTabla);
+
+document.getElementById('form-alta').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-alta');
+  const toast = document.getElementById('toast-alta');
+  btn.disabled = true;
+
+  const nuevo = {
+    nombre_completo: document.getElementById('f-nombre').value.trim(),
+    empresa_id: document.getElementById('f-empresa').value || null,
+    tipo_pago_1: document.getElementById('f-tipopago1').value,
+    proyecto_id: document.getElementById('f-proyecto').value || null,
+    coordinador: document.getElementById('f-coordinador').value.trim()
+  };
+
+  const { error } = await sb.from('personal').insert(nuevo);
+  btn.disabled = false;
+
+  if (error) {
+    toast.textContent = 'Error al guardar: ' + error.message;
+    toast.className = 'toast err';
+    toast.style.display = 'block';
+    console.error(error);
+    return;
+  }
+
+  toast.textContent = 'Persona registrada en Supabase.';
+  toast.className = 'toast ok';
+  toast.style.display = 'block';
+  setTimeout(() => toast.style.display = 'none', 3000);
+  this.reset();
+  await cargarPersonal();
+});
+
+(async function init() {
+  setStatus('Conectando…', 'ok');
+  await cargarCatalogos();
+  await cargarPersonal();
+})();
+</script>
+</body>
+</html>

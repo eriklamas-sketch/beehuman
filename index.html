@@ -100,11 +100,16 @@
 
         <h3>Datos generales</h3>
         <div class="grid3">
-          <div><label>Nombre completo</label><input id="f-nombre" type="text" required></div>
+          <div><label>Nombre(s)</label><input id="f-nombres" type="text" required></div>
+          <div><label>Primer apellido</label><input id="f-apellido1" type="text" required></div>
+          <div><label>Segundo apellido</label><input id="f-apellido2" type="text"></div>
+        </div>
+        <div class="grid3">
           <div><label>Empresa / razón social</label><select id="f-empresa"></select></div>
           <div><label>Tipo de empleado</label>
             <select id="f-tipoempleado"><option>Confianza</option><option>Sindicalizado</option><option>Base</option><option>Honorarios</option></select>
           </div>
+          <div></div>
         </div>
 
         <h3>Asignación operativa</h3>
@@ -362,8 +367,15 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
 
   const descanso = Array.from(document.querySelectorAll('#f-descanso input:checked')).map(c=>c.value).join(',');
 
+  const nombres = document.getElementById('f-nombres').value.trim();
+  const apellido1 = document.getElementById('f-apellido1').value.trim();
+  const apellido2 = document.getElementById('f-apellido2').value.trim();
+
   const nuevo = {
-    nombre_completo: document.getElementById('f-nombre').value.trim(),
+    nombres: nombres,
+    primer_apellido: apellido1,
+    segundo_apellido: apellido2,
+    nombre_completo: [nombres, apellido1, apellido2].filter(Boolean).join(' '),
     empresa_id: document.getElementById('f-empresa').value || null,
     tipo_empleado: document.getElementById('f-tipoempleado').value,
     proyecto_id: document.getElementById('f-proyecto').value || null,

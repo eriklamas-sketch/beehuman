@@ -106,6 +106,7 @@
     <button class="active" data-tab="alta">Alta de personal</button>
     <button data-tab="lista">Personal</button>
     <button data-tab="resumen">Resumen</button>
+    <button data-tab="empresas">Empresas</button>
     <button data-tab="catalogos">Catálogos</button>
   </nav>
 
@@ -262,6 +263,25 @@
     <div class="card"><h2>Costo bruto por coordinador</h2><div id="breakdown-coordinador"></div></div>
   </section>
 
+  <section class="panel" id="panel-empresas">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2>Empresas</h2>
+          <p class="hint" style="margin-bottom:0;">Datos fiscales, domicilio y registros patronales de cada empresa del grupo.</p>
+        </div>
+        <button type="button" class="primary" style="margin-top:0;" onclick="abrirModalEmpresa(null)">Nueva empresa</button>
+      </div>
+      <div class="table-wrap" style="margin-top:16px;">
+        <table>
+          <thead><tr><th>Nombre</th><th>RFC</th><th>Domicilio</th><th>Registros patronales</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="tabla-empresas"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="empresas-vacio" style="display:none;">Sin empresas registradas todavía.</div>
+    </div>
+  </section>
+
   <section class="panel" id="panel-catalogos">
     <div class="card" data-catalogo="areas">
       <h2>Áreas</h2>
@@ -338,6 +358,56 @@
       <div class="empty catalogo-vacio" data-catalogo="centros_costo" style="display:none;">Sin valores capturados todavía.</div>
     </div>
   </section>
+
+  <div id="modal-empresa-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
+    <div class="card" style="max-width:640px;margin:40px auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2 id="modal-empresa-titulo">Nueva empresa</h2>
+        <button class="primary" style="margin-top:0;padding:6px 14px;font-size:12px;background:var(--surface-2);color:var(--text);" onclick="cerrarModalEmpresa()">Cerrar</button>
+      </div>
+
+      <h3>Datos generales</h3>
+      <div class="grid3">
+        <div><label>Nombre comercial</label><input id="em-nombre" type="text" required></div>
+        <div><label>Razón social</label><input id="em-razon-social" type="text"></div>
+        <div><label>RFC</label><input id="em-rfc" type="text"></div>
+      </div>
+
+      <h3>Domicilio fiscal</h3>
+      <div class="grid3">
+        <div><label>Código postal</label><input id="em-cp" type="text"></div>
+        <div><label>Estado</label><input id="em-estado" type="text"></div>
+        <div><label>Municipio / alcaldía</label><input id="em-municipio" type="text"></div>
+      </div>
+      <div class="grid3">
+        <div><label>Colonia</label><input id="em-colonia" type="text"></div>
+        <div><label>Calle</label><input id="em-calle" type="text"></div>
+        <div></div>
+      </div>
+      <div class="grid">
+        <div><label>Número exterior</label><input id="em-numext" type="text"></div>
+        <div><label>Número interior (opcional)</label><input id="em-numint" type="text"></div>
+      </div>
+
+      <button type="button" class="primary" id="btn-guardar-empresa" onclick="guardarEmpresa()">Guardar empresa</button>
+      <div class="toast" id="toast-empresa"></div>
+
+      <div id="seccion-registros-patronales" style="display:none;">
+        <h3>Registros patronales</h3>
+        <form id="form-nuevo-registro-patronal" style="display:flex;gap:10px;align-items:flex-end;margin-bottom:12px;">
+          <div style="flex:1;"><label>Nuevo registro patronal</label><input type="text" id="input-nuevo-registro-patronal" placeholder="Ej. B1234567108"></div>
+          <button type="submit" class="primary" style="margin-top:0;">Agregar</button>
+        </form>
+        <div class="toast" id="toast-registro-patronal"></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Registro patronal</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="tabla-registros-patronales"></tbody></table>
+        </div>
+        <div class="empty" id="registros-patronales-vacio" style="display:none;">Sin registros patronales capturados todavía.</div>
+      </div>
+      <p class="hint" id="hint-guardar-primero" style="display:none;">Guarda la empresa para poder agregar sus registros patronales.</p>
+    </div>
+  </div>
 
   <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
     <div class="card" style="max-width:720px;margin:40px auto;">
@@ -986,6 +1056,7 @@ async function mostrarApp(){
   setStatus('Conectando…','ok');
   await cargarTodo();
   await cargarPersonal();
+  await cargarEmpresasAdmin();
   await cargarCatalogos();
 }
 
@@ -1091,6 +1162,255 @@ document.querySelectorAll('.form-nuevo-catalogo').forEach(form=>{
     mostrarToastCatalogo(tabla, 'Valor agregado.', 'ok');
   });
 });
+
+// ---------------------------------------------------------------------
+// Administración de empresas (7D-3): datos fiscales, domicilio estructurado
+// y múltiples registros patronales por empresa. Reutiliza el arreglo global
+// `empresas` (ya cargado por cargarTodo() con TODAS las columnas y TODAS
+// las filas, activas e inactivas) y agrega `registrosPatronales` para la
+// tabla nueva empresas_registros_patronales. NO se conecta a Alta/Detalle
+// de personal (eso es 7D-4): f-empresa, d-empresa y filtro-empresa siguen
+// sin cambios.
+// ---------------------------------------------------------------------
+let registrosPatronales = [];
+let empresaModalId = null; // null = creando una empresa nueva
+
+// Escapa texto proveniente de Supabase antes de insertarlo en innerHTML,
+// para que nombres, RFC, domicilio o registros patronales capturados por
+// cualquier usuario no puedan inyectar HTML/JS en la tabla de empresas.
+function escapeHtml(valor){
+  if (valor === null || valor === undefined) return '';
+  return String(valor).replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+async function cargarEmpresasAdmin(){
+  const { data, error } = await sb.from('empresas_registros_patronales').select('*').order('registro_patronal');
+  if (error) {
+    mostrarToastEmpresa('No se pudieron cargar los registros patronales: ' + error.message, 'err');
+    return;
+  }
+  registrosPatronales = data || [];
+  renderTablaEmpresas();
+}
+
+function mostrarToastEmpresa(msg, tipo){
+  const toast = document.getElementById('toast-empresa');
+  if (!toast) return;
+  toast.textContent = msg; toast.className = 'toast ' + tipo; toast.style.display = 'block';
+  setTimeout(()=>{ toast.style.display='none'; }, 3500);
+}
+function mostrarToastRegistroPatronal(msg, tipo){
+  const toast = document.getElementById('toast-registro-patronal');
+  if (!toast) return;
+  toast.textContent = msg; toast.className = 'toast ' + tipo; toast.style.display = 'block';
+  setTimeout(()=>{ toast.style.display='none'; }, 3500);
+}
+
+function contarRegistrosPatronales(empresaId){
+  const filas = registrosPatronales.filter(r => r.empresa_id === empresaId);
+  return { total: filas.length, activos: filas.filter(r=>r.activo).length };
+}
+
+// "Personal activo" = estatus Activo, o sin estatus capturado (que en el
+// resto de la interfaz se trata como Activo por defecto).
+function contarPersonalActivoDeEmpresa(empresaId){
+  return personal.filter(p => p.empresa_id === empresaId && (p.estatus||'Activo') === 'Activo').length;
+}
+
+function renderTablaEmpresas(){
+  const tbody = document.getElementById('tabla-empresas');
+  if (!tbody) return;
+  document.getElementById('empresas-vacio').style.display = empresas.length ? 'none' : 'block';
+  const lista = empresas.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  tbody.innerHTML = lista.map(e=>{
+    const domicilioTexto = [e.municipio, e.estado].filter(Boolean).join(', ') || '—';
+    const reg = contarRegistrosPatronales(e.id);
+    const nombre = escapeHtml(e.nombre);
+    const rfc = escapeHtml(e.rfc || '—');
+    const domicilio = escapeHtml(domicilioTexto);
+    const idAttr = escapeHtml(e.id);
+    return `
+      <tr>
+        <td>${nombre}</td>
+        <td>${rfc}</td>
+        <td>${domicilio}</td>
+        <td>${reg.activos} activo(s) de ${reg.total}</td>
+        <td><span class="pill"${e.activo ? '' : ' style="opacity:.6;"'}>${e.activo ? 'Activo' : 'Inactivo'}</span></td>
+        <td style="display:flex;gap:6px;">
+          <button type="button" class="primary" style="margin-top:0;padding:5px 12px;font-size:12px;" onclick="abrirModalEmpresa('${idAttr}')">Editar</button>
+          <button type="button" class="primary" style="margin-top:0;padding:5px 12px;font-size:12px;background:${e.activo ? 'var(--danger)' : 'var(--accent)'};" onclick="alternarEmpresa('${idAttr}', ${!e.activo})">
+            ${e.activo ? 'Desactivar' : 'Reactivar'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Ajuste 1 de Erik: antes de desactivar una empresa con personal activo
+// asignado, se pide confirmación indicando cuántas personas están
+// vinculadas. La desactivación en sí nunca borra ni modifica relaciones.
+async function alternarEmpresa(id, nuevoEstado){
+  if (!nuevoEstado) {
+    const n = contarPersonalActivoDeEmpresa(id);
+    if (n > 0) {
+      const ok = confirm(`Esta empresa tiene ${n} persona(s) activa(s) asignada(s). Desactivarla no borra ni modifica esas relaciones, pero dejará de ofrecerse para nuevas asignaciones. ¿Deseas continuar?`);
+      if (!ok) return;
+    }
+  }
+  const { error } = await sb.from('empresas').update({ activo: nuevoEstado }).eq('id', id);
+  if (error) { mostrarToastEmpresa('Error al actualizar: ' + error.message, 'err'); return; }
+  const e = empresas.find(x=>x.id===id);
+  if (e) e.activo = nuevoEstado;
+  renderTablaEmpresas();
+  mostrarToastEmpresa(nuevoEstado ? 'Empresa reactivada.' : 'Empresa desactivada.', 'ok');
+}
+
+function abrirModalEmpresa(id){
+  empresaModalId = id;
+  const esNueva = !id;
+  document.getElementById('modal-empresa-titulo').textContent = esNueva ? 'Nueva empresa' : 'Editar empresa';
+  const e = esNueva ? {} : (empresas.find(x=>x.id===id) || {});
+
+  document.getElementById('em-nombre').value = e.nombre || '';
+  document.getElementById('em-razon-social').value = e.razon_social || '';
+  document.getElementById('em-rfc').value = e.rfc || '';
+  document.getElementById('em-cp').value = e.codigo_postal || '';
+  document.getElementById('em-estado').value = e.estado || '';
+  document.getElementById('em-municipio').value = e.municipio || '';
+  document.getElementById('em-colonia').value = e.colonia || '';
+  document.getElementById('em-calle').value = e.calle || '';
+  document.getElementById('em-numext').value = e.numero_exterior || '';
+  document.getElementById('em-numint').value = e.numero_interior || '';
+
+  document.getElementById('seccion-registros-patronales').style.display = esNueva ? 'none' : 'block';
+  document.getElementById('hint-guardar-primero').style.display = esNueva ? 'block' : 'none';
+  if (!esNueva) renderTablaRegistrosPatronales();
+
+  document.getElementById('toast-empresa').style.display = 'none';
+  document.getElementById('modal-empresa-overlay').style.display = 'block';
+}
+
+function cerrarModalEmpresa(){
+  document.getElementById('modal-empresa-overlay').style.display = 'none';
+  empresaModalId = null;
+}
+
+// Ajuste 2 de Erik: duplicado insensible a mayúsculas/minúsculas y a
+// espacios al inicio/fin; en edición, no marca como duplicado el nombre de
+// la propia empresa. Validación solo de interfaz (sin UNIQUE en Supabase).
+function nombreEmpresaDuplicado(nombre, excluirId){
+  const norm = nombre.trim().toLowerCase();
+  return empresas.some(e => e.id !== excluirId && e.nombre.trim().toLowerCase() === norm);
+}
+
+async function guardarEmpresa(){
+  const btn = document.getElementById('btn-guardar-empresa');
+  const nombre = document.getElementById('em-nombre').value.trim();
+  if (!nombre) { mostrarToastEmpresa('El nombre es obligatorio.', 'err'); return; }
+  if (nombreEmpresaDuplicado(nombre, empresaModalId)) {
+    mostrarToastEmpresa('Ya existe una empresa con ese nombre.', 'err');
+    return;
+  }
+
+  const campos = {
+    nombre,
+    razon_social: document.getElementById('em-razon-social').value.trim() || null,
+    rfc: document.getElementById('em-rfc').value.trim() || null,
+    codigo_postal: document.getElementById('em-cp').value.trim() || null,
+    estado: document.getElementById('em-estado').value.trim() || null,
+    municipio: document.getElementById('em-municipio').value.trim() || null,
+    colonia: document.getElementById('em-colonia').value.trim() || null,
+    calle: document.getElementById('em-calle').value.trim() || null,
+    numero_exterior: document.getElementById('em-numext').value.trim() || null,
+    numero_interior: document.getElementById('em-numint').value.trim() || null
+  };
+
+  btn.disabled = true;
+  if (!empresaModalId) {
+    const { data, error } = await sb.from('empresas').insert(campos).select().single();
+    btn.disabled = false;
+    if (error) { mostrarToastEmpresa('Error al guardar: ' + error.message, 'err'); return; }
+    empresas.push(data);
+    empresaModalId = data.id;
+    document.getElementById('modal-empresa-titulo').textContent = 'Editar empresa';
+    document.getElementById('seccion-registros-patronales').style.display = 'block';
+    document.getElementById('hint-guardar-primero').style.display = 'none';
+    renderTablaRegistrosPatronales();
+    mostrarToastEmpresa('Empresa creada. Ya puedes agregar sus registros patronales.', 'ok');
+  } else {
+    const { error } = await sb.from('empresas').update(campos).eq('id', empresaModalId);
+    btn.disabled = false;
+    if (error) { mostrarToastEmpresa('Error al guardar: ' + error.message, 'err'); return; }
+    const e = empresas.find(x=>x.id===empresaModalId);
+    if (e) Object.assign(e, campos);
+    mostrarToastEmpresa('Cambios guardados.', 'ok');
+  }
+  renderTablaEmpresas();
+}
+
+function renderTablaRegistrosPatronales(){
+  const tbody = document.getElementById('tabla-registros-patronales');
+  if (!tbody || !empresaModalId) return;
+  const filas = registrosPatronales.filter(r => r.empresa_id === empresaModalId)
+    .slice().sort((a,b)=>a.registro_patronal.localeCompare(b.registro_patronal,'es'));
+  document.getElementById('registros-patronales-vacio').style.display = filas.length ? 'none' : 'block';
+  tbody.innerHTML = filas.map(r => {
+    const registroTexto = escapeHtml(r.registro_patronal);
+    const idAttr = escapeHtml(r.id);
+    return `
+    <tr>
+      <td>${registroTexto}</td>
+      <td><span class="pill"${r.activo ? '' : ' style="opacity:.6;"'}>${r.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td>
+        <button type="button" class="primary" style="margin-top:0;padding:5px 12px;font-size:12px;background:${r.activo ? 'var(--danger)' : 'var(--accent)'};" onclick="alternarRegistroPatronal('${idAttr}', ${!r.activo})">
+          ${r.activo ? 'Desactivar' : 'Reactivar'}
+        </button>
+      </td>
+    </tr>
+  `;
+  }).join('');
+}
+
+document.getElementById('form-nuevo-registro-patronal').addEventListener('submit', async function(e){
+  e.preventDefault();
+  if (!empresaModalId) return;
+  const input = document.getElementById('input-nuevo-registro-patronal');
+  const valor = input.value.trim();
+  if (!valor) { mostrarToastRegistroPatronal('El registro patronal no puede estar vacío.', 'err'); return; }
+
+  const duplicado = registrosPatronales.some(r => r.empresa_id === empresaModalId && r.registro_patronal.trim().toLowerCase() === valor.toLowerCase());
+  if (duplicado) { mostrarToastRegistroPatronal('Ese registro patronal ya existe para esta empresa.', 'err'); return; }
+
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  const { data, error } = await sb.from('empresas_registros_patronales').insert({ empresa_id: empresaModalId, registro_patronal: valor }).select().single();
+  btn.disabled = false;
+
+  if (error) {
+    // 23505 = unique_violation -- por si dos pestañas/usuarios insertan a la vez
+    const msg = error.code === '23505' ? 'Ese registro patronal ya existe para esta empresa.' : 'Error al guardar: ' + error.message;
+    mostrarToastRegistroPatronal(msg, 'err');
+    return;
+  }
+  registrosPatronales.push(data);
+  renderTablaRegistrosPatronales();
+  renderTablaEmpresas();
+  input.value = '';
+  mostrarToastRegistroPatronal('Registro patronal agregado.', 'ok');
+});
+
+async function alternarRegistroPatronal(id, nuevoEstado){
+  const { error } = await sb.from('empresas_registros_patronales').update({ activo: nuevoEstado }).eq('id', id);
+  if (error) { mostrarToastRegistroPatronal('Error al actualizar: ' + error.message, 'err'); return; }
+  const r = registrosPatronales.find(x=>x.id===id);
+  if (r) r.activo = nuevoEstado;
+  renderTablaRegistrosPatronales();
+  renderTablaEmpresas();
+  mostrarToastRegistroPatronal(nuevoEstado ? 'Registro patronal reactivado.' : 'Registro patronal desactivado.', 'ok');
+}
 
 function mostrarLogin(){
   document.getElementById('app-content').style.display='none';

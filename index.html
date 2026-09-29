@@ -528,7 +528,10 @@
       <div class="toast" id="toast-detalle"></div>
 
       <h3>Historial de movimientos</h3>
-      <div id="d-historial"><p class="hint">Cargando…</p></div>
+      <div id="d-historial">
+        <p class="hint" id="d-historial-resumen" style="margin-bottom:8px;">Cargando…</p>
+        <button type="button" class="primary" id="btn-descargar-historial" style="margin-top:0;display:none;" onclick="descargarHistorialCSV()">Descargar historial (CSV)</button>
+      </div>
     </div>
   </div>
   </div>
@@ -880,6 +883,75 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
 
 let detalleActual = null;
 let detallePercepciones = [];
+let detalleHistorial = [];
+
+// ---------------------------------------------------------------------
+// Descarga del historial de movimientos en CSV. El historial completo
+// sigue viviendo únicamente en Supabase (no se borra ni se altera nada);
+// esto solo cambia cómo se consulta desde la interfaz. Cuando el campo
+// modificado es un identificador de una entidad conocida (empresa,
+// proyecto, área, departamento, puesto, localidad, centro de costo,
+// registro patronal, coordinador o jefe), se intenta mostrar su nombre
+// legible en vez del UUID; si no se puede resolver, se conserva el valor
+// original tal cual está guardado.
+// ---------------------------------------------------------------------
+function nombreDeCatalogoPorId(tabla, id){
+  const filas = (typeof catalogosData !== 'undefined' && catalogosData[tabla]) || [];
+  const fila = filas.find(r=>r.id===id);
+  return fila ? fila.nombre : null;
+}
+function nombreDeRegistroPatronalPorId(id){
+  const r = registrosPatronales.find(x=>x.id===id);
+  return r ? r.registro_patronal : null;
+}
+function nombreDePersonalPorIdOMenos(id){
+  const p = personal.find(x=>x.id===id);
+  return p ? p.nombre_completo : null;
+}
+const RESOLVER_CAMPO_HISTORIAL = {
+  empresa_id: (id) => { const e = empresas.find(x=>x.id===id); return e ? e.nombre : null; },
+  proyecto_id: (id) => { const p = proyectos.find(x=>x.id===id); return p ? p.nombre : null; },
+  area_id: (id) => nombreDeCatalogoPorId('areas', id),
+  departamento_id: (id) => nombreDeCatalogoPorId('departamentos', id),
+  puesto_id: (id) => nombreDeCatalogoPorId('puestos', id),
+  localidad_id: (id) => nombreDeCatalogoPorId('localidades', id),
+  centro_costo_id: (id) => nombreDeCatalogoPorId('centros_costo', id),
+  registro_patronal_id: nombreDeRegistroPatronalPorId,
+  coordinador_id: nombreDePersonalPorIdOMenos,
+  jefe_id: nombreDePersonalPorIdOMenos
+};
+function valorLegibleHistorial(campo, valor){
+  if (!valor) return valor;
+  const resolver = RESOLVER_CAMPO_HISTORIAL[campo];
+  if (!resolver) return valor;
+  const nombre = resolver(valor);
+  return nombre || valor; // si no se pudo resolver, se conserva el valor original
+}
+function celdaCSV(valor){
+  const texto = (valor===null || valor===undefined) ? '' : String(valor);
+  return '"' + texto.replace(/"/g, '""') + '"';
+}
+function descargarHistorialCSV(){
+  if (!detalleActual || !detalleHistorial.length) return;
+  const encabezado = ['Fecha y hora','Campo modificado','Valor anterior','Valor nuevo'];
+  const filas = detalleHistorial.map(m => [
+    new Date(m.fecha).toLocaleString('es-MX'),
+    m.campo,
+    valorLegibleHistorial(m.campo, m.valor_anterior),
+    valorLegibleHistorial(m.campo, m.valor_nuevo)
+  ]);
+  const csv = '﻿' + [encabezado, ...filas].map(fila => fila.map(celdaCSV).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const idParaArchivo = detalleActual.empleado_id || detalleActual.id;
+  a.href = url;
+  a.download = 'historial_' + idParaArchivo + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 function fillSelectSimple(sel, items){ sel.innerHTML = items.map(i=>`<option value="${i.id}">${i.nombre}</option>`).join(''); }
 
@@ -969,14 +1041,29 @@ async function abrirDetalle(id){
     return `<div class="concepto-row" data-percepcion="${x.id}"><span class="nombre">${c?c.nombre:'—'}</span><input type="number" step="0.01" value="${x.monto}" class="monto-percepcion"></div>`;
   }).join('') : '<p class="hint" style="margin:0;">Sin percepciones capturadas.</p>';
 
-  document.getElementById('d-historial').innerHTML = '<p class="hint">Cargando…</p>';
+  // El historial ya no se lista en pantalla (podía mostrar UUIDs de
+  // empresa/área/etc.); se conserva íntegro en Supabase y se ofrece como
+  // descarga en CSV (ver descargarHistorialCSV). Se guarda en
+  // `detalleHistorial`, siempre filtrado por este `personal_id`, para que
+  // la descarga nunca mezcle movimientos de otra persona.
+  document.getElementById('d-historial-resumen').textContent = 'Cargando…';
+  document.getElementById('btn-descargar-historial').style.display = 'none';
+  detalleHistorial = [];
   document.getElementById('modal-overlay').style.display = 'block';
 
   const { data: hist, error } = await sb.from('movimientos').select('*').eq('personal_id', id).order('fecha', {ascending:false});
-  if (error) { document.getElementById('d-historial').innerHTML = '<p class="hint">No se pudo cargar el historial.</p>'; return; }
-  document.getElementById('d-historial').innerHTML = (hist && hist.length) ? hist.map(m=>`
-    <div class="breakdown-row"><span>${new Date(m.fecha).toLocaleString('es-MX')} — ${m.campo}</span><span>${m.valor_anterior||'—'} → ${m.valor_nuevo}</span></div>
-  `).join('') : '<p class="hint">Sin movimientos registrados todavía.</p>';
+  // Si mientras tanto se abrió el Detalle de otra persona, se descarta este
+  // resultado en vez de mezclarlo con el registro que quedó abierto.
+  if (!detalleActual || detalleActual.id !== id) return;
+  if (error) { document.getElementById('d-historial-resumen').textContent = 'No se pudo cargar el historial.'; return; }
+  detalleHistorial = hist || [];
+  if (detalleHistorial.length) {
+    document.getElementById('d-historial-resumen').textContent = detalleHistorial.length + ' movimiento(s) registrado(s).';
+    document.getElementById('btn-descargar-historial').style.display = 'inline-block';
+  } else {
+    document.getElementById('d-historial-resumen').textContent = 'Sin movimientos registrados todavía.';
+    document.getElementById('btn-descargar-historial').style.display = 'none';
+  }
 }
 
 function actualizarModoCoordinadorDetalle(){
@@ -1303,12 +1390,44 @@ function mensajeErrorGuardarPersonal(error){
   return 'Error al guardar: ' + error.message;
 }
 
+// Registro patronal predeterminado (ajuste de usabilidad post-7D-4): al
+// seleccionar o cambiar de empresa se propone automáticamente su primer
+// registro patronal ACTIVO. Criterio de "primero" (determinista): de los
+// registros patronales activos de la empresa, se ordenan alfabéticamente
+// por el texto de `registro_patronal` con collation español (el mismo
+// orden en que ya aparecen listados en el selector) y se toma el primero.
+// Si no hay ninguno activo, no se propone nada (queda "Sin asignar").
+function primerRegistroPatronalActivo(empresaId){
+  if (!empresaId) return null;
+  const activos = registrosPatronales.filter(r => r.empresa_id === empresaId && r.activo)
+    .slice().sort((a,b)=>a.registro_patronal.localeCompare(b.registro_patronal,'es'));
+  return activos.length ? activos[0].id : null;
+}
+
+// Aplica el predeterminado. Se usa solo cuando el usuario selecciona/cambia
+// de empresa (o al presentar un formulario de Alta nuevo/recién reiniciado,
+// que equivale a "seleccionar" la empresa por primera vez) — nunca al abrir
+// el Detalle de un registro existente ni al solo refrescar el catálogo de
+// registros patronales en segundo plano.
 function actualizarRegistroPatronalAlta(){
   const empresaId = document.getElementById('f-empresa').value || null;
-  const res = fillSelectRegistroPatronal(document.getElementById('f-registro-patronal'), empresaId, null);
+  const valorPredeterminado = primerRegistroPatronalActivo(empresaId);
+  const res = fillSelectRegistroPatronal(document.getElementById('f-registro-patronal'), empresaId, valorPredeterminado);
   document.getElementById('f-registro-patronal-vacio').style.display = (empresaId && res.sinActivos) ? 'block' : 'none';
 }
 document.getElementById('f-empresa').addEventListener('change', actualizarRegistroPatronalAlta);
+
+// Refresca las opciones del selector de Alta sin tocar la selección actual
+// del usuario (usado cuando cambia el catálogo de registros patronales
+// desde la pestaña Empresas en segundo plano — agregar/activar/desactivar
+// uno — y no porque el usuario haya cambiado de empresa).
+function refrescarOpcionesRegistroPatronalAlta(){
+  const sel = document.getElementById('f-registro-patronal');
+  const empresaId = document.getElementById('f-empresa').value || null;
+  const valorActual = sel.value || null;
+  const res = fillSelectRegistroPatronal(sel, empresaId, valorActual);
+  document.getElementById('f-registro-patronal-vacio').style.display = (empresaId && res.sinActivos) ? 'block' : 'none';
+}
 
 function actualizarRegistroPatronalDetalle(empresaId, valorActual){
   const res = fillSelectRegistroPatronal(document.getElementById('d-registro-patronal'), empresaId, valorActual || null);
@@ -1316,9 +1435,11 @@ function actualizarRegistroPatronalDetalle(empresaId, valorActual){
 }
 document.getElementById('d-empresa').addEventListener('change', function(){
   // Al cambiar de empresa manualmente ya no se conserva el registro
-  // patronal anterior: evita quedarse "accidentalmente" con un registro
-  // patronal de la empresa previa (decisión de Erik en la fase 7D).
-  actualizarRegistroPatronalDetalle(this.value || null, null);
+  // patronal anterior (evita quedarse "accidentalmente" con uno de la
+  // empresa previa, decisión de Erik en la fase 7D) y en su lugar se
+  // propone el primer registro patronal activo de la nueva empresa.
+  const empresaId = this.value || null;
+  actualizarRegistroPatronalDetalle(empresaId, primerRegistroPatronalActivo(empresaId));
 });
 
 function mostrarToastEmpresa(msg, tipo){
@@ -1524,7 +1645,7 @@ document.getElementById('form-nuevo-registro-patronal').addEventListener('submit
   registrosPatronales.push(data);
   renderTablaRegistrosPatronales();
   renderTablaEmpresas();
-  actualizarRegistroPatronalAlta();
+  refrescarOpcionesRegistroPatronalAlta();
   input.value = '';
   mostrarToastRegistroPatronal('Registro patronal agregado.', 'ok');
 });
@@ -1536,7 +1657,7 @@ async function alternarRegistroPatronal(id, nuevoEstado){
   if (r) r.activo = nuevoEstado;
   renderTablaRegistrosPatronales();
   renderTablaEmpresas();
-  actualizarRegistroPatronalAlta();
+  refrescarOpcionesRegistroPatronalAlta();
   mostrarToastRegistroPatronal(nuevoEstado ? 'Registro patronal reactivado.' : 'Registro patronal desactivado.', 'ok');
 }
 

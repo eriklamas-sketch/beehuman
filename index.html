@@ -106,6 +106,7 @@
     <button class="active" data-tab="alta">Alta de personal</button>
     <button data-tab="lista">Personal</button>
     <button data-tab="resumen">Resumen</button>
+    <button data-tab="catalogos">Catálogos</button>
   </nav>
 
   <section class="panel active" id="panel-alta">
@@ -131,11 +132,50 @@
         <h3>Asignación operativa</h3>
         <div class="grid3">
           <div><label>Proyecto / centro de costo</label><select id="f-proyecto"></select></div>
-          <div><label>Coordinador a cargo</label><input id="f-coordinador" type="text" required></div>
           <div><label>Turno</label>
             <select id="f-turno"><option>Matutino</option><option>Vespertino</option><option>Nocturno</option><option>Mixto</option></select>
           </div>
+          <div></div>
         </div>
+        <div class="grid">
+          <div>
+            <label>Coordinador a cargo</label>
+            <div class="checks" style="margin-bottom:8px;">
+              <label><input type="radio" name="f-coordinador-modo" value="directorio" checked> Del directorio</label>
+              <label><input type="radio" name="f-coordinador-modo" value="externo"> Externo</label>
+            </div>
+            <select id="f-coordinador-select"></select>
+            <input id="f-coordinador-externo" type="text" placeholder="Nombre del coordinador externo" style="display:none;margin-top:8px;">
+          </div>
+          <div><label>Jefe directo</label><select id="f-jefe"></select></div>
+        </div>
+
+        <h3>Clasificación organizacional</h3>
+        <div class="grid3">
+          <div>
+            <label>Área</label><select id="f-cat-areas"></select>
+            <p class="hint" id="f-cat-areas-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de áreas. Este campo se guardará vacío.</p>
+          </div>
+          <div>
+            <label>Departamento</label><select id="f-cat-departamentos"></select>
+            <p class="hint" id="f-cat-departamentos-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de departamentos. Este campo se guardará vacío.</p>
+          </div>
+          <div>
+            <label>Puesto</label><select id="f-cat-puestos"></select>
+            <p class="hint" id="f-cat-puestos-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de puestos. Este campo se guardará vacío.</p>
+          </div>
+        </div>
+        <div class="grid">
+          <div>
+            <label>Localidad</label><select id="f-cat-localidades"></select>
+            <p class="hint" id="f-cat-localidades-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de localidades. Este campo se guardará vacío.</p>
+          </div>
+          <div>
+            <label>Centro de costo</label><select id="f-cat-centros_costo"></select>
+            <p class="hint" id="f-cat-centros_costo-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de centros de costo. Este campo se guardará vacío.</p>
+          </div>
+        </div>
+
         <div class="grid">
           <div><label>Tipo de jornada</label>
             <select id="f-jornada"><option>Completa</option><option>Reducida</option><option>Sin semana o jornada reducida</option></select>
@@ -199,11 +239,12 @@
   <section class="panel" id="panel-lista">
     <div class="card">
       <h2>Personal registrado</h2>
-      <p class="hint">Cambia proyecto o coordinador directamente en la fila — se guarda al momento en Supabase.</p>
+      <p class="hint">Cambia el proyecto directamente en la fila — se guarda al momento en Supabase.</p>
       <div class="filters">
         <select id="filtro-empresa"><option value="">Todas las empresas</option></select>
         <select id="filtro-proyecto"><option value="">Todos los proyectos</option></select>
       </div>
+      <p class="hint" style="margin-top:-6px;">El coordinador y el jefe directo se asignan desde el detalle de cada persona.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>ID</th><th>Nombre</th><th>Empresa</th><th>Proyecto</th><th>Coordinador</th><th>Estatus</th><th>Total bruto</th></tr></thead>
@@ -219,6 +260,83 @@
     <div class="card"><h2>Resumen general</h2><div class="summary-grid" id="summary-stats"></div></div>
     <div class="card"><h2>Costo bruto por proyecto</h2><div id="breakdown-proyecto"></div></div>
     <div class="card"><h2>Costo bruto por coordinador</h2><div id="breakdown-coordinador"></div></div>
+  </section>
+
+  <section class="panel" id="panel-catalogos">
+    <div class="card" data-catalogo="areas">
+      <h2>Áreas</h2>
+      <p class="hint">Desactivar un valor lo oculta para nuevas asignaciones, pero conserva las que ya existan.</p>
+      <form class="form-nuevo-catalogo" data-catalogo="areas" style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+        <div style="flex:1;"><label>Nuevo valor</label><input type="text" class="input-nuevo-catalogo" placeholder="Ej. Recursos Humanos"></div>
+        <button type="submit" class="primary" style="margin-top:0;">Agregar</button>
+      </form>
+      <div class="toast" data-catalogo="areas"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead>
+        <tbody class="tbody-catalogo" data-catalogo="areas"></tbody></table>
+      </div>
+      <div class="empty catalogo-vacio" data-catalogo="areas" style="display:none;">Sin valores capturados todavía.</div>
+    </div>
+
+    <div class="card" data-catalogo="departamentos">
+      <h2>Departamentos</h2>
+      <p class="hint">Desactivar un valor lo oculta para nuevas asignaciones, pero conserva las que ya existan.</p>
+      <form class="form-nuevo-catalogo" data-catalogo="departamentos" style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+        <div style="flex:1;"><label>Nuevo valor</label><input type="text" class="input-nuevo-catalogo" placeholder="Ej. Nóminas"></div>
+        <button type="submit" class="primary" style="margin-top:0;">Agregar</button>
+      </form>
+      <div class="toast" data-catalogo="departamentos"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead>
+        <tbody class="tbody-catalogo" data-catalogo="departamentos"></tbody></table>
+      </div>
+      <div class="empty catalogo-vacio" data-catalogo="departamentos" style="display:none;">Sin valores capturados todavía.</div>
+    </div>
+
+    <div class="card" data-catalogo="puestos">
+      <h2>Puestos</h2>
+      <p class="hint">Desactivar un valor lo oculta para nuevas asignaciones, pero conserva las que ya existan.</p>
+      <form class="form-nuevo-catalogo" data-catalogo="puestos" style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+        <div style="flex:1;"><label>Nuevo valor</label><input type="text" class="input-nuevo-catalogo" placeholder="Ej. Auxiliar operativo"></div>
+        <button type="submit" class="primary" style="margin-top:0;">Agregar</button>
+      </form>
+      <div class="toast" data-catalogo="puestos"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead>
+        <tbody class="tbody-catalogo" data-catalogo="puestos"></tbody></table>
+      </div>
+      <div class="empty catalogo-vacio" data-catalogo="puestos" style="display:none;">Sin valores capturados todavía.</div>
+    </div>
+
+    <div class="card" data-catalogo="localidades">
+      <h2>Localidades</h2>
+      <p class="hint">Desactivar un valor lo oculta para nuevas asignaciones, pero conserva las que ya existan.</p>
+      <form class="form-nuevo-catalogo" data-catalogo="localidades" style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+        <div style="flex:1;"><label>Nuevo valor</label><input type="text" class="input-nuevo-catalogo" placeholder="Ej. CDMX"></div>
+        <button type="submit" class="primary" style="margin-top:0;">Agregar</button>
+      </form>
+      <div class="toast" data-catalogo="localidades"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead>
+        <tbody class="tbody-catalogo" data-catalogo="localidades"></tbody></table>
+      </div>
+      <div class="empty catalogo-vacio" data-catalogo="localidades" style="display:none;">Sin valores capturados todavía.</div>
+    </div>
+
+    <div class="card" data-catalogo="centros_costo">
+      <h2>Centros de costo</h2>
+      <p class="hint">Desactivar un valor lo oculta para nuevas asignaciones, pero conserva las que ya existan.</p>
+      <form class="form-nuevo-catalogo" data-catalogo="centros_costo" style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+        <div style="flex:1;"><label>Nuevo valor</label><input type="text" class="input-nuevo-catalogo" placeholder="Ej. Administración corporativa"></div>
+        <button type="submit" class="primary" style="margin-top:0;">Agregar</button>
+      </form>
+      <div class="toast" data-catalogo="centros_costo"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead>
+        <tbody class="tbody-catalogo" data-catalogo="centros_costo"></tbody></table>
+      </div>
+      <div class="empty catalogo-vacio" data-catalogo="centros_costo" style="display:none;">Sin valores capturados todavía.</div>
+    </div>
   </section>
 
   <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
@@ -240,7 +358,46 @@
       <div class="grid3">
         <div><label>Empresa</label><select id="d-empresa"></select></div>
         <div><label>Proyecto</label><select id="d-proyecto"></select></div>
-        <div><label>Coordinador</label><input id="d-coordinador"></div>
+        <div></div>
+      </div>
+      <div class="grid">
+        <div>
+          <label>Coordinador</label>
+          <div class="checks" style="margin-bottom:8px;">
+            <label><input type="radio" name="d-coordinador-modo" value="directorio"> Del directorio</label>
+            <label><input type="radio" name="d-coordinador-modo" value="externo"> Externo</label>
+            <label><input type="radio" name="d-coordinador-modo" value="ninguno"> Sin asignar</label>
+          </div>
+          <select id="d-coordinador-select"></select>
+          <input id="d-coordinador-externo" type="text" placeholder="Nombre del coordinador externo" style="display:none;margin-top:8px;">
+          <p class="hint" id="d-coordinador-historico" style="margin:6px 0 0;display:none;"></p>
+        </div>
+        <div><label>Jefe directo</label><select id="d-jefe"></select></div>
+      </div>
+      <div class="grid3">
+        <div>
+          <label>Área</label><select id="d-cat-areas"></select>
+          <p class="hint" id="d-cat-areas-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de áreas. Se conservará el valor actual sin cambios.</p>
+        </div>
+        <div>
+          <label>Departamento</label><select id="d-cat-departamentos"></select>
+          <p class="hint" id="d-cat-departamentos-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de departamentos. Se conservará el valor actual sin cambios.</p>
+        </div>
+        <div>
+          <label>Puesto</label><select id="d-cat-puestos"></select>
+          <p class="hint" id="d-cat-puestos-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de puestos. Se conservará el valor actual sin cambios.</p>
+        </div>
+      </div>
+      <div class="grid3">
+        <div>
+          <label>Localidad</label><select id="d-cat-localidades"></select>
+          <p class="hint" id="d-cat-localidades-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de localidades. Se conservará el valor actual sin cambios.</p>
+        </div>
+        <div>
+          <label>Centro de costo</label><select id="d-cat-centros_costo"></select>
+          <p class="hint" id="d-cat-centros_costo-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de centros de costo. Se conservará el valor actual sin cambios.</p>
+        </div>
+        <div></div>
       </div>
 
       <h3>Relación laboral</h3>
@@ -310,6 +467,81 @@ function fillSelect(sel,items,placeholder){sel.innerHTML=(placeholder?`<option v
 function empresaNombre(id){const e=empresas.find(x=>x.id===id);return e?e.nombre:'—';}
 function proyectoNombre(id){const p=proyectos.find(x=>x.id===id);return p?p.nombre:'—';}
 function money(n){return '$'+Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+// Coordinador/jefe (7C-4b): coordinador_id (directorio) y coordinador_externo (texto)
+// son mutuamente excluyentes (CHECK personal_coordinador_excluyente). El texto libre
+// histórico en la columna `coordinador` se conserva y solo se muestra si no hay ninguno
+// de los dos campos nuevos capturados todavía.
+function nombrePersonalPorId(id){ const p=personal.find(x=>x.id===id); return p?p.nombre_completo:'—'; }
+function nombreCoordinador(p){
+  if (p.coordinador_id) return nombrePersonalPorId(p.coordinador_id);
+  if (p.coordinador_externo) return p.coordinador_externo + ' (externo)';
+  return p.coordinador || '';
+}
+function nombreJefe(p){ return p.jefe_id ? nombrePersonalPorId(p.jefe_id) : ''; }
+function fillSelectPersonal(sel, excludeId, placeholder){
+  const lista = personal.filter(p=>p.id!==excludeId).slice().sort((a,b)=>a.nombre_completo.localeCompare(b.nombre_completo,'es'));
+  sel.innerHTML = (placeholder?`<option value="">${placeholder}</option>`:'<option value="">Selecciona…</option>') + lista.map(p=>`<option value="${p.id}">${p.nombre_completo}</option>`).join('');
+}
+
+// ---------------------------------------------------------------------
+// Catálogos organizacionales en Alta/Detalle (7C-4c). Reutiliza
+// catalogosData (cargado por cargarCatalogos(), 7C-4a) que contiene TODAS
+// las filas de cada catálogo (activas e inactivas) — necesario para poder
+// seguir mostrando en el Detalle un valor ya asignado aunque se haya
+// desactivado después. catalogosError[tabla] marca si la última carga de
+// ese catálogo falló, para no guardar silenciosamente null ni sobrescribir
+// una relación existente por un problema de carga.
+// ---------------------------------------------------------------------
+const CATALOGOS_PERSONAL = [
+  { tabla: 'areas', campo: 'area_id' },
+  { tabla: 'departamentos', campo: 'departamento_id' },
+  { tabla: 'puestos', campo: 'puesto_id' },
+  { tabla: 'localidades', campo: 'localidad_id' },
+  { tabla: 'centros_costo', campo: 'centro_costo_id' }
+];
+let catalogosError = {};
+
+function mostrarErrorCatalogoCampo(id, mostrar){
+  const el = document.getElementById(id);
+  if (el) el.style.display = mostrar ? 'block' : 'none';
+}
+
+// Si el catálogo no cargó, el selector se deshabilita por completo (no se
+// puede elegir un valor a ciegas). Si cargó, se listan solo los valores
+// activos; si `valorActual` apunta a un valor que ya no está activo (o que
+// fue desactivado después de asignarse), se agrega igualmente a las
+// opciones marcado como "(inactivo)" y queda seleccionado, sin mezclarse
+// con el resto de los valores inactivos del catálogo.
+function fillSelectCatalogo(sel, tabla, valorActual){
+  if (!sel) return;
+  if (catalogosError[tabla]) {
+    sel.innerHTML = '<option value="">No disponible</option>';
+    sel.value = '';
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  const filas = catalogosData[tabla] || [];
+  const activos = filas.filter(r=>r.activo);
+  let opciones = activos.slice();
+  if (valorActual && !activos.some(r=>r.id===valorActual)) {
+    const inactivo = filas.find(r=>r.id===valorActual);
+    if (inactivo) opciones = opciones.concat([inactivo]);
+  }
+  opciones.sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  sel.innerHTML = '<option value="">Sin asignar</option>' + opciones.map(r=>
+    `<option value="${r.id}">${r.nombre}${r.activo ? '' : ' (inactivo)'}</option>`
+  ).join('');
+  sel.value = valorActual || '';
+}
+
+function actualizarSelectsCatalogoAlta(){
+  CATALOGOS_PERSONAL.forEach(c=>{
+    fillSelectCatalogo(document.getElementById('f-cat-'+c.tabla), c.tabla, null);
+    mostrarErrorCatalogoCampo('f-cat-'+c.tabla+'-err', !!catalogosError[c.tabla]);
+  });
+}
 
 async function cargarTodo() {
   const [e,p,per,con,com,cc] = await Promise.all([
@@ -386,6 +618,8 @@ async function cargarPersonal() {
   personal = p.data||[];
   percepciones = pp.data||[];
   renderTabla(); renderResumen();
+  fillSelectPersonal(document.getElementById('f-coordinador-select'), null, 'Selecciona coordinador');
+  fillSelectPersonal(document.getElementById('f-jefe'), null, 'Sin jefe asignado');
 }
 
 function totalBrutoPersona(personalId){
@@ -410,7 +644,7 @@ function renderTabla(){
           ${proyectos.map(pr=>`<option value="${pr.id}" ${pr.id===p.proyecto_id?'selected':''}>${pr.nombre}</option>`).join('')}
         </select>
       </td>
-      <td><input class="inline-select" style="width:130px" value="${p.coordinador||''}" onchange="actualizarCampo('${p.id}','coordinador',this.value)"></td>
+      <td>${nombreCoordinador(p)}</td>
       <td><span class="pill">${p.estatus||'Activo'}</span></td>
       <td>${money(totalBrutoPersona(p.id))}</td>
     </tr>
@@ -437,7 +671,7 @@ function renderResumen(){
   personal.forEach(p=>{
     const b = totalBrutoPersona(p.id);
     const np = proyectoNombre(p.proyecto_id); porProyecto[np]=(porProyecto[np]||0)+b;
-    const nc = p.coordinador||'Sin coordinador'; porCoordinador[nc]=(porCoordinador[nc]||0)+b;
+    const nc = nombreCoordinador(p)||'Sin coordinador'; porCoordinador[nc]=(porCoordinador[nc]||0)+b;
   });
   document.getElementById('breakdown-proyecto').innerHTML = Object.entries(porProyecto).map(([k,v])=>`<div class="breakdown-row"><span>${k}</span><span>${money(v)}</span></div>`).join('')||'<div class="empty">Sin datos</div>';
   document.getElementById('breakdown-coordinador').innerHTML = Object.entries(porCoordinador).map(([k,v])=>`<div class="breakdown-row"><span>${k}</span><span>${money(v)}</span></div>`).join('')||'<div class="empty">Sin datos</div>';
@@ -454,6 +688,15 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 document.getElementById('filtro-empresa').addEventListener('change', renderTabla);
 document.getElementById('filtro-proyecto').addEventListener('change', renderTabla);
 
+function actualizarModoCoordinadorAlta(){
+  const modo = document.querySelector('input[name="f-coordinador-modo"]:checked').value;
+  document.getElementById('f-coordinador-select').style.display = modo==='directorio' ? 'block':'none';
+  document.getElementById('f-coordinador-externo').style.display = modo==='externo' ? 'block':'none';
+  if (modo==='directorio') document.getElementById('f-coordinador-externo').value='';
+  else document.getElementById('f-coordinador-select').value='';
+}
+document.querySelectorAll('input[name="f-coordinador-modo"]').forEach(r=>r.addEventListener('change', actualizarModoCoordinadorAlta));
+
 document.getElementById('form-alta').addEventListener('submit', async function(e){
   e.preventDefault();
   const btn=document.getElementById('btn-alta'); const toast=document.getElementById('toast-alta');
@@ -465,6 +708,29 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
   const apellido1 = document.getElementById('f-apellido1').value.trim();
   const apellido2 = document.getElementById('f-apellido2').value.trim();
 
+  // 7C-4b: coordinador_id (directorio) y coordinador_externo (texto) son mutuamente
+  // excluyentes. Según el modo elegido, se envía explícitamente null en el que no
+  // corresponda para no dejar ambas opciones guardadas. El texto vacío se convierte
+  // a null antes de enviarlo (la restricción CHECK no considera '' como NULL).
+  const modoCoordinador = document.querySelector('input[name="f-coordinador-modo"]:checked').value;
+  let coordinadorId = null, coordinadorExterno = null;
+  if (modoCoordinador === 'directorio') {
+    coordinadorId = document.getElementById('f-coordinador-select').value || null;
+  } else {
+    const texto = document.getElementById('f-coordinador-externo').value.trim();
+    coordinadorExterno = texto || null;
+  }
+  const jefeId = document.getElementById('f-jefe').value || null;
+
+  // 7C-4c: catálogos organizacionales opcionales. Si algún catálogo no pudo
+  // cargarse, su selector queda deshabilitado y se envía null explícitamente
+  // (no hay una relación previa que perder en un alta nueva).
+  const catalogosAlta = {};
+  CATALOGOS_PERSONAL.forEach(c=>{
+    const sel = document.getElementById('f-cat-'+c.tabla);
+    catalogosAlta[c.campo] = sel.disabled ? null : (sel.value || null);
+  });
+
   const nuevo = {
     nombres: nombres,
     primer_apellido: apellido1,
@@ -473,7 +739,10 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     empresa_id: document.getElementById('f-empresa').value || null,
     tipo_empleado: document.getElementById('f-tipoempleado').value,
     proyecto_id: document.getElementById('f-proyecto').value || null,
-    coordinador: document.getElementById('f-coordinador').value.trim(),
+    coordinador_id: coordinadorId,
+    coordinador_externo: coordinadorExterno,
+    jefe_id: jefeId,
+    ...catalogosAlta,
     turno: document.getElementById('f-turno').value,
     tipo_jornada: document.getElementById('f-jornada').value,
     dias_descanso: descanso,
@@ -511,6 +780,8 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
   toast.textContent='Persona registrada en Supabase.'; toast.className='toast ok'; toast.style.display='block';
   setTimeout(()=>toast.style.display='none',3000);
   this.reset();
+  actualizarModoCoordinadorAlta();
+  actualizarSelectsCatalogoAlta();
   document.getElementById('conceptos-combo').innerHTML='<p class="hint" style="margin:0;">Elige un esquema para ver sus conceptos.</p>';
   document.getElementById('totales-combo').style.display='none';
   await cargarPersonal();
@@ -535,7 +806,34 @@ async function abrirDetalle(id){
   document.getElementById('d-apellido2').value = p.segundo_apellido||'';
   document.getElementById('d-empresa').value = p.empresa_id||'';
   document.getElementById('d-proyecto').value = p.proyecto_id||'';
-  document.getElementById('d-coordinador').value = p.coordinador||'';
+
+  // 7C-4b: coordinador_id / coordinador_externo son mutuamente excluyentes.
+  // Se excluye a la propia persona de ambos selectores (coordinador y jefe).
+  fillSelectPersonal(document.getElementById('d-coordinador-select'), p.id, 'Selecciona coordinador');
+  fillSelectPersonal(document.getElementById('d-jefe'), p.id, 'Sin jefe asignado');
+  const modoCoord = p.coordinador_id ? 'directorio' : (p.coordinador_externo ? 'externo' : 'ninguno');
+  document.querySelector(`input[name="d-coordinador-modo"][value="${modoCoord}"]`).checked = true;
+  document.getElementById('d-coordinador-select').value = p.coordinador_id || '';
+  document.getElementById('d-coordinador-externo').value = p.coordinador_externo || '';
+  document.getElementById('d-jefe').value = p.jefe_id || '';
+  actualizarModoCoordinadorDetalle();
+
+  // 7C-4c: catálogos organizacionales — un valor ya asignado que después se
+  // desactivó sigue visible y seleccionado (fillSelectCatalogo lo agrega
+  // marcado "(inactivo)"); si el catálogo no cargó, el selector queda
+  // deshabilitado para no arriesgar la relación existente al guardar.
+  CATALOGOS_PERSONAL.forEach(c=>{
+    fillSelectCatalogo(document.getElementById('d-cat-'+c.tabla), c.tabla, p[c.campo]);
+    mostrarErrorCatalogoCampo('d-cat-'+c.tabla+'-err', !!catalogosError[c.tabla]);
+  });
+  const histHint = document.getElementById('d-coordinador-historico');
+  if (!p.coordinador_id && !p.coordinador_externo && p.coordinador) {
+    histHint.textContent = 'Valor histórico (texto libre, no editable aquí): ' + p.coordinador;
+    histHint.style.display = 'block';
+  } else {
+    histHint.style.display = 'none';
+  }
+
   document.getElementById('d-tipoempleado').value = p.tipo_empleado||'Confianza';
   document.getElementById('d-turno').value = p.turno||'Matutino';
   document.getElementById('d-jornada').value = p.tipo_jornada||'Completa';
@@ -571,6 +869,16 @@ async function abrirDetalle(id){
   `).join('') : '<p class="hint">Sin movimientos registrados todavía.</p>';
 }
 
+function actualizarModoCoordinadorDetalle(){
+  const checked = document.querySelector('input[name="d-coordinador-modo"]:checked');
+  const modo = checked ? checked.value : 'ninguno';
+  document.getElementById('d-coordinador-select').style.display = modo==='directorio' ? 'block':'none';
+  document.getElementById('d-coordinador-externo').style.display = modo==='externo' ? 'block':'none';
+  if (modo!=='directorio') document.getElementById('d-coordinador-select').value='';
+  if (modo!=='externo') document.getElementById('d-coordinador-externo').value='';
+}
+document.querySelectorAll('input[name="d-coordinador-modo"]').forEach(r=>r.addEventListener('change', actualizarModoCoordinadorDetalle));
+
 function cerrarDetalle(){
   document.getElementById('modal-overlay').style.display='none';
   detalleActual = null;
@@ -582,13 +890,40 @@ async function guardarDetalle(){
   const toast = document.getElementById('toast-detalle');
   btn.disabled = true;
 
+  // 7C-4b: al cambiar de modo se envía explícitamente null en el campo que no
+  // corresponda, para no dejar ambas opciones guardadas. La columna de texto libre
+  // `coordinador` ya no se escribe desde esta interfaz (se conserva su valor histórico).
+  const modoCoordinadorDet = document.querySelector('input[name="d-coordinador-modo"]:checked').value;
+  let coordinadorIdDet = null, coordinadorExternoDet = null;
+  if (modoCoordinadorDet === 'directorio') {
+    coordinadorIdDet = document.getElementById('d-coordinador-select').value || null;
+  } else if (modoCoordinadorDet === 'externo') {
+    const texto = document.getElementById('d-coordinador-externo').value.trim();
+    coordinadorExternoDet = texto || null;
+  }
+  const jefeIdDet = document.getElementById('d-jefe').value || null;
+
+  // 7C-4c: si el catálogo no cargó (selector deshabilitado), se reenvía el
+  // ID que ya tenía la persona (detalleActual), nunca null — así un fallo de
+  // carga o de inicialización no borra una relación existente. Si el
+  // selector sí está disponible, se lee su valor actual (que es el mismo
+  // valor original si el usuario no lo modificó, o el nuevo si sí lo hizo).
+  const catalogosDet = {};
+  CATALOGOS_PERSONAL.forEach(c=>{
+    const sel = document.getElementById('d-cat-'+c.tabla);
+    catalogosDet[c.campo] = sel.disabled ? (detalleActual[c.campo] ?? null) : (sel.value || null);
+  });
+
   const nuevo = {
     nombres: document.getElementById('d-nombres').value.trim(),
     primer_apellido: document.getElementById('d-apellido1').value.trim(),
     segundo_apellido: document.getElementById('d-apellido2').value.trim(),
     empresa_id: document.getElementById('d-empresa').value || null,
     proyecto_id: document.getElementById('d-proyecto').value || null,
-    coordinador: document.getElementById('d-coordinador').value.trim(),
+    coordinador_id: coordinadorIdDet,
+    coordinador_externo: coordinadorExternoDet,
+    jefe_id: jefeIdDet,
+    ...catalogosDet,
     tipo_empleado: document.getElementById('d-tipoempleado').value,
     turno: document.getElementById('d-turno').value,
     tipo_jornada: document.getElementById('d-jornada').value,
@@ -651,7 +986,111 @@ async function mostrarApp(){
   setStatus('Conectando…','ok');
   await cargarTodo();
   await cargarPersonal();
+  await cargarCatalogos();
 }
+
+// ---------------------------------------------------------------------
+// Catálogos organizacionales (7C-4a): áreas, departamentos, puestos,
+// localidades, centros de costo. Administración genérica — no se conecta
+// todavía a los formularios de alta/detalle de personal (eso es 7C-4b/c).
+// ---------------------------------------------------------------------
+const TABLAS_CATALOGO = ['areas','departamentos','puestos','localidades','centros_costo'];
+let catalogosData = {};
+
+function mostrarToastCatalogo(tabla, msg, tipo){
+  const toast = document.querySelector(`.toast[data-catalogo="${tabla}"]`);
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.className = 'toast ' + tipo;
+  toast.style.display = 'block';
+  setTimeout(()=>{ toast.style.display='none'; }, 3000);
+}
+
+function renderCatalogo(tabla){
+  const filas = catalogosData[tabla] || [];
+  const tbody = document.querySelector(`.tbody-catalogo[data-catalogo="${tabla}"]`);
+  const vacio = document.querySelector(`.catalogo-vacio[data-catalogo="${tabla}"]`);
+  if (!tbody) return;
+  vacio.style.display = filas.length ? 'none' : 'block';
+  tbody.innerHTML = filas.map(r => `
+    <tr>
+      <td>${r.nombre}</td>
+      <td><span class="pill"${r.activo ? '' : ' style="opacity:.6;"'}>${r.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td>
+        <button type="button" class="primary" style="margin-top:0;padding:5px 12px;font-size:12px;background:${r.activo ? 'var(--danger)' : 'var(--accent)'};"
+          onclick="alternarCatalogo('${tabla}','${r.id}',${!r.activo})">
+          ${r.activo ? 'Desactivar' : 'Reactivar'}
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function cargarCatalogos(){
+  for (const tabla of TABLAS_CATALOGO) {
+    const { data, error } = await sb.from(tabla).select('*').order('nombre');
+    if (error) {
+      // No se sobrescribe catalogosData[tabla] con [] para no perder, de ser
+      // el caso, lo cargado en un intento anterior; solo se marca el error.
+      catalogosError[tabla] = true;
+      mostrarToastCatalogo(tabla, 'No se pudo cargar: ' + error.message, 'err');
+    } else {
+      catalogosError[tabla] = false;
+      catalogosData[tabla] = data || [];
+    }
+    renderCatalogo(tabla);
+  }
+  actualizarSelectsCatalogoAlta();
+}
+
+async function alternarCatalogo(tabla, id, nuevoEstado){
+  const { error } = await sb.from(tabla).update({ activo: nuevoEstado }).eq('id', id);
+  if (error) {
+    mostrarToastCatalogo(tabla, 'Error al actualizar: ' + error.message, 'err');
+    return;
+  }
+  const fila = (catalogosData[tabla] || []).find(r => r.id === id);
+  if (fila) fila.activo = nuevoEstado;
+  renderCatalogo(tabla);
+  actualizarSelectsCatalogoAlta();
+  mostrarToastCatalogo(tabla, nuevoEstado ? 'Valor reactivado.' : 'Valor desactivado.', 'ok');
+}
+
+document.querySelectorAll('.form-nuevo-catalogo').forEach(form=>{
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const tabla = this.dataset.catalogo;
+    const input = this.querySelector('.input-nuevo-catalogo');
+    const nombre = input.value.trim();
+
+    if (!nombre) {
+      mostrarToastCatalogo(tabla, 'El nombre no puede estar vacío.', 'err');
+      return;
+    }
+    const duplicado = (catalogosData[tabla] || []).some(r => r.nombre.trim().toLowerCase() === nombre.toLowerCase());
+    if (duplicado) {
+      mostrarToastCatalogo(tabla, 'Ya existe un valor con ese nombre.', 'err');
+      return;
+    }
+
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    const { data, error } = await sb.from(tabla).insert({ nombre }).select().single();
+    btn.disabled = false;
+
+    if (error) {
+      mostrarToastCatalogo(tabla, 'Error al guardar: ' + error.message, 'err');
+      return;
+    }
+    catalogosData[tabla] = catalogosData[tabla] || [];
+    catalogosData[tabla].push(data);
+    catalogosData[tabla].sort((a,b) => a.nombre.localeCompare(b.nombre, 'es'));
+    renderCatalogo(tabla);
+    actualizarSelectsCatalogoAlta();
+    input.value = '';
+    mostrarToastCatalogo(tabla, 'Valor agregado.', 'ok');
+  });
+});
 
 function mostrarLogin(){
   document.getElementById('app-content').style.display='none';

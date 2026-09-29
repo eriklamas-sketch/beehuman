@@ -123,6 +123,19 @@
           <div><label>Segundo apellido</label><input id="f-apellido2" type="text"></div>
         </div>
         <div class="grid3">
+          <div>
+            <label>RFC (opcional)</label>
+            <input id="f-rfc" type="text" maxlength="13" placeholder="Ej. LAAE850202AB1">
+            <p class="hint" id="f-rfc-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
+          </div>
+          <div>
+            <label>CURP (opcional)</label>
+            <input id="f-curp" type="text" maxlength="18" placeholder="Ej. LAAE850202HDFRRN08">
+            <p class="hint" id="f-curp-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
+          </div>
+          <div></div>
+        </div>
+        <div class="grid3">
           <div><label>Empresa / razón social</label><select id="f-empresa"></select></div>
           <div>
             <label>Registro patronal</label>
@@ -374,13 +387,20 @@
       <div class="grid3">
         <div><label>Nombre comercial</label><input id="em-nombre" type="text" required></div>
         <div><label>Razón social</label><input id="em-razon-social" type="text"></div>
-        <div><label>RFC</label><input id="em-rfc" type="text"></div>
+        <div>
+          <label>RFC</label>
+          <input id="em-rfc" type="text" maxlength="12" placeholder="Ej. LPT010203AB1">
+          <p class="hint" id="em-rfc-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
+        </div>
       </div>
 
       <h3>Domicilio fiscal</h3>
       <div class="grid3">
         <div><label>Código postal</label><input id="em-cp" type="text"></div>
-        <div><label>Estado</label><input id="em-estado" type="text"></div>
+        <div>
+          <label>Estado</label>
+          <select id="em-estado"></select>
+        </div>
         <div><label>Municipio / alcaldía</label><input id="em-municipio" type="text"></div>
       </div>
       <div class="grid3">
@@ -428,6 +448,19 @@
         <div><label>Segundo apellido</label><input id="d-apellido2"></div>
       </div>
       <p class="hint" id="d-nombre-historico" style="margin:6px 0 0;display:none;"></p>
+      <div class="grid3">
+        <div>
+          <label>RFC (opcional)</label>
+          <input id="d-rfc" type="text" maxlength="13" placeholder="Ej. LAAE850202AB1">
+          <p class="hint" id="d-rfc-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
+        </div>
+        <div>
+          <label>CURP (opcional)</label>
+          <input id="d-curp" type="text" maxlength="18" placeholder="Ej. LAAE850202HDFRRN08">
+          <p class="hint" id="d-curp-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
+        </div>
+        <div></div>
+      </div>
 
       <h3>Organización</h3>
       <div class="grid3">
@@ -800,6 +833,25 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
   const apellido1 = document.getElementById('f-apellido1').value.trim();
   const apellido2 = document.getElementById('f-apellido2').value.trim();
 
+  // 7D-5: RFC y CURP de la persona son opcionales; si se capturan, deben
+  // cumplir la estructura de un RFC de persona física / CURP válida.
+  document.getElementById('f-rfc-err').style.display = 'none';
+  document.getElementById('f-curp-err').style.display = 'none';
+  const rfcCheck = validarRFCPersona(document.getElementById('f-rfc').value);
+  const curpCheck = validarCURP(document.getElementById('f-curp').value);
+  let huboErrorIdentidad = false;
+  if (!rfcCheck.valido) {
+    document.getElementById('f-rfc-err').textContent = rfcCheck.error;
+    document.getElementById('f-rfc-err').style.display = 'block';
+    huboErrorIdentidad = true;
+  }
+  if (!curpCheck.valido) {
+    document.getElementById('f-curp-err').textContent = curpCheck.error;
+    document.getElementById('f-curp-err').style.display = 'block';
+    huboErrorIdentidad = true;
+  }
+  if (huboErrorIdentidad) { btn.disabled = false; return; }
+
   // 7C-4b: coordinador_id (directorio) y coordinador_externo (texto) son mutuamente
   // excluyentes. Según el modo elegido, se envía explícitamente null en el que no
   // corresponda para no dejar ambas opciones guardadas. El texto vacío se convierte
@@ -828,6 +880,8 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     primer_apellido: apellido1,
     segundo_apellido: apellido2,
     nombre_completo: [nombres, apellido1, apellido2].filter(Boolean).join(' '),
+    rfc: rfcCheck.valor,
+    curp: curpCheck.valor,
     empresa_id: document.getElementById('f-empresa').value || null,
     registro_patronal_id: document.getElementById('f-registro-patronal').disabled ? null : (document.getElementById('f-registro-patronal').value || null),
     tipo_empleado: document.getElementById('f-tipoempleado').value,
@@ -980,6 +1034,13 @@ async function abrirDetalle(id){
     nombreHist.style.display = 'none';
   }
 
+  // 7D-5: RFC y CURP se muestran tal como están guardados (aunque no
+  // cumplan el formato nuevo); solo se re-validan si el usuario los cambia.
+  document.getElementById('d-rfc').value = p.rfc || '';
+  document.getElementById('d-curp').value = p.curp || '';
+  document.getElementById('d-rfc-err').style.display = 'none';
+  document.getElementById('d-curp-err').style.display = 'none';
+
   document.getElementById('d-empresa').value = p.empresa_id||'';
   document.getElementById('d-proyecto').value = p.proyecto_id||'';
 
@@ -1129,8 +1190,46 @@ async function guardarDetalle(){
     ? { nombres: nombresForm, primer_apellido: apellido1Form, segundo_apellido: apellido2Form, nombre_completo: nombreCompletoForm }
     : { nombres: detalleActual.nombres, primer_apellido: detalleActual.primer_apellido, segundo_apellido: detalleActual.segundo_apellido, nombre_completo: detalleActual.nombre_completo };
 
+  // 7D-5: RFC y CURP solo se vuelven a validar si el usuario cambió el
+  // valor respecto al que ya tenía la persona. Así, un valor histórico
+  // que no cumpla el formato nuevo (o que ya sea válido) no se toca ni
+  // bloquea el guardado del resto del detalle; solo se valida lo que
+  // realmente se está capturando/modificando ahora.
+  document.getElementById('d-rfc-err').style.display = 'none';
+  document.getElementById('d-curp-err').style.display = 'none';
+  const rfcFormValor = normalizarExterior(document.getElementById('d-rfc').value);
+  const curpFormValor = normalizarExterior(document.getElementById('d-curp').value);
+  const rfcOriginal = normalizarExterior(detalleActual.rfc);
+  const curpOriginal = normalizarExterior(detalleActual.curp);
+  let rfcParaGuardar = detalleActual.rfc ?? null;
+  let curpParaGuardar = detalleActual.curp ?? null;
+  let huboErrorIdentidadDet = false;
+  if (rfcFormValor !== rfcOriginal) {
+    const rfcChk = validarRFCPersona(rfcFormValor);
+    if (!rfcChk.valido) {
+      document.getElementById('d-rfc-err').textContent = rfcChk.error;
+      document.getElementById('d-rfc-err').style.display = 'block';
+      huboErrorIdentidadDet = true;
+    } else {
+      rfcParaGuardar = rfcChk.valor;
+    }
+  }
+  if (curpFormValor !== curpOriginal) {
+    const curpChk = validarCURP(curpFormValor);
+    if (!curpChk.valido) {
+      document.getElementById('d-curp-err').textContent = curpChk.error;
+      document.getElementById('d-curp-err').style.display = 'block';
+      huboErrorIdentidadDet = true;
+    } else {
+      curpParaGuardar = curpChk.valor;
+    }
+  }
+  if (huboErrorIdentidadDet) { btn.disabled = false; return; }
+
   const nuevo = {
     ...identidad,
+    rfc: rfcParaGuardar,
+    curp: curpParaGuardar,
     empresa_id: document.getElementById('d-empresa').value || null,
     registro_patronal_id: document.getElementById('d-registro-patronal').disabled ? null : (document.getElementById('d-registro-patronal').value || null),
     proyecto_id: document.getElementById('d-proyecto').value || null,
@@ -1305,6 +1404,99 @@ document.querySelectorAll('.form-nuevo-catalogo').forEach(form=>{
     mostrarToastCatalogo(tabla, 'Valor agregado.', 'ok');
   });
 });
+
+// ---------------------------------------------------------------------
+// Validaciones estructurales de formato (7D-5): RFC, CURP y registro
+// patronal. Son validaciones de FORMATO/estructura únicamente: no
+// confirman ante el SAT, RENAPO ni el IMSS que el dato exista o esté
+// vigente. La base de datos también valida el formato como segunda
+// capa (triggers), pero solo cuando el valor se inserta o se cambia
+// de verdad, para no bloquear la edición de registros históricos que
+// ya tenían un valor que no cumple con el formato nuevo.
+// ---------------------------------------------------------------------
+function normalizarExterior(valor){
+  return (valor || '').trim().toUpperCase();
+}
+
+function fechaAAMMDDValida(mm, dd){
+  const mes = parseInt(mm, 10), dia = parseInt(dd, 10);
+  if (!(mes >= 1 && mes <= 12)) return false;
+  const diasPorMes = [31,29,31,30,31,30,31,31,30,31,30,31]; // permisivo con 29/feb por año de 2 dígitos
+  return dia >= 1 && dia <= diasPorMes[mes - 1];
+}
+
+// Devuelve { valido, valor, error }. `valor` ya viene normalizado
+// (mayúsculas, sin espacios al inicio/fin). Vacío siempre es válido:
+// RFC y CURP son opcionales en personal.
+function validarRFCEmpresa(valorCrudo){
+  const v = normalizarExterior(valorCrudo);
+  if (!v) return { valido: true, valor: null };
+  if (v.length !== 12) return { valido: false, valor: v, error: 'El RFC de una empresa (persona moral) debe tener 12 caracteres.' };
+  const m = v.match(/^([A-ZÑ&]{3})(\d{2})(\d{2})(\d{2})([A-Z0-9]{3})$/);
+  if (!m) return { valido: false, valor: v, error: 'El RFC no tiene el formato de persona moral (3 letras + 6 dígitos de fecha + 3 de homoclave).' };
+  if (!fechaAAMMDDValida(m[3], m[4])) return { valido: false, valor: v, error: 'El RFC no tiene una fecha válida (mes/día) en su estructura.' };
+  return { valido: true, valor: v };
+}
+
+function validarRFCPersona(valorCrudo){
+  const v = normalizarExterior(valorCrudo);
+  if (!v) return { valido: true, valor: null };
+  if (v.length !== 13) return { valido: false, valor: v, error: 'El RFC de una persona física debe tener 13 caracteres.' };
+  const m = v.match(/^([A-ZÑ&]{4})(\d{2})(\d{2})(\d{2})([A-Z0-9]{3})$/);
+  if (!m) return { valido: false, valor: v, error: 'El RFC no tiene el formato de persona física (4 letras + 6 dígitos de fecha + 3 de homoclave).' };
+  if (!fechaAAMMDDValida(m[3], m[4])) return { valido: false, valor: v, error: 'El RFC no tiene una fecha válida (mes/día) en su estructura.' };
+  return { valido: true, valor: v };
+}
+
+const CURP_REGEX = /^[A-Z][AEIOUX][A-Z]{2}\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])[HM](AS|BC|BS|CC|CS|CH|CL|CM|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QO|QR|SP|SL|SR|TC|TL|TS|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d$/;
+function validarCURP(valorCrudo){
+  const v = normalizarExterior(valorCrudo);
+  if (!v) return { valido: true, valor: null };
+  if (v.length !== 18) return { valido: false, valor: v, error: 'La CURP debe tener 18 caracteres.' };
+  if (!CURP_REGEX.test(v)) return { valido: false, valor: v, error: 'La CURP no tiene una estructura válida (revisa letras, fecha de nacimiento, sexo y entidad).' };
+  return { valido: true, valor: v };
+}
+
+// El registro patronal NO es opcional (se captura para agregarlo a una
+// empresa), por eso aquí la cadena vacía sí se marca inválida.
+function validarRegistroPatronal(valorCrudo){
+  const v = normalizarExterior(valorCrudo);
+  if (!v) return { valido: false, valor: v, error: 'El registro patronal no puede estar vacío.' };
+  if (!/^[A-Z]\d{10}$/.test(v)) {
+    return { valido: false, valor: v, error: 'El registro patronal debe tener 11 caracteres: 1 letra seguida de 10 dígitos (formato IMSS).' };
+  }
+  return { valido: true, valor: v };
+}
+
+// 7D-5: catálogo cerrado de las 32 entidades federativas de México, para
+// reemplazar el campo de texto libre "Estado" del domicilio fiscal y
+// evitar variantes escritas a mano ("morelos", "Edo. Mex.", etc.).
+const ESTADOS_MEXICO = [
+  'Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas',
+  'Chihuahua','Ciudad de México','Coahuila','Colima','Durango','Guanajuato',
+  'Guerrero','Hidalgo','Jalisco','México','Michoacán','Morelos','Nayarit',
+  'Nuevo León','Oaxaca','Puebla','Querétaro','Quintana Roo','San Luis Potosí',
+  'Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucatán','Zacatecas'
+];
+
+// Llena el <select> de estado con el catálogo cerrado. Si el valor
+// actualmente guardado no coincide (sin distinguir mayúsculas/espacios)
+// con ninguna entidad del catálogo, se agrega como opción adicional
+// marcada "(valor histórico)" para que quede visible y seleccionada sin
+// modificarla; el usuario decide si la corrige o no.
+function fillSelectEstado(sel, valorActual){
+  const val = (valorActual || '').trim();
+  // Coincidencia sin distinguir mayúsculas/minúsculas: "morelos" y "Morelos"
+  // son la misma entidad. Si coincide, se selecciona la grafía oficial
+  // (esto solo se guarda si el usuario efectivamente da clic en Guardar).
+  const canonico = val ? ESTADOS_MEXICO.find(e => e.toLowerCase() === val.toLowerCase()) : null;
+  let opciones = ESTADOS_MEXICO.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`);
+  if (val && !canonico) {
+    opciones.unshift(`<option value="${escapeHtml(val)}">${escapeHtml(val)} (valor histórico, corrígelo si quieres)</option>`);
+  }
+  sel.innerHTML = '<option value="">— Selecciona —</option>' + opciones.join('');
+  sel.value = canonico || val || '';
+}
 
 // ---------------------------------------------------------------------
 // Administración de empresas (7D-3): datos fiscales, domicilio estructurado
@@ -1524,8 +1716,9 @@ function abrirModalEmpresa(id){
   document.getElementById('em-nombre').value = e.nombre || '';
   document.getElementById('em-razon-social').value = e.razon_social || '';
   document.getElementById('em-rfc').value = e.rfc || '';
+  document.getElementById('em-rfc-err').style.display = 'none';
   document.getElementById('em-cp').value = e.codigo_postal || '';
-  document.getElementById('em-estado').value = e.estado || '';
+  fillSelectEstado(document.getElementById('em-estado'), e.estado || '');
   document.getElementById('em-municipio').value = e.municipio || '';
   document.getElementById('em-colonia').value = e.colonia || '';
   document.getElementById('em-calle').value = e.calle || '';
@@ -1553,6 +1746,14 @@ function nombreEmpresaDuplicado(nombre, excluirId){
   return empresas.some(e => e.id !== excluirId && e.nombre.trim().toLowerCase() === norm);
 }
 
+// 7D-5: evita RFC duplicados de empresa dentro del mismo tenant. Validación
+// de interfaz únicamente (mismo criterio que nombreEmpresaDuplicado arriba;
+// no se agregó una restricción UNIQUE nueva en Supabase para esto).
+function rfcEmpresaDuplicado(rfcNormalizado, excluirId){
+  if (!rfcNormalizado) return false;
+  return empresas.some(e => e.id !== excluirId && (e.rfc || '').trim().toUpperCase() === rfcNormalizado);
+}
+
 async function guardarEmpresa(){
   const btn = document.getElementById('btn-guardar-empresa');
   const nombre = document.getElementById('em-nombre').value.trim();
@@ -1562,10 +1763,33 @@ async function guardarEmpresa(){
     return;
   }
 
+  // 7D-5: el RFC solo se (re)valida si el usuario lo cambió respecto al
+  // valor ya guardado; así un RFC histórico con formato inválido no
+  // bloquea guardar otros cambios de la empresa si no se toca ese campo.
+  document.getElementById('em-rfc-err').style.display = 'none';
+  const empresaExistente = empresaModalId ? (empresas.find(x=>x.id===empresaModalId) || {}) : {};
+  const rfcFormValor = normalizarExterior(document.getElementById('em-rfc').value);
+  const rfcOriginal = normalizarExterior(empresaExistente.rfc);
+  let rfcParaGuardar = empresaExistente.rfc ?? null;
+  if (rfcFormValor !== rfcOriginal) {
+    const rfcChk = validarRFCEmpresa(rfcFormValor);
+    if (!rfcChk.valido) {
+      document.getElementById('em-rfc-err').textContent = rfcChk.error;
+      document.getElementById('em-rfc-err').style.display = 'block';
+      return;
+    }
+    if (rfcChk.valor && rfcEmpresaDuplicado(rfcChk.valor, empresaModalId)) {
+      document.getElementById('em-rfc-err').textContent = 'Ya existe una empresa con ese RFC.';
+      document.getElementById('em-rfc-err').style.display = 'block';
+      return;
+    }
+    rfcParaGuardar = rfcChk.valor;
+  }
+
   const campos = {
     nombre,
     razon_social: document.getElementById('em-razon-social').value.trim() || null,
-    rfc: document.getElementById('em-rfc').value.trim() || null,
+    rfc: rfcParaGuardar,
     codigo_postal: document.getElementById('em-cp').value.trim() || null,
     estado: document.getElementById('em-estado').value.trim() || null,
     municipio: document.getElementById('em-municipio').value.trim() || null,
@@ -1625,10 +1849,15 @@ document.getElementById('form-nuevo-registro-patronal').addEventListener('submit
   e.preventDefault();
   if (!empresaModalId) return;
   const input = document.getElementById('input-nuevo-registro-patronal');
-  const valor = input.value.trim();
-  if (!valor) { mostrarToastRegistroPatronal('El registro patronal no puede estar vacío.', 'err'); return; }
 
-  const duplicado = registrosPatronales.some(r => r.empresa_id === empresaModalId && r.registro_patronal.trim().toLowerCase() === valor.toLowerCase());
+  // 7D-5: formato IMSS (11 caracteres: 1 letra + 10 dígitos), normalizando
+  // a mayúsculas y sin espacios al inicio/fin antes de validar y guardar.
+  // Esto es una validación estructural, no una verificación ante el IMSS.
+  const chk = validarRegistroPatronal(input.value);
+  if (!chk.valido) { mostrarToastRegistroPatronal(chk.error, 'err'); return; }
+  const valor = chk.valor;
+
+  const duplicado = registrosPatronales.some(r => r.empresa_id === empresaModalId && r.registro_patronal.trim().toUpperCase() === valor);
   if (duplicado) { mostrarToastRegistroPatronal('Ese registro patronal ya existe para esta empresa.', 'err'); return; }
 
   const btn = this.querySelector('button[type="submit"]');

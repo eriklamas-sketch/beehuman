@@ -133,6 +133,19 @@
             <input id="f-curp" type="text" maxlength="18" placeholder="Ej. LAAE850202HDFRRN08">
             <p class="hint" id="f-curp-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
           </div>
+          <div>
+            <label>NSS (opcional)</label>
+            <input id="f-nss" type="text" maxlength="15" inputmode="numeric" placeholder="11 dígitos">
+            <p class="hint" id="f-nss-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
+          </div>
+        </div>
+        <div class="grid3">
+          <div>
+            <label>Código postal fiscal (opcional)</label>
+            <input id="f-cp-fiscal" type="text" maxlength="5" inputmode="numeric" placeholder="Ej. 06600">
+            <p class="hint" id="f-cp-fiscal-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
+          </div>
+          <div></div>
           <div></div>
         </div>
         <div class="grid3">
@@ -300,6 +313,24 @@
   </section>
 
   <section class="panel" id="panel-catalogos">
+    <div class="card" id="card-clasificaciones">
+      <h2>Clasificaciones de personal</h2>
+      <p class="hint">Cada clasificación define qué datos del expediente (RFC, CURP, NSS, código postal fiscal) se exigen a la persona cuando tiene un registro de pago activo de esa clasificación. Desactivar una clasificación la oculta para nuevas asignaciones, pero conserva las que ya existan. No se eliminan.</p>
+      <form id="form-nueva-clasificacion" style="margin-bottom:16px;">
+        <div style="display:flex;gap:10px;align-items:flex-end;">
+          <div style="flex:1;"><label>Nueva clasificación</label><input type="text" id="input-nueva-clasificacion" placeholder="Ej. Asimilado a salarios"></div>
+          <button type="submit" class="primary" style="margin-top:0;">Agregar</button>
+        </div>
+        <div class="checks" id="nueva-clasificacion-requisitos" style="margin-top:10px;"></div>
+      </form>
+      <div class="toast" id="toast-clasificaciones"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nombre</th><th>Datos que exige</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="tabla-clasificaciones"></tbody></table>
+      </div>
+      <div class="empty" id="clasificaciones-vacio" style="display:none;">Sin clasificaciones capturadas todavía.</div>
+    </div>
+
     <div class="card" data-catalogo="areas">
       <h2>Áreas</h2>
       <p class="hint">Desactivar un valor lo oculta para nuevas asignaciones, pero conserva las que ya existan.</p>
@@ -459,6 +490,19 @@
           <input id="d-curp" type="text" maxlength="18" placeholder="Ej. LAAE850202HDFRRN08">
           <p class="hint" id="d-curp-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
         </div>
+        <div>
+          <label>NSS (opcional)</label>
+          <input id="d-nss" type="text" maxlength="15" inputmode="numeric" placeholder="11 dígitos">
+          <p class="hint" id="d-nss-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
+        </div>
+      </div>
+      <div class="grid3">
+        <div>
+          <label>Código postal fiscal (opcional)</label>
+          <input id="d-cp-fiscal" type="text" maxlength="5" inputmode="numeric" placeholder="Ej. 06600">
+          <p class="hint" id="d-cp-fiscal-err" style="display:none;color:var(--danger);margin:4px 0 0;font-size:12px;"></p>
+        </div>
+        <div></div>
         <div></div>
       </div>
 
@@ -778,7 +822,7 @@ function renderTabla(){
 
 async function actualizarCampo(id,campo,valor){
   const { error } = await sb.from('personal').update({[campo]:valor}).eq('id',id);
-  if (error){ alert('No se pudo guardar: '+error.message); return; }
+  if (error){ alert('No se pudo guardar: '+traducirErrorSupabase(error)); return; }
   await sb.from('movimientos').insert({personal_id:id,campo,valor_nuevo:valor,usuario:'admin'});
   const p = personal.find(x=>x.id===id); if(p) p[campo]=valor;
   renderResumen();
@@ -837,8 +881,13 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
   // cumplir la estructura de un RFC de persona física / CURP válida.
   document.getElementById('f-rfc-err').style.display = 'none';
   document.getElementById('f-curp-err').style.display = 'none';
+  document.getElementById('f-nss-err').style.display = 'none';
+  document.getElementById('f-cp-fiscal-err').style.display = 'none';
   const rfcCheck = validarRFCPersona(document.getElementById('f-rfc').value);
   const curpCheck = validarCURP(document.getElementById('f-curp').value);
+  // 7D-6b (P1): NSS y CP fiscal, opcionales; si se capturan, deben cumplir formato.
+  const nssCheck = validarNSS(document.getElementById('f-nss').value);
+  const cpFiscalCheck = validarCPFiscal(document.getElementById('f-cp-fiscal').value);
   let huboErrorIdentidad = false;
   if (!rfcCheck.valido) {
     document.getElementById('f-rfc-err').textContent = rfcCheck.error;
@@ -848,6 +897,16 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
   if (!curpCheck.valido) {
     document.getElementById('f-curp-err').textContent = curpCheck.error;
     document.getElementById('f-curp-err').style.display = 'block';
+    huboErrorIdentidad = true;
+  }
+  if (!nssCheck.valido) {
+    document.getElementById('f-nss-err').textContent = nssCheck.error;
+    document.getElementById('f-nss-err').style.display = 'block';
+    huboErrorIdentidad = true;
+  }
+  if (!cpFiscalCheck.valido) {
+    document.getElementById('f-cp-fiscal-err').textContent = cpFiscalCheck.error;
+    document.getElementById('f-cp-fiscal-err').style.display = 'block';
     huboErrorIdentidad = true;
   }
   if (huboErrorIdentidad) { btn.disabled = false; return; }
@@ -882,6 +941,8 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     nombre_completo: [nombres, apellido1, apellido2].filter(Boolean).join(' '),
     rfc: rfcCheck.valor,
     curp: curpCheck.valor,
+    nss: nssCheck.valor,
+    cp_fiscal: cpFiscalCheck.valor,
     empresa_id: document.getElementById('f-empresa').value || null,
     registro_patronal_id: document.getElementById('f-registro-patronal').disabled ? null : (document.getElementById('f-registro-patronal').value || null),
     tipo_empleado: document.getElementById('f-tipoempleado').value,
@@ -1040,6 +1101,12 @@ async function abrirDetalle(id){
   document.getElementById('d-curp').value = p.curp || '';
   document.getElementById('d-rfc-err').style.display = 'none';
   document.getElementById('d-curp-err').style.display = 'none';
+  // 7D-6b (P1): NSS y CP fiscal, mismo criterio que RFC/CURP: se muestran
+  // tal como están guardados y solo se re-validan si el usuario los cambia.
+  document.getElementById('d-nss').value = p.nss || '';
+  document.getElementById('d-cp-fiscal').value = p.cp_fiscal || '';
+  document.getElementById('d-nss-err').style.display = 'none';
+  document.getElementById('d-cp-fiscal-err').style.display = 'none';
 
   document.getElementById('d-empresa').value = p.empresa_id||'';
   document.getElementById('d-proyecto').value = p.proyecto_id||'';
@@ -1224,12 +1291,43 @@ async function guardarDetalle(){
       curpParaGuardar = curpChk.valor;
     }
   }
+  // 7D-6b (P1): NSS y CP fiscal — solo se validan si cambiaron respecto al
+  // valor guardado (comparando ya normalizados); si no cambiaron se reenvía
+  // exactamente el valor original, para no tocar datos históricos.
+  document.getElementById('d-nss-err').style.display = 'none';
+  document.getElementById('d-cp-fiscal-err').style.display = 'none';
+  const nssFormValor = normalizarNSS(document.getElementById('d-nss').value);
+  const cpFiscalFormValor = normalizarCP(document.getElementById('d-cp-fiscal').value);
+  let nssParaGuardar = detalleActual.nss ?? null;
+  let cpFiscalParaGuardar = detalleActual.cp_fiscal ?? null;
+  if (nssFormValor !== normalizarNSS(detalleActual.nss)) {
+    const nssChk = validarNSS(nssFormValor);
+    if (!nssChk.valido) {
+      document.getElementById('d-nss-err').textContent = nssChk.error;
+      document.getElementById('d-nss-err').style.display = 'block';
+      huboErrorIdentidadDet = true;
+    } else {
+      nssParaGuardar = nssChk.valor;
+    }
+  }
+  if (cpFiscalFormValor !== normalizarCP(detalleActual.cp_fiscal)) {
+    const cpChk = validarCPFiscal(cpFiscalFormValor);
+    if (!cpChk.valido) {
+      document.getElementById('d-cp-fiscal-err').textContent = cpChk.error;
+      document.getElementById('d-cp-fiscal-err').style.display = 'block';
+      huboErrorIdentidadDet = true;
+    } else {
+      cpFiscalParaGuardar = cpChk.valor;
+    }
+  }
   if (huboErrorIdentidadDet) { btn.disabled = false; return; }
 
   const nuevo = {
     ...identidad,
     rfc: rfcParaGuardar,
     curp: curpParaGuardar,
+    nss: nssParaGuardar,
+    cp_fiscal: cpFiscalParaGuardar,
     empresa_id: document.getElementById('d-empresa').value || null,
     registro_patronal_id: document.getElementById('d-registro-patronal').disabled ? null : (document.getElementById('d-registro-patronal').value || null),
     proyecto_id: document.getElementById('d-proyecto').value || null,
@@ -1300,6 +1398,7 @@ async function mostrarApp(){
   await cargarPersonal();
   await cargarEmpresasAdmin();
   await cargarCatalogos();
+  await cargarClasificaciones();
 }
 
 // ---------------------------------------------------------------------
@@ -1359,7 +1458,7 @@ async function cargarCatalogos(){
 async function alternarCatalogo(tabla, id, nuevoEstado){
   const { error } = await sb.from(tabla).update({ activo: nuevoEstado }).eq('id', id);
   if (error) {
-    mostrarToastCatalogo(tabla, 'Error al actualizar: ' + error.message, 'err');
+    mostrarToastCatalogo(tabla, 'No se pudo actualizar: ' + traducirErrorSupabase(error), 'err');
     return;
   }
   const fila = (catalogosData[tabla] || []).find(r => r.id === id);
@@ -1392,7 +1491,7 @@ document.querySelectorAll('.form-nuevo-catalogo').forEach(form=>{
     btn.disabled = false;
 
     if (error) {
-      mostrarToastCatalogo(tabla, 'Error al guardar: ' + error.message, 'err');
+      mostrarToastCatalogo(tabla, 'No se pudo guardar: ' + traducirErrorSupabase(error), 'err');
       return;
     }
     catalogosData[tabla] = catalogosData[tabla] || [];
@@ -1403,6 +1502,202 @@ document.querySelectorAll('.form-nuevo-catalogo').forEach(form=>{
     input.value = '';
     mostrarToastCatalogo(tabla, 'Valor agregado.', 'ok');
   });
+});
+
+// ---------------------------------------------------------------------
+// Clasificaciones de personal (7D-6b, P2). Catálogo `clasificaciones_personal`
+// (por tenant, RLS de 7D-6). Cada fila tiene un nombre, un estado activo y
+// cuatro banderas requiere_* que indican qué datos del expediente se exigen
+// cuando la persona tiene un registro de pago ACTIVO de esa clasificación
+// (la regla la aplica la base de datos en 7D-6a; aquí solo se administra
+// el catálogo).
+//   - Se permite editar nombre, banderas y estado (decisión D6).
+//   - Cambiar banderas NO es retroactivo: los registros existentes conservan
+//     su clasificación y no se revisan ni se modifican. Por eso se pide
+//     confirmación explícita antes de guardar un cambio de banderas.
+//   - No hay borrado: se desactiva.
+//   - Esta interfaz NO lee ni escribe personal.clasificacion_id (modelo 7D-6
+//     anterior, superado).
+// ---------------------------------------------------------------------
+const REQUISITOS_CLASIFICACION = [
+  { bandera: 'requiere_rfc',       etiqueta: 'RFC' },
+  { bandera: 'requiere_curp',      etiqueta: 'CURP' },
+  { bandera: 'requiere_nss',       etiqueta: 'NSS' },
+  { bandera: 'requiere_cp_fiscal', etiqueta: 'Código postal fiscal' }
+];
+let clasificaciones = [];
+let clasificacionesError = false;
+let clasificacionEditandoId = null;
+
+function mostrarToastClasificaciones(msg, tipo){
+  const toast = document.getElementById('toast-clasificaciones');
+  toast.textContent = msg;
+  toast.className = 'toast ' + tipo;
+  toast.style.display = 'block';
+  setTimeout(()=>{ toast.style.display='none'; }, 4000);
+}
+
+function checksRequisitosHTML(valores){
+  return REQUISITOS_CLASIFICACION.map(r =>
+    `<label><input type="checkbox" data-bandera="${r.bandera}"${valores && valores[r.bandera] ? ' checked' : ''}> ${escapeHtml(r.etiqueta)}</label>`
+  ).join('');
+}
+
+function leerRequisitos(contenedor){
+  const valores = {};
+  REQUISITOS_CLASIFICACION.forEach(r=>{
+    const cb = contenedor.querySelector(`input[data-bandera="${r.bandera}"]`);
+    valores[r.bandera] = !!(cb && cb.checked);
+  });
+  return valores;
+}
+
+function textoRequisitos(c){
+  const lista = REQUISITOS_CLASIFICACION.filter(r=>c[r.bandera]).map(r=>r.etiqueta);
+  return lista.length ? lista.join(', ') : 'Ninguno';
+}
+
+function nombreClasificacionDuplicado(nombre, excluirId){
+  const n = nombre.trim().toLowerCase();
+  return clasificaciones.some(c => c.id !== excluirId && (c.nombre || '').trim().toLowerCase() === n);
+}
+
+function renderClasificaciones(){
+  const tbody = document.getElementById('tabla-clasificaciones');
+  const vacio = document.getElementById('clasificaciones-vacio');
+  const filas = clasificaciones.slice().sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'));
+  vacio.style.display = filas.length ? 'none' : 'block';
+  tbody.innerHTML = filas.map(c => {
+    const idAttr = escapeHtml(c.id);
+    if (c.id === clasificacionEditandoId) {
+      return `
+      <tr>
+        <td colspan="4">
+          <label>Nombre</label>
+          <input type="text" id="edit-clasificacion-nombre" value="${escapeHtml(c.nombre)}">
+          <label style="margin-top:10px;">Datos que exige</label>
+          <div class="checks" id="edit-clasificacion-requisitos">${checksRequisitosHTML(c)}</div>
+          <p class="hint" style="margin:8px 0 0;color:var(--danger);font-size:12px;">Cambiar los datos que exige NO es retroactivo: los registros de pago existentes conservan esta clasificación y no se revisan ni se modifican. Los requisitos nuevos solo se aplicarán a partir de ahora. El nombre nuevo sí se mostrará también donde ya se use.</p>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="button" class="primary" style="margin-top:0;padding:5px 12px;font-size:12px;" onclick="guardarEdicionClasificacion('${idAttr}')">Guardar</button>
+            <button type="button" class="primary" style="margin-top:0;padding:5px 12px;font-size:12px;background:var(--surface-2);color:var(--text);" onclick="cancelarEdicionClasificacion()">Cancelar</button>
+          </div>
+        </td>
+      </tr>`;
+    }
+    return `
+      <tr>
+        <td>${escapeHtml(c.nombre)}</td>
+        <td>${escapeHtml(textoRequisitos(c))}</td>
+        <td><span class="pill"${c.activo ? '' : ' style="opacity:.6;"'}>${c.activo ? 'Activa' : 'Inactiva'}</span></td>
+        <td style="white-space:nowrap;">
+          <button type="button" class="primary" style="margin-top:0;padding:5px 12px;font-size:12px;background:var(--surface-2);color:var(--text);" onclick="editarClasificacion('${idAttr}')">Editar</button>
+          <button type="button" class="primary" style="margin-top:0;padding:5px 12px;font-size:12px;background:${c.activo ? 'var(--danger)' : 'var(--accent)'};"
+            onclick="alternarClasificacion('${idAttr}',${!c.activo})">${c.activo ? 'Desactivar' : 'Reactivar'}</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+async function cargarClasificaciones(){
+  const { data, error } = await sb.from('clasificaciones_personal').select('*').order('nombre');
+  if (error) {
+    // Se conserva lo cargado anteriormente (si lo hubo); solo se marca el error.
+    clasificacionesError = true;
+    mostrarToastClasificaciones('No se pudo cargar: ' + error.message, 'err');
+  } else {
+    clasificacionesError = false;
+    clasificaciones = data || [];
+  }
+  renderClasificaciones();
+}
+
+function editarClasificacion(id){
+  clasificacionEditandoId = id;
+  renderClasificaciones();
+}
+
+function cancelarEdicionClasificacion(){
+  clasificacionEditandoId = null;
+  renderClasificaciones();
+}
+
+async function guardarEdicionClasificacion(id){
+  const original = clasificaciones.find(c=>c.id===id);
+  if (!original) return;
+  const nombre = document.getElementById('edit-clasificacion-nombre').value.trim();
+  const requisitos = leerRequisitos(document.getElementById('edit-clasificacion-requisitos'));
+
+  if (!nombre) { mostrarToastClasificaciones('El nombre no puede estar vacío.', 'err'); return; }
+  if (nombreClasificacionDuplicado(nombre, id)) { mostrarToastClasificaciones('Ya existe una clasificación con ese nombre.', 'err'); return; }
+
+  const cambioNombre = nombre !== (original.nombre || '');
+  const banderasCambiadas = REQUISITOS_CLASIFICACION.filter(r => !!original[r.bandera] !== requisitos[r.bandera]);
+  if (!cambioNombre && !banderasCambiadas.length) {
+    clasificacionEditandoId = null;
+    renderClasificaciones();
+    mostrarToastClasificaciones('Sin cambios.', 'ok');
+    return;
+  }
+
+  // D6: advertencia explícita cuando cambian las banderas (no retroactivo).
+  if (banderasCambiadas.length) {
+    const antes = textoRequisitos(original);
+    const despues = textoRequisitos(requisitos);
+    const ok = confirm(
+      `Vas a cambiar los datos que exige "${original.nombre}".\n\n` +
+      `Antes: ${antes}\nDespués: ${despues}\n\n` +
+      'Este cambio NO es retroactivo: los registros de pago existentes conservan su clasificación y no se revisan ni se modifican. ' +
+      'Los requisitos nuevos solo se aplicarán a partir de ahora, cuando se dé de alta, se reactive o se cambie a esta clasificación un registro de pago.\n\n' +
+      '¿Deseas continuar?'
+    );
+    if (!ok) return;
+  }
+
+  const { data, error } = await sb.from('clasificaciones_personal')
+    .update({ nombre, ...requisitos })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) { mostrarToastClasificaciones('No se pudo guardar: ' + traducirErrorSupabase(error), 'err'); return; }
+
+  clasificaciones = clasificaciones.map(c => c.id === id ? data : c);
+  clasificacionEditandoId = null;
+  renderClasificaciones();
+  mostrarToastClasificaciones('Clasificación actualizada.', 'ok');
+}
+
+async function alternarClasificacion(id, nuevoEstado){
+  const { error } = await sb.from('clasificaciones_personal').update({ activo: nuevoEstado }).eq('id', id);
+  if (error) { mostrarToastClasificaciones('No se pudo actualizar: ' + traducirErrorSupabase(error), 'err'); return; }
+  const fila = clasificaciones.find(c => c.id === id);
+  if (fila) fila.activo = nuevoEstado;
+  renderClasificaciones();
+  mostrarToastClasificaciones(nuevoEstado ? 'Clasificación reactivada.' : 'Clasificación desactivada.', 'ok');
+}
+
+document.getElementById('nueva-clasificacion-requisitos').innerHTML = checksRequisitosHTML(null);
+
+document.getElementById('form-nueva-clasificacion').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const input = document.getElementById('input-nueva-clasificacion');
+  const nombre = input.value.trim();
+  if (clasificacionesError) { mostrarToastClasificaciones('El catálogo no se cargó correctamente; recarga la página antes de agregar para evitar duplicados.', 'err'); return; }
+  if (!nombre) { mostrarToastClasificaciones('El nombre no puede estar vacío.', 'err'); return; }
+  if (nombreClasificacionDuplicado(nombre, null)) { mostrarToastClasificaciones('Ya existe una clasificación con ese nombre.', 'err'); return; }
+
+  const requisitos = leerRequisitos(document.getElementById('nueva-clasificacion-requisitos'));
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  const { data, error } = await sb.from('clasificaciones_personal').insert({ nombre, ...requisitos }).select().single();
+  btn.disabled = false;
+  if (error) { mostrarToastClasificaciones('No se pudo guardar: ' + traducirErrorSupabase(error), 'err'); return; }
+
+  clasificaciones.push(data);
+  renderClasificaciones();
+  input.value = '';
+  document.getElementById('nueva-clasificacion-requisitos').innerHTML = checksRequisitosHTML(null);
+  mostrarToastClasificaciones('Clasificación agregada.', 'ok');
 });
 
 // ---------------------------------------------------------------------
@@ -1454,6 +1749,32 @@ function validarCURP(valorCrudo){
   if (!v) return { valido: true, valor: null };
   if (v.length !== 18) return { valido: false, valor: v, error: 'La CURP debe tener 18 caracteres.' };
   if (!CURP_REGEX.test(v)) return { valido: false, valor: v, error: 'La CURP no tiene una estructura válida (revisa letras, fecha de nacimiento, sexo y entidad).' };
+  return { valido: true, valor: v };
+}
+
+// 7D-6b (P1): NSS y código postal fiscal de la persona. Mismas reglas que
+// las funciones de Supabase es_nss_valido / es_cp_valido, que el trigger
+// validar_nss_cp_persona aplica solo cuando el valor se inserta o cambia:
+//   - NSS: exactamente 11 dígitos (se aceptan espacios o guiones al
+//     capturar y se eliminan antes de guardar).
+//   - CP fiscal: 5 dígitos, sin empezar con "00" (01000 a 99999).
+// Vacío siempre es válido aquí: son opcionales en el expediente. Cuando
+// un registro de pago activo los exija (7D-6a), la base de datos rechaza
+// el cambio y el mensaje se traduce en mensajeErrorGuardarPersonal.
+function normalizarNSS(valor){ return (valor || '').replace(/[\s-]/g, ''); }
+function normalizarCP(valor){ return (valor || '').trim(); }
+
+function validarNSS(valorCrudo){
+  const v = normalizarNSS(valorCrudo);
+  if (!v) return { valido: true, valor: null };
+  if (!/^\d{11}$/.test(v)) return { valido: false, valor: v, error: 'El NSS debe tener exactamente 11 dígitos.' };
+  return { valido: true, valor: v };
+}
+
+function validarCPFiscal(valorCrudo){
+  const v = normalizarCP(valorCrudo);
+  if (!v) return { valido: true, valor: null };
+  if (!/^\d{5}$/.test(v) || v.startsWith('00')) return { valido: false, valor: v, error: 'El código postal fiscal debe tener 5 dígitos (01000 a 99999).' };
   return { valido: true, valor: v };
 }
 
@@ -1570,16 +1891,77 @@ function fillSelectRegistroPatronal(sel, empresaId, valorActual){
   return { sinActivos: activos.length === 0 };
 }
 
-// Mensaje amigable (23503 = foreign_key_violation) por si, a pesar del
-// filtro de la interfaz, llega a intentarse guardar una combinación
-// empresa/registro patronal inválida — la FK compuesta de Supabase es la
-// que realmente lo bloquea; aquí solo se traduce el error a un mensaje
-// legible en vez de duplicar esa validación en JavaScript.
-function mensajeErrorGuardarPersonal(error){
-  if (error.code === '23503') {
-    return 'El registro patronal seleccionado no pertenece a la empresa elegida. Verifica ambos campos.';
+// ---------------------------------------------------------------------
+// Traducción de errores de Supabase (7D-6b, P3). La base de datos es la
+// que valida de verdad (FK, CHECK, RLS, triggers); aquí solo se convierte
+// el error técnico en un mensaje legible, sin duplicar las reglas.
+// Orden: (1) restricción con nombre conocido, (2) código SQLSTATE /
+// PostgREST, (3) error de red, (4) mensaje original como último recurso.
+// Las restricciones prp_* pertenecen a personal_registros_pago (7D-6a):
+// no se usan hasta que esa migración exista, pero dejarlas aquí no afecta
+// nada mientras tanto.
+// ---------------------------------------------------------------------
+const MENSAJES_RESTRICCION = {
+  personal_registro_patronal_empresa_fkey: 'El registro patronal seleccionado no pertenece a la empresa elegida. Verifica ambos campos.',
+  personal_coordinador_excluyente: 'El coordinador no puede ser a la vez del directorio y externo. Elige solo una opción.',
+  personal_empleado_id_key: 'Ya existe otra persona con ese ID de empleado.',
+  empresas_registros_patronales_empresa_id_registro_patronal_key: 'Ese registro patronal ya existe para esta empresa.',
+  prp_sueldo_mayor_cero: 'El sueldo debe ser mayor que cero.',
+  prp_modalidad_valida: 'La modalidad del sueldo debe ser bruto o neto.',
+  prp_dias_periodo_positivo: 'Los días del periodo deben ser mayores que cero, o déjalos vacíos para usar los de la periodicidad.',
+  prp_fechas_coherentes: 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+  prp_registro_patronal_con_empresa: 'Para asignar un registro patronal primero elige la empresa.',
+  prp_registro_patronal_fkey: 'El registro patronal seleccionado no pertenece a la empresa elegida.',
+  prp_personal_fkey: 'La persona indicada no existe o pertenece a otra organización.',
+  prp_clasificacion_fkey: 'La clasificación elegida no existe o pertenece a otra organización.',
+  prp_periodicidad_fkey: 'La periodicidad elegida no existe o pertenece a otra organización.',
+  prp_empresa_fkey: 'La empresa elegida no existe o pertenece a otra organización.'
+};
+
+// Guía adicional según el `hint` técnico que ponen los triggers de
+// requisitos (el hint en sí no se muestra al usuario).
+const GUIA_POR_HINT = {
+  requisitos_registro_pago: ' Completa esos datos en la sección Identidad del expediente y vuelve a intentarlo.',
+  requisitos_expediente: ' Captura un valor válido o, si ya no aplica, cierra primero el registro de pago que lo exige.'
+};
+
+function restriccionDelError(error){
+  const texto = [error.message, error.details].filter(Boolean).join(' ');
+  const m = texto.match(/constraint "([^"]+)"/);
+  return m ? m[1] : null;
+}
+
+function traducirErrorSupabase(error){
+  if (!error) return 'Ocurrió un error desconocido.';
+  const restriccion = restriccionDelError(error);
+  if (restriccion && MENSAJES_RESTRICCION[restriccion]) return MENSAJES_RESTRICCION[restriccion];
+  switch (error.code) {
+    case 'P0001':
+      // RAISE EXCEPTION de los triggers de BeeHuman: su mensaje ya está
+      // redactado en español para el usuario (formato de RFC/CURP/NSS/CP,
+      // requisitos, tenant, borrado bloqueado, etc.).
+      return (error.message || 'La operación fue rechazada por una regla de validación.') + (GUIA_POR_HINT[error.hint] || '');
+    case '23505': return 'Ya existe un registro con esos datos.';
+    case '23503': return 'Uno de los valores seleccionados ya no existe o no es válido. Recarga la página y vuelve a intentarlo.';
+    case '23514': return 'Algún dato no cumple las reglas de validación. Revisa los campos y vuelve a intentarlo.';
+    case '23502': return 'Falta capturar un dato obligatorio.';
+    case '22P02': case '22003': case '22007': case '22008':
+      return 'Algún dato tiene un formato no válido (número o fecha).';
+    case '42501': return 'No tienes permiso para realizar esta operación o tu sesión ya no es válida. Vuelve a iniciar sesión.';
+    case 'PGRST301': case 'PGRST303': return 'Tu sesión expiró. Vuelve a iniciar sesión.';
+    case '40001': case '40P01': return 'Otra persona modificó esta información al mismo tiempo. Recarga y vuelve a intentarlo.';
   }
-  return 'Error al guardar: ' + error.message;
+  if (/failed to fetch|networkerror|load failed/i.test(error.message || '')) {
+    return 'No hay conexión con el servidor. Revisa tu conexión a internet y vuelve a intentarlo.';
+  }
+  return error.message || 'Ocurrió un error desconocido.';
+}
+
+// Personal (Alta/Detalle). Antes, cualquier 23503 se mostraba como "registro
+// patronal no pertenece a la empresa"; ahora ese mensaje solo aparece si la
+// restricción que falló es realmente personal_registro_patronal_empresa_fkey.
+function mensajeErrorGuardarPersonal(error){
+  return 'No se pudo guardar: ' + traducirErrorSupabase(error);
 }
 
 // Registro patronal predeterminado (ajuste de usabilidad post-7D-4): al
@@ -1700,7 +2082,7 @@ async function alternarEmpresa(id, nuevoEstado){
     }
   }
   const { error } = await sb.from('empresas').update({ activo: nuevoEstado }).eq('id', id);
-  if (error) { mostrarToastEmpresa('Error al actualizar: ' + error.message, 'err'); return; }
+  if (error) { mostrarToastEmpresa('No se pudo actualizar: ' + traducirErrorSupabase(error), 'err'); return; }
   const e = empresas.find(x=>x.id===id);
   if (e) e.activo = nuevoEstado;
   renderTablaEmpresas();
@@ -1803,7 +2185,7 @@ async function guardarEmpresa(){
   if (!empresaModalId) {
     const { data, error } = await sb.from('empresas').insert(campos).select().single();
     btn.disabled = false;
-    if (error) { mostrarToastEmpresa('Error al guardar: ' + error.message, 'err'); return; }
+    if (error) { mostrarToastEmpresa('No se pudo guardar: ' + traducirErrorSupabase(error), 'err'); return; }
     empresas.push(data);
     empresaModalId = data.id;
     document.getElementById('modal-empresa-titulo').textContent = 'Editar empresa';
@@ -1814,7 +2196,7 @@ async function guardarEmpresa(){
   } else {
     const { error } = await sb.from('empresas').update(campos).eq('id', empresaModalId);
     btn.disabled = false;
-    if (error) { mostrarToastEmpresa('Error al guardar: ' + error.message, 'err'); return; }
+    if (error) { mostrarToastEmpresa('No se pudo guardar: ' + traducirErrorSupabase(error), 'err'); return; }
     const e = empresas.find(x=>x.id===empresaModalId);
     if (e) Object.assign(e, campos);
     mostrarToastEmpresa('Cambios guardados.', 'ok');
@@ -1867,7 +2249,7 @@ document.getElementById('form-nuevo-registro-patronal').addEventListener('submit
 
   if (error) {
     // 23505 = unique_violation -- por si dos pestañas/usuarios insertan a la vez
-    const msg = error.code === '23505' ? 'Ese registro patronal ya existe para esta empresa.' : 'Error al guardar: ' + error.message;
+    const msg = 'No se pudo guardar: ' + traducirErrorSupabase(error);
     mostrarToastRegistroPatronal(msg, 'err');
     return;
   }
@@ -1881,7 +2263,7 @@ document.getElementById('form-nuevo-registro-patronal').addEventListener('submit
 
 async function alternarRegistroPatronal(id, nuevoEstado){
   const { error } = await sb.from('empresas_registros_patronales').update({ activo: nuevoEstado }).eq('id', id);
-  if (error) { mostrarToastRegistroPatronal('Error al actualizar: ' + error.message, 'err'); return; }
+  if (error) { mostrarToastRegistroPatronal('No se pudo actualizar: ' + traducirErrorSupabase(error), 'err'); return; }
   const r = registrosPatronales.find(x=>x.id===id);
   if (r) r.activo = nuevoEstado;
   renderTablaRegistrosPatronales();

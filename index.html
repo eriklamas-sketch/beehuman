@@ -74,6 +74,8 @@
   .concepto-row input{width:120px;}
   .badge-bruto{font-size:10px;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent-text);}
   .badge-otro{font-size:10px;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--text-muted);}
+  .rp-sub{font-size:12px;color:var(--text-muted);}
+  .rp-cerrado td{color:var(--text-muted);}
   .totales{display:flex;gap:20px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:13.5px;}
   .totales b{font-size:16px;}
   #login-screen{display:none;}
@@ -96,24 +98,24 @@
   <header class="top">
     <div class="brand">Bee<span>Human</span></div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <div class="tag">Conectado a Supabase</div>
+      <div class="tag">Sesión activa</div>
       <button class="primary" style="margin-top:0;padding:6px 14px;font-size:12px;" onclick="cerrarSesion()">Salir</button>
     </div>
   </header>
   <div id="conn-status"></div>
 
   <nav class="tabs">
-    <button class="active" data-tab="alta">Alta de personal</button>
-    <button data-tab="lista">Personal</button>
+    <button class="active" data-tab="lista">Personal</button>
     <button data-tab="resumen">Resumen</button>
+    <button data-tab="alta">Alta de personal</button>
     <button data-tab="empresas">Empresas</button>
     <button data-tab="catalogos">Catálogos</button>
   </nav>
 
-  <section class="panel active" id="panel-alta">
+  <section class="panel" id="panel-alta">
     <div class="card">
       <h2>Dar de alta a una persona</h2>
-      <p class="hint">Se guarda directamente en tu base de datos de Supabase.</p>
+      <p class="hint">Al guardar, la persona queda registrada y aparece en la pestaña Personal.</p>
       <form id="form-alta">
 
         <h3>Datos generales</h3>
@@ -230,25 +232,12 @@
           </div>
         </div>
 
-        <h3>Pago</h3>
-        <div class="grid3">
-          <div><label>Periodicidad</label><select id="f-periodicidad"></select></div>
-          <div><label>Días a considerar por periodo</label><input id="f-diasperiodo" type="number" step="0.01"></div>
-          <div><label>Esquema (combo)</label><select id="f-combo"></select></div>
-        </div>
-        <div class="card" style="background:var(--surface-2);border-style:dashed;margin-top:10px;">
-          <div id="conceptos-combo"><p class="hint" style="margin:0;">Elige un esquema para ver sus conceptos.</p></div>
-          <div class="totales" id="totales-combo" style="display:none;">
-            <div>Total bruto: <b id="tot-bruto">$0</b></div>
-            <div>Total percepciones: <b id="tot-percepciones">$0</b></div>
-          </div>
-        </div>
+        <h3>Compensación</h3>
+        <p class="hint">Los esquemas de pago se administran en el expediente de la persona, en la sección Compensación, una vez guardada el alta. Una persona puede tener varios esquemas.</p>
 
         <h3>Otros datos</h3>
         <div class="grid3">
           <div><label>No. FONACOT</label><input id="f-fonacot" type="text"></div>
-          <div><label>Salario por hora (si aplica)</label><input id="f-salariohora" type="number" step="0.01"></div>
-          <div><label>Horas por día (si aplica)</label><input id="f-horasdia" type="number" step="0.5"></div>
         </div>
         <div class="grid">
           <div><label>Restricciones de salud</label><textarea id="f-restricciones"></textarea></div>
@@ -263,14 +252,19 @@
 
         <button type="submit" class="primary" id="btn-alta">Dar de alta</button>
         <div class="toast" id="toast-alta"></div>
+        <div class="toast ok" id="alta-guardada" style="display:none;">
+          <div id="alta-guardada-texto" style="margin-bottom:8px;"></div>
+          <button type="button" class="primary" style="margin-top:0;" onclick="abrirExpedienteReciente()">Abrir expediente</button>
+          <button type="button" class="primary" style="margin-top:0;background:var(--surface-2);color:var(--text);" onclick="registrarOtraPersona()">Registrar otra persona</button>
+        </div>
       </form>
     </div>
   </section>
 
-  <section class="panel" id="panel-lista">
+  <section class="panel active" id="panel-lista">
     <div class="card">
       <h2>Personal registrado</h2>
-      <p class="hint">Cambia el proyecto directamente en la fila — se guarda al momento en Supabase.</p>
+      <p class="hint">Cambia el proyecto directamente en la fila: se guarda al momento.</p>
       <div class="filters">
         <select id="filtro-empresa"><option value="">Todas las empresas</option></select>
         <select id="filtro-proyecto"><option value="">Todos los proyectos</option></select>
@@ -278,7 +272,7 @@
       <p class="hint" style="margin-top:-6px;">El coordinador y el jefe directo se asignan desde el detalle de cada persona.</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>ID</th><th>Nombre</th><th>Empresa</th><th>Proyecto</th><th>Coordinador</th><th>Estatus</th><th>Total bruto</th></tr></thead>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Empresa</th><th>Proyecto</th><th>Coordinador</th><th>Estatus</th><th>Esquemas de pago</th></tr></thead>
           <tbody id="tabla-personal"></tbody>
         </table>
       </div>
@@ -288,9 +282,24 @@
   </section>
 
   <section class="panel" id="panel-resumen">
-    <div class="card"><h2>Resumen general</h2><div class="summary-grid" id="summary-stats"></div></div>
-    <div class="card"><h2>Costo bruto por proyecto</h2><div id="breakdown-proyecto"></div></div>
-    <div class="card"><h2>Costo bruto por coordinador</h2><div id="breakdown-coordinador"></div></div>
+    <div class="card"><h2>Personal</h2><div class="summary-grid" id="resumen-personal"></div></div>
+    <div class="card"><h2>Compensación</h2>
+      <p class="hint">Esquemas de pago activos de las personas que no están en Baja.</p>
+      <div class="summary-grid" id="resumen-compensacion"></div>
+    </div>
+    <div class="card"><h2>Esquemas por modalidad, periodicidad y días del periodo</h2>
+      <p class="hint">Los importes solo se suman entre esquemas con la misma modalidad, la misma periodicidad y los mismos días del periodo. No hay total general: no son importes comparables entre sí.</p>
+      <div id="resumen-grupos"></div>
+    </div>
+    <div class="card"><h2>Desglose</h2>
+      <div class="filters"><select id="resumen-dimension">
+        <option value="clasificacion">Por clasificación</option>
+        <option value="proyecto">Por proyecto</option>
+        <option value="coordinador">Por coordinador</option>
+      </select></div>
+      <div id="resumen-desglose"></div>
+    </div>
+    <div class="card"><h2>Para revisar</h2><div id="resumen-revisar"></div></div>
   </section>
 
   <section class="panel" id="panel-empresas">
@@ -313,6 +322,37 @@
   </section>
 
   <section class="panel" id="panel-catalogos">
+    <div class="card" id="card-proyectos">
+      <h2>Proyectos</h2>
+      <p class="hint">Obras o proyectos a los que se asigna el personal.</p>
+      <form id="form-nuevo-proyecto" style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+        <div style="flex:1;"><label>Nuevo proyecto</label><input type="text" id="input-nuevo-proyecto" placeholder="Ej. Obra Norte"></div>
+        <button type="submit" class="primary" style="margin-top:0;">Agregar</button>
+      </form>
+      <div class="toast" id="toast-proyectos"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nombre</th><th></th></tr></thead>
+        <tbody id="tabla-proyectos"></tbody></table>
+      </div>
+      <div class="empty" id="proyectos-vacio" style="display:none;">Sin proyectos capturados todavía.</div>
+    </div>
+
+    <div class="card" id="card-periodicidades">
+      <h2>Periodicidades de pago</h2>
+      <p class="hint">Cada esquema de pago usa una periodicidad. Los días se aplican a los esquemas que no tienen días propios; si los cambias, cambian también para esos esquemas.</p>
+      <form id="form-nueva-periodicidad" style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+        <div style="flex:1;"><label>Nueva periodicidad</label><input type="text" id="input-nueva-periodicidad" placeholder="Ej. Quincenal"></div>
+        <div style="width:160px;"><label>Días del periodo</label><input type="number" step="0.01" min="0" id="input-nueva-periodicidad-dias" placeholder="Ej. 15"></div>
+        <button type="submit" class="primary" style="margin-top:0;">Agregar</button>
+      </form>
+      <div class="toast" id="toast-periodicidades"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nombre</th><th>Días del periodo</th><th></th></tr></thead>
+        <tbody id="tabla-periodicidades"></tbody></table>
+      </div>
+      <div class="empty" id="periodicidades-vacio" style="display:none;">Sin periodicidades capturadas todavía.</div>
+    </div>
+
     <div class="card" id="card-clasificaciones">
       <h2>Clasificaciones de personal</h2>
       <p class="hint">Cada clasificación define qué datos del expediente (RFC, CURP, NSS, código postal fiscal) se exigen a la persona cuando tiene un registro de pago activo de esa clasificación. Desactivar una clasificación la oculta para nuevas asignaciones, pero conserva las que ya existan. No se eliminan.</p>
@@ -472,7 +512,7 @@
       </div>
       <p class="hint" id="d-empleadoid"></p>
 
-      <h3>Identidad</h3>
+      <h3>Datos personales</h3>
       <div class="grid3">
         <div><label>Nombre(s)</label><input id="d-nombres"></div>
         <div><label>Primer apellido</label><input id="d-apellido1"></div>
@@ -506,7 +546,7 @@
         <div></div>
       </div>
 
-      <h3>Organización</h3>
+      <h3>Laborales · Organización</h3>
       <div class="grid3">
         <div><label>Empresa</label><select id="d-empresa"></select></div>
         <div>
@@ -556,7 +596,7 @@
         <div></div>
       </div>
 
-      <h3>Relación laboral</h3>
+      <h3>Laborales · Relación laboral</h3>
       <div class="grid3">
         <div><label>Tipo de empleado</label>
           <select id="d-tipoempleado"><option>Confianza</option><option>Sindicalizado</option><option>Base</option><option>Honorarios</option></select>
@@ -574,22 +614,48 @@
         <div><label>Subcontratación</label><div class="checks"><label><input type="checkbox" id="d-subcontratacion"> Sí</label></div></div>
       </div>
 
-      <h3>Estatus</h3>
+      <h3>Laborales · Estatus</h3>
       <div class="grid3">
         <div><label>Estatus</label><select id="d-estatus"><option>Activo</option><option>Baja</option><option>Suspendido</option></select></div>
         <div><label>Fecha de baja</label><input id="d-fechabaja" type="date"></div>
         <div><label>Comentario de baja</label><input id="d-comentariobaja" type="text"></div>
       </div>
 
-      <h3>Pago</h3>
+      <h3>Compensación</h3>
+      <!-- Componente «Esquemas de pago» (P4a–P4c), dentro de Compensación. Se
+           guarda con sus propios botones, no con «Guardar cambios». -->
+      <div id="rp-componente" class="card" style="background:var(--surface-2);">
+      <p class="hint" style="margin-bottom:10px;"><b>Esquemas de pago.</b> Una persona puede tener varios. Cada uno se guarda con sus propios botones; no depende de «Guardar cambios».</p>
+      <div id="d-registros-pago">
+        <p class="hint" style="margin-bottom:8px;">Cargando…</p>
+      </div>
+      <button type="button" class="primary" id="btn-rp-agregar" style="margin-top:4px;display:none;" onclick="abrirFormRegistroPago()">Agregar registro de pago</button>
+      <div id="rp-form" style="display:none;margin-top:12px;">
+        <div class="rp-sub" id="rp-form-titulo" style="margin-bottom:8px;font-weight:600;"></div>
+        <div class="grid3">
+          <div><label>Clasificación</label><select id="rp-clasificacion"></select></div>
+          <div><label>Periodicidad</label><select id="rp-periodicidad"></select></div>
+          <div><label>Modalidad del sueldo</label><select id="rp-modalidad"><option value="">Selecciona…</option><option value="bruto">Bruto</option><option value="neto">Neto</option></select></div>
+          <div><label>Sueldo por periodo</label><input id="rp-sueldo" type="number" step="0.01" min="0" inputmode="decimal"></div>
+          <div><label>Días del periodo (opcional)</label><input id="rp-dias" type="number" step="0.01" min="0" inputmode="decimal"><div class="rp-sub" id="rp-dias-hint"></div></div>
+          <div><label>Fecha de inicio</label><input id="rp-fecha-inicio" type="date"></div>
+          <div id="rp-fecha-fin-campo" style="display:none;"><label>Fecha de fin (informativa)</label><input id="rp-fecha-fin" type="date"></div>
+          <div><label>Empresa (opcional)</label><select id="rp-empresa"></select></div>
+          <div><label>Registro patronal (opcional)</label><select id="rp-registro-patronal"></select></div>
+          <div><label>Notas (opcional)</label><input id="rp-notas" type="text" maxlength="500"></div>
+        </div>
+        <button type="button" class="primary" id="btn-rp-guardar" onclick="guardarRegistroPago()">Guardar registro</button>
+        <button type="button" class="primary" id="btn-rp-cancelar" style="background:var(--surface-2);color:var(--text);" onclick="cancelarFormRegistroPago()">Cancelar</button>
+      </div>
+      <div class="toast" id="toast-registros-pago"></div>
+      </div>
+
+      <h3>Prestaciones</h3>
       <div class="grid3">
         <div><label>No. FONACOT</label><input id="d-fonacot"></div>
-        <div><label>Salario por hora</label><input id="d-salariohora" type="number" step="0.01"></div>
-        <div><label>Horas por día</label><input id="d-horasdia" type="number" step="0.5"></div>
       </div>
-      <div id="d-percepciones" style="margin-top:10px;"></div>
 
-      <h3>Otros datos</h3>
+      <h3>Salud y contacto de emergencia</h3>
       <div class="grid">
         <div><label>Restricciones de salud</label><textarea id="d-restricciones"></textarea></div>
         <div>
@@ -604,7 +670,7 @@
       <button class="primary" id="btn-guardar-detalle" onclick="guardarDetalle()">Guardar cambios</button>
       <div class="toast" id="toast-detalle"></div>
 
-      <h3>Historial de movimientos</h3>
+      <h3>Movimientos</h3>
       <div id="d-historial">
         <p class="hint" id="d-historial-resumen" style="margin-bottom:8px;">Cargando…</p>
         <button type="button" class="primary" id="btn-descargar-historial" style="margin-top:0;display:none;" onclick="descargarHistorialCSV()">Descargar historial (CSV)</button>
@@ -619,10 +685,10 @@ const SUPABASE_URL = 'https://vovyvvpwtjdlswerfjqb.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvdnl2dnB3dGpkbHN3ZXJmanFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMzMyNTcsImV4cCI6MjEwNTYwOTI1N30.R3RS3J83pqyKpWSHdZRWp4YbY82p6_obxp-2pSzgYo4';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let empresas=[], proyectos=[], personal=[], periodicidades=[], conceptos=[], combos=[], comboConceptos=[], percepciones=[];
+let empresas=[], proyectos=[], personal=[], periodicidades=[];
 
 function setStatus(msg,type){const el=document.getElementById('conn-status');el.textContent=msg;el.className=type;}
-function fillSelect(sel,items,placeholder){sel.innerHTML=(placeholder?`<option value="">${placeholder}</option>`:'')+items.map(i=>`<option value="${i.id}">${i.nombre}</option>`).join('');}
+function fillSelect(sel,items,placeholder){sel.innerHTML=(placeholder?`<option value="">${escapeHtml(placeholder)}</option>`:'')+items.map(i=>`<option value="${escapeHtml(i.id)}">${escapeHtml(i.nombre)}</option>`).join('');}
 function empresaNombre(id){const e=empresas.find(x=>x.id===id);return e?e.nombre:'—';}
 function proyectoNombre(id){const p=proyectos.find(x=>x.id===id);return p?p.nombre:'—';}
 function money(n){return '$'+Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -703,89 +769,125 @@ function actualizarSelectsCatalogoAlta(){
 }
 
 async function cargarTodo() {
-  const [e,p,per,con,com,cc] = await Promise.all([
+  // Fase 8: combos y percepciones (modelo anterior) ya no se cargan ni se
+  // usan en la interfaz. Sus tablas y datos siguen intactos en la base.
+  const [e,p,per] = await Promise.all([
     sb.from('empresas').select('*').order('nombre'),
     sb.from('proyectos').select('*').order('nombre'),
-    sb.from('periodicidades').select('*'),
-    sb.from('conceptos_percepcion').select('*'),
-    sb.from('combos').select('*'),
-    sb.from('combo_conceptos').select('*')
+    sb.from('periodicidades').select('*')
   ]);
-  if (e.error||p.error||per.error||con.error||com.error||cc.error) {
+  if (e.error||p.error||per.error) {
     setStatus('Error cargando catálogos. Revisa la consola.','err');
-    console.error(e.error,p.error,per.error,con.error,com.error,cc.error);
+    console.error(e.error,p.error,per.error);
     return;
   }
   empresas=e.data||[]; proyectos=p.data||[]; periodicidades=per.data||[];
-  conceptos=con.data||[]; combos=com.data||[]; comboConceptos=cc.data||[];
+  renderCatalogoSimple('proyectos'); renderCatalogoSimple('periodicidades'); // Fase 1 de producto
 
   fillSelect(document.getElementById('f-empresa'), empresas, null);
   fillSelect(document.getElementById('f-proyecto'), proyectos, null);
   fillSelect(document.getElementById('filtro-empresa'), empresas, 'Todas las empresas');
   fillSelect(document.getElementById('filtro-proyecto'), proyectos, 'Todos los proyectos');
-  fillSelect(document.getElementById('f-periodicidad'), periodicidades, null);
-  fillSelect(document.getElementById('f-combo'), combos, 'Sin esquema (captura libre)');
 
   if (empresas.length===0 || proyectos.length===0) {
-    setStatus('Conectado, pero faltan empresas o proyectos cargados. Agrega filas en esas tablas desde Supabase.','err');
+    setStatus('Conectado. Aún no hay empresas o proyectos: créalos en las pestañas Empresas y Catálogos.','ok');
   } else {
-    setStatus('Conectado a Supabase correctamente.','ok');
+    setStatus('Información cargada correctamente.','ok');
   }
 }
 
-document.getElementById('f-periodicidad').addEventListener('change', function(){
-  const per = periodicidades.find(x=>x.id===this.value);
-  if (per) document.getElementById('f-diasperiodo').value = per.dias_default;
-});
-
-document.getElementById('f-combo').addEventListener('change', function(){
-  const comboId = this.value;
-  const cont = document.getElementById('conceptos-combo');
-  const totales = document.getElementById('totales-combo');
-  if (!comboId) { cont.innerHTML='<p class="hint" style="margin:0;">Elige un esquema para ver sus conceptos.</p>'; totales.style.display='none'; return; }
-  const conceptoIds = comboConceptos.filter(cc=>cc.combo_id===comboId).map(cc=>cc.concepto_id);
-  const items = conceptos.filter(c=>conceptoIds.includes(c.id));
-  cont.innerHTML = items.map(c=>`
-    <div class="concepto-row" data-concepto="${c.id}" data-bruto="${c.suma_a_bruto}">
-      <span class="nombre">${c.nombre} <span class="${c.suma_a_bruto?'badge-bruto':'badge-otro'}">${c.suma_a_bruto?'suma a bruto':'otra percepción'}</span></span>
-      <input type="number" step="0.01" value="0" class="monto-concepto" oninput="recalcularTotales()">
-    </div>
-  `).join('');
-  totales.style.display='flex';
-  recalcularTotales();
-});
-
-function recalcularTotales(){
-  let bruto=0, total=0;
-  document.querySelectorAll('#conceptos-combo .concepto-row').forEach(row=>{
-    const val = parseFloat(row.querySelector('.monto-concepto').value)||0;
-    total += val;
-    if (row.dataset.bruto==='true') bruto += val;
-  });
-  document.getElementById('tot-bruto').textContent = money(bruto);
-  document.getElementById('tot-percepciones').textContent = money(total);
+// ---------------------------------------------------------------------
+// Carga por bloques (Fase 8). La API devuelve un máximo de filas por
+// consulta; en vez de depender de ese tope en silencio, se pide el total
+// exacto y se leen bloques hasta completarlo. `construirConsulta` debe
+// devolver cada vez una consulta nueva, con orden estable y count exacto.
+// ---------------------------------------------------------------------
+const TAMANO_BLOQUE_CONSULTA = 1000;
+async function cargarPorBloques(construirConsulta){
+  const filas = [];
+  let total = null;
+  for (;;) {
+    let res;
+    try {
+      res = await construirConsulta().range(filas.length, filas.length + TAMANO_BLOQUE_CONSULTA - 1);
+    } catch (e) {
+      return { data: null, error: e };
+    }
+    if (res.error) return { data: null, error: res.error };
+    const bloque = res.data || [];
+    if (typeof res.count === 'number') total = res.count;
+    filas.push(...bloque);
+    if (!bloque.length) break;                           // no hay más filas
+    if (total !== null && filas.length >= total) break;  // ya se leyó el total informado
+  }
+  return { data: filas, error: null };
 }
 
 async function cargarPersonal() {
   document.getElementById('lista-cargando').style.display='block';
-  const [p, pp] = await Promise.all([
-    sb.from('personal').select('*').order('created_at',{ascending:false}),
-    sb.from('personal_percepciones').select('*')
-  ]);
+  const p = await cargarPorBloques(() =>
+    sb.from('personal').select('*', { count: 'exact' }).order('created_at',{ascending:false}).order('id'));
   document.getElementById('lista-cargando').style.display='none';
-  if (p.error) { setStatus('Error al cargar personal: '+p.error.message,'err'); console.error(p.error); return; }
+  if (p.error) { setStatus('Error al cargar personal: '+traducirErrorSupabase(p.error),'err'); console.error(p.error); return; }
   personal = p.data||[];
-  percepciones = pp.data||[];
   renderTabla(); renderResumen();
   fillSelectPersonal(document.getElementById('f-coordinador-select'), null, 'Selecciona coordinador');
   fillSelectPersonal(document.getElementById('f-jefe'), null, 'Sin jefe asignado');
 }
 
-function totalBrutoPersona(personalId){
-  return percepciones.filter(x=>x.personal_id===personalId).reduce((sum,x)=>{
-    const c = conceptos.find(c=>c.id===x.concepto_id);
-    return sum + (c && c.suma_a_bruto ? Number(x.monto||0) : 0);
-  },0);
+// ---------------------------------------------------------------------
+// Esquemas de pago ACTIVOS de todo el tenant (Fase 8): fuente de la Lista y
+// del Resumen. Se leen de v_personal_registros_pago, que respeta RLS. El
+// modelo anterior (combos y percepciones) ya no alimenta ningún indicador.
+// ---------------------------------------------------------------------
+let registrosPagoActivos = [];
+let registrosPagoPorPersona = new Map();   // personal_id -> esquemas activos
+let registrosPagoGlobalEstado = 'cargando'; // 'cargando' | 'ok' | 'error'
+let registrosPagoGlobalTurno = 0;
+
+async function cargarRegistrosPagoGlobal(){
+  const turno = ++registrosPagoGlobalTurno;
+  const r = await cargarPorBloques(() =>
+    sb.from('v_personal_registros_pago').select('*', { count: 'exact' }).eq('activo', true).order('id'));
+  if (turno !== registrosPagoGlobalTurno) return; // llegó después de una carga más reciente
+  if (r.error) {
+    console.error('No se pudieron cargar los esquemas de pago:', r.error);
+    registrosPagoActivos = []; registrosPagoPorPersona = new Map(); registrosPagoGlobalEstado = 'error';
+  } else {
+    registrosPagoActivos = r.data;
+    registrosPagoPorPersona = new Map();
+    registrosPagoActivos.forEach(x => {
+      if (!registrosPagoPorPersona.has(x.personal_id)) registrosPagoPorPersona.set(x.personal_id, []);
+      registrosPagoPorPersona.get(x.personal_id).push(x);
+    });
+    registrosPagoGlobalEstado = 'ok';
+  }
+  renderTabla(); renderResumen();
+}
+
+function esquemasActivosDe(personalId){ return registrosPagoPorPersona.get(personalId) || []; }
+function personaEnBaja(p){ return p.estatus === 'Baja'; }
+
+// Lista: un renglón por cada esquema activo de la persona (clasificación e
+// importe) y, debajo, el Total percepciones = suma simple de esos importes.
+// Por decisión de producto, este total NO se clasifica como bruto o neto y
+// no convierte ni equipara periodicidades: solo suma los importes activos.
+// El detalle de cada registro (modalidad, periodicidad, días) sigue intacto
+// en el expediente. El Resumen conserva sus propias reglas de agrupación.
+function resumenEsquemasPersonaHTML(p){
+  if (registrosPagoGlobalEstado === 'cargando') return '<span class="rp-sub">Cargando…</span>';
+  if (registrosPagoGlobalEstado === 'error') return '<span class="rp-sub">No disponible</span>';
+  const esquemas = esquemasActivosDe(p.id).slice().sort((a, b) =>
+    String(a.clasificacion_nombre || '').localeCompare(String(b.clasificacion_nombre || ''), 'es') || String(a.id).localeCompare(String(b.id)));
+  if (!esquemas.length) return '<span class="rp-sub">Sin esquema</span>';
+  let centavos = 0; // se acumula en centavos para no arrastrar errores de decimales
+  const renglones = esquemas.map(r => {
+    centavos += Math.round(Number(r.sueldo) * 100);
+    return `<div>${escapeHtml(r.clasificacion_nombre || 'Sin clasificación')} ${escapeHtml(money(r.sueldo))}</div>`;
+  }).join('');
+  return renglones +
+    `<div><b>Total percepciones ${escapeHtml(money(centavos / 100))}</b></div>` +
+    (personaEnBaja(p) ? '<span class="pill">revisar: persona en Baja</span>' : '');
 }
 
 function renderTabla(){
@@ -804,17 +906,17 @@ function renderTabla(){
       : '<em>(sin nombre — clic para corregir)</em>';
     return `
     <tr>
-      <td>${p.empleado_id||'—'}</td>
+      <td>${escapeHtml(p.empleado_id||'—')}</td>
       <td><a href="#" onclick="abrirDetalle('${p.id}');return false;" style="color:var(--accent);text-decoration:none;font-weight:500;">${nombreMostrar}</a></td>
-      <td>${empresaNombre(p.empresa_id)}</td>
+      <td>${escapeHtml(empresaNombre(p.empresa_id))}</td>
       <td>
         <select class="inline-select" onchange="actualizarCampo('${p.id}','proyecto_id',this.value)">
-          ${proyectos.map(pr=>`<option value="${pr.id}" ${pr.id===p.proyecto_id?'selected':''}>${pr.nombre}</option>`).join('')}
+          ${proyectos.map(pr=>`<option value="${escapeHtml(pr.id)}" ${pr.id===p.proyecto_id?'selected':''}>${escapeHtml(pr.nombre)}</option>`).join('')}
         </select>
       </td>
-      <td>${nombreCoordinador(p)}</td>
-      <td><span class="pill">${p.estatus||'Activo'}</span></td>
-      <td>${money(totalBrutoPersona(p.id))}</td>
+      <td>${escapeHtml(nombreCoordinador(p))}</td>
+      <td><span class="pill">${escapeHtml(p.estatus||'Activo')}</span></td>
+      <td>${resumenEsquemasPersonaHTML(p)}</td>
     </tr>
   `;
   }).join('');
@@ -828,23 +930,140 @@ async function actualizarCampo(id,campo,valor){
   renderResumen();
 }
 
-function renderResumen(){
-  const total = personal.length;
-  document.getElementById('summary-stats').innerHTML = `
-    <div class="stat"><div class="num">${total}</div><div class="lbl">Personas registradas</div></div>
-    <div class="stat"><div class="num">${new Set(personal.map(p=>p.empresa_id)).size}</div><div class="lbl">Empresas con personal</div></div>
-    <div class="stat"><div class="num">${new Set(personal.map(p=>p.proyecto_id)).size}</div><div class="lbl">Proyectos activos</div></div>
-    <div class="stat"><div class="num">${money(personal.reduce((s,p)=>s+totalBrutoPersona(p.id),0))}</div><div class="lbl">Costo bruto total</div></div>
-  `;
-  const porProyecto={}, porCoordinador={};
-  personal.forEach(p=>{
-    const b = totalBrutoPersona(p.id);
-    const np = proyectoNombre(p.proyecto_id); porProyecto[np]=(porProyecto[np]||0)+b;
-    const nc = nombreCoordinador(p)||'Sin coordinador'; porCoordinador[nc]=(porCoordinador[nc]||0)+b;
+// ---------------------------------------------------------------------
+// Resumen (Fase 8). Fuente única: los esquemas de pago activos.
+// Reglas de importes:
+//   - Solo se suman esquemas con la MISMA modalidad (bruto/neto), la MISMA
+//     periodicidad y los MISMOS días del periodo.
+//   - No se convierte entre periodicidades ni entre bruto y neto, no hay
+//     total general y no se calcula nada de nómina.
+//   - Los esquemas de personas en Baja no cuentan; se listan en "Para revisar".
+// ---------------------------------------------------------------------
+function etiquetaModalidad(m){ return m === 'bruto' ? 'Bruto' : (m === 'neto' ? 'Neto' : '—'); }
+function numeroDias(v){ return Number(v).toLocaleString('es-MX', { maximumFractionDigits: 2 }); }
+
+// Agrupa por modalidad + periodicidad + días del periodo y suma dentro de
+// cada grupo. Se acumula en centavos para no arrastrar errores de decimales.
+function agruparImportesComparables(esquemas){
+  const grupos = new Map();
+  esquemas.forEach(r => {
+    const dias = Number(r.dias_periodo_efectivo);
+    const clave = [r.modalidad_sueldo, r.periodicidad_id, dias].join('|');
+    let g = grupos.get(clave);
+    if (!g) {
+      g = { modalidad: r.modalidad_sueldo, periodicidad: r.periodicidad_nombre || '—', dias, esquemas: 0, personas: new Set(), centavos: 0 };
+      grupos.set(clave, g);
+    }
+    g.esquemas += 1;
+    g.personas.add(r.personal_id);
+    g.centavos += Math.round(Number(r.sueldo) * 100);
   });
-  document.getElementById('breakdown-proyecto').innerHTML = Object.entries(porProyecto).map(([k,v])=>`<div class="breakdown-row"><span>${k}</span><span>${money(v)}</span></div>`).join('')||'<div class="empty">Sin datos</div>';
-  document.getElementById('breakdown-coordinador').innerHTML = Object.entries(porCoordinador).map(([k,v])=>`<div class="breakdown-row"><span>${k}</span><span>${money(v)}</span></div>`).join('')||'<div class="empty">Sin datos</div>';
+  return Array.from(grupos.values()).sort((a, b) =>
+    String(a.modalidad).localeCompare(String(b.modalidad)) ||
+    String(a.periodicidad).localeCompare(String(b.periodicidad), 'es') ||
+    (a.dias - b.dias));
 }
+function etiquetaGrupoImporte(g){
+  return `${etiquetaModalidad(g.modalidad)} · ${g.periodicidad} · ${numeroDias(g.dias)} días`;
+}
+
+// Dimensiones del desglose. `dePersona`: el valor sale del expediente;
+// `deEsquema`: sale del propio esquema de pago.
+const DIMENSIONES_RESUMEN = {
+  clasificacion: { deEsquema: r => ({ clave: r.clasificacion_id || '', nombre: r.clasificacion_nombre || 'Sin clasificación' }) },
+  proyecto:      { dePersona: p => ({ clave: p.proyecto_id || '', nombre: p.proyecto_id ? proyectoNombre(p.proyecto_id) : 'Sin proyecto' }) },
+  coordinador:   { dePersona: p => { const n = nombreCoordinador(p) || 'Sin coordinador'; return { clave: n, nombre: n }; } }
+};
+
+function enlacePersonaHTML(p){
+  const nombre = (p.nombre_completo && p.nombre_completo.trim()) ? p.nombre_completo : '(sin nombre)';
+  return `<a href="#" onclick="abrirDetalle('${escapeHtml(p.id)}');return false;" style="color:var(--accent);text-decoration:none;">${escapeHtml(nombre)}</a>`;
+}
+
+function renderResumen(){
+  const vigentes = personal.filter(p => !personaEnBaja(p));
+  const enBaja = personal.length - vigentes.length;
+  const stat = (num, lbl) => `<div class="stat"><div class="num">${escapeHtml(num)}</div><div class="lbl">${escapeHtml(lbl)}</div></div>`;
+
+  // --- Personal (del expediente: personal.empresa_id, personal.proyecto_id)
+  document.getElementById('resumen-personal').innerHTML =
+    stat(vigentes.length, 'Personas vigentes (sin Baja)') +
+    stat(enBaja, 'Personas en Baja') +
+    stat(new Set(vigentes.map(p => p.empresa_id).filter(Boolean)).size, 'Empresas con personal vigente') +
+    stat(new Set(vigentes.map(p => p.proyecto_id).filter(Boolean)).size, 'Proyectos con personal vigente');
+
+  const contComp = document.getElementById('resumen-compensacion');
+  const contGrupos = document.getElementById('resumen-grupos');
+  const contDesglose = document.getElementById('resumen-desglose');
+  const contRevisar = document.getElementById('resumen-revisar');
+  if (registrosPagoGlobalEstado !== 'ok') {
+    const msg = `<div class="empty">${registrosPagoGlobalEstado === 'error' ? 'No se pudieron cargar los esquemas de pago. Recarga la página.' : 'Cargando…'}</div>`;
+    contComp.innerHTML = msg; contGrupos.innerHTML = msg; contDesglose.innerHTML = msg; contRevisar.innerHTML = msg;
+    return;
+  }
+
+  // --- Compensación: solo esquemas de personas que no están en Baja
+  const idsVigentes = new Set(vigentes.map(p => p.id));
+  const esquemas = registrosPagoActivos.filter(r => idsVigentes.has(r.personal_id));
+  const sinEsquema = vigentes.filter(p => !esquemasActivosDe(p.id).length);
+  contComp.innerHTML =
+    stat(esquemas.length, 'Esquemas activos') +
+    stat(esquemas.filter(r => r.modalidad_sueldo === 'bruto').length, 'Esquemas en bruto') +
+    stat(esquemas.filter(r => r.modalidad_sueldo === 'neto').length, 'Esquemas en neto') +
+    stat(new Set(esquemas.map(r => r.personal_id)).size, 'Personas con esquema') +
+    stat(sinEsquema.length, 'Personas vigentes sin esquema');
+
+  // --- Importes por grupo comparable
+  const grupos = agruparImportesComparables(esquemas);
+  contGrupos.innerHTML = grupos.length ? `<div class="table-wrap"><table>
+    <thead><tr><th>Modalidad</th><th>Periodicidad</th><th>Días del periodo</th><th>Esquemas</th><th>Personas</th><th>Importe por periodo</th></tr></thead>
+    <tbody>${grupos.map(g => `<tr>
+      <td>${escapeHtml(etiquetaModalidad(g.modalidad))}</td>
+      <td>${escapeHtml(g.periodicidad)}</td>
+      <td>${escapeHtml(numeroDias(g.dias))}</td>
+      <td>${g.esquemas}</td>
+      <td>${g.personas.size}</td>
+      <td>${escapeHtml(money(g.centavos / 100))}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<div class="empty">Sin esquemas de pago activos.</div>';
+
+  // --- Desglose por la dimensión elegida
+  const dimension = DIMENSIONES_RESUMEN[document.getElementById('resumen-dimension').value] || DIMENSIONES_RESUMEN.clasificacion;
+  const personaPorId = new Map(vigentes.map(p => [p.id, p]));
+  const filas = new Map();
+  const fila = v => { if (!filas.has(v.clave)) filas.set(v.clave, { nombre: v.nombre, personas: new Set(), esquemas: [] }); return filas.get(v.clave); };
+  if (dimension.dePersona) vigentes.forEach(p => fila(dimension.dePersona(p)).personas.add(p.id)); // cuenta también a quien no tiene esquema
+  esquemas.forEach(r => {
+    const f = fila(dimension.dePersona ? dimension.dePersona(personaPorId.get(r.personal_id)) : dimension.deEsquema(r));
+    f.personas.add(r.personal_id);
+    f.esquemas.push(r);
+  });
+  const filasOrdenadas = Array.from(filas.values()).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+  contDesglose.innerHTML = filasOrdenadas.length ? `<div class="table-wrap"><table>
+    <thead><tr><th></th><th>Personas</th><th>Esquemas activos</th><th>Importe por periodo (por grupo comparable)</th></tr></thead>
+    <tbody>${filasOrdenadas.map(f => `<tr>
+      <td>${escapeHtml(f.nombre)}</td>
+      <td>${f.personas.size}</td>
+      <td>${f.esquemas.length}</td>
+      <td>${agruparImportesComparables(f.esquemas).map(g => `<div>${escapeHtml(etiquetaGrupoImporte(g))}: <b>${escapeHtml(money(g.centavos / 100))}</b></div>`).join('') || '<span class="rp-sub">Sin esquemas</span>'}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<div class="empty">Sin datos.</div>';
+
+  // --- Para revisar
+  const bajaConEsquemas = personal.filter(p => personaEnBaja(p) && esquemasActivosDe(p.id).length);
+  const MAX = 20;
+  const lista = arr => arr.slice(0, MAX).map(enlacePersonaHTML).join(', ') + (arr.length > MAX ? ` y ${arr.length - MAX} más` : '');
+  const avisos = [];
+  if (bajaConEsquemas.length) {
+    const n = bajaConEsquemas.reduce((s, p) => s + esquemasActivosDe(p.id).length, 0);
+    avisos.push(`<div class="breakdown-row"><span><b>${n}</b> esquema(s) activo(s) en <b>${bajaConEsquemas.length}</b> persona(s) con estatus Baja. No cuentan en Compensación; ciérralos desde su expediente: ${lista(bajaConEsquemas)}</span></div>`);
+  }
+  if (sinEsquema.length) {
+    avisos.push(`<div class="breakdown-row"><span><b>${sinEsquema.length}</b> persona(s) vigente(s) sin ningún esquema de pago activo: ${lista(sinEsquema)}</span></div>`);
+  }
+  contRevisar.innerHTML = avisos.join('') || '<div class="empty">Nada pendiente de revisar.</div>';
+}
+document.getElementById('resumen-dimension').addEventListener('change', renderResumen);
 
 document.querySelectorAll('nav.tabs button').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -869,6 +1088,7 @@ document.querySelectorAll('input[name="f-coordinador-modo"]').forEach(r=>r.addEv
 document.getElementById('form-alta').addEventListener('submit', async function(e){
   e.preventDefault();
   const btn=document.getElementById('btn-alta'); const toast=document.getElementById('toast-alta');
+  ocultarAltaGuardada();
   btn.disabled=true;
 
   const descanso = Array.from(document.querySelectorAll('#f-descanso input:checked')).map(c=>c.value).join(',');
@@ -957,12 +1177,7 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     fecha_inicio_contrato: document.getElementById('f-fechainicio').value || null,
     fecha_vencimiento_contrato: document.getElementById('f-fechavencimiento').value || null,
     subcontratacion: document.getElementById('f-subcontratacion').checked,
-    periodicidad_id: document.getElementById('f-periodicidad').value || null,
-    dias_periodo: parseFloat(document.getElementById('f-diasperiodo').value) || null,
-    combo_id: document.getElementById('f-combo').value || null,
     no_fonacot: document.getElementById('f-fonacot').value.trim(),
-    salario_por_hora: parseFloat(document.getElementById('f-salariohora').value) || null,
-    horas_por_dia: parseFloat(document.getElementById('f-horasdia').value) || null,
     restricciones_salud: document.getElementById('f-restricciones').value.trim(),
     contacto_emergencia_nombre: document.getElementById('f-emerg-nombre').value.trim(),
     contacto_emergencia_telefono: document.getElementById('f-emerg-telefono').value.trim(),
@@ -977,28 +1192,41 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     console.error(error); return;
   }
 
-  const filas = Array.from(document.querySelectorAll('#conceptos-combo .concepto-row')).map(row=>({
-    personal_id: data.id,
-    concepto_id: row.dataset.concepto,
-    monto: parseFloat(row.querySelector('.monto-concepto').value)||0
-  }));
-  if (filas.length) await sb.from('personal_percepciones').insert(filas);
-
   btn.disabled=false;
-  toast.textContent='Persona registrada en Supabase.'; toast.className='toast ok'; toast.style.display='block';
-  setTimeout(()=>toast.style.display='none',3000);
+  toast.style.display='none';
   this.reset();
   actualizarModoCoordinadorAlta();
   actualizarSelectsCatalogoAlta();
   actualizarRegistroPatronalAlta();
-  document.getElementById('conceptos-combo').innerHTML='<p class="hint" style="margin:0;">Elige un esquema para ver sus conceptos.</p>';
-  document.getElementById('totales-combo').style.display='none';
   await cargarPersonal();
+  // Fase 8: no se abre el expediente automáticamente. Se ofrece continuar con
+  // esa persona (p. ej. para capturar su compensación) o seguir con otra alta.
+  altaRecienteId = data.id;
+  document.getElementById('alta-guardada-texto').textContent =
+    'Persona registrada: ' + (data.nombre_completo || nuevo.nombre_completo || '') + (data.empleado_id ? ' (' + data.empleado_id + ')' : '') +
+    '. Su compensación se captura en el expediente.';
+  document.getElementById('alta-guardada').style.display='block';
 });
 
+let altaRecienteId = null;
+function ocultarAltaGuardada(){
+  document.getElementById('alta-guardada').style.display='none';
+  altaRecienteId = null;
+}
+function abrirExpedienteReciente(){
+  const id = altaRecienteId;
+  ocultarAltaGuardada();
+  if (id) abrirDetalle(id);
+}
+function registrarOtraPersona(){
+  ocultarAltaGuardada();
+  document.getElementById('f-nombres').focus();
+}
+
 let detalleActual = null;
-let detallePercepciones = [];
 let detalleHistorial = [];
+let detalleRegistrosPago = [];            // 7D-6b (P4a)
+let detalleRegistrosPagoEstado = 'cargando'; // 'cargando' | 'ok' | 'error'
 
 // ---------------------------------------------------------------------
 // Descarga del historial de movimientos en CSV. El historial completo
@@ -1068,7 +1296,7 @@ function descargarHistorialCSV(){
   URL.revokeObjectURL(url);
 }
 
-function fillSelectSimple(sel, items){ sel.innerHTML = items.map(i=>`<option value="${i.id}">${i.nombre}</option>`).join(''); }
+function fillSelectSimple(sel, items){ sel.innerHTML = items.map(i=>`<option value="${escapeHtml(i.id)}">${escapeHtml(i.nombre)}</option>`).join(''); }
 
 async function abrirDetalle(id){
   const p = personal.find(x=>x.id===id);
@@ -1154,20 +1382,11 @@ async function abrirDetalle(id){
   document.getElementById('d-fechabaja').value = p.fecha_baja||'';
   document.getElementById('d-comentariobaja').value = p.comentario_baja||'';
   document.getElementById('d-fonacot').value = p.no_fonacot||'';
-  document.getElementById('d-salariohora').value = p.salario_por_hora||'';
-  document.getElementById('d-horasdia').value = p.horas_por_dia||'';
   document.getElementById('d-restricciones').value = p.restricciones_salud||'';
   document.getElementById('d-emerg-nombre').value = p.contacto_emergencia_nombre||'';
   document.getElementById('d-emerg-telefono').value = p.contacto_emergencia_telefono||'';
   document.getElementById('d-emerg-parentesco').value = p.contacto_emergencia_parentesco||'';
   document.getElementById('d-emerg-direccion').value = p.contacto_emergencia_direccion||'';
-
-  const misPercepciones = percepciones.filter(x=>x.personal_id===id);
-  detallePercepciones = misPercepciones.map(x=>({...x}));
-  document.getElementById('d-percepciones').innerHTML = misPercepciones.length ? misPercepciones.map(x=>{
-    const c = conceptos.find(c=>c.id===x.concepto_id);
-    return `<div class="concepto-row" data-percepcion="${x.id}"><span class="nombre">${c?c.nombre:'—'}</span><input type="number" step="0.01" value="${x.monto}" class="monto-percepcion"></div>`;
-  }).join('') : '<p class="hint" style="margin:0;">Sin percepciones capturadas.</p>';
 
   // El historial ya no se lista en pantalla (podía mostrar UUIDs de
   // empresa/área/etc.); se conserva íntegro en Supabase y se ofrece como
@@ -1178,6 +1397,11 @@ async function abrirDetalle(id){
   document.getElementById('btn-descargar-historial').style.display = 'none';
   detalleHistorial = [];
   document.getElementById('modal-overlay').style.display = 'block';
+
+  // 7D-6b (P4a): los registros de pago se cargan aparte y sin esperar su
+  // resultado, para que un fallo ahí no afecte al resto del Detalle.
+  reiniciarFormRegistroPago(); // 7D-6b (P4b): nunca arrastrar un alta a medias de otra persona
+  cargarRegistrosPagoDetalle(id);
 
   const { data: hist, error } = await sb.from('movimientos').select('*').eq('personal_id', id).order('fecha', {ascending:false});
   // Si mientras tanto se abrió el Detalle de otra persona, se descarta este
@@ -1207,6 +1431,583 @@ document.querySelectorAll('input[name="d-coordinador-modo"]').forEach(r=>r.addEv
 function cerrarDetalle(){
   document.getElementById('modal-overlay').style.display='none';
   detalleActual = null;
+  detalleRegistrosPago = [];
+  detalleRegistrosPagoEstado = 'cargando';
+  reiniciarFormRegistroPago();
+}
+
+// ---------------------------------------------------------------------
+// Registros de pago en el Detalle (7D-6b, P4a): SOLO LECTURA.
+// Se leen de la vista v_personal_registros_pago (7D-6a), que ya entrega
+// clasificacion_nombre, periodicidad_nombre y dias_periodo_efectivo
+// (= dias_periodo, o los días de la periodicidad si dias_periodo es nulo).
+// La vista respeta RLS: solo devuelve registros del tenant del usuario.
+// No hay altas, edición, cierre ni borrado en este subpaso, y no se suman
+// sueldos: cada importe corresponde a su propia periodicidad y modalidad.
+// ---------------------------------------------------------------------
+function fechaRegistroPago(valor){
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor || '');
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '—';
+}
+
+function ordenarRegistrosPago(filas){
+  // Activos primero; dentro de cada grupo, fecha de inicio más reciente
+  // primero y, a igualdad, el creado más recientemente.
+  return filas.slice().sort((a, b) =>
+    (a.activo === b.activo ? 0 : (a.activo ? -1 : 1)) ||
+    String(b.fecha_inicio || '').localeCompare(String(a.fecha_inicio || '')) ||
+    String(b.created_at || '').localeCompare(String(a.created_at || ''))
+  );
+}
+
+function renderRegistrosPagoDetalle(){
+  const cont = document.getElementById('d-registros-pago');
+  if (!cont) return;
+  actualizarBotonAgregarRegistroPago(); // 7D-6b (P4b)
+  if (detalleRegistrosPagoEstado === 'cargando') {
+    cont.innerHTML = '<p class="hint" style="margin-bottom:8px;">Cargando…</p>';
+    return;
+  }
+  if (detalleRegistrosPagoEstado === 'error') {
+    cont.innerHTML = '<p class="hint" style="margin-bottom:8px;">No se pudieron cargar los registros de pago. El resto del expediente no se ve afectado.</p>';
+    return;
+  }
+  if (!detalleRegistrosPago.length) {
+    cont.innerHTML = '<p class="hint" style="margin-bottom:8px;">Sin registros de pago.</p>';
+    return;
+  }
+  const filas = detalleRegistrosPago.map(r => {
+    const empresa = r.empresa_id ? (empresas.find(e => e.id === r.empresa_id) || {}).nombre : null;
+    const rp = r.registro_patronal_id ? nombreDeRegistroPatronalPorId(r.registro_patronal_id) : null;
+    const empresaTxt = r.empresa_id ? (empresa || 'No disponible') : '—';
+    const rpTxt = r.registro_patronal_id ? (rp || 'No disponible') : '—';
+    const dias = (r.dias_periodo_efectivo === null || r.dias_periodo_efectivo === undefined)
+      ? '—'
+      : Number(r.dias_periodo_efectivo).toLocaleString('es-MX', { maximumFractionDigits: 2 });
+    const origenDias = (r.dias_periodo === null || r.dias_periodo === undefined) ? 'de la periodicidad' : 'propios del registro';
+    const esBruto = r.modalidad_sueldo === 'bruto';
+    return `<tr class="${r.activo ? '' : 'rp-cerrado'}">
+      <td>${escapeHtml(r.clasificacion_nombre || '—')}</td>
+      <td>${escapeHtml(money(r.sueldo))} <span class="${esBruto ? 'badge-bruto' : 'badge-otro'}">${escapeHtml(r.modalidad_sueldo || '—')}</span><div class="rp-sub">por periodo</div></td>
+      <td>${escapeHtml(r.periodicidad_nombre || '—')}</td>
+      <td>${escapeHtml(dias)}<div class="rp-sub">${dias === '—' ? '' : origenDias}</div></td>
+      <td>${escapeHtml(empresaTxt)}<div class="rp-sub">Registro patronal: ${escapeHtml(rpTxt)}</div></td>
+      <td>${escapeHtml(fechaRegistroPago(r.fecha_inicio))}</td>
+      <td>${escapeHtml(fechaRegistroPago(r.fecha_fin))}</td>
+      <td><span class="pill">${r.activo ? 'Activo' : 'Cerrado'}</span></td>
+      <td style="white-space:nowrap;">${accionesRegistroPagoHTML(r)}</td>
+    </tr>`;
+  }).join('');
+  cont.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Clasificación</th><th>Sueldo</th><th>Periodicidad</th><th>Días del periodo</th><th>Empresa</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></div>`;
+}
+
+async function cargarRegistrosPagoDetalle(id){
+  detalleRegistrosPago = [];
+  detalleRegistrosPagoEstado = 'cargando';
+  renderRegistrosPagoDetalle();
+  let data = null, error = null;
+  try {
+    ({ data, error } = await sb.from('v_personal_registros_pago').select('*').eq('personal_id', id));
+  } catch (e) {
+    error = e;
+  }
+  // Si mientras tanto se cerró el Detalle o se abrió el de otra persona, se
+  // descarta este resultado (mismo criterio que el historial).
+  if (!detalleActual || detalleActual.id !== id) return;
+  if (error) {
+    console.error('No se pudieron cargar los registros de pago:', error);
+    detalleRegistrosPagoEstado = 'error';
+    renderRegistrosPagoDetalle();
+    return;
+  }
+  detalleRegistrosPago = ordenarRegistrosPago(data || []);
+  detalleRegistrosPagoEstado = 'ok';
+  renderRegistrosPagoDetalle();
+}
+
+// ---------------------------------------------------------------------
+// Alta de un registro de pago desde el Detalle (7D-6b, P4b).
+// - Un alta siempre nace activa: no se envía `activo` ni `fecha_fin`.
+// - No se envía `tenant_id`: lo asigna el trigger de la base.
+// - La base decide (FK compuestas, CHECK, RLS y trigger de requisitos);
+//   aquí solo se valida para dar un mensaje claro antes de enviar.
+// - El `id` se genera en el navegador al abrir el formulario: si la misma
+//   alta se envía dos veces (doble clic, reintento tras un corte de red),
+//   la segunda choca con la llave primaria y se trata como "ya guardado",
+//   en vez de crear un duplicado (los registros no se pueden borrar).
+// - No hay edición, cierre ni borrado en este subpaso (P4c).
+// ---------------------------------------------------------------------
+let rpAltaId = null;      // UUID del alta en curso; null = no hay alta abierta
+let rpEdicionId = null;   // 7D-6b (P4c): id del registro en edición; null = no hay edición abierta
+let rpFormInicial = null; // P4c: valores del formulario al abrir la edición (para enviar solo lo que cambió)
+let rpEnviando = false;
+
+function fechaLocalHoy(){
+  // Fecha LOCAL del navegador (no UTC): por la tarde en México, la fecha
+  // UTC del servidor ya es la del día siguiente.
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function nuevoUuidRegistroPago(){
+  const c = window.crypto;
+  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  if (c && typeof c.getRandomValues === 'function') {
+    const b = c.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+    const h = Array.from(b, x => x.toString(16).padStart(2, '0'));
+    return `${h.slice(0,4).join('')}-${h.slice(4,6).join('')}-${h.slice(6,8).join('')}-${h.slice(8,10).join('')}-${h.slice(10).join('')}`;
+  }
+  return null;
+}
+
+function mostrarToastRegistrosPago(msg, tipo){
+  const toast = document.getElementById('toast-registros-pago');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.className = 'toast ' + tipo;
+  toast.style.display = msg ? 'block' : 'none';
+}
+
+function actualizarBotonAgregarRegistroPago(){
+  const btn = document.getElementById('btn-rp-agregar');
+  if (!btn) return;
+  // Solo se ofrece el alta cuando la lista cargó bien y no hay un alta abierta.
+  btn.style.display = (detalleRegistrosPagoEstado === 'ok' && !rpAltaId && !rpEdicionId) ? 'inline-block' : 'none';
+}
+
+function reiniciarFormRegistroPago(){
+  rpAltaId = null;
+  rpEdicionId = null;
+  rpFormInicial = null;
+  const form = document.getElementById('rp-form');
+  if (form) form.style.display = 'none';
+  mostrarToastRegistrosPago('', 'ok');
+  actualizarBotonAgregarRegistroPago();
+}
+
+function opcionesRegistroPagoHTML(items, placeholder, texto){
+  return `<option value="">${escapeHtml(placeholder)}</option>` +
+    items.map(i => `<option value="${escapeHtml(i.id)}">${escapeHtml(texto(i))}</option>`).join('');
+}
+
+// `original` = registro en edición (P4c) o null en un alta. Se ofrecen solo
+// valores activos; el que ya tiene el registro se conserva aunque después se
+// haya desactivado (mismo criterio que los catálogos de 7C-4c).
+function clasificacionesActivasRegistroPago(original){
+  return clasificaciones.filter(c => c.activo || (original && c.id === original.clasificacion_id))
+    .slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+}
+function empresasActivasRegistroPago(original){
+  return empresas.filter(e => e.activo !== false || (original && e.id === original.empresa_id))
+    .slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+}
+
+function actualizarSugerenciaDiasRegistroPago(){
+  const per = periodicidades.find(x => x.id === document.getElementById('rp-periodicidad').value);
+  document.getElementById('rp-dias-hint').textContent = per
+    ? `Vacío = ${Number(per.dias_default).toLocaleString('es-MX', { maximumFractionDigits: 2 })} días, los de la periodicidad.`
+    : 'Vacío = los días de la periodicidad.';
+}
+
+function abrirFormRegistroPago(){
+  if (!detalleActual || detalleRegistrosPagoEstado !== 'ok' || rpAltaId || rpEdicionId) return;
+  if (detalleActual.estatus === 'Baja') {
+    mostrarToastRegistrosPago('No se pueden agregar registros de pago a una persona con estatus Baja.', 'err');
+    return;
+  }
+  if (clasificacionesError) {
+    mostrarToastRegistrosPago('El catálogo de clasificaciones no se cargó correctamente. Recarga la página antes de agregar un registro de pago.', 'err');
+    return;
+  }
+  const activas = clasificacionesActivasRegistroPago(null);
+  if (!activas.length) {
+    mostrarToastRegistrosPago('No hay clasificaciones activas. Crea o reactiva una en Catálogos antes de agregar un registro de pago.', 'err');
+    return;
+  }
+  if (!periodicidades.length) {
+    mostrarToastRegistrosPago('No hay periodicidades disponibles. Recarga la página antes de agregar un registro de pago.', 'err');
+    return;
+  }
+  const id = nuevoUuidRegistroPago();
+  if (!id) {
+    mostrarToastRegistrosPago('Este navegador no permite generar el identificador del registro. Usa un navegador actualizado.', 'err');
+    return;
+  }
+  llenarFormRegistroPago(null);
+  rpAltaId = id;
+  mostrarFormRegistroPago();
+}
+
+// Llena el formulario para un alta (original = null) o para editar un
+// registro existente (P4c). Es el mismo formulario en ambos casos.
+function llenarFormRegistroPago(original){
+  const r = original || {};
+  const texto = v => (v === null || v === undefined) ? '' : String(v);
+  const periodicidadesOrdenadas = periodicidades.slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+  document.getElementById('rp-clasificacion').innerHTML = opcionesRegistroPagoHTML(clasificacionesActivasRegistroPago(original), 'Selecciona…', c => c.nombre + (c.activo ? '' : ' (inactiva)'));
+  document.getElementById('rp-periodicidad').innerHTML = opcionesRegistroPagoHTML(periodicidadesOrdenadas, 'Selecciona…', p => p.nombre);
+  document.getElementById('rp-empresa').innerHTML = opcionesRegistroPagoHTML(empresasActivasRegistroPago(original), 'Sin asignar', e => e.nombre + (e.activo !== false ? '' : ' (inactiva)'));
+  document.getElementById('rp-clasificacion').value = texto(r.clasificacion_id);
+  document.getElementById('rp-periodicidad').value = texto(r.periodicidad_id);
+  document.getElementById('rp-empresa').value = texto(r.empresa_id);
+  document.getElementById('rp-modalidad').value = texto(r.modalidad_sueldo);
+  document.getElementById('rp-sueldo').value = texto(r.sueldo);
+  document.getElementById('rp-dias').value = texto(r.dias_periodo);
+  document.getElementById('rp-fecha-inicio').value = original ? texto(r.fecha_inicio) : fechaLocalHoy();
+  document.getElementById('rp-fecha-fin').value = texto(r.fecha_fin);
+  document.getElementById('rp-notas').value = texto(r.notas);
+  fillSelectRegistroPatronal(document.getElementById('rp-registro-patronal'), r.empresa_id || null, r.registro_patronal_id || null);
+  actualizarSugerenciaDiasRegistroPago();
+  // La fecha de fin solo se captura al editar; un alta siempre nace activa y sin fecha de fin.
+  document.getElementById('rp-fecha-fin-campo').style.display = original ? 'block' : 'none';
+  document.getElementById('rp-form-titulo').textContent = original ? 'Editar registro de pago' : 'Nuevo registro de pago';
+}
+
+function mostrarFormRegistroPago(){
+  document.getElementById('btn-rp-guardar').disabled = false;
+  mostrarToastRegistrosPago('', 'ok');
+  document.getElementById('rp-form').style.display = 'block';
+  actualizarBotonAgregarRegistroPago();
+}
+
+function cancelarFormRegistroPago(){
+  if (rpEnviando) return; // no se abandona un envío en curso
+  reiniciarFormRegistroPago();
+}
+
+document.getElementById('rp-periodicidad').addEventListener('change', actualizarSugerenciaDiasRegistroPago);
+document.getElementById('rp-empresa').addEventListener('change', function(){
+  // Sin registro patronal predeterminado: es un dato opcional del registro.
+  fillSelectRegistroPatronal(document.getElementById('rp-registro-patronal'), this.value || null, null);
+});
+
+// Importe o días capturados: número positivo, sin exponentes, con un máximo
+// de decimales y de valor. No se redondea en silencio.
+function validarNumeroRegistroPago(crudo, etiqueta, maximo){
+  const v = (crudo || '').trim();
+  if (!/^\d+(\.\d+)?$/.test(v)) return { error: `${etiqueta}: captura un número válido.` };
+  if ((v.split('.')[1] || '').length > 2) return { error: `${etiqueta}: máximo 2 decimales.` };
+  const n = Number(v);
+  if (!(n > 0)) return { error: `${etiqueta}: debe ser mayor que cero.` };
+  if (n > maximo) return { error: `${etiqueta}: el valor es demasiado grande.` };
+  return { valor: v };
+}
+
+// ¿Hay cambios sin guardar en RFC, CURP, NSS o CP fiscal? Misma comparación
+// (normalizada) que usa guardarDetalle. La base valida los requisitos contra
+// lo GUARDADO, no contra lo que está en pantalla.
+function identidadSinGuardarDetalle(){
+  const p = detalleActual;
+  return normalizarExterior(document.getElementById('d-rfc').value) !== normalizarExterior(p.rfc)
+      || normalizarExterior(document.getElementById('d-curp').value) !== normalizarExterior(p.curp)
+      || normalizarNSS(document.getElementById('d-nss').value) !== normalizarNSS(p.nss)
+      || normalizarCP(document.getElementById('d-cp-fiscal').value) !== normalizarCP(p.cp_fiscal);
+}
+
+// Requisitos de la clasificación que el expediente GUARDADO no cumple. Un
+// dato cuenta como cumplido solo si está capturado, es válido y ya está
+// guardado en su forma normalizada (que es lo que revisa la base).
+function requisitosFaltantesRegistroPago(clasificacion, p){
+  const revision = {
+    requiere_rfc:       [validarRFCPersona, p.rfc],
+    requiere_curp:      [validarCURP, p.curp],
+    requiere_nss:       [validarNSS, p.nss],
+    requiere_cp_fiscal: [validarCPFiscal, p.cp_fiscal]
+  };
+  return REQUISITOS_CLASIFICACION.filter(r => clasificacion[r.bandera]).filter(r => {
+    const [validar, guardado] = revision[r.bandera];
+    const chk = validar(guardado);
+    return !(chk.valido && chk.valor !== null && chk.valor === guardado);
+  }).map(r => r.etiqueta);
+}
+
+// `original` = registro en edición (P4c) o null en un alta.
+function validarFormRegistroPago(original = null){
+  const p = detalleActual;
+  if (!original && p.estatus === 'Baja') return { error: 'No se pueden agregar registros de pago a una persona con estatus Baja.' };
+
+  const clasificacion = clasificacionesActivasRegistroPago(original).find(c => c.id === document.getElementById('rp-clasificacion').value);
+  if (!clasificacion) return { error: 'Selecciona una clasificación.' };
+  const periodicidad = periodicidades.find(x => x.id === document.getElementById('rp-periodicidad').value);
+  if (!periodicidad) return { error: 'Selecciona una periodicidad.' };
+  const modalidad = document.getElementById('rp-modalidad').value;
+  if (modalidad !== 'bruto' && modalidad !== 'neto') return { error: 'Selecciona la modalidad del sueldo: bruto o neto.' };
+
+  const sueldoCrudo = document.getElementById('rp-sueldo').value;
+  if (!(sueldoCrudo || '').trim()) return { error: 'Sueldo: captura un importe mayor que cero.' };
+  const sueldo = validarNumeroRegistroPago(sueldoCrudo, 'Sueldo', 9999999999.99);
+  if (sueldo.error) return sueldo;
+
+  const diasCrudo = (document.getElementById('rp-dias').value || '').trim();
+  let dias = null;
+  if (diasCrudo) {
+    const d = validarNumeroRegistroPago(diasCrudo, 'Días del periodo', 9999.99);
+    if (d.error) return d;
+    dias = d.valor;
+  }
+
+  const fechaInicio = document.getElementById('rp-fecha-inicio').value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaInicio)) return { error: 'Captura la fecha de inicio.' };
+  // P4c: la fecha de fin solo existe al editar; es informativa y opcional.
+  const fechaFin = original ? (document.getElementById('rp-fecha-fin').value || null) : null;
+  if (fechaFin && !/^\d{4}-\d{2}-\d{2}$/.test(fechaFin)) return { error: 'La fecha de fin no es válida.' };
+  if (fechaFin && fechaFin < fechaInicio) return { error: 'La fecha de fin no puede ser anterior a la fecha de inicio.' };
+
+  const empresaId = document.getElementById('rp-empresa').value || null;
+  if (empresaId && !empresasActivasRegistroPago(original).some(e => e.id === empresaId)) return { error: 'La empresa seleccionada ya no está disponible.' };
+  const rpId = document.getElementById('rp-registro-patronal').value || null;
+  if (rpId) {
+    if (!empresaId) return { error: 'Para asignar un registro patronal primero elige la empresa.' };
+    const esElQueYaTenia = !!original && original.registro_patronal_id === rpId;
+    if (!registrosPatronales.some(r => r.id === rpId && r.empresa_id === empresaId && (r.activo || esElQueYaTenia))) {
+      return { error: 'El registro patronal seleccionado no pertenece a la empresa elegida o ya no está activo.' };
+    }
+  }
+
+  // Las notas son texto libre: no se normalizan. En edición solo se revisa su
+  // longitud si el usuario las cambió.
+  const notasCrudas = document.getElementById('rp-notas').value;
+  const notas = notasCrudas.trim();
+  const notasCambiaron = !original || !rpFormInicial || notasCrudas !== rpFormInicial.notas;
+  if (notasCambiaron && notas.length > 500) return { error: 'Las notas no pueden pasar de 500 caracteres.' };
+
+  // Requisitos del expediente: la base los revisa en un alta, y en una
+  // edición solo si el registro está activo y cambia de clasificación.
+  const revisaRequisitos = !original || (original.activo && clasificacion.id !== original.clasificacion_id);
+  if (revisaRequisitos) {
+    if (identidadSinGuardarDetalle()) {
+      return { error: 'Hay cambios sin guardar en RFC, CURP, NSS o código postal fiscal. Guarda primero los cambios del expediente y vuelve a abrirlo.' };
+    }
+    const faltan = requisitosFaltantesRegistroPago(clasificacion, p);
+    if (faltan.length) {
+      return { error: `Para un registro de pago "${clasificacion.nombre}", el expediente debe tener completos y con formato válido: ${faltan.join(', ')}. Captúralos en la sección Identidad, guarda y vuelve a intentarlo.` };
+    }
+  }
+
+  return { payload: {
+    clasificacion_id: clasificacion.id,
+    periodicidad_id: periodicidad.id,
+    sueldo: sueldo.valor,
+    modalidad_sueldo: modalidad,
+    dias_periodo: dias,
+    empresa_id: empresaId,
+    registro_patronal_id: rpId,
+    fecha_inicio: fechaInicio,
+    ...(original ? { fecha_fin: fechaFin } : {}),
+    notas: notas || null
+  } };
+}
+
+function esErrorDeRedRegistroPago(error){
+  return !error.code && /failed to fetch|networkerror|load failed/i.test(error.message || '');
+}
+
+async function guardarRegistroPago(){
+  if (!detalleActual || rpEnviando || (!rpAltaId && !rpEdicionId)) return;
+  if (rpEdicionId) return guardarEdicionRegistroPago();
+  const personaId = detalleActual.id;
+  const altaId = rpAltaId;
+  const validacion = validarFormRegistroPago();
+  if (validacion.error) { mostrarToastRegistrosPago(validacion.error, 'err'); return; }
+
+  const btn = document.getElementById('btn-rp-guardar');
+  rpEnviando = true;
+  btn.disabled = true;
+  let error = null;
+  try {
+    ({ error } = await sb.from('personal_registros_pago').insert({ id: altaId, personal_id: personaId, ...validacion.payload }));
+  } catch (e) {
+    error = e;
+  }
+  rpEnviando = false;
+  btn.disabled = false;
+
+  // Si mientras tanto se cerró el Detalle o se abrió el de otra persona, no
+  // se pinta nada (el formulario ya se reinició al cerrar o cambiar).
+  if (!detalleActual || detalleActual.id !== personaId || rpAltaId !== altaId) return;
+
+  // Mismo `id` rechazado por la llave primaria: el alta ya se había guardado
+  // en un intento anterior.
+  const yaGuardado = !!error && error.code === '23505' && restriccionDelError(error) === 'personal_registros_pago_pkey';
+  if (!error || yaGuardado) {
+    reiniciarFormRegistroPago();
+    mostrarToastRegistrosPago(yaGuardado
+      ? 'El registro de pago ya se había guardado en un intento anterior. Revisa sus datos en la lista.'
+      : 'Registro de pago guardado.', 'ok');
+    cargarRegistrosPagoGlobal(); // Fase 8: la Lista y el Resumen reflejan el cambio
+    await cargarRegistrosPagoDetalle(personaId);
+    return;
+  }
+
+  if (esErrorDeRedRegistroPago(error)) {
+    // Resultado desconocido: antes de permitir otro intento se recarga la
+    // lista para ver si el alta sí llegó a guardarse.
+    await cargarRegistrosPagoDetalle(personaId);
+    if (!detalleActual || detalleActual.id !== personaId || rpAltaId !== altaId) return;
+    if (detalleRegistrosPagoEstado === 'ok' && detalleRegistrosPago.some(r => r.id === altaId)) {
+      cargarRegistrosPagoGlobal();
+      reiniciarFormRegistroPago();
+      mostrarToastRegistrosPago('Registro de pago guardado.', 'ok');
+      return;
+    }
+  }
+  mostrarToastRegistrosPago('No se pudo guardar el registro de pago: ' + traducirErrorSupabase(error), 'err');
+}
+
+// ---------------------------------------------------------------------
+// Edición, cierre y reactivación de un registro de pago (7D-6b, P4c).
+// - Sin borrado: un registro se cierra (activo = false) y sigue visible.
+// - `activo` es la única fuente de verdad de vigencia; fecha_fin es
+//   informativa.
+// - Nunca se envían id, personal_id ni tenant_id. La edición envía solo los
+//   campos que el usuario cambió, y nunca `activo` (eso es cerrar/reactivar).
+// - Cada operación toca un único registro: no se recalcula ni se modifica
+//   ningún otro registro ni ningún histórico.
+// - La base decide: al reactivar, o al cambiar la clasificación de un
+//   registro activo, el trigger vuelve a revisar los requisitos.
+// - No hay regla que impida varios registros activos a la vez (decisión de
+//   7D-6a), así que reactivar no revisa ni cierra otros registros.
+// ---------------------------------------------------------------------
+const CAMPOS_FORM_REGISTRO_PAGO = {
+  clasificacion_id: 'rp-clasificacion', periodicidad_id: 'rp-periodicidad', modalidad_sueldo: 'rp-modalidad',
+  sueldo: 'rp-sueldo', dias_periodo: 'rp-dias', fecha_inicio: 'rp-fecha-inicio', fecha_fin: 'rp-fecha-fin',
+  empresa_id: 'rp-empresa', registro_patronal_id: 'rp-registro-patronal', notas: 'rp-notas'
+};
+function leerFormRegistroPago(){
+  const valores = {};
+  Object.keys(CAMPOS_FORM_REGISTRO_PAGO).forEach(campo => { valores[campo] = document.getElementById(CAMPOS_FORM_REGISTRO_PAGO[campo]).value; });
+  return valores;
+}
+
+function accionesRegistroPagoHTML(r){
+  const id = escapeHtml(r.id);
+  const estilo = 'margin-top:0;padding:5px 12px;font-size:12px;';
+  return `<button type="button" class="primary" style="${estilo}" onclick="editarRegistroPago('${id}')">Editar</button> ` +
+    (r.activo
+      ? `<button type="button" class="primary" style="${estilo}background:var(--danger);" onclick="cerrarRegistroPago('${id}')">Cerrar</button>`
+      : `<button type="button" class="primary" style="${estilo}" onclick="reactivarRegistroPago('${id}')">Reactivar</button>`);
+}
+
+// Una sola operación a la vez: ni con un envío en curso ni con el
+// formulario abierto (para no perder lo que se está capturando).
+function puedeOperarRegistroPago(){
+  if (!detalleActual || rpEnviando || detalleRegistrosPagoEstado !== 'ok') return false;
+  if (rpAltaId || rpEdicionId) {
+    mostrarToastRegistrosPago('Guarda o cancela primero el registro que tienes abierto.', 'err');
+    return false;
+  }
+  return true;
+}
+
+function editarRegistroPago(id){
+  if (!puedeOperarRegistroPago()) return;
+  const original = detalleRegistrosPago.find(r => r.id === id);
+  if (!original) return;
+  if (clasificacionesError) {
+    mostrarToastRegistrosPago('El catálogo de clasificaciones no se cargó correctamente. Recarga la página antes de editar un registro de pago.', 'err');
+    return;
+  }
+  llenarFormRegistroPago(original);
+  rpFormInicial = leerFormRegistroPago();
+  rpEdicionId = id;
+  mostrarFormRegistroPago();
+}
+
+// UPDATE de un único registro. `activoEsperado` (true/false) hace que cerrar
+// y reactivar no pisen un cambio que otra persona ya hizo. Se piden de
+// vuelta las filas afectadas para saber si el registro seguía disponible.
+async function actualizarRegistroPago(registroId, cambios, activoEsperado){
+  let data = null, error = null;
+  try {
+    let consulta = sb.from('personal_registros_pago').update(cambios).eq('id', registroId);
+    if (activoEsperado !== null) consulta = consulta.eq('activo', activoEsperado);
+    ({ data, error } = await consulta.select('id'));
+  } catch (e) {
+    error = e;
+  }
+  return { error, filas: error ? 0 : (data || []).length };
+}
+
+// Envía el cambio y deja la lista al día. Devuelve true si se guardó.
+async function aplicarCambioRegistroPago(registroId, cambios, activoEsperado, mensajeOk){
+  const personaId = detalleActual.id;
+  const btn = document.getElementById('btn-rp-guardar');
+  rpEnviando = true;
+  btn.disabled = true;
+  const { error, filas } = await actualizarRegistroPago(registroId, cambios, activoEsperado);
+  rpEnviando = false;
+  btn.disabled = false;
+  if (!detalleActual || detalleActual.id !== personaId) return false;
+  if (error) {
+    mostrarToastRegistrosPago('No se pudo guardar el cambio: ' + traducirErrorSupabase(error), 'err');
+    if (esErrorDeRedRegistroPago(error)) await cargarRegistrosPagoDetalle(personaId); // resultado desconocido: mostrar el estado real
+    return false;
+  }
+  reiniciarFormRegistroPago();
+  mostrarToastRegistrosPago(filas
+    ? mensajeOk
+    : 'El registro ya había cambiado o no está disponible. Se actualizó la lista; revisa su estado.', filas ? 'ok' : 'err');
+  cargarRegistrosPagoGlobal(); // Fase 8
+  await cargarRegistrosPagoDetalle(personaId);
+  return filas > 0;
+}
+
+async function guardarEdicionRegistroPago(){
+  const registroId = rpEdicionId;
+  const original = detalleRegistrosPago.find(r => r.id === registroId);
+  if (!original || !rpFormInicial) { reiniciarFormRegistroPago(); return; }
+  const validacion = validarFormRegistroPago(original);
+  if (validacion.error) { mostrarToastRegistrosPago(validacion.error, 'err'); return; }
+  // Solo se envía lo que el usuario cambió respecto a lo que se le mostró:
+  // así no se reescriben valores que no tocó (p. ej. notas con saltos de línea).
+  const actual = leerFormRegistroPago();
+  const cambios = {};
+  Object.keys(CAMPOS_FORM_REGISTRO_PAGO).forEach(campo => {
+    if (actual[campo] !== rpFormInicial[campo]) cambios[campo] = validacion.payload[campo];
+  });
+  if (!Object.keys(cambios).length) { mostrarToastRegistrosPago('No hay cambios que guardar.', 'err'); return; }
+  await aplicarCambioRegistroPago(registroId, cambios, null, 'Cambios del registro de pago guardados.');
+}
+
+async function cerrarRegistroPago(id){
+  if (!puedeOperarRegistroPago()) return;
+  const r = detalleRegistrosPago.find(x => x.id === id);
+  if (!r || !r.activo) return;
+  if (!confirm(`¿Cerrar el registro de pago "${r.clasificacion_nombre || ''}" de ${money(r.sueldo)}?\n\nDejará de estar activo y seguirá visible como histórico. No se elimina y se puede reactivar.`)) return;
+  // Fecha de fin: se respeta la que ya tenga si no es futura; si no, hoy
+  // (o la fecha de inicio, si el registro empieza en el futuro).
+  const hoy = fechaLocalHoy();
+  const fechaFin = (r.fecha_fin && r.fecha_fin <= hoy) ? r.fecha_fin : (r.fecha_inicio > hoy ? r.fecha_inicio : hoy);
+  await aplicarCambioRegistroPago(id, { activo: false, fecha_fin: fechaFin }, true, 'Registro de pago cerrado. Sigue visible como histórico.');
+}
+
+async function reactivarRegistroPago(id){
+  if (!puedeOperarRegistroPago()) return;
+  const r = detalleRegistrosPago.find(x => x.id === id);
+  if (!r || r.activo) return;
+  if (detalleActual.estatus === 'Baja') {
+    mostrarToastRegistrosPago('No se pueden reactivar registros de pago de una persona con estatus Baja.', 'err');
+    return;
+  }
+  // Al reactivar, la base vuelve a revisar los requisitos de la clasificación.
+  const clasificacion = clasificaciones.find(c => c.id === r.clasificacion_id);
+  if (clasificacion) {
+    if (identidadSinGuardarDetalle()) {
+      mostrarToastRegistrosPago('Hay cambios sin guardar en RFC, CURP, NSS o código postal fiscal. Guarda primero los cambios del expediente y vuelve a abrirlo.', 'err');
+      return;
+    }
+    const faltan = requisitosFaltantesRegistroPago(clasificacion, detalleActual);
+    if (faltan.length) {
+      mostrarToastRegistrosPago(`Para reactivar un registro de pago "${clasificacion.nombre}", el expediente debe tener completos y con formato válido: ${faltan.join(', ')}. Captúralos en la sección Identidad, guarda y vuelve a intentarlo.`, 'err');
+      return;
+    }
+  }
+  if (!confirm(`¿Reactivar el registro de pago "${r.clasificacion_nombre || ''}" de ${money(r.sueldo)}?\n\nVolverá a estar activo con su misma fecha de inicio y se quitará su fecha de fin.`)) return;
+  await aplicarCambioRegistroPago(id, { activo: true, fecha_fin: null }, false, 'Registro de pago reactivado.');
 }
 
 async function guardarDetalle(){
@@ -1345,8 +2146,6 @@ async function guardarDetalle(){
     fecha_baja: document.getElementById('d-fechabaja').value || null,
     comentario_baja: document.getElementById('d-comentariobaja').value.trim(),
     no_fonacot: document.getElementById('d-fonacot').value.trim(),
-    salario_por_hora: parseFloat(document.getElementById('d-salariohora').value) || null,
-    horas_por_dia: parseFloat(document.getElementById('d-horasdia').value) || null,
     restricciones_salud: document.getElementById('d-restricciones').value.trim(),
     contacto_emergencia_nombre: document.getElementById('d-emerg-nombre').value.trim(),
     contacto_emergencia_telefono: document.getElementById('d-emerg-telefono').value.trim(),
@@ -1372,17 +2171,6 @@ async function guardarDetalle(){
     await sb.from('movimientos').insert(cambios.map(c=>({personal_id:detalleActual.id, campo:c.campo, valor_anterior:String(c.antes), valor_nuevo:String(c.despues), usuario:'admin'})));
   }
 
-  const filasPercepciones = Array.from(document.querySelectorAll('#d-percepciones .concepto-row')).map(row=>({
-    id: row.dataset.percepcion,
-    monto: parseFloat(row.querySelector('.monto-percepcion').value)||0
-  }));
-  for (const fp of filasPercepciones) {
-    const original = detallePercepciones.find(x=>x.id===fp.id);
-    if (original && Number(original.monto)!==fp.monto) {
-      await sb.from('personal_percepciones').update({monto: fp.monto}).eq('id', fp.id);
-    }
-  }
-
   btn.disabled=false;
   toast.textContent='Cambios guardados.'; toast.className='toast ok'; toast.style.display='block';
   setTimeout(()=>toast.style.display='none',2500);
@@ -1399,7 +2187,123 @@ async function mostrarApp(){
   await cargarEmpresasAdmin();
   await cargarCatalogos();
   await cargarClasificaciones();
+  await cargarRegistrosPagoGlobal(); // Fase 8: esquemas activos para la Lista y el Resumen
 }
+
+// ---------------------------------------------------------------------
+// Proyectos y periodicidades (Fase 1 de producto): crear y editar desde la
+// interfaz, sin entrar a Supabase. Estas dos tablas no tienen columna
+// `activo`, así que aquí no hay desactivar ni borrar: solo crear y editar.
+// ---------------------------------------------------------------------
+const CATALOGOS_SIMPLES = {
+  proyectos:      { lista: () => proyectos,      conDias: false, singular: 'proyecto' },
+  periodicidades: { lista: () => periodicidades, conDias: true,  singular: 'periodicidad' }
+};
+let catalogoSimpleEditando = null; // { tabla, id } de la fila en edición
+let catalogoSimpleEnviando = false;
+
+function mostrarToastCatalogoSimple(tabla, msg, tipo){
+  const toast = document.getElementById('toast-' + tabla);
+  toast.textContent = msg; toast.className = 'toast ' + tipo; toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 4000);
+}
+
+function renderCatalogoSimple(tabla){
+  const cfg = CATALOGOS_SIMPLES[tabla];
+  const filas = cfg.lista().slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+  document.getElementById(tabla + '-vacio').style.display = filas.length ? 'none' : 'block';
+  const estilo = 'margin-top:0;padding:5px 12px;font-size:12px;';
+  document.getElementById('tabla-' + tabla).innerHTML = filas.map(f => {
+    const id = escapeHtml(f.id);
+    if (catalogoSimpleEditando && catalogoSimpleEditando.tabla === tabla && catalogoSimpleEditando.id === f.id) {
+      return `<tr>
+        <td><input type="text" id="edit-${tabla}-nombre" value="${escapeHtml(f.nombre)}"></td>
+        ${cfg.conDias ? `<td><input type="number" step="0.01" min="0" id="edit-${tabla}-dias" value="${escapeHtml(f.dias_default)}"></td>` : ''}
+        <td style="white-space:nowrap;">
+          <button type="button" class="primary" style="${estilo}" onclick="guardarEdicionCatalogoSimple('${tabla}','${id}')">Guardar</button>
+          <button type="button" class="primary" style="${estilo}background:var(--surface-2);color:var(--text);" onclick="cancelarEdicionCatalogoSimple('${tabla}')">Cancelar</button>
+        </td></tr>`;
+    }
+    return `<tr>
+      <td>${escapeHtml(f.nombre)}</td>
+      ${cfg.conDias ? `<td>${escapeHtml(Number(f.dias_default).toLocaleString('es-MX', { maximumFractionDigits: 2 }))}</td>` : ''}
+      <td><button type="button" class="primary" style="${estilo}" onclick="editarCatalogoSimple('${tabla}','${id}')">Editar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// Tras crear o editar: se refrescan los selectores y las vistas que usan el catálogo.
+function refrescarUsosCatalogoSimple(tabla){
+  renderCatalogoSimple(tabla);
+  if (tabla === 'proyectos') {
+    const alta = document.getElementById('f-proyecto'), filtro = document.getElementById('filtro-proyecto');
+    const vAlta = alta.value, vFiltro = filtro.value; // se conserva lo que el usuario tenía elegido
+    fillSelect(alta, proyectos, null); fillSelect(filtro, proyectos, 'Todos los proyectos');
+    if (vAlta) alta.value = vAlta;
+    filtro.value = vFiltro;
+    renderTabla(); renderResumen();
+  } else {
+    cargarRegistrosPagoGlobal(); // los esquemas traen el nombre y los días de su periodicidad
+  }
+}
+
+// Valida nombre (y días). `excluirId` = fila en edición, para no marcarla como duplicada de sí misma.
+function validarCatalogoSimple(tabla, nombreCrudo, diasCrudo, excluirId){
+  const cfg = CATALOGOS_SIMPLES[tabla];
+  const nombre = (nombreCrudo || '').trim();
+  if (!nombre) return { error: 'Escribe un nombre.' };
+  if (cfg.lista().some(f => f.id !== excluirId && String(f.nombre).trim().toLowerCase() === nombre.toLowerCase())) {
+    return { error: `Ya existe ${cfg.singular === 'proyecto' ? 'un proyecto' : 'una periodicidad'} con ese nombre.` };
+  }
+  const datos = { nombre };
+  if (cfg.conDias) {
+    const dias = validarNumeroRegistroPago(diasCrudo, 'Días del periodo', 9999.99);
+    if (dias.error) return dias;
+    datos.dias_default = dias.valor;
+  }
+  return { datos };
+}
+
+async function agregarCatalogoSimple(tabla){
+  if (catalogoSimpleEnviando) return;
+  const cfg = CATALOGOS_SIMPLES[tabla];
+  const inputNombre = document.getElementById(tabla === 'proyectos' ? 'input-nuevo-proyecto' : 'input-nueva-periodicidad');
+  const inputDias = cfg.conDias ? document.getElementById('input-nueva-periodicidad-dias') : null;
+  const v = validarCatalogoSimple(tabla, inputNombre.value, inputDias ? inputDias.value : null, null);
+  if (v.error) { mostrarToastCatalogoSimple(tabla, v.error, 'err'); return; }
+  catalogoSimpleEnviando = true;
+  const { data, error } = await sb.from(tabla).insert(v.datos).select().single();
+  catalogoSimpleEnviando = false;
+  if (error) { mostrarToastCatalogoSimple(tabla, 'No se pudo guardar: ' + traducirErrorSupabase(error), 'err'); return; }
+  cfg.lista().push(data);
+  inputNombre.value = ''; if (inputDias) inputDias.value = '';
+  mostrarToastCatalogoSimple(tabla, 'Guardado.', 'ok');
+  refrescarUsosCatalogoSimple(tabla);
+}
+
+function editarCatalogoSimple(tabla, id){ catalogoSimpleEditando = { tabla, id }; renderCatalogoSimple(tabla); }
+function cancelarEdicionCatalogoSimple(tabla){ catalogoSimpleEditando = null; renderCatalogoSimple(tabla); }
+
+async function guardarEdicionCatalogoSimple(tabla, id){
+  if (catalogoSimpleEnviando) return;
+  const cfg = CATALOGOS_SIMPLES[tabla];
+  const fila = cfg.lista().find(f => f.id === id);
+  if (!fila) return;
+  const inputDias = cfg.conDias ? document.getElementById('edit-' + tabla + '-dias') : null;
+  const v = validarCatalogoSimple(tabla, document.getElementById('edit-' + tabla + '-nombre').value, inputDias ? inputDias.value : null, id);
+  if (v.error) { mostrarToastCatalogoSimple(tabla, v.error, 'err'); return; }
+  catalogoSimpleEnviando = true;
+  const { error } = await sb.from(tabla).update(v.datos).eq('id', id);
+  catalogoSimpleEnviando = false;
+  if (error) { mostrarToastCatalogoSimple(tabla, 'No se pudo guardar: ' + traducirErrorSupabase(error), 'err'); return; }
+  Object.assign(fila, v.datos);
+  catalogoSimpleEditando = null;
+  mostrarToastCatalogoSimple(tabla, 'Cambios guardados.', 'ok');
+  refrescarUsosCatalogoSimple(tabla);
+}
+
+document.getElementById('form-nuevo-proyecto').addEventListener('submit', e => { e.preventDefault(); agregarCatalogoSimple('proyectos'); });
+document.getElementById('form-nueva-periodicidad').addEventListener('submit', e => { e.preventDefault(); agregarCatalogoSimple('periodicidades'); });
 
 // ---------------------------------------------------------------------
 // Catálogos organizacionales (7C-4a): áreas, departamentos, puestos,
@@ -1950,6 +2854,10 @@ function traducirErrorSupabase(error){
     case '42501': return 'No tienes permiso para realizar esta operación o tu sesión ya no es válida. Vuelve a iniciar sesión.';
     case 'PGRST301': case 'PGRST303': return 'Tu sesión expiró. Vuelve a iniciar sesión.';
     case '40001': case '40P01': return 'Otra persona modificó esta información al mismo tiempo. Recarga y vuelve a intentarlo.';
+    // 7D-6b (P4b): espera por bloqueo o tiempo agotado, y tabla o vista que
+    // no existe todavía en la base (p. ej. sin la migración 7D-6a).
+    case '55P03': case '57014': return 'La operación tardó demasiado porque esa información está en uso. Espera unos segundos y vuelve a intentarlo.';
+    case 'PGRST205': case '42P01': return 'Esta función aún no está disponible en el sistema.';
   }
   if (/failed to fetch|networkerror|load failed/i.test(error.message || '')) {
     return 'No hay conexión con el servidor. Revisa tu conexión a internet y vuelve a intentarlo.';

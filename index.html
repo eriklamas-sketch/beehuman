@@ -54,6 +54,14 @@
   .toast.err{background:var(--danger-soft);color:var(--danger);}
   .filters{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
   .filters select{width:auto;min-width:150px;}
+  .filters input[type=search]{width:auto;flex:1 1 260px;min-width:220px;}
+  .filters button,.lista-barra button,.paginador button{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;cursor:pointer;}
+  .filters button:disabled,.lista-barra button:disabled,.paginador button:disabled{opacity:.5;cursor:not-allowed;}
+  .lista-barra{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:13px;color:var(--text-secondary);}
+  .paginador{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--text-secondary);}
+  .paginador select{width:auto;padding:6px 8px;font-size:13px;}
+  th.ordenable{cursor:pointer;user-select:none;white-space:nowrap;}
+  th.ordenable:hover{color:var(--text);}
   table{width:100%;border-collapse:collapse;font-size:13.5px;}
   thead th{text-align:left;font-weight:500;color:var(--text-secondary);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
   tbody td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
@@ -266,17 +274,43 @@
       <h2>Personal registrado</h2>
       <p class="hint">Cambia el proyecto directamente en la fila: se guarda al momento.</p>
       <div class="filters">
-        <select id="filtro-empresa"><option value="">Todas las empresas</option></select>
-        <select id="filtro-proyecto"><option value="">Todos los proyectos</option></select>
+        <input type="search" id="buscar-personal" placeholder="Buscar por nombre, ID, RFC, CURP o NSS" autocomplete="off" aria-label="Buscar personas">
+        <select id="filtro-estatus" aria-label="Estatus">
+          <option value="Activo">Activos</option>
+          <option value="">Todos los estatus</option>
+          <option value="Suspendido">Suspendidos</option>
+          <option value="Baja">Bajas</option>
+        </select>
+        <select id="filtro-empresa" aria-label="Empresa"><option value="">Todas las empresas</option></select>
+        <select id="filtro-proyecto" aria-label="Proyecto"><option value="">Todos los proyectos</option></select>
+        <select id="filtro-coordinador" aria-label="Coordinador"><option value="">Todos los coordinadores</option></select>
+        <select id="filtro-clasificacion" aria-label="Clasificación de pago"><option value="">Todas las clasificaciones</option></select>
+        <select id="filtro-pendiente" aria-label="Pendientes de RH">
+          <option value="">Pendientes de RH: todos</option>
+          <option value="sin_esquema">Sin esquema de pago activo</option>
+          <option value="sin_fiscales">Sin RFC, CURP o NSS</option>
+          <option value="contrato">Contrato vencido o por vencer (30 días)</option>
+        </select>
+        <button type="button" id="limpiar-filtros">Limpiar filtros</button>
       </div>
-      <p class="hint" style="margin-top:-6px;">El coordinador y el jefe directo se asignan desde el detalle de cada persona.</p>
+      <div class="lista-barra">
+        <span id="lista-conteo"></span>
+        <button type="button" id="exportar-personal" disabled>Exportar</button>
+      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>ID</th><th>Nombre</th><th>Empresa</th><th>Proyecto</th><th>Coordinador</th><th>Estatus</th><th>Esquemas de pago</th></tr></thead>
+          <thead><tr id="encabezado-personal"></tr></thead>
           <tbody id="tabla-personal"></tbody>
         </table>
       </div>
       <div class="empty" id="lista-vacia" style="display:none;">Sin personal registrado todavía.</div>
+      <div class="paginador" id="lista-paginador" style="display:none;">
+        <label>Filas por página <select id="lista-tamano"><option>50</option><option>100</option></select></label>
+        <button type="button" id="pagina-anterior">Anterior</button>
+        <span id="pagina-texto"></span>
+        <button type="button" id="pagina-siguiente">Siguiente</button>
+      </div>
+      <p class="hint" style="margin:12px 0 0;">El coordinador y el jefe directo se asignan desde el detalle de cada persona.</p>
       <div class="loading" id="lista-cargando">Cargando…</div>
     </div>
   </section>
@@ -890,11 +924,143 @@ function resumenEsquemasPersonaHTML(p){
     (personaEnBaja(p) ? '<span class="pill">revisar: persona en Baja</span>' : '');
 }
 
+// ---------------------------------------------------------------------
+// Personal (Fase 2): búsqueda, filtros, orden, paginación y exportación.
+// Todo trabaja en el navegador sobre lo ya cargado del tenant (`personal`
+// y los esquemas activos); no hace consultas nuevas. La paginación es solo
+// de pantalla: la exportación incluye todas las coincidencias.
+// ---------------------------------------------------------------------
+const DIAS_AVISO_CONTRATO = 30;
+const COLUMNAS_PERSONAL = [
+  { clave: 'id',          titulo: 'ID',          valor: p => p.empleado_id || '' },
+  { clave: 'nombre',      titulo: 'Nombre',      valor: p => p.nombre_completo || '' },
+  { clave: 'empresa',     titulo: 'Empresa',     valor: p => empresaNombre(p.empresa_id) },
+  { clave: 'proyecto',    titulo: 'Proyecto',    valor: p => proyectoNombre(p.proyecto_id) },
+  { clave: 'puesto',      titulo: 'Puesto',      valor: p => nombreCatalogoPersona('puestos', p.puesto_id) },
+  { clave: 'coordinador', titulo: 'Coordinador', valor: p => nombreCoordinador(p) },
+  { clave: 'estatus',     titulo: 'Estatus',     valor: p => estatusPersona(p) },
+  { clave: 'esquemas',    titulo: 'Esquemas de pago', valor: null } // no ordenable
+];
+let listaOrden = { clave: 'nombre', sentido: 1 };
+let listaPagina = 1;
+let listaFiltrada = [];   // coincidencias en el orden visible; es lo que se exporta
+
+function estatusPersona(p){ return p.estatus || 'Activo'; }
+function nombreCatalogoPersona(tabla, id){ return id ? (nombreDeCatalogoPorId(tabla, id) || '') : ''; }
+function normalizarBusqueda(t){
+  return String(t == null ? '' : t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+function claveCoordinador(p){ return nombreCoordinador(p) || '__sin__'; }
+function sumarDias(fechaISO, dias){
+  const [a, m, d] = fechaISO.split('-').map(Number);
+  const f = new Date(a, m - 1, d + dias);
+  return `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`;
+}
+// Pendientes de RH: solo aplican a personas que no están en Baja.
+function tienePendiente(p, tipo, limiteContrato){
+  if (personaEnBaja(p)) return false;
+  if (tipo === 'sin_esquema') return registrosPagoGlobalEstado === 'ok' && esquemasActivosDe(p.id).length === 0;
+  if (tipo === 'sin_fiscales') return !p.rfc || !p.curp || !p.nss;
+  if (tipo === 'contrato') return !!p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0, 10) <= limiteContrato;
+  return true;
+}
+
+// Rellena un filtro conservando lo elegido; solo toca el DOM si cambiaron las opciones.
+function ponerOpcionesFiltro(id, opciones, textoTodos){
+  const sel = document.getElementById(id);
+  const html = `<option value="">${escapeHtml(textoTodos)}</option>` +
+    opciones.map(o => `<option value="${escapeHtml(o.valor)}">${escapeHtml(o.texto)}</option>`).join('');
+  if (sel.dataset.firma === html) return;
+  const previo = sel.value;
+  sel.innerHTML = html; sel.dataset.firma = html;
+  sel.value = opciones.some(o => o.valor === previo) ? previo : '';
+}
+function actualizarOpcionesFiltrosPersonal(){
+  const coords = new Map();
+  personal.forEach(p => { const n = nombreCoordinador(p); if (n) coords.set(n, n); });
+  const listaCoords = Array.from(coords.keys()).sort((a, b) => a.localeCompare(b, 'es')).map(n => ({ valor: n, texto: n }));
+  if (personal.some(p => !nombreCoordinador(p))) listaCoords.push({ valor: '__sin__', texto: 'Sin coordinador' });
+  ponerOpcionesFiltro('filtro-coordinador', listaCoords, 'Todos los coordinadores');
+  const clas = new Map();
+  registrosPagoActivos.forEach(r => { if (r.clasificacion_id) clas.set(r.clasificacion_id, r.clasificacion_nombre || 'Sin clasificación'); });
+  ponerOpcionesFiltro('filtro-clasificacion',
+    Array.from(clas.entries()).map(([valor, texto]) => ({ valor, texto })).sort((a, b) => a.texto.localeCompare(b.texto, 'es')),
+    'Todas las clasificaciones');
+}
+
+function filtrarYOrdenarPersonal(){
+  const v = id => document.getElementById(id).value;
+  const palabras = normalizarBusqueda(v('buscar-personal')).split(/\s+/).filter(Boolean);
+  const fEst = v('filtro-estatus'), fe = v('filtro-empresa'), fp = v('filtro-proyecto');
+  const fc = v('filtro-coordinador'), fcl = v('filtro-clasificacion'), fpen = v('filtro-pendiente');
+  const limiteContrato = sumarDias(fechaLocalHoy(), DIAS_AVISO_CONTRATO);
+  const filas = personal.filter(p => {
+    if (fEst && estatusPersona(p) !== fEst) return false;
+    if (fe && p.empresa_id !== fe) return false;
+    if (fp && p.proyecto_id !== fp) return false;
+    if (fc && claveCoordinador(p) !== fc) return false;
+    if (fcl && !esquemasActivosDe(p.id).some(r => r.clasificacion_id === fcl)) return false;
+    if (fpen && !tienePendiente(p, fpen, limiteContrato)) return false;
+    if (palabras.length) {
+      const texto = normalizarBusqueda([p.nombre_completo, p.empleado_id, p.rfc, p.curp, p.nss].filter(Boolean).join(' '));
+      if (!palabras.every(w => texto.includes(w))) return false;
+    }
+    return true;
+  });
+  const col = COLUMNAS_PERSONAL.find(c => c.clave === listaOrden.clave && c.valor) || COLUMNAS_PERSONAL[1];
+  const pares = filas.map(p => ({ p, k: String(col.valor(p) || '') }));
+  pares.sort((a, b) =>
+    (!a.k && b.k ? 1 : (a.k && !b.k ? -1 : 0)) ||   // los vacíos siempre al final
+    listaOrden.sentido * a.k.localeCompare(b.k, 'es', { numeric: true, sensitivity: 'base' }) ||
+    String(a.p.nombre_completo || '').localeCompare(String(b.p.nombre_completo || ''), 'es') ||
+    String(a.p.id).localeCompare(String(b.p.id)));
+  return pares.map(x => x.p);
+}
+
+function renderEncabezadoPersonal(){
+  document.getElementById('encabezado-personal').innerHTML = COLUMNAS_PERSONAL.map(c => {
+    if (!c.valor) return `<th>${escapeHtml(c.titulo)}</th>`;
+    const activa = c.clave === listaOrden.clave;
+    const flecha = activa ? (listaOrden.sentido === 1 ? ' ▲' : ' ▼') : '';
+    return `<th class="ordenable" onclick="ordenarPersonalPor('${c.clave}')" title="Ordenar por ${escapeHtml(c.titulo)}"${activa ? ` aria-sort="${listaOrden.sentido === 1 ? 'ascending' : 'descending'}"` : ''}>${escapeHtml(c.titulo)}${flecha}</th>`;
+  }).join('');
+}
+function ordenarPersonalPor(clave){
+  listaOrden = { clave, sentido: listaOrden.clave === clave ? -listaOrden.sentido : 1 };
+  listaPagina = 1; renderTabla();
+}
+function alCambiarFiltrosPersonal(){ listaPagina = 1; renderTabla(); }
+function limpiarFiltrosPersonal(){
+  document.getElementById('buscar-personal').value = '';
+  ['filtro-empresa','filtro-proyecto','filtro-coordinador','filtro-clasificacion','filtro-pendiente'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('filtro-estatus').value = 'Activo'; // la vista por defecto son los activos
+  alCambiarFiltrosPersonal();
+}
+
 function renderTabla(){
-  const fe=document.getElementById('filtro-empresa').value, fp=document.getElementById('filtro-proyecto').value;
-  const rows = personal.filter(p=>(!fe||p.empresa_id===fe)&&(!fp||p.proyecto_id===fp));
+  actualizarOpcionesFiltrosPersonal();
+  renderEncabezadoPersonal();
+  listaFiltrada = filtrarYOrdenarPersonal();
+  const total = listaFiltrada.length;
+  const tamano = Number(document.getElementById('lista-tamano').value) || 50;
+  const paginas = Math.max(1, Math.ceil(total / tamano));
+  listaPagina = Math.min(Math.max(1, listaPagina), paginas);
+  const rows = listaFiltrada.slice((listaPagina - 1) * tamano, listaPagina * tamano);
+
+  const vacia = document.getElementById('lista-vacia');
+  vacia.style.display = total ? 'none' : 'block';
+  vacia.textContent = personal.length ? 'Ninguna persona coincide con la búsqueda y los filtros.' : 'Sin personal registrado todavía.';
+  document.getElementById('lista-conteo').textContent = personal.length
+    ? `Mostrando ${total.toLocaleString('es-MX')} de ${personal.length.toLocaleString('es-MX')} personas` : '';
+  const btnExportar = document.getElementById('exportar-personal');
+  btnExportar.disabled = !total;
+  btnExportar.textContent = total ? `Exportar ${total.toLocaleString('es-MX')} ${total === 1 ? 'persona' : 'personas'} (CSV)` : 'Exportar';
+  document.getElementById('lista-paginador').style.display = total > 50 ? 'flex' : 'none';
+  document.getElementById('pagina-texto').textContent = `Página ${listaPagina} de ${paginas}`;
+  document.getElementById('pagina-anterior').disabled = listaPagina <= 1;
+  document.getElementById('pagina-siguiente').disabled = listaPagina >= paginas;
+
   const tbody = document.getElementById('tabla-personal');
-  document.getElementById('lista-vacia').style.display = rows.length?'none':'block';
   tbody.innerHTML = rows.map(p=>{
     // Si nombre_completo quedó vacío (registro sin nombre capturado), un
     // <a> sin texto no tiene área visible ni clicable en el navegador. Se
@@ -914,12 +1080,69 @@ function renderTabla(){
           ${proyectos.map(pr=>`<option value="${escapeHtml(pr.id)}" ${pr.id===p.proyecto_id?'selected':''}>${escapeHtml(pr.nombre)}</option>`).join('')}
         </select>
       </td>
+      <td>${escapeHtml(nombreCatalogoPersona('puestos', p.puesto_id) || '—')}</td>
       <td>${escapeHtml(nombreCoordinador(p))}</td>
-      <td><span class="pill">${escapeHtml(p.estatus||'Activo')}</span></td>
+      <td><span class="pill">${escapeHtml(estatusPersona(p))}</span></td>
       <td>${resumenEsquemasPersonaHTML(p)}</td>
     </tr>
   `;
   }).join('');
+}
+
+// Exportación CSV: una fila por persona, exactamente las coincidencias de
+// la búsqueda y los filtros, en el orden visible, sin importar la página.
+function celdaCSVPersonal(valor, comoTexto){
+  let t = String(valor == null ? '' : valor);
+  if (comoTexto === 'numero') return t;                    // número literal: se escribe tal cual, sin comillas
+  if (comoTexto && t) t = `="${t.replace(/"/g, '""')}"`;   // Excel lo conserva como texto (ceros a la izquierda, sin notación científica)
+  else if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;            // evita que Excel interprete el texto como fórmula
+  return /[",\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+}
+function construirCSVPersonal(filas){
+  const disponible = registrosPagoGlobalEstado === 'ok';
+  const fecha = v => v ? String(v).slice(0, 10) : '';
+  const columnas = [
+    ['ID', p => p.empleado_id, true],
+    ['Nombre', p => p.nombre_completo],
+    ['Estatus', p => estatusPersona(p)],
+    ['Empresa', p => p.empresa_id ? empresaNombre(p.empresa_id) : ''],
+    ['Proyecto', p => p.proyecto_id ? proyectoNombre(p.proyecto_id) : ''],
+    ['Puesto', p => nombreCatalogoPersona('puestos', p.puesto_id)],
+    ['Área', p => nombreCatalogoPersona('areas', p.area_id)],
+    ['Departamento', p => nombreCatalogoPersona('departamentos', p.departamento_id)],
+    ['Coordinador', p => nombreCoordinador(p)],
+    ['RFC', p => p.rfc, true],
+    ['CURP', p => p.curp, true],
+    ['NSS', p => p.nss, true],
+    ['Inicio de contrato', p => fecha(p.fecha_inicio_contrato)],
+    ['Vencimiento de contrato', p => fecha(p.fecha_vencimiento_contrato)],
+    ['Fecha de baja', p => fecha(p.fecha_baja)],
+    ['Esquemas de pago activos', p => {
+      if (!disponible) return 'No disponible';
+      return esquemasActivosDe(p.id).slice()
+        .sort((a, b) => String(a.clasificacion_nombre || '').localeCompare(String(b.clasificacion_nombre || ''), 'es') || String(a.id).localeCompare(String(b.id)))
+        .map(r => `${r.clasificacion_nombre || 'Sin clasificación'} ${money(r.sueldo)}`).join('; ');
+    }],
+    ['Total percepciones', p => {
+      if (!disponible) return '';
+      const esquemas = esquemasActivosDe(p.id);
+      if (!esquemas.length) return '';
+      // Número literal con punto decimal y dos decimales (p. ej. 18750.30): sin comillas, sin "=" y sin separador de miles.
+      return (esquemas.reduce((c, r) => c + Math.round(Number(r.sueldo) * 100), 0) / 100).toFixed(2);
+    }, 'numero']
+  ];
+  const lineas = [columnas.map(c => celdaCSVPersonal(c[0])).join(',')];
+  filas.forEach(p => lineas.push(columnas.map(c => celdaCSVPersonal(c[1](p), c[2])).join(',')));
+  return '﻿' + lineas.join('\r\n') + '\r\n';   // BOM: Excel abre los acentos correctamente
+}
+function exportarPersonalCSV(){
+  if (!listaFiltrada.length) return;
+  const blob = new Blob([construirCSVPersonal(listaFiltrada)], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `personal_${fechaLocalHoy()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function actualizarCampo(id,campo,valor){
@@ -1073,8 +1296,17 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
   });
 });
-document.getElementById('filtro-empresa').addEventListener('change', renderTabla);
-document.getElementById('filtro-proyecto').addEventListener('change', renderTabla);
+['filtro-estatus','filtro-empresa','filtro-proyecto','filtro-coordinador','filtro-clasificacion','filtro-pendiente','lista-tamano']
+  .forEach(id => document.getElementById(id).addEventListener('change', alCambiarFiltrosPersonal));
+let temporizadorBusquedaPersonal = null;
+document.getElementById('buscar-personal').addEventListener('input', () => {
+  clearTimeout(temporizadorBusquedaPersonal);
+  temporizadorBusquedaPersonal = setTimeout(alCambiarFiltrosPersonal, 150);
+});
+document.getElementById('limpiar-filtros').addEventListener('click', limpiarFiltrosPersonal);
+document.getElementById('exportar-personal').addEventListener('click', exportarPersonalCSV);
+document.getElementById('pagina-anterior').addEventListener('click', () => { listaPagina -= 1; renderTabla(); });
+document.getElementById('pagina-siguiente').addEventListener('click', () => { listaPagina += 1; renderTabla(); });
 
 function actualizarModoCoordinadorAlta(){
   const modo = document.querySelector('input[name="f-coordinador-modo"]:checked').value;

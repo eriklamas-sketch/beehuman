@@ -238,6 +238,20 @@
     .detail-section .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
   }
 
+
+  /* Ensure the segmented expediente navigation wins over legacy form styles. */
+  #modal-overlay .detail-modal nav.detail-tabs{display:flex!important;align-items:center;gap:7px;overflow-x:auto;padding:14px 0 12px;margin:0;border-bottom:1px solid #EEECE5;white-space:nowrap}
+  #modal-overlay .detail-modal nav.detail-tabs button{display:flex!important;align-items:center;flex:none;gap:8px;background:#F7F6F1;border:1px solid transparent;border-radius:12px;padding:10px 13px;color:#5D666D;font:600 12px Inter,sans-serif;white-space:nowrap;cursor:pointer}
+  #modal-overlay .detail-modal nav.detail-tabs button.active{background:#FFF0B8;border-color:#F7D76B;color:#171A16}
+  #modal-overlay .detail-modal nav.detail-tabs button span{display:grid;place-items:center;width:23px;height:23px;border-radius:8px;background:#E9E7DF;color:#69736D;font:700 10px Montserrat,sans-serif}
+  #modal-overlay .detail-modal nav.detail-tabs button.active span{background:#FFCC2F;color:#161616}
+  #modal-overlay .detail-modal [data-detail-section]{display:none!important}
+  #modal-overlay .detail-modal [data-detail-section].active{display:block!important}
+  #modal-overlay .detail-modal .detail-savebar{position:sticky;top:68px;z-index:8}
+  #modal-overlay .detail-modal .detail-section>h3{display:flex;align-items:center;gap:10px;font:700 13px Montserrat,sans-serif;letter-spacing:.045em;text-transform:uppercase;color:#2E6945;margin:0 0 18px;padding:0 0 12px;border-bottom:1px solid #EEECE5}
+  #modal-overlay .detail-modal .detail-section>h3:before{content:"";display:block;width:7px;height:23px;border-radius:99px;background:#FFCC2F}
+  @media(max-width:700px){#modal-overlay .detail-modal nav.detail-tabs{margin-right:-2px}#modal-overlay .detail-modal nav.detail-tabs button{padding:9px 10px;font-size:11px}#modal-overlay .detail-modal .detail-savebar{top:60px}}
+
 </style>
 </head>
 <body>

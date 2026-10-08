@@ -1462,11 +1462,11 @@ function mostrarAyudaBeeHuman(){
 function actualizarDashboard(){
   const total=personal.length;
   const vigentes=personal.filter(p=>!personaEnBaja(p));
-  const empresasUnicas=new Set(vigentes.map(p=>p.empresa_id).filter(Boolean)).size;
+  const empresasUnicas=empresas.length;
   const sinEsquema=registrosPagoGlobalEstado==='ok' ? vigentes.filter(p=>!esquemasActivosDe(p.id).length).length : null;
   const sinFiscales=vigentes.filter(p=>!p.rfc||!p.curp||!p.nss).length;
   const contratos=vigentes.filter(p=>p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0,10)<=sumarDias(fechaLocalHoy(),DIAS_AVISO_CONTRATO)).length;
-  const pendientes=sinFiscales+contratos+(sinEsquema===null?0:sinEsquema);
+  const pendientes=vigentes.filter(p => (!p.rfc||!p.curp||!p.nss) || (p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0,10)<=sumarDias(fechaLocalHoy(),DIAS_AVISO_CONTRATO)) || (sinEsquema!==null && !esquemasActivosDe(p.id).length)).length;
   const poner=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   poner('dash-personas',vigentes.length.toLocaleString('es-MX'));
   poner('dash-personas-sub',total-vigentes.length ? (total-vigentes.length)+' en baja' : 'Personal vigente');
@@ -1481,7 +1481,7 @@ function actualizarDashboard(){
     recent.innerHTML=filas.length?filas.map(p=>{
       const nombre=(p.nombre_completo&&p.nombre_completo.trim())?p.nombre_completo:'(sin nombre)';
       const puesto=nombreCatalogoPersona('puestos',p.puesto_id)||'—';
-      return '<tr><td><a href="#" onclick="abrirDetalle(\''+String(p.id).replace(/'/g,'\\\\\\'')+'\');return false;">'+escapeHtml(nombre)+'</a></td><td>'+escapeHtml(empresaNombre(p.empresa_id)||'—')+'</td><td>'+escapeHtml(puesto)+'</td><td><span class="pill">'+escapeHtml(estatusPersona(p))+'</span></td></tr>';
+      return '<tr><td><a href="#" onclick="abrirDetalle(\''+String(p.id)+'\');return false;">'+escapeHtml(nombre)+'</a></td><td>'+escapeHtml(empresaNombre(p.empresa_id)||'—')+'</td><td>'+escapeHtml(puesto)+'</td><td><span class="pill">'+escapeHtml(estatusPersona(p))+'</span></td></tr>';
     }).join(''):'<tr><td colspan="4" class="empty">Todavía no hay personal registrado.</td></tr>';
   }
   const nombre= (personal[0]&&personal[0].empresa_id) ? empresaNombre(personal[0].empresa_id) : 'Organización';
@@ -1500,6 +1500,12 @@ document.querySelectorAll('nav.tabs button[data-tab]').forEach(btn=>{
 ['filtro-estatus','filtro-empresa','filtro-proyecto','filtro-coordinador','filtro-clasificacion','filtro-pendiente','lista-tamano']
   .forEach(id => document.getElementById(id).addEventListener('change', alCambiarFiltrosPersonal));
 let temporizadorBusquedaPersonal = null;
+document.getElementById('busqueda-global').addEventListener('input', e => {
+  const q=e.target.value;
+  document.getElementById('buscar-personal').value=q;
+  cambiarPestana('lista');
+  alCambiarFiltrosPersonal();
+});
 document.getElementById('buscar-personal').addEventListener('input', () => {
   clearTimeout(temporizadorBusquedaPersonal);
   temporizadorBusquedaPersonal = setTimeout(alCambiarFiltrosPersonal, 150);

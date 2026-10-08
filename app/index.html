@@ -191,6 +191,53 @@
   @media(max-width:900px){.app-layout{grid-template-columns:82px minmax(0,1fr)}.app-sidebar{padding:18px 10px}.brand-logo{justify-content:center}.brand-symbol{width:50px;height:50px}.brand-word,.sidebar-nav button:not(.active){} .brand-word{display:none}.sidebar-nav button{justify-content:center;font-size:0;padding:14px 8px}.sidebar-nav .nav-icon{font-size:22px}.sidebar-nav .nav-chevron,.sidebar-nav button:not(.active){font-size:0}.sidebar-nav button.active{font-size:0}.sidebar-bottom>button{justify-content:center;font-size:0;padding:13px 8px}.sidebar-bottom .nav-icon{font-size:20px}.company-switch{justify-content:center;padding:8px}.company-switch>span:nth-child(2),.company-switch>.nav-chevron{display:none}.dashboard-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-columns{grid-template-columns:1fr}.dashboard-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}.dashboard-hero{grid-template-columns:1fr .7fr}.hero-people{width:125px;height:130px}}
   @media(max-width:600px){.app-layout{display:block}.app-sidebar{position:sticky;top:0;height:auto;padding:8px 12px;display:block;border-right:0;border-bottom:1px solid #eee;box-shadow:0 3px 14px rgba(20,20,20,.04)}.brand-logo{display:none}.sidebar-nav{flex-direction:row;gap:4px;overflow-x:auto}.sidebar-nav button,.sidebar-nav button.active{font-size:11px;display:flex;flex-direction:column;gap:4px;padding:8px 10px;min-width:70px}.sidebar-nav button:not(.active){font-size:11px}.sidebar-nav .nav-icon{font-size:18px}.sidebar-nav .nav-chevron{display:none}.sidebar-bottom{display:none}.app-main{padding:0 12px 24px}.app-topbar{height:60px}.global-search{width:100%;height:36px}.topbar-user{gap:6px}.notification-dot,.user-copy,.user-menu{display:none}.avatar-initials{width:34px;height:34px}.dashboard-hero{grid-template-columns:1fr;min-height:0;padding:24px 20px}.dashboard-hero h1{font-size:36px}.hero-team-art{display:none}.dashboard-metrics{gap:8px}.metric-card{align-items:flex-start;flex-direction:column;padding:12px}.metric-icon{width:38px;height:38px}.metric-card b{font-size:20px}.metric-card em{white-space:normal}.metric-arrow{display:none}.dashboard-actions{display:block}.dashboard-recent{padding:14px}.section-heading{align-items:flex-start}.section-heading .hint{max-width:220px}.card{padding:14px}.dashboard-analytics{overflow:hidden}}
 
+
+  /* Expediente segmentado: navigation and visual hierarchy */
+  #modal-overlay{padding:1px 18px 30px}
+  .detail-modal{border:1px solid #EEECE5;border-radius:22px;padding:22px 24px 0;box-shadow:0 24px 70px rgba(22,27,20,.17);overflow:visible}
+  .detail-modal>div:first-child{position:sticky;top:0;z-index:6;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);padding:0 0 12px;border-bottom:1px solid #F0EEE8}
+  .detail-modal>div:first-child h2{font:700 21px Montserrat,sans-serif;margin:4px 0}
+  .detail-modal #d-empleadoid{margin:7px 0 0}
+  .detail-tabs{display:flex;gap:6px;overflow-x:auto;padding:14px 0 12px;border-bottom:1px solid #EEECE5;scrollbar-width:thin}
+  .detail-tabs button{display:flex;align-items:center;gap:8px;flex:none;border:1px solid transparent;background:#F7F6F1;color:#5D666D;border-radius:12px;padding:10px 13px;font:600 12px Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+  .detail-tabs button span{display:grid;place-items:center;width:23px;height:23px;border-radius:8px;background:#E9E7DF;color:#69736D;font:700 10px Montserrat,sans-serif}
+  .detail-tabs button:hover{background:#F1EFE7;color:#1D2822}
+  .detail-tabs button.active{background:#FFF0B8;border-color:#F7D76B;color:#171A16}
+  .detail-tabs button.active span{background:#FFCC2F;color:#161616}
+  .detail-savebar{position:sticky;top:68px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid #F0EEE8}
+  .detail-savehint{font-size:11px;color:#737C80}
+  .detail-save-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+  .detail-savebar .toast{margin:0;font-size:12px}
+  .detail-savebar #btn-guardar-detalle{margin:0;white-space:nowrap}
+  .detail-section{display:none;padding:20px 0 28px;min-height:300px}
+  .detail-section.active{display:block;animation:detailIn .16s ease-out}
+  @keyframes detailIn{from{opacity:.45;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+  .detail-section>h3{font:700 13px Montserrat,sans-serif;letter-spacing:.045em;text-transform:uppercase;color:#2E6945;margin:0 0 15px;padding:0 0 10px;border-bottom:1px solid #EEECE5}
+  .detail-section>h3:not(:first-child){margin-top:26px}
+  .detail-section label{font-size:12px;color:#68717A}
+  .detail-section input:not([type=checkbox]):not([type=radio]),.detail-section select,.detail-section textarea{border-radius:10px;border-color:#E8E5DC;min-height:39px}
+  .detail-section .grid,.detail-section .grid3{gap:14px 16px}
+  .detail-section .hint{line-height:1.5}
+  .detail-section #rp-componente{border:1px solid #EAE7DE;border-radius:16px;padding:18px;background:#F7F6F1!important}
+  .detail-section #rp-componente>p:first-child{max-width:760px}
+  .detail-section #d-registros-pago{overflow-x:auto}
+  .detail-section .primary{border-radius:11px}
+  .detail-section .checks{gap:8px}
+  .detail-section .checks label{background:#F7F6F1;border-radius:999px;padding:7px 10px}
+  .detail-section #d-historial{background:#F8F7F2;border:1px solid #ECEAE2;border-radius:14px;padding:18px}
+  @media(max-width:700px){
+    #modal-overlay{padding:0 8px 12px}
+    .detail-modal{margin:8px auto!important;padding:16px 14px 0;border-radius:17px}
+    .detail-modal>div:first-child h2{font-size:18px}
+    .detail-tabs{margin-right:-2px}
+    .detail-tabs button{padding:9px 10px;font-size:11px}
+    .detail-savebar{top:60px;align-items:flex-start}
+    .detail-savehint{display:none}
+    .detail-save-actions{width:100%;justify-content:flex-end}
+    .detail-section{padding:16px 0 22px}
+    .detail-section .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+
 </style>
 </head>
 <body>
@@ -696,14 +743,27 @@
   </div>
 
   <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
-    <div class="card" style="max-width:720px;margin:40px auto;">
+    <div class="card detail-modal" style="max-width:1080px;margin:24px auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <h2>Detalle de persona</h2>
         <button class="primary" style="margin-top:0;padding:6px 14px;font-size:12px;background:var(--surface-2);color:var(--text);" onclick="cerrarDetalle()">Cerrar</button>
       </div>
       <p class="hint" id="d-empleadoid"></p>
+      <nav class="detail-tabs" aria-label="Secciones del expediente">
+        <button type="button" class="active" data-detail-tab="personal" onclick="cambiarSeccionDetalle('personal')"><span>01</span>Datos personales</button>
+        <button type="button" data-detail-tab="organizacion" onclick="cambiarSeccionDetalle('organizacion')"><span>02</span>Organización</button>
+        <button type="button" data-detail-tab="laboral" onclick="cambiarSeccionDetalle('laboral')"><span>03</span>Relación laboral</button>
+        <button type="button" data-detail-tab="compensacion" onclick="cambiarSeccionDetalle('compensacion')"><span>04</span>Compensación</button>
+        <button type="button" data-detail-tab="prestaciones" onclick="cambiarSeccionDetalle('prestaciones')"><span>05</span>Prestaciones y emergencia</button>
+        <button type="button" data-detail-tab="movimientos" onclick="cambiarSeccionDetalle('movimientos')"><span>06</span>Movimientos</button>
+      </nav>
+      <div class="detail-savebar">
+        <span class="detail-savehint">Los cambios generales se guardan al confirmar.</span>
+        <div class="detail-save-actions"><div class="toast" id="toast-detalle"></div><button class="primary" id="btn-guardar-detalle" onclick="guardarDetalle()">Guardar cambios</button></div>
+      </div>
 
-      <h3>Datos personales</h3>
+
+      <section class="detail-section active" data-detail-section="personal"><h3>Datos personales</h3>
       <div class="grid3">
         <div><label>Nombre(s)</label><input id="d-nombres"></div>
         <div><label>Primer apellido</label><input id="d-apellido1"></div>
@@ -737,7 +797,7 @@
         <div></div>
       </div>
 
-      <h3>Laborales · Organización</h3>
+      </section><section class="detail-section" data-detail-section="organizacion"><h3>Laborales · Organización</h3>
       <div class="grid3">
         <div><label>Empresa</label><select id="d-empresa"></select></div>
         <div>
@@ -787,7 +847,7 @@
         <div></div>
       </div>
 
-      <h3>Laborales · Relación laboral</h3>
+      </section><section class="detail-section" data-detail-section="laboral"><h3>Laborales · Relación laboral</h3>
       <div class="grid3">
         <div><label>Tipo de empleado</label>
           <select id="d-tipoempleado"><option>Confianza</option><option>Sindicalizado</option><option>Base</option><option>Honorarios</option></select>
@@ -812,7 +872,7 @@
         <div><label>Comentario de baja</label><input id="d-comentariobaja" type="text"></div>
       </div>
 
-      <h3>Compensación</h3>
+      </section><section class="detail-section" data-detail-section="compensacion"><h3>Compensación</h3>
       <!-- Componente «Esquemas de pago» (P4a–P4c), dentro de Compensación. Se
            guarda con sus propios botones, no con «Guardar cambios». -->
       <div id="rp-componente" class="card" style="background:var(--surface-2);">
@@ -841,7 +901,7 @@
       <div class="toast" id="toast-registros-pago"></div>
       </div>
 
-      <h3>Prestaciones</h3>
+      </section><section class="detail-section" data-detail-section="prestaciones"><h3>Prestaciones</h3>
       <div class="grid3">
         <div><label>No. FONACOT</label><input id="d-fonacot"></div>
       </div>
@@ -858,16 +918,14 @@
         </div>
       </div>
 
-      <button class="primary" id="btn-guardar-detalle" onclick="guardarDetalle()">Guardar cambios</button>
-      <div class="toast" id="toast-detalle"></div>
 
-      <h3>Movimientos</h3>
+      </section><section class="detail-section" data-detail-section="movimientos"><h3>Movimientos</h3>
       <div id="d-historial">
         <p class="hint" id="d-historial-resumen" style="margin-bottom:8px;">Cargando…</p>
         <button type="button" class="primary" id="btn-descargar-historial" style="margin-top:0;display:none;" onclick="descargarHistorialCSV()">Descargar historial (CSV)</button>
       </div>
     </div>
-  </div>
+  </section></div>
     </main>
   </div>
   </div>
@@ -1835,6 +1893,7 @@ async function abrirDetalle(id){
   document.getElementById('d-historial-resumen').textContent = 'Cargando…';
   document.getElementById('btn-descargar-historial').style.display = 'none';
   detalleHistorial = [];
+  cambiarSeccionDetalle('personal');
   document.getElementById('modal-overlay').style.display = 'block';
 
   // 7D-6b (P4a): los registros de pago se cargan aparte y sin esperar su
@@ -1857,6 +1916,16 @@ async function abrirDetalle(id){
   }
 }
 
+function cambiarSeccionDetalle(seccion){
+  document.querySelectorAll('[data-detail-tab]').forEach(btn=>{
+    const activo=btn.dataset.detailTab===seccion;
+    btn.classList.toggle('active',activo);
+    btn.setAttribute('aria-selected',activo?'true':'false');
+  });
+  document.querySelectorAll('[data-detail-section]').forEach(panel=>{
+    panel.classList.toggle('active',panel.dataset.detailSection===seccion);
+  });
+}
 function actualizarModoCoordinadorDetalle(){
   const checked = document.querySelector('input[name="d-coordinador-modo"]:checked');
   const modo = checked ? checked.value : 'ninguno';

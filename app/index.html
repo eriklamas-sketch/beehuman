@@ -252,6 +252,17 @@
   #modal-overlay .detail-modal .detail-section>h3:before{content:"";display:block;width:7px;height:23px;border-radius:99px;background:#FFCC2F}
   @media(max-width:700px){#modal-overlay .detail-modal nav.detail-tabs{margin-right:-2px}#modal-overlay .detail-modal nav.detail-tabs button{padding:9px 10px;font-size:11px}#modal-overlay .detail-modal .detail-savebar{top:60px}}
 
+
+  .detail-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .detail-heading h2{margin:0}
+  .detail-heading #d-empleadoid{margin:5px 0 0}
+  .detail-person-summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 12px;margin-top:9px}
+  .detail-person-summary strong{font:700 15px Montserrat,Inter,sans-serif;color:var(--text)}
+  .detail-person-summary span{font-size:12px;color:var(--text-secondary)}
+  .detail-baja-fields{margin-top:8px;padding:12px;background:#FFF8E8;border:1px solid #F4E3B1;border-radius:12px}
+  #modal-overlay .detail-modal .detail-section>h3{margin-top:12px}
+  @media(max-width:700px){.detail-heading{gap:8px}.detail-person-summary{display:grid;gap:4px}}
+
 </style>
 </head>
 <body>
@@ -758,20 +769,19 @@
 
   <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
     <div class="card detail-modal" style="max-width:1080px;margin:24px auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h2>Detalle de persona</h2>
+      <div class="detail-heading">
+        <div><h2>Detalle de persona</h2><p class="hint" id="d-empleadoid"></p><div id="d-encabezado-persona" class="detail-person-summary"></div></div>
         <button class="primary" style="margin-top:0;padding:6px 14px;font-size:12px;background:var(--surface-2);color:var(--text);" onclick="cerrarDetalle()">Cerrar</button>
       </div>
-      <p class="hint" id="d-empleadoid"></p>
       <nav class="detail-tabs" aria-label="Secciones del expediente">
         <button type="button" class="active" data-detail-tab="personal" onclick="cambiarSeccionDetalle('personal')"><span>01</span>Datos personales</button>
         <button type="button" data-detail-tab="organizacion" onclick="cambiarSeccionDetalle('organizacion')"><span>02</span>Organización</button>
         <button type="button" data-detail-tab="laboral" onclick="cambiarSeccionDetalle('laboral')"><span>03</span>Relación laboral</button>
         <button type="button" data-detail-tab="compensacion" onclick="cambiarSeccionDetalle('compensacion')"><span>04</span>Compensación</button>
-        <button type="button" data-detail-tab="prestaciones" onclick="cambiarSeccionDetalle('prestaciones')"><span>05</span>Prestaciones y emergencia</button>
+        <button type="button" data-detail-tab="prestaciones" onclick="cambiarSeccionDetalle('prestaciones')"><span>05</span>Contacto y emergencia</button>
         <button type="button" data-detail-tab="movimientos" onclick="cambiarSeccionDetalle('movimientos')"><span>06</span>Movimientos</button>
       </nav>
-      <div class="detail-savebar">
+      <div class="detail-savebar" id="detail-savebar">
         <span class="detail-savehint">Los cambios generales se guardan al confirmar.</span>
         <div class="detail-save-actions"><div class="toast" id="toast-detalle"></div><button class="primary" id="btn-guardar-detalle" onclick="guardarDetalle()">Guardar cambios</button></div>
       </div>
@@ -874,16 +884,15 @@
         </div>
       </div>
       <div class="grid3">
-        <div><label>Fecha de inicio</label><input id="d-fechainicio" type="date"></div>
-        <div><label>Fecha de vencimiento</label><input id="d-fechavencimiento" type="date"></div>
+        <div><label>Fecha de ingreso</label><input id="d-fechainicio" type="date"></div>
+        <div><label>Vencimiento de contrato</label><input id="d-fechavencimiento" type="date"></div>
         <div><label>Subcontratación</label><div class="checks"><label><input type="checkbox" id="d-subcontratacion"> Sí</label></div></div>
       </div>
 
       <h3>Laborales · Estatus</h3>
       <div class="grid3">
         <div><label>Estatus</label><select id="d-estatus"><option>Activo</option><option>Baja</option><option>Suspendido</option></select></div>
-        <div><label>Fecha de baja</label><input id="d-fechabaja" type="date"></div>
-        <div><label>Comentario de baja</label><input id="d-comentariobaja" type="text"></div>
+        <div id="d-campos-baja" class="grid3 detail-baja-fields" style="display:none;grid-column:1/-1"><div><label>Fecha de baja</label><input id="d-fechabaja" type="date"></div><div><label>Comentario de baja</label><input id="d-comentariobaja" type="text"></div><div></div></div>
       </div>
 
       </section><section class="detail-section" data-detail-section="compensacion"><h3>Compensación</h3>
@@ -915,12 +924,12 @@
       <div class="toast" id="toast-registros-pago"></div>
       </div>
 
-      </section><section class="detail-section" data-detail-section="prestaciones"><h3>Prestaciones</h3>
+      </section><section class="detail-section" data-detail-section="prestaciones"><h3>Contacto y emergencia</h3>
       <div class="grid3">
         <div><label>No. FONACOT</label><input id="d-fonacot"></div>
       </div>
 
-      <h3>Salud y contacto de emergencia</h3>
+      <h3>Prestaciones</h3>
       <div class="grid">
         <div><label>Restricciones de salud</label><textarea id="d-restricciones"></textarea></div>
         <div>
@@ -1815,6 +1824,10 @@ async function abrirDetalle(id){
   detalleActual = {...p};
 
   document.getElementById('d-empleadoid').textContent = p.empleado_id ? ('ID: '+p.empleado_id) : 'ID: pendiente';
+  const empresaDetalle = empresas.find(e => String(e.id) === String(p.empresa_id));
+  const nombreDetalle = [p.nombres,p.primer_apellido,p.segundo_apellido].filter(Boolean).join(' ').trim() || p.nombre_completo || 'Persona sin nombre capturado';
+  const resumenDetalle = [p.puesto || p.puesto_nombre, empresaDetalle?.nombre, p.estatus || 'Activo'].filter(Boolean).join(' · ');
+  document.getElementById('d-encabezado-persona').innerHTML = `<strong>${escapeHtml(nombreDetalle)}</strong><span>${escapeHtml(resumenDetalle)}</span>`;
   fillSelectSimple(document.getElementById('d-empresa'), empresas);
   fillSelectSimple(document.getElementById('d-proyecto'), proyectos);
 
@@ -1890,6 +1903,7 @@ async function abrirDetalle(id){
   document.getElementById('d-fechavencimiento').value = p.fecha_vencimiento_contrato||'';
   document.getElementById('d-subcontratacion').checked = !!p.subcontratacion;
   document.getElementById('d-estatus').value = p.estatus||'Activo';
+  document.getElementById('d-campos-baja').style.display = p.estatus === 'Baja' ? 'grid' : 'none';
   document.getElementById('d-fechabaja').value = p.fecha_baja||'';
   document.getElementById('d-comentariobaja').value = p.comentario_baja||'';
   document.getElementById('d-fonacot').value = p.no_fonacot||'';
@@ -1931,6 +1945,8 @@ async function abrirDetalle(id){
 }
 
 function cambiarSeccionDetalle(seccion){
+  const savebar = document.getElementById('detail-savebar');
+  if (savebar) savebar.style.display = ['compensacion','movimientos'].includes(seccion) ? 'none' : 'flex';
   document.querySelectorAll('[data-detail-tab]').forEach(btn=>{
     const activo=btn.dataset.detailTab===seccion;
     btn.classList.toggle('active',activo);
@@ -1949,6 +1965,7 @@ function actualizarModoCoordinadorDetalle(){
   if (modo!=='externo') document.getElementById('d-coordinador-externo').value='';
 }
 document.querySelectorAll('input[name="d-coordinador-modo"]').forEach(r=>r.addEventListener('change', actualizarModoCoordinadorDetalle));
+document.getElementById('d-estatus').addEventListener('change', e => { document.getElementById('d-campos-baja').style.display = e.target.value === 'Baja' ? 'grid' : 'none'; });
 
 function cerrarDetalle(){
   document.getElementById('modal-overlay').style.display='none';

@@ -1047,17 +1047,24 @@ function actualizarSelectsCatalogoAlta(){
 async function cargarTodo() {
   // Fase 8: combos y percepciones (modelo anterior) ya no se cargan ni se
   // usan en la interfaz. Sus tablas y datos siguen intactos en la base.
+  // Cada consulta se reintenta una vez si falla (justo después de iniciar
+  // sesión alguna puede ser rechazada), y el fallo de una ya no descarta
+  // las otras dos: lo que sí cargó se usa.
+  const conReintento = async (consulta) => {
+    let r = await consulta();
+    if (r.error) { await new Promise(ok => setTimeout(ok, 700)); r = await consulta(); }
+    return r;
+  };
   const [e,p,per] = await Promise.all([
-    sb.from('empresas').select('*').order('nombre'),
-    sb.from('proyectos').select('*').order('nombre'),
-    sb.from('periodicidades').select('*')
+    conReintento(() => sb.from('empresas').select('*').order('nombre')),
+    conReintento(() => sb.from('proyectos').select('*').order('nombre')),
+    conReintento(() => sb.from('periodicidades').select('*'))
   ]);
-  if (e.error||p.error||per.error) {
-    setStatus('Error cargando catálogos. Revisa la consola.','err');
-    console.error(e.error,p.error,per.error);
-    return;
-  }
-  empresas=e.data||[]; proyectos=p.data||[]; periodicidades=per.data||[];
+  const fallidos = [];
+  if (e.error) fallidos.push('empresas'); else empresas=e.data||[];
+  if (p.error) fallidos.push('proyectos'); else proyectos=p.data||[];
+  if (per.error) fallidos.push('periodicidades'); else periodicidades=per.data||[];
+  if (fallidos.length) console.error('Error cargando catálogos:', e.error, p.error, per.error);
   renderCatalogoSimple('proyectos'); renderCatalogoSimple('periodicidades'); // Fase 1 de producto
 
   fillSelect(document.getElementById('f-empresa'), empresas, null);
@@ -1065,7 +1072,9 @@ async function cargarTodo() {
   fillSelect(document.getElementById('filtro-empresa'), empresas, 'Todas las empresas');
   fillSelect(document.getElementById('filtro-proyecto'), proyectos, 'Todos los proyectos');
 
-  if (empresas.length===0 || proyectos.length===0) {
+  if (fallidos.length) {
+    setStatus('No se pudo cargar: ' + fallidos.join(', ') + '. Recarga la página para reintentar.','err');
+  } else if (empresas.length===0 || proyectos.length===0) {
     setStatus('Conectado. Aún no hay empresas o proyectos: créalos en las pestañas Empresas y Catálogos.','ok');
   } else {
     setStatus('Información cargada correctamente.','ok');

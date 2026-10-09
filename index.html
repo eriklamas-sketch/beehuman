@@ -30,6 +30,14 @@ footer{border-top:1px solid var(--line);padding:25px 0 35px;color:#7b838b;font-s
 .dark-band{background:#20231f;color:#fff;border-radius:22px;padding:48px 46px;margin:10px auto 76px;position:relative;overflow:hidden}.dark-band .hex{right:25px;top:-10px;opacity:.28}.dark-band h2{font-family:Montserrat;font-size:clamp(34px,4vw,52px);line-height:1.02;letter-spacing:-2px;margin:0 0 14px;max-width:680px}.dark-band p{color:#cbd0ca;max-width:700px;line-height:1.5}.dark-points{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px;border-top:1px solid rgba(255,255,255,.14);padding-top:20px}.dark-points b{font-size:12px}.dark-points span{display:block;color:#aeb6ad;font-size:11px;margin-top:5px}
 @media(max-width:900px){.story-grid,.context-grid{grid-template-columns:1fr}.dark-points{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.story-panels{grid-template-columns:1fr}.dark-band{padding:35px 24px}.dark-points{grid-template-columns:1fr}.brand-logo{height:40px}}
+
+/* Ajustes de demo: el encabezado ya no desborda en móvil y la sección de experiencia queda centrada */
+.experience{justify-items:center;text-align:center}
+.experience-copy p{max-width:620px;margin-left:auto;margin-right:auto}
+@media(max-width:600px){.eyebrow{letter-spacing:2px;font-size:10px}.hero-art{height:auto;margin-top:8px}}
+.context-grid>*{min-width:0}
+.context{overflow-x:clip}
+@media(max-width:900px){.context-card .tabs{flex-wrap:wrap;row-gap:8px}}
 </style>
 </head>
 <body>
@@ -46,7 +54,7 @@ footer{border-top:1px solid var(--line);padding:25px 0 35px;color:#7b838b;font-s
 <main>
 <section class="wrap hero">
   <div>
-    <div class="eyebrow">PERSONAL&nbsp;&nbsp;·&nbsp;&nbsp;ORGANIZACIÓN&nbsp;&nbsp;·&nbsp;&nbsp;COMPENSACIÓN</div>
+    <div class="eyebrow">PERSONAL · ORGANIZACIÓN · COMPENSACIÓN</div>
     <h1>La gestión de tu personal,<br><span>fácil de verdad.</span></h1>
     <p>BeeHuman simplifica la captura, administración y consulta de toda la información de tu personal, para que te enfoques en lo más importante: tu equipo.</p>
     <div class="actions"><a class="btn btn-main" href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman%20y%20solicitar%20una%20demostraci%C3%B3n." target="_blank" rel="noopener noreferrer">Solicitar una demo&nbsp;&nbsp;→</a><a class="btn btn-ghost" href="#como">Conocer la plataforma</a></div>

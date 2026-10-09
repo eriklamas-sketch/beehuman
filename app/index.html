@@ -924,14 +924,16 @@
       <div class="toast" id="toast-registros-pago"></div>
       </div>
 
-      </section><section class="detail-section" data-detail-section="prestaciones"><h3>Contacto y emergencia</h3>
+      </section><section class="detail-section" data-detail-section="prestaciones">
+      <h3>Prestaciones</h3>
       <div class="grid3">
         <div><label>No. FONACOT</label><input id="d-fonacot"></div>
       </div>
-
-      <h3>Prestaciones</h3>
       <div class="grid">
         <div><label>Restricciones de salud</label><textarea id="d-restricciones"></textarea></div>
+      </div>
+      <h3>Contacto y emergencia</h3>
+      <div class="grid">
         <div>
           <label>Contacto de emergencia</label>
           <input id="d-emerg-nombre" placeholder="Nombre" style="margin-bottom:8px;">
@@ -1826,7 +1828,8 @@ async function abrirDetalle(id){
   document.getElementById('d-empleadoid').textContent = p.empleado_id ? ('ID: '+p.empleado_id) : 'ID: pendiente';
   const empresaDetalle = empresas.find(e => String(e.id) === String(p.empresa_id));
   const nombreDetalle = [p.nombres,p.primer_apellido,p.segundo_apellido].filter(Boolean).join(' ').trim() || p.nombre_completo || 'Persona sin nombre capturado';
-  const resumenDetalle = [p.puesto || p.puesto_nombre, empresaDetalle?.nombre, p.estatus || 'Activo'].filter(Boolean).join(' · ');
+  const puestoDetalle = nombreCatalogoPersona('puestos', p.puesto_id) || p.puesto || p.puesto_nombre || '';
+  const resumenDetalle = [puestoDetalle, empresaDetalle?.nombre, p.estatus || 'Activo'].filter(Boolean).join(' · ');
   document.getElementById('d-encabezado-persona').innerHTML = `<strong>${escapeHtml(nombreDetalle)}</strong><span>${escapeHtml(resumenDetalle)}</span>`;
   fillSelectSimple(document.getElementById('d-empresa'), empresas);
   fillSelectSimple(document.getElementById('d-proyecto'), proyectos);

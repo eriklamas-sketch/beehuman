@@ -263,6 +263,41 @@
   #modal-overlay .detail-modal .detail-section>h3{margin-top:12px}
   @media(max-width:700px){.detail-heading{gap:8px}.detail-person-summary{display:grid;gap:4px}}
 
+
+/* Alta de personal: formulario organizado en tarjetas independientes */
+#panel-alta #form-alta { display:flex; flex-direction:column; gap:16px; }
+#panel-alta .alta-card {
+  background:var(--surface, #fff);
+  border:1px solid var(--border, #e7e5df);
+  border-radius:12px;
+  padding:20px;
+  min-width:0;
+}
+#panel-alta .alta-card-title {
+  margin:0 0 18px;
+  padding:0 0 12px;
+  border-bottom:1px solid var(--border, #e7e5df);
+  color:var(--text, #202522);
+  font-size:16px;
+  font-weight:700;
+}
+#panel-alta .alta-subtitle {
+  margin:20px 0 12px;
+  padding:0;
+  color:var(--text-secondary, #647067);
+  font-size:13px;
+  font-weight:700;
+}
+#panel-alta .alta-card-title + .alta-subtitle { margin-top:0; }
+#panel-alta .alta-card .grid,
+#panel-alta .alta-card .grid3 { margin-bottom:12px; }
+#panel-alta .alta-card .grid:last-child,
+#panel-alta .alta-card .grid3:last-child { margin-bottom:0; }
+@media (max-width:640px) {
+  #panel-alta .alta-card { padding:14px; border-radius:10px; }
+  #panel-alta .alta-card-title { margin-bottom:14px; }
+}
+
 </style>
 </head>
 <body>
@@ -323,7 +358,8 @@
       <p class="hint">Al guardar, la persona queda registrada y aparece en la pestaña Personal.</p>
       <form id="form-alta">
 
-        <h3>Datos generales</h3>
+        <section class="alta-card">
+          <h3 class="alta-card-title">Datos personales</h3>
         <div class="grid3">
           <div><label>Nombre(s)</label><input id="f-nombres" type="text" required></div>
           <div><label>Primer apellido</label><input id="f-apellido1" type="text" required></div>
@@ -355,6 +391,10 @@
           <div></div>
           <div></div>
         </div>
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Organización</h3>
         <div class="grid3">
           <div><label>Empresa / razón social</label><select id="f-empresa"></select></div>
           <div>
@@ -367,7 +407,7 @@
           </div>
         </div>
 
-        <h3>Asignación operativa</h3>
+        <h4 class="alta-subtitle">Asignación operativa</h4>
         <div class="grid3">
           <div><label>Proyecto / centro de costo</label><select id="f-proyecto"></select></div>
           <div><label>Turno</label>
@@ -388,7 +428,7 @@
           <div><label>Jefe directo</label><select id="f-jefe"></select></div>
         </div>
 
-        <h3>Clasificación organizacional</h3>
+        <h4 class="alta-subtitle">Clasificación organizacional</h4>
         <div class="grid3">
           <div>
             <label>Área</label><select id="f-cat-areas"></select>
@@ -414,6 +454,10 @@
           </div>
         </div>
 
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Relación laboral</h3>
         <div class="grid">
           <div><label>Tipo de jornada</label>
             <select id="f-jornada"><option>Completa</option><option>Reducida</option><option>Sin semana o jornada reducida</option></select>
@@ -428,7 +472,7 @@
           </div>
         </div>
 
-        <h3>Contrato</h3>
+        <h4 class="alta-subtitle">Contrato</h4>
         <div class="grid3">
           <div><label>Fecha de inicio</label><input id="f-fechainicio" type="date"></div>
           <div><label>Fecha de vencimiento (si aplica)</label><input id="f-fechavencimiento" type="date"></div>
@@ -437,15 +481,26 @@
           </div>
         </div>
 
-        <h3>Compensación</h3>
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Compensación</h3>
         <p class="hint">Los esquemas de pago se administran en el expediente de la persona, en la sección Compensación, una vez guardada el alta. Una persona puede tener varios esquemas.</p>
 
-        <h3>Otros datos</h3>
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Prestaciones y otros datos</h3>
         <div class="grid3">
           <div><label>No. FONACOT</label><input id="f-fonacot" type="text"></div>
         </div>
         <div class="grid">
           <div><label>Restricciones de salud</label><textarea id="f-restricciones"></textarea></div>
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Contacto y emergencia</h3>
+        <div class="grid">
           <div>
             <label>Contacto de emergencia</label>
             <input id="f-emerg-nombre" type="text" placeholder="Nombre" style="margin-bottom:8px;">
@@ -454,6 +509,7 @@
             <input id="f-emerg-direccion" type="text" placeholder="Dirección">
           </div>
         </div>
+        </section>
 
         <button type="submit" class="primary" id="btn-alta">Dar de alta</button>
         <div class="toast" id="toast-alta"></div>

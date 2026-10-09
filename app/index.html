@@ -1756,6 +1756,7 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     curp: curpCheck.valor,
     nss: nssCheck.valor,
     cp_fiscal: cpFiscalCheck.valor,
+    numero_interno_trabajador: document.getElementById('f-numero-interno').value.trim() || null,
     empresa_id: document.getElementById('f-empresa').value || null,
     registro_patronal_id: document.getElementById('f-registro-patronal').disabled ? null : (document.getElementById('f-registro-patronal').value || null),
     tipo_empleado: document.getElementById('f-tipoempleado').value,
@@ -3617,8 +3618,7 @@ function impValidar(matriz){
     const payload = {
       id: crypto.randomUUID(),
       nombres: v('nombres'), primer_apellido: v('apellido1'), segundo_apellido: v('apellido2') || null,
-      nombre_completo: [v('nombres'), v('apellido1'), v('apellido2')].filter(Boolean).join(' '),
-      numero_interno_trabajador: document.getElementById('f-numero-interno').value.trim() || null
+      nombre_completo: [v('nombres'), v('apellido1'), v('apellido2')].filter(Boolean).join(' ')
     };
     [['rfc', validarRFCPersona, 'rfc'], ['curp', validarCURP, 'curp'], ['nss', validarNSS, 'nss'], ['cp', validarCPFiscal, 'cp_fiscal']].forEach(([clave, validar, campo]) => {
       const r = validar(v(clave));

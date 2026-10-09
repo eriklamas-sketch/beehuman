@@ -197,7 +197,12 @@
   .detail-modal{border:1px solid #EEECE5;border-radius:22px;padding:22px 24px 0;box-shadow:0 24px 70px rgba(22,27,20,.17);overflow:visible}
   .detail-modal>div:first-child{position:sticky;top:0;z-index:6;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);padding:0 0 12px;border-bottom:1px solid #F0EEE8}
   .detail-modal>div:first-child h2{font:700 21px Montserrat,sans-serif;margin:4px 0}
-  .detail-modal #d-empleadoid{margin:7px 0 0}
+  .detail-modal #d-empleadoid{margin:0;color:var(--text-muted);font-size:12px;white-space:nowrap}
+  .detail-title-line{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .detail-title-line h2{margin:0}
+  .detail-title-line .hint{margin:0}
+  .detail-savebar{position:static;top:auto;border-top:1px solid #F0EEE8;border-bottom:0;margin-top:4px;padding:14px 0 0}
+  @media(max-width:640px){.detail-title-line{gap:8px}}
   .detail-tabs{display:flex;gap:6px;overflow-x:auto;padding:14px 0 12px;border-bottom:1px solid #EEECE5;scrollbar-width:thin}
   .detail-tabs button{display:flex;align-items:center;gap:8px;flex:none;border:1px solid transparent;background:#F7F6F1;color:#5D666D;border-radius:12px;padding:10px 13px;font:600 12px Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
   .detail-tabs button span{display:grid;place-items:center;width:23px;height:23px;border-radius:8px;background:#E9E7DF;color:#69736D;font:700 10px Montserrat,sans-serif}
@@ -263,6 +268,41 @@
   #modal-overlay .detail-modal .detail-section>h3{margin-top:12px}
   @media(max-width:700px){.detail-heading{gap:8px}.detail-person-summary{display:grid;gap:4px}}
 
+
+/* Alta de personal: formulario organizado en tarjetas independientes */
+#panel-alta #form-alta { display:flex; flex-direction:column; gap:16px; }
+#panel-alta .alta-card {
+  background:var(--surface, #fff);
+  border:1px solid var(--border, #e7e5df);
+  border-radius:12px;
+  padding:20px;
+  min-width:0;
+}
+#panel-alta .alta-card-title {
+  margin:0 0 18px;
+  padding:0 0 12px;
+  border-bottom:1px solid var(--border, #e7e5df);
+  color:var(--text, #202522);
+  font-size:16px;
+  font-weight:700;
+}
+#panel-alta .alta-subtitle {
+  margin:20px 0 12px;
+  padding:0;
+  color:var(--text-secondary, #647067);
+  font-size:13px;
+  font-weight:700;
+}
+#panel-alta .alta-card-title + .alta-subtitle { margin-top:0; }
+#panel-alta .alta-card .grid,
+#panel-alta .alta-card .grid3 { margin-bottom:12px; }
+#panel-alta .alta-card .grid:last-child,
+#panel-alta .alta-card .grid3:last-child { margin-bottom:0; }
+@media (max-width:640px) {
+  #panel-alta .alta-card { padding:14px; border-radius:10px; }
+  #panel-alta .alta-card-title { margin-bottom:14px; }
+}
+
 </style>
 </head>
 <body>
@@ -323,7 +363,8 @@
       <p class="hint">Al guardar, la persona queda registrada y aparece en la pestaña Personal.</p>
       <form id="form-alta">
 
-        <h3>Datos generales</h3>
+        <section class="alta-card">
+          <h3 class="alta-card-title">Datos personales</h3>
         <div class="grid3">
           <div><label>Nombre(s)</label><input id="f-nombres" type="text" required></div>
           <div><label>Primer apellido</label><input id="f-apellido1" type="text" required></div>
@@ -355,7 +396,12 @@
           <div></div>
           <div></div>
         </div>
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Organización</h3>
         <div class="grid3">
+          <div><label>Número interno de trabajador (opcional)</label><input id="f-numero-interno" type="text" maxlength="50" placeholder="Ej. 00125"></div>
           <div><label>Empresa / razón social</label><select id="f-empresa"></select></div>
           <div>
             <label>Registro patronal</label>
@@ -367,7 +413,7 @@
           </div>
         </div>
 
-        <h3>Asignación operativa</h3>
+        <h4 class="alta-subtitle">Asignación operativa</h4>
         <div class="grid3">
           <div><label>Proyecto / centro de costo</label><select id="f-proyecto"></select></div>
           <div><label>Turno</label>
@@ -388,7 +434,7 @@
           <div><label>Jefe directo</label><select id="f-jefe"></select></div>
         </div>
 
-        <h3>Clasificación organizacional</h3>
+        <h4 class="alta-subtitle">Clasificación organizacional</h4>
         <div class="grid3">
           <div>
             <label>Área</label><select id="f-cat-areas"></select>
@@ -414,6 +460,10 @@
           </div>
         </div>
 
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Relación laboral</h3>
         <div class="grid">
           <div><label>Tipo de jornada</label>
             <select id="f-jornada"><option>Completa</option><option>Reducida</option><option>Sin semana o jornada reducida</option></select>
@@ -428,7 +478,7 @@
           </div>
         </div>
 
-        <h3>Contrato</h3>
+        <h4 class="alta-subtitle">Contrato</h4>
         <div class="grid3">
           <div><label>Fecha de inicio</label><input id="f-fechainicio" type="date"></div>
           <div><label>Fecha de vencimiento (si aplica)</label><input id="f-fechavencimiento" type="date"></div>
@@ -437,15 +487,26 @@
           </div>
         </div>
 
-        <h3>Compensación</h3>
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Compensación</h3>
         <p class="hint">Los esquemas de pago se administran en el expediente de la persona, en la sección Compensación, una vez guardada el alta. Una persona puede tener varios esquemas.</p>
 
-        <h3>Otros datos</h3>
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Prestaciones y otros datos</h3>
         <div class="grid3">
           <div><label>No. FONACOT</label><input id="f-fonacot" type="text"></div>
         </div>
         <div class="grid">
           <div><label>Restricciones de salud</label><textarea id="f-restricciones"></textarea></div>
+        </section>
+
+        <section class="alta-card">
+          <h3 class="alta-card-title">Contacto y emergencia</h3>
+        <div class="grid">
           <div>
             <label>Contacto de emergencia</label>
             <input id="f-emerg-nombre" type="text" placeholder="Nombre" style="margin-bottom:8px;">
@@ -454,6 +515,7 @@
             <input id="f-emerg-direccion" type="text" placeholder="Dirección">
           </div>
         </div>
+        </section>
 
         <button type="submit" class="primary" id="btn-alta">Dar de alta</button>
         <div class="toast" id="toast-alta"></div>
@@ -768,7 +830,7 @@
   <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
     <div class="card detail-modal" style="max-width:1080px;margin:24px auto;">
       <div class="detail-heading">
-        <div><h2>Detalle de persona</h2><p class="hint" id="d-empleadoid"></p><div id="d-encabezado-persona" class="detail-person-summary"></div></div>
+        <div class="detail-title-wrap"><div class="detail-title-line"><h2>Detalle de persona</h2><p class="hint" id="d-empleadoid"></p></div><div id="d-encabezado-persona" class="detail-person-summary"></div></div>
         <button class="primary" style="margin-top:0;padding:6px 14px;font-size:12px;background:var(--surface-2);color:var(--text);" onclick="cerrarDetalle()">Cerrar</button>
       </div>
       <nav class="detail-tabs" aria-label="Secciones del expediente">
@@ -779,11 +841,6 @@
         <button type="button" data-detail-tab="prestaciones" onclick="cambiarSeccionDetalle('prestaciones')"><span>05</span>Contacto y emergencia</button>
         <button type="button" data-detail-tab="movimientos" onclick="cambiarSeccionDetalle('movimientos')"><span>06</span>Movimientos</button>
       </nav>
-      <div class="detail-savebar" id="detail-savebar">
-        <span class="detail-savehint">Los cambios generales se guardan al confirmar.</span>
-        <div class="detail-save-actions"><div class="toast" id="toast-detalle"></div><button class="primary" id="btn-guardar-detalle" onclick="guardarDetalle()">Guardar cambios</button></div>
-      </div>
-
 
       <section class="detail-section active" data-detail-section="personal"><h3>Datos personales</h3>
       <div class="grid3">
@@ -821,6 +878,7 @@
 
       </section><section class="detail-section" data-detail-section="organizacion"><h3>Laborales · Organización</h3>
       <div class="grid3">
+        <div><label>Número interno de trabajador (opcional)</label><input id="d-numero-interno" type="text" maxlength="50" placeholder="Ej. 00125"></div>
         <div><label>Empresa</label><select id="d-empresa"></select></div>
         <div>
           <label>Registro patronal</label>
@@ -947,6 +1005,12 @@
         <p class="hint" id="d-historial-resumen" style="margin-bottom:8px;">Cargando…</p>
         <button type="button" class="primary" id="btn-descargar-historial" style="margin-top:0;display:none;" onclick="descargarHistorialCSV()">Descargar historial (CSV)</button>
       </div>
+      <div class="detail-savebar" id="detail-savebar">
+        <span class="detail-savehint">Los cambios generales se guardan al confirmar.</span>
+        <div class="detail-save-actions"><div class="toast" id="toast-detalle"></div><button class="primary" id="btn-guardar-detalle" onclick="guardarDetalle()">Guardar cambios</button></div>
+      </div>
+
+
     </div>
   </section></div>
     </main>
@@ -1692,6 +1756,7 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     curp: curpCheck.valor,
     nss: nssCheck.valor,
     cp_fiscal: cpFiscalCheck.valor,
+    numero_interno_trabajador: document.getElementById('f-numero-interno').value.trim() || null,
     empresa_id: document.getElementById('f-empresa').value || null,
     registro_patronal_id: document.getElementById('f-registro-patronal').disabled ? null : (document.getElementById('f-registro-patronal').value || null),
     tipo_empleado: document.getElementById('f-tipoempleado').value,
@@ -1870,6 +1935,7 @@ async function abrirDetalle(id){
   document.getElementById('d-nss-err').style.display = 'none';
   document.getElementById('d-cp-fiscal-err').style.display = 'none';
 
+  document.getElementById('d-numero-interno').value = p.numero_interno_trabajador || '';
   document.getElementById('d-empresa').value = p.empresa_id||'';
   document.getElementById('d-proyecto').value = p.proyecto_id||'';
 
@@ -2678,6 +2744,7 @@ async function guardarDetalle(){
     curp: curpParaGuardar,
     nss: nssParaGuardar,
     cp_fiscal: cpFiscalParaGuardar,
+    numero_interno_trabajador: document.getElementById('d-numero-interno').value.trim() || null,
     empresa_id: document.getElementById('d-empresa').value || null,
     registro_patronal_id: document.getElementById('d-registro-patronal').disabled ? null : (document.getElementById('d-registro-patronal').value || null),
     proyecto_id: document.getElementById('d-proyecto').value || null,

@@ -132,18 +132,25 @@
   .user-menu{border:0;background:transparent;font-size:21px;cursor:pointer;color:var(--text);margin-left:8px}
   #conn-status{margin:0 0 12px;padding:8px 12px;border-radius:10px;font-size:12px}
   .panel{display:none}.panel.active{display:block}
-  .dashboard-hero{min-height:255px;border-radius:18px;background:linear-gradient(105deg,#FFF8E2 0%,#FFF5D8 56%,#FFF8E7 100%);display:grid;grid-template-columns:minmax(0,1.2fr) minmax(180px,.8fr) minmax(170px,.65fr);align-items:center;gap:12px;padding:25px 28px;margin-bottom:18px;overflow:hidden;position:relative}
+  /* Dashboard: portada compacta; el resumen operativo tiene prioridad visual. */
+  .dashboard-hero{min-height:150px;border-radius:16px;background:linear-gradient(105deg,#FFF8E2 0%,#FFF5D8 56%,#FFF8E7 100%);display:grid;grid-template-columns:minmax(0,1.35fr) minmax(150px,.65fr) minmax(145px,.55fr);align-items:center;gap:10px;padding:17px 22px;margin-bottom:14px;overflow:hidden;position:relative}
   .dashboard-hero-copy{position:relative;z-index:2}
-  .dashboard-greeting{margin:0 0 14px;font-size:17px;color:#34434B}
-  .dashboard-hero h1{font:800 clamp(31px,3.1vw,48px)/1.08 Montserrat,sans-serif;letter-spacing:-2px;margin:0 0 14px;color:#101214}
+  .dashboard-greeting{margin:0 0 8px;font-size:14px;color:#34434B}
+  .dashboard-hero h1{font:800 clamp(27px,2.5vw,37px)/1.05 Montserrat,sans-serif;letter-spacing:-1.6px;margin:0 0 9px;color:#101214}
   .dashboard-hero h1 span{display:inline-block;background:var(--yellow);padding:1px 8px 4px;border-radius:8px}
-  .dashboard-hero-copy>p:last-child{font-size:14px;line-height:1.55;color:#5A6267;max-width:440px;margin:0}
-  .hero-team-art{height:200px;position:relative;display:grid;place-items:center}
-  .hero-hex{position:absolute;width:92px;height:92px;border-radius:24px;background:var(--yellow);transform:rotate(30deg);opacity:.92}
-  .hero-hex-a{left:3%;top:0}.hero-hex-b{right:2%;bottom:1%;background:#FFE28A}
-  .hero-people{position:relative;z-index:1;width:155px;height:160px;border-radius:48% 42% 48% 38%;background:linear-gradient(140deg,#F6DCA8,#F7F2E5);border:5px solid rgba(255,255,255,.75);box-shadow:0 14px 35px rgba(89,70,26,.13);display:grid;place-items:center;font:800 43px Montserrat,sans-serif;color:#263C2E;transform:rotate(-4deg)}
-  .hero-quote{font:italic 500 21px/1.45 Montserrat,sans-serif;color:#29443D;text-align:center;position:relative;z-index:1}
-  .hero-quote i{display:block;width:48px;height:6px;border-radius:99px;background:var(--yellow);margin:18px auto 0}
+  .dashboard-hero-copy>p:last-child{font-size:12px;line-height:1.45;color:#5A6267;max-width:420px;margin:0}
+  .hero-team-art{height:118px;position:relative;display:grid;place-items:center;min-width:0}
+  .hero-hex{position:absolute;width:58px;height:58px;border-radius:16px;background:var(--yellow);transform:rotate(30deg);opacity:.75}
+  .hero-hex-a{left:5%;top:2%}.hero-hex-b{right:3%;bottom:0;background:#FFE28A}
+  .hero-company-brand{position:relative;z-index:1;width:min(100%,175px);height:100px;padding:12px;border-radius:16px;background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.9);box-shadow:0 8px 20px rgba(89,70,26,.08);display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden}
+  .hero-company-brand img{display:none;max-width:100%;max-height:76px;object-fit:contain}
+  .hero-company-brand.has-logo img{display:block}
+  .hero-company-brand.has-logo .hero-company-fallback{display:none}
+  .hero-company-fallback{display:flex;align-items:center;justify-content:center;gap:9px;min-width:0;color:#29443D;text-align:left}
+  .hero-company-initial{width:42px;height:42px;border-radius:12px;background:#E3EEDD;color:#2B6741;display:grid;place-items:center;flex:none;font:800 17px Montserrat,sans-serif}
+  .hero-company-copy{font:700 11px/1.3 Montserrat,sans-serif;overflow-wrap:anywhere;max-height:48px;overflow:hidden}
+  .hero-quote{font:italic 500 16px/1.35 Montserrat,sans-serif;color:#29443D;text-align:center;position:relative;z-index:1}
+  .hero-quote i{display:block;width:38px;height:5px;border-radius:99px;background:var(--yellow);margin:12px auto 0}
   .dashboard-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
   .metric-card{display:flex;align-items:center;gap:12px;text-align:left;min-width:0;padding:15px 14px;border:1px solid #EBE9E3;border-radius:16px;background:#fff;cursor:pointer;color:var(--text);font:inherit;transition:transform .15s,box-shadow .15s}
   .metric-card:hover{transform:translateY(-2px);box-shadow:0 9px 22px rgba(20,30,20,.06)}
@@ -519,7 +526,7 @@
         <h1>Tu organización,<br><span>en orden.</span></h1>
         <p>Gestiona la información de tu personal, consulta expedientes y mantén todo al día, en un solo lugar.</p>
       </div>
-      <div class="hero-team-art" aria-hidden="true"><span class="hero-hex hero-hex-a"></span><span class="hero-hex hero-hex-b"></span><div class="hero-people">bH</div></div>
+      <div class="hero-team-art"><span class="hero-hex hero-hex-a" aria-hidden="true"></span><span class="hero-hex hero-hex-b" aria-hidden="true"></span><div class="hero-company-brand" id="hero-company-brand" aria-label="Marca de la empresa activa"><img id="hero-company-logo" alt="Logo de la empresa activa"><div class="hero-company-fallback"><span class="hero-company-initial" id="hero-company-initial">E</span><span class="hero-company-copy" id="hero-company-copy">Logo de tu empresa</span></div></div></div>
       <div class="hero-quote">“Más tiempo<br>para lo humano.”<i></i></div>
     </section>
     <div class="dashboard-metrics">
@@ -1574,8 +1581,26 @@ function actualizarDashboard(){
       return '<tr><td><a href="#" onclick="abrirDetalle(\''+String(p.id)+'\');return false;">'+escapeHtml(nombre)+'</a></td><td>'+escapeHtml(empresaNombre(p.empresa_id)||'—')+'</td><td>'+escapeHtml(puesto)+'</td><td><span class="pill">'+escapeHtml(estatusPersona(p))+'</span></td></tr>';
     }).join(''):'<tr><td colspan="4" class="empty">Todavía no hay personal registrado.</td></tr>';
   }
-  const nombre= (personal[0]&&personal[0].empresa_id) ? empresaNombre(personal[0].empresa_id) : 'Organización';
-  poner('empresa-activa-nombre',nombre||'Organización');
+  const personaConEmpresa = personal.find(p => p.empresa_id && empresas.some(e => String(e.id) === String(p.empresa_id)));
+  const empresaDashboard = personaConEmpresa ? empresas.find(e => String(e.id) === String(personaConEmpresa.empresa_id)) : (empresas[0] || null);
+  const nombre = empresaDashboard?.nombre || 'Tu empresa';
+  poner('empresa-activa-nombre',nombre);
+  const marca = document.getElementById('hero-company-brand');
+  const imagenMarca = document.getElementById('hero-company-logo');
+  const textoMarca = document.getElementById('hero-company-copy');
+  const inicialMarca = document.getElementById('hero-company-initial');
+  if (marca && imagenMarca && textoMarca && inicialMarca) {
+    const urlLogo = empresaDashboard?.logo_url || empresaDashboard?.logo || empresaDashboard?.logotipo_url || '';
+    textoMarca.textContent = nombre;
+    inicialMarca.textContent = nombre.split(/\\s+/).filter(Boolean).slice(0,2).map(x => x[0]).join('').toUpperCase() || 'E';
+    marca.classList.remove('has-logo');
+    imagenMarca.removeAttribute('src');
+    if (urlLogo && /^https?:\\/\\//i.test(urlLogo)) {
+      imagenMarca.onload = () => marca.classList.add('has-logo');
+      imagenMarca.onerror = () => marca.classList.remove('has-logo');
+      imagenMarca.src = urlLogo;
+    }
+  }
 }
 function prepararIdentidadUsuario(){
   const email=(document.getElementById('login-email').value||'').trim();

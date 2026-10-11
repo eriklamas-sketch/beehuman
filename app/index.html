@@ -97,7 +97,7 @@
   .app-layout{display:grid;grid-template-columns:278px minmax(0,1fr);min-height:100vh}
   .app-sidebar{position:sticky;top:0;height:100vh;padding:22px 20px 18px;background:#FBFAF5;border-right:1px solid #F0EEE7;display:flex;flex-direction:column;gap:30px;z-index:10}
   .brand-logo{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);padding:0 4px 4px}
-  .brand-symbol{width:58px;height:58px;display:grid;place-items:center;flex:none;border-radius:18px;background:var(--yellow);color:#161616;font:800 34px Montserrat,sans-serif;transform:rotate(-5deg);box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
+  .brand-symbol{width:58px;height:58px;display:grid;place-items:center;flex:none;border-radius:18px;background:var(--yellow);color:#161616;transform:rotate(-5deg);box-shadow:inset 0 0 0 1px rgba(0,0,0,.04);overflow:hidden}.brand-symbol svg{width:55px;height:55px;display:block;transform:rotate(5deg)}
   .brand-word{display:flex;flex-direction:column;gap:2px}
   .brand-word strong{font:700 25px Montserrat,sans-serif;letter-spacing:-1.4px;white-space:nowrap}
   .brand-word strong i{font-style:normal;color:#EFB900}
@@ -132,23 +132,23 @@
   .user-menu{border:0;background:transparent;font-size:21px;cursor:pointer;color:var(--text);margin-left:8px}
   #conn-status{margin:0 0 12px;padding:8px 12px;border-radius:10px;font-size:12px}
   .panel{display:none}.panel.active{display:block}
-  .dashboard-hero{min-height:150px;border-radius:16px;background:linear-gradient(105deg,#FFF8E2 0%,#FFF5D8 56%,#FFF8E7 100%);display:grid;grid-template-columns:minmax(0,1.35fr) minmax(150px,.65fr) minmax(145px,.55fr);align-items:center;gap:10px;padding:17px 22px;margin-bottom:14px;overflow:hidden;position:relative}
+  .dashboard-hero{min-height:112px;border-radius:16px;background:linear-gradient(105deg,#FFF8E2 0%,#FFF5D8 56%,#FFF8E7 100%);display:grid;grid-template-columns:minmax(0,1.35fr) minmax(125px,.55fr) minmax(120px,.4fr);align-items:center;gap:8px;padding:11px 18px;margin-bottom:12px;overflow:hidden;position:relative}
   .dashboard-hero-copy{position:relative;z-index:2}
-  .dashboard-greeting{margin:0 0 8px;font-size:14px;color:#34434B}
-  .dashboard-hero h1{font:800 clamp(27px,2.5vw,37px)/1.05 Montserrat,sans-serif;letter-spacing:-1.6px;margin:0 0 9px;color:#101214}
+  .dashboard-greeting{margin:0 0 4px;font-size:12px;color:#34434B}
+  .dashboard-hero h1{font:800 clamp(24px,2vw,30px)/1.02 Montserrat,sans-serif;letter-spacing:-1.2px;margin:0 0 6px;color:#101214}
   .dashboard-hero h1 span{display:inline-block;background:var(--yellow);padding:1px 8px 4px;border-radius:8px}
-  .dashboard-hero-copy>p:last-child{font-size:12px;line-height:1.45;color:#5A6267;max-width:420px;margin:0}
-  .hero-team-art{height:118px;position:relative;display:grid;place-items:center;min-width:0}
-  .hero-hex{position:absolute;width:58px;height:58px;border-radius:16px;background:var(--yellow);transform:rotate(30deg);opacity:.75}
+  .dashboard-hero-copy>p:last-child{font-size:11px;line-height:1.35;color:#5A6267;max-width:420px;margin:0}
+  .hero-team-art{height:82px;position:relative;display:grid;place-items:center;min-width:0}
+  .hero-hex{position:absolute;width:42px;height:42px;border-radius:13px;background:var(--yellow);transform:rotate(30deg);opacity:.75}
   .hero-hex-a{left:5%;top:2%}.hero-hex-b{right:3%;bottom:0;background:#FFE28A}
-  .hero-company-brand{position:relative;z-index:1;width:min(100%,175px);height:100px;padding:12px;border-radius:16px;background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.9);box-shadow:0 8px 20px rgba(89,70,26,.08);display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden}
-  .hero-company-brand img{display:none;max-width:100%;max-height:76px;object-fit:contain}
+  .hero-company-brand{position:relative;z-index:1;width:min(100%,160px);height:76px;padding:9px;border-radius:14px;background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.9);box-shadow:0 8px 20px rgba(89,70,26,.08);display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden}
+  .hero-company-brand img{display:none;max-width:100%;max-height:58px;object-fit:contain}
   .hero-company-brand.has-logo img{display:block}
   .hero-company-brand.has-logo .hero-company-fallback{display:none}
   .hero-company-fallback{display:flex;align-items:center;justify-content:center;gap:9px;min-width:0;color:#29443D;text-align:left}
   .hero-company-initial{width:42px;height:42px;border-radius:12px;background:#E3EEDD;color:#2B6741;display:grid;place-items:center;flex:none;font:800 17px Montserrat,sans-serif}
   .hero-company-copy{font:700 11px/1.3 Montserrat,sans-serif;overflow-wrap:anywhere;max-height:48px;overflow:hidden}
-  .hero-quote{font:italic 500 16px/1.35 Montserrat,sans-serif;color:#29443D;text-align:center;position:relative;z-index:1}
+  .hero-quote{font:italic 500 13px/1.3 Montserrat,sans-serif;color:#29443D;text-align:center;position:relative;z-index:1}
   .hero-quote i{display:block;width:38px;height:5px;border-radius:99px;background:var(--yellow);margin:12px auto 0}
   .dashboard-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
   .metric-card{display:flex;align-items:center;gap:12px;text-align:left;min-width:0;padding:15px 14px;border:1px solid #EBE9E3;border-radius:16px;background:#fff;cursor:pointer;color:var(--text);font:inherit;transition:transform .15s,box-shadow .15s}
@@ -215,7 +215,7 @@
   .detail-tabs button:hover{background:#F1EFE7;color:#1D2822}
   .detail-tabs button.active{background:#FFF0B8;border-color:#F7D76B;color:#171A16}
   .detail-tabs button.active span{background:#FFCC2F;color:#161616}
-  .detail-savebar{position:sticky;top:68px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid #F0EEE8}
+  .detail-savebar{position:static;top:auto;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 16px;margin-top:4px;background:#fff;backdrop-filter:none;border-top:1px solid #F0EEE8;border-bottom:0}
   .detail-savehint{font-size:11px;color:#737C80}
   .detail-save-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px}
   .detail-savebar .toast{margin:0;font-size:12px}
@@ -314,6 +314,10 @@
 #modal-overlay .detail-modal .detail-heading .detail-title-line #d-empleadoid{margin:0;align-self:baseline;white-space:nowrap}
 #modal-overlay .detail-modal .detail-savebar{position:static!important;top:auto!important;z-index:auto;margin-top:14px;border-top:1px solid #F0EEE8;border-bottom:0;padding:14px 0 0;background:#fff}
 @media(max-width:640px){#modal-overlay .detail-modal .detail-savebar{position:static!important;top:auto!important}}
+
+  /* Ajustes de revisión: el botón permanece dentro del expediente y después de Movimientos. */
+  #modal-overlay .detail-modal #detail-savebar{position:static!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;z-index:1!important;display:flex!important;width:100%;box-sizing:border-box;align-self:stretch;margin:4px 0 0;padding:14px 0 16px;background:#fff;border-top:1px solid #F0EEE8;border-bottom:0;backdrop-filter:none;}
+  .dashboard-hero{min-height:0;}
 </style>
 </head>
 <body>
@@ -333,7 +337,7 @@
   <div class="app-layout">
     <aside class="app-sidebar">
       <a class="brand brand-logo" href="#" onclick="cambiarPestana('resumen');return false;" aria-label="BeeHuman, ir al resumen">
-        <span class="brand-symbol" aria-hidden="true">b</span>
+        <span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 3 56 17v30L32 61 8 47V17Z" fill="#FFC62B" stroke="#111" stroke-width="2.6" stroke-linejoin="round"/><path d="M28 25c-6-9-16-6-19 0-4 7 2 13 11 10l8-4M36 25c6-9 16-6 19 0 4 7-2 13-11 10l-8-4" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"/><path d="M32 23c-5 0-9 5-9 12 0 9 4 16 9 19 5-3 9-10 9-19 0-7-4-12-9-12Z" fill="#111"/><path d="M26 32h12M24 39h16M27 46h10" stroke="#FFC62B" stroke-width="3" stroke-linecap="round"/><path d="M29 19c-2-5-5-7-9-8M35 19c2-5 5-7 9-8" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></svg></span>
         <span class="brand-word"><strong><i>bee</i>Human</strong><small>Gestión de personal, simplificada.</small></span>
       </a>
       <nav class="tabs sidebar-nav" aria-label="Navegación principal">
@@ -889,7 +893,7 @@
 
       </section><section class="detail-section" data-detail-section="organizacion"><h3>Laborales · Organización</h3>
       <div class="grid3">
-        <div><label>Número interno de trabajador (opcional)</label><input id="d-numero-interno" type="text" maxlength="50" placeholder="Ej. 00125"></div>
+        <div><label>Número interno de trabajador (opcional)</label><input id="d-numero-interno" type="text" maxlength="50" placeholder="Sin asignar"></div>
         <div><label>Empresa</label><select id="d-empresa"></select></div>
         <div>
           <label>Registro patronal</label>
@@ -1963,7 +1967,8 @@ async function abrirDetalle(id){
   document.getElementById('d-nss-err').style.display = 'none';
   document.getElementById('d-cp-fiscal-err').style.display = 'none';
 
-  document.getElementById('d-numero-interno').value = p.numero_interno_trabajador || '';
+  const numeroInternoGuardado = p.numero_interno_trabajador;
+  document.getElementById('d-numero-interno').value = numeroInternoGuardado && String(numeroInternoGuardado).trim().toLowerCase() !== 'null' ? String(numeroInternoGuardado).trim() : '';
   document.getElementById('d-empresa').value = p.empresa_id||'';
   document.getElementById('d-proyecto').value = p.proyecto_id||'';
 

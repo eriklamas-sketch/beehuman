@@ -260,7 +260,7 @@
 
   .detail-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
   .detail-heading h2{margin:0}
-  .detail-heading #d-empleadoid{margin:5px 0 0}
+  .detail-heading #d-empleadoid{margin:0;color:var(--text-muted);font-size:12px;white-space:nowrap}
   .detail-person-summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 12px;margin-top:9px}
   .detail-person-summary strong{font:700 15px Montserrat,Inter,sans-serif;color:var(--text)}
   .detail-person-summary span{font-size:12px;color:var(--text-secondary)}
@@ -303,6 +303,11 @@
   #panel-alta .alta-card-title { margin-bottom:14px; }
 }
 
+
+/* Correcciones de estructura del expediente: ID alineado y guardado al final */
+#modal-overlay .detail-modal .detail-heading .detail-title-line #d-empleadoid{margin:0;align-self:baseline;white-space:nowrap}
+#modal-overlay .detail-modal .detail-savebar{position:static!important;top:auto!important;z-index:auto;margin-top:14px;border-top:1px solid #F0EEE8;border-bottom:0;padding:14px 0 0;background:#fff}
+@media(max-width:640px){#modal-overlay .detail-modal .detail-savebar{position:static!important;top:auto!important}}
 </style>
 </head>
 <body>
@@ -885,12 +890,12 @@
           <select id="d-registro-patronal"></select>
           <p class="hint" id="d-registro-patronal-vacio" style="display:none;color:var(--text-secondary);margin:4px 0 0;font-size:12px;">Esta empresa no tiene registros patronales activos.</p>
         </div>
-        <div><label>Proyecto</label><select id="d-proyecto"></select></div>
       </div>
-      <div class="grid">
+      <div class="grid3">
+        <div><label>Proyecto</label><select id="d-proyecto"></select></div>
         <div>
           <label>Coordinador</label>
-          <div class="checks" style="margin-bottom:8px;">
+          <div class="checks" style="margin-bottom:8px;flex-wrap:wrap;">
             <label><input type="radio" name="d-coordinador-modo" value="directorio"> Del directorio</label>
             <label><input type="radio" name="d-coordinador-modo" value="externo"> Externo</label>
             <label><input type="radio" name="d-coordinador-modo" value="ninguno"> Sin asignar</label>
@@ -924,10 +929,9 @@
           <label>Centro de costo</label><select id="d-cat-centros_costo"></select>
           <p class="hint" id="d-cat-centros_costo-err" style="display:none;color:var(--danger);margin:4px 0 0;">No se pudo cargar el catálogo de centros de costo. Se conservará el valor actual sin cambios.</p>
         </div>
-        <div></div>
       </div>
-
-      </section><section class="detail-section" data-detail-section="laboral"><h3>Laborales · Relación laboral</h3>
+    </section>
+    <section class="detail-section" data-detail-section="laboral"><h3>Laborales · Relación laboral</h3>
       <div class="grid3">
         <div><label>Tipo de empleado</label>
           <select id="d-tipoempleado"><option>Confianza</option><option>Sindicalizado</option><option>Base</option><option>Honorarios</option></select>
@@ -1005,14 +1009,16 @@
         <p class="hint" id="d-historial-resumen" style="margin-bottom:8px;">Cargando…</p>
         <button type="button" class="primary" id="btn-descargar-historial" style="margin-top:0;display:none;" onclick="descargarHistorialCSV()">Descargar historial (CSV)</button>
       </div>
-      <div class="detail-savebar" id="detail-savebar">
-        <span class="detail-savehint">Los cambios generales se guardan al confirmar.</span>
-        <div class="detail-save-actions"><div class="toast" id="toast-detalle"></div><button class="primary" id="btn-guardar-detalle" onclick="guardarDetalle()">Guardar cambios</button></div>
+      
       </div>
 
 
     </div>
-  </section></div>
+  </section>
+<div class="detail-savebar" id="detail-savebar">
+        <span class="detail-savehint">Los cambios generales se guardan al confirmar.</span>
+        <div class="detail-save-actions"><div class="toast" id="toast-detalle"></div><button class="primary" id="btn-guardar-detalle" onclick="guardarDetalle()">Guardar cambios</button></div>
+</div>
     </main>
   </div>
   </div>

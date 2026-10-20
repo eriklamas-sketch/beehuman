@@ -743,6 +743,56 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
 /* Botón final */
 #panel-alta #form-alta>#btn-alta{align-self:flex-end;margin-top:6px;padding:12px 26px;border-radius:10px;font-weight:600;font-size:14px;background:var(--v21-amarillo);color:var(--v21-navy)}
 
+/* ---- Iteración 4 · Empresas, ficha de empresa y Catálogos (solo presentación) ---- */
+/* Acciones dentro de tablas: contorno discreto; el color solo indica la intención */
+#app-content td button.primary,#modal-empresa-overlay td button.primary{background:#fff!important;color:var(--v21-navy)!important;border:1px solid var(--v21-borde)!important;
+  border-radius:8px!important;padding:5px 12px!important;font-size:12px!important;font-weight:500!important;margin-top:0!important;box-shadow:none}
+#app-content td button.primary:hover,#modal-empresa-overlay td button.primary:hover{background:var(--v21-hover)!important}
+#app-content td button.primary[onclick*="false)"],#modal-empresa-overlay td button.primary[onclick*="false)"]{color:#B4352C!important;border-color:#F0CFCB!important}
+#app-content td button.primary[onclick*="false)"]:hover,#modal-empresa-overlay td button.primary[onclick*="false)"]:hover{background:#FDF1EF!important}
+#app-content td button.primary[onclick*="true)"],#modal-empresa-overlay td button.primary[onclick*="true)"]{color:var(--v21-verde)!important;border-color:#CBE5D4!important}
+#app-content td button.primary[onclick^="guardar"]{background:var(--v21-navy)!important;color:#fff!important;border-color:var(--v21-navy)!important}
+.pill[style*="opacity"]{background:#F1F3F7!important;color:#6B7487!important;opacity:1!important}
+/* Empresas */
+#panel-empresas>.card{padding:22px 22px 18px}
+#panel-empresas>.card h2{font-size:24px;letter-spacing:-.025em;margin-bottom:4px}
+#panel-empresas>.card button.primary:not(td button){border-radius:10px;padding:10px 18px;font-weight:600}
+#panel-empresas .table-wrap{border:1px solid var(--v21-borde);border-radius:12px;margin-top:18px!important}
+#panel-empresas table thead th,#panel-catalogos table thead th,#modal-empresa-overlay table thead th{background:var(--v21-fondo);color:var(--v21-texto-2);font-weight:500;font-size:12px;padding:10px 12px;border-bottom:1px solid var(--v21-borde)}
+#panel-empresas table tbody td,#panel-catalogos table tbody td,#modal-empresa-overlay table tbody td{padding:11px 12px;border-bottom:1px solid var(--v21-borde-2);color:var(--v21-texto)}
+#panel-empresas table tbody tr:last-child td,#panel-catalogos table tbody tr:last-child td,#modal-empresa-overlay table tbody tr:last-child td{border-bottom:0}
+#panel-empresas table tbody td:first-child{font-weight:500;color:var(--v21-navy)}
+#panel-empresas table tbody td:nth-child(2){font-variant-numeric:tabular-nums;color:var(--v21-texto-2)}
+/* Ficha de empresa */
+#modal-empresa-overlay{background:rgba(14,26,51,.42)!important;backdrop-filter:blur(3px)}
+#modal-empresa-overlay>.card{max-width:720px!important;border-radius:16px;padding:26px 28px 24px;border:0;box-shadow:0 24px 60px rgba(14,26,51,.22)}
+#modal-empresa-overlay>.card h2{font-size:20px;letter-spacing:-.02em}
+#modal-empresa-overlay>.card>div:first-child>button{background:#fff!important;color:var(--v21-navy)!important;border:1px solid var(--v21-borde)!important;border-radius:9px!important;font-weight:500!important}
+#modal-empresa-overlay h3{margin:22px 0 12px;padding-top:18px;border-top:1px solid var(--v21-borde-2);font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--v21-texto-2)}
+#modal-empresa-overlay>.card>h3:first-of-type{border-top:0;padding-top:0;margin-top:18px}
+#modal-empresa-overlay .grid,#modal-empresa-overlay .grid3{gap:12px 14px;margin-bottom:12px}
+#modal-empresa-overlay .grid3>div:empty{display:none}
+#modal-empresa-overlay label{font-size:12.5px;font-weight:500;color:var(--v21-texto);margin-bottom:6px}
+#modal-empresa-overlay input,#modal-empresa-overlay select{height:40px;border:1px solid #DDE2EB;border-radius:9px;font-size:13.5px}
+#modal-empresa-overlay div:has(>input[required])>label::after{content:" *";color:var(--v21-rojo)}
+#modal-empresa-overlay #btn-guardar-empresa{border-radius:10px;padding:11px 22px;font-weight:600;margin-top:8px}
+#modal-empresa-overlay form button.primary,#panel-catalogos form button.primary{background:var(--v21-navy)!important;color:#fff!important;border-radius:9px!important;height:40px;padding:0 18px!important;font-weight:500}
+#modal-empresa-overlay .table-wrap{border:1px solid var(--v21-borde);border-radius:12px}
+/* Catálogos: rejilla de dos columnas */
+#panel-catalogos.active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+#panel-catalogos>.card{margin:0;padding:20px 20px 16px;border-radius:12px;box-shadow:none;border-color:var(--v21-tarjeta-borde)}
+#panel-catalogos>#card-clasificaciones{grid-column:1/-1}
+#panel-catalogos>.card h2{font-size:15px;margin-bottom:4px}
+#panel-catalogos>.card>p.hint{font-size:12.5px;margin-bottom:14px}
+#panel-catalogos form{margin-bottom:14px!important}
+#panel-catalogos form label{font-size:12px;font-weight:500;color:var(--v21-texto-2);margin-bottom:6px}
+#panel-catalogos form input{height:40px;border:1px solid #DDE2EB;border-radius:9px;font-size:13.5px}
+#panel-catalogos .table-wrap{border:1px solid var(--v21-borde);border-radius:10px}
+#panel-catalogos table td:last-child{text-align:right;white-space:nowrap}
+#panel-catalogos .checks label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:6px 11px;border:1px solid #DDE2EB;border-radius:9px;background:#fff;font-size:12.5px;font-weight:500;color:var(--v21-texto-2)}
+#panel-catalogos .checks label:has(input:checked){background:var(--v21-azul-suave);border-color:#B9CBF3;color:#22489E}
+#panel-catalogos .checks input{accent-color:var(--v21-navy);margin:0}
+
 /* ---- Celular y tableta ---- */
 @media(max-width:900px){
   .app-sidebar .sidebar-nav button,.app-sidebar .sidebar-bottom>button{font-size:0!important;justify-content:center;padding:12px 8px;gap:0}
@@ -753,6 +803,8 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
   #panel-alta #form-alta>section.alta-card{grid-template-columns:1fr;padding:18px}
   #panel-alta #form-alta>section.alta-card>.alta-card-title{grid-row:auto;margin-bottom:16px}
   #panel-alta #form-alta>section.alta-card>*{grid-column:1}
+  #panel-catalogos.active{grid-template-columns:1fr}
+  #panel-catalogos>#card-clasificaciones{grid-column:auto}
 }
 @media(max-width:600px){
   .app-sidebar{background:var(--v21-superficie);border-bottom:1px solid var(--v21-borde);box-shadow:0 2px 10px rgba(22,38,74,.05)}

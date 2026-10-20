@@ -6,7 +6,7 @@
 <title>BeeHuman</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
@@ -631,11 +631,53 @@ body:not(.rol-consulta) #panel-lista table a{color:var(--v21-azul)!important;fon
 #panel-lista table a:hover{text-decoration:underline}
 #panel-lista .inline-select{height:34px;border-radius:9px;border-color:var(--v21-borde);background:#fff}
 
+/* ---- Iteración 2 · tipografía Geist y tarjetas minimalistas ----
+   Número protagonista, etiqueta discreta, icono pequeño, fondo blanco.
+   Tres pesos: 400 / 500 / 600. Cifras tabulares. */
+:root{--v21-fuente:'Geist','Inter',-apple-system,sans-serif;--v21-cifra:#0E1A33;--v21-tarjeta-borde:#E6E9EF}
+body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td,th,span,p,a,label,div){font-family:var(--v21-fuente)}
+#app-content :is(h1,h2,h3,b,strong){font-weight:600}
+.app-sidebar .sidebar-nav button.active{font-weight:500}
+.card h2,.section-heading h2,.quick-card h2,#panel-resumen .resumen-seccion .seccion-cabeza h2{font-weight:600;letter-spacing:-.015em}
+.hero-compacta-texto .dashboard-greeting{font-weight:600!important;letter-spacing:-.025em}
+#panel-lista>.card>h2{font-weight:600;letter-spacing:-.025em}
+/* Resumen: tarjetas de indicadores */
+.dashboard-metrics .metric-card,.dashboard-metrics .metric-card:nth-child(n){position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:0;
+  background:var(--v21-superficie);border:1px solid var(--v21-tarjeta-borde);border-radius:12px;padding:16px 18px 15px;box-shadow:none;min-height:0}
+.dashboard-metrics .metric-card:hover{transform:none;border-color:#CBD3E1;box-shadow:0 1px 3px rgba(14,26,51,.06)}
+.dashboard-metrics .metric-card>span:nth-child(2){display:flex;flex-direction:column;gap:0;width:100%}
+.dashboard-metrics .metric-card small{order:-1;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--v21-texto-2);margin:0 0 8px}
+.dashboard-metrics .metric-card b{font-size:32px;line-height:1.05;font-weight:600;letter-spacing:-.035em;color:var(--v21-cifra);font-variant-numeric:tabular-nums}
+.dashboard-metrics .metric-card em{font-size:12.5px;color:var(--v21-texto-2);margin-top:6px;white-space:normal}
+.dashboard-metrics .metric-icon,.dashboard-metrics .metric-card:nth-child(n) .metric-icon{position:absolute;top:14px;right:14px;width:18px!important;height:18px!important;
+  background:none!important;border-radius:0;color:var(--v21-m)!important;opacity:.85}
+.dashboard-metrics .metric-icon::before{width:18px!important;height:18px!important}
+.dashboard-metrics .metric-arrow{display:none}
+/* Personal: indicadores */
+#panel-lista .kpi-personal,#panel-lista .kpi-personal.kpi-azul,#panel-lista .kpi-personal.kpi-verde,#panel-lista .kpi-personal.kpi-dorado{
+  --kpi-fondo:var(--v21-superficie);--kpi-borde:var(--v21-tarjeta-borde);--kpi-icono-fondo:transparent;--kpi-etiqueta:var(--v21-texto-2);
+  border-radius:12px;padding:15px 18px 14px;gap:0}
+#panel-lista .kpi-personal.kpi-azul{--kpi-icono:var(--v21-azul)}
+#panel-lista .kpi-personal.kpi-verde{--kpi-icono:var(--v21-verde)}
+#panel-lista .kpi-personal.kpi-dorado{--kpi-icono:#B98900}
+#panel-lista .kpi-cabeza{flex-direction:row-reverse;justify-content:space-between;margin-bottom:8px}
+#panel-lista .kpi-icono{width:18px;height:18px;border-radius:0;background:none;opacity:.85}
+#panel-lista .kpi-icono svg{width:17px;height:17px}
+#panel-lista .kpi-personal small{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+#panel-lista .kpi-personal b{font-size:30px;line-height:1.1;font-weight:600;letter-spacing:-.035em;color:var(--v21-cifra)}
+#panel-lista .kpi-personal em{font-size:12.5px;color:var(--v21-texto-2);margin-top:6px}
+/* Vista general y Compensación: mismas reglas de cifra */
+.stat{background:var(--v21-superficie);border:1px solid var(--v21-tarjeta-borde);border-radius:12px;padding:14px 16px}
+.stat .num{font-size:26px;font-weight:600;letter-spacing:-.03em;color:var(--v21-cifra)}
+.stat .lbl{font-size:12.5px;margin-top:4px}
+
 /* ---- Celular y tableta ---- */
 @media(max-width:900px){
   .app-sidebar .sidebar-nav button,.app-sidebar .sidebar-bottom>button{font-size:0!important;justify-content:center;padding:12px 8px;gap:0}
   .app-sidebar .sidebar-nav .nav-chevron{display:none}
   .app-sidebar .company-switch{justify-content:center;padding:8px}
+  #panel-lista .kpi-personal b{font-size:24px}
+  .dashboard-metrics .metric-card b{font-size:28px}
 }
 @media(max-width:600px){
   .app-sidebar{background:var(--v21-superficie);border-bottom:1px solid var(--v21-borde);box-shadow:0 2px 10px rgba(22,38,74,.05)}
@@ -643,7 +685,9 @@ body:not(.rol-consulta) #panel-lista table a{color:var(--v21-azul)!important;fon
   .app-sidebar .sidebar-nav button,.app-sidebar .sidebar-nav button.active{font-size:11px!important;padding:8px 10px;border-radius:10px}
   .app-sidebar .sidebar-nav button.active{box-shadow:none}
   .hero-compacta-texto .dashboard-greeting{font-size:21px!important}
-  .metric-card b{font-size:24px}
+  .hero-compacta-sep{display:none}
+  .dashboard-metrics .metric-card b{font-size:28px}
+  #panel-lista .kpi-personal b{font-size:26px}
   #panel-lista>.card{padding:16px 14px}
   #panel-lista>.card>h2{font-size:20px}
   #panel-lista .filters{padding:10px}

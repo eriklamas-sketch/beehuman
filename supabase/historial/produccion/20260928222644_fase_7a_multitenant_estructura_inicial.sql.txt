@@ -1,0 +1,57 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20260928222644 · fase_7a_multitenant_estructura_inicial
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+
+begin;
+
+-- 1. Tabla de tenants
+create table tenants (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  created_at timestamptz default now()
+);
+
+-- 2. Relación usuario de login → tenant
+create table usuarios_tenant (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  tenant_id uuid not null references tenants(id),
+  created_at timestamptz default now()
+);
+
+-- 3. Crear el tenant único y capturar su ID explícitamente
+do $$
+declare v_tenant_id uuid;
+begin
+  insert into tenants (nombre)
+  values ('BeeHuman — Entorno inicial')
+  returning id into v_tenant_id;
+
+  insert into usuarios_tenant (user_id, tenant_id)
+  values ('28b037db-6fde-4175-8408-a644c6aeee50', v_tenant_id);
+
+  execute format('alter table empresas add column tenant_id uuid not null default %L references tenants(id)', v_tenant_id);
+  execute format('alter table proyectos add column tenant_id uuid not null default %L references tenants(id)', v_tenant_id);
+  execute format('alter table personal add column tenant_id uuid not null default %L references tenants(id)', v_tenant_id);
+  execute format('alter table movimientos add column tenant_id uuid not null default %L references tenants(id)', v_tenant_id);
+  execute format('alter table periodicidades add column tenant_id uuid not null default %L references tenants(id)', v_tenant_id);
+  execute format('alter table conceptos_percepcion add column tenant_id uuid not null default %L references tenants(id)', v_tenant_id);
+  execute format('alter table combos add column tenant_id uuid not null default %L references tenants(id)', v_tenant_id);
+  execute format('alter table combo_conceptos add column tenant_id uuid not null default %L references tenants(id)', v_tenant_id);
+  execute format('alter table personal_percepciones add column tenant_id uuid not null default %L references tenants(id)', v_tenant_id);
+end $$;
+
+-- 4. RLS mínimo en las tablas nuevas únicamente
+alter table tenants enable row level security;
+alter table usuarios_tenant enable row level security;
+
+create policy "ver_propio_vinculo" on usuarios_tenant for select using (user_id = auth.uid());
+create policy "ver_tenant_propio" on tenants for select using (
+  id in (select tenant_id from usuarios_tenant where user_id = auth.uid())
+);
+
+commit;
+

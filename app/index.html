@@ -318,6 +318,192 @@
   /* Ajustes de revisión: el botón permanece dentro del expediente y después de Movimientos. */
   #modal-overlay .detail-modal #detail-savebar{position:static!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;z-index:1!important;display:flex!important;width:100%;box-sizing:border-box;align-self:stretch;margin:4px 0 0;padding:14px 0 16px;background:#fff;border-top:1px solid #F0EEE8;border-bottom:0;backdrop-filter:none;}
   .dashboard-hero{min-height:0;}
+
+/* Resumen: encabezado compacto en una línea */
+.dashboard-hero.dashboard-hero-compacta{display:flex!important;align-items:center;justify-content:space-between;gap:12px;min-height:0!important;padding:8px 14px!important;margin-bottom:12px;grid-template-columns:none!important}
+.hero-compacta-texto{display:flex;align-items:baseline;gap:8px;min-width:0;flex-wrap:wrap}
+.hero-compacta-texto .dashboard-greeting{margin:0;font:700 15px Montserrat,Inter,sans-serif;color:var(--text)}
+.hero-compacta-sep{color:#C9B57A}
+.hero-compacta-sub{font-size:12px;color:var(--text-secondary)}
+.dashboard-hero-compacta .hero-company-brand{position:static!important;width:auto!important;height:40px!important;padding:4px 10px!important;border-radius:10px!important;box-shadow:none;flex:none}
+.dashboard-hero-compacta .hero-company-brand img{max-height:30px;width:auto}
+.dashboard-hero-compacta .hero-company-initial{width:28px!important;height:28px!important;font-size:12px!important;border-radius:8px}
+.dashboard-hero-compacta .hero-company-copy{font-size:12px!important;max-height:none;white-space:nowrap}
+.dashboard-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:900px){.dashboard-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.dashboard-metrics{grid-template-columns:1fr}.hero-compacta-sub{display:none}}
+
+/* Ficha del empleado: nombre, ID y estatus en la cabecera */
+.detail-kicker{margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-secondary)}
+#modal-overlay .detail-modal .detail-title-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#modal-overlay .detail-modal .detail-title-line h2{margin:0;font:700 22px Montserrat,Inter,sans-serif}
+#modal-overlay .detail-modal .detail-id{font-size:12px;color:var(--text-muted);white-space:nowrap}
+.detail-estatus-pill{font-size:11px;padding:3px 10px}
+.detail-estatus-pill.estatus-baja{background:#FDECEC;color:#A33A3A}
+.detail-estatus-pill.estatus-suspendido{background:#FFF3D6;color:#8A6400}
+.detail-head-actions{display:flex;align-items:center;gap:10px;flex:none}
+.detail-estatus-control{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);margin:0}
+.detail-estatus-control select{min-height:32px;padding:4px 8px;border-radius:9px;width:auto}
+#modal-overlay .detail-modal #d-campos-baja{margin:10px 0 0}
+#modal-overlay .detail-modal .detail-section .grid,#modal-overlay .detail-modal .detail-section .grid3{margin-bottom:14px}
+@media(max-width:700px){.detail-head-actions{flex-direction:column;align-items:flex-end}}
+#modal-overlay .detail-modal nav.detail-tabs{flex-wrap:wrap!important;overflow-x:visible!important}
+#modal-overlay .detail-modal .detail-id{align-self:center}
+
+/* Personal: indicadores del resultado filtrado y filtros activos.
+   Azul = selección de filtros; no se usa para acciones (amarillo) ni para estados (verde). */
+:root{--filtro-azul:#2E6BD8;--filtro-azul-suave:#EAF1FD;--filtro-azul-texto:#1F4FA8;}
+.kpis-personal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:4px 0 6px;align-items:stretch;}
+.kpi-personal{--kpi-fondo:#F4F3EE;--kpi-borde:var(--border);--kpi-icono:#59636C;--kpi-icono-fondo:#ECEAE3;--kpi-etiqueta:var(--text-secondary);
+  background:var(--kpi-fondo);border:1px solid var(--kpi-borde);border-radius:12px;padding:11px 14px 12px;display:flex;flex-direction:column;gap:3px;min-width:0;}
+.kpi-personal.kpi-azul{--kpi-fondo:#F4F8FE;--kpi-borde:#DDE8FA;--kpi-icono:#2E6BD8;--kpi-icono-fondo:#E4EDFC;--kpi-etiqueta:#1F4FA8;}
+.kpi-personal.kpi-verde{--kpi-fondo:#F3F8F2;--kpi-borde:#DCEBD8;--kpi-icono:#278344;--kpi-icono-fondo:#E2F0DE;--kpi-etiqueta:#216B36;}
+.kpi-personal.kpi-dorado{--kpi-fondo:#FFFAEC;--kpi-borde:#F3E5B8;--kpi-icono:#9A7200;--kpi-icono-fondo:#FCEFC4;--kpi-etiqueta:#765700;}
+.kpi-cabeza{display:flex;align-items:center;gap:8px;margin-bottom:2px;}
+.kpi-icono{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--kpi-icono-fondo);color:var(--kpi-icono);}
+.kpi-icono svg{width:15px;height:15px;display:block;}
+.kpi-personal small{font-size:12.5px;color:var(--kpi-etiqueta);font-weight:600;letter-spacing:.01em;}
+.kpi-personal b{font:700 21px/1.2 Montserrat,sans-serif;color:var(--text);overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
+.kpi-personal em{font-style:normal;font-size:11.5px;line-height:1.35;color:#5F6872;}
+.kpi-nota{font-size:11.5px;color:#6B737C;margin:0 0 12px;line-height:1.4;}
+@media (max-width:720px){.kpis-personal{grid-template-columns:1fr;gap:8px;}.kpi-personal{padding:10px 12px;}.kpi-personal b{font-size:19px;}}
+#panel-lista .filters select.filtro-activo,
+#panel-lista .filters input.filtro-activo{border:1.5px solid var(--filtro-azul);background-color:var(--filtro-azul-suave);color:var(--filtro-azul-texto);font-weight:600;}
+.filtros-aplicados{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-4px 0 12px;padding:8px 10px;border:1px solid #D6E3FA;background:#F6F9FE;border-radius:10px;font-size:12.5px;}
+.filtros-aplicados-titulo{font-weight:700;color:var(--filtro-azul-texto);}
+.filtros-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 auto;}
+.filtro-chip{display:inline-flex;align-items:center;gap:6px;background:var(--filtro-azul);color:#fff;border:0;border-radius:999px;padding:4px 6px 4px 11px;font:600 12px Inter,sans-serif;cursor:pointer;max-width:100%;}
+.filtro-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.filtro-chip i{font-style:normal;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.22);font-size:13px;line-height:1;}
+.filtro-chip:hover i,.filtro-chip:focus-visible i{background:rgba(255,255,255,.4);}
+.filtros-aplicados button.filtros-limpiar{background:transparent;border:1px solid var(--filtro-azul);color:var(--filtro-azul-texto);border-radius:8px;padding:5px 10px;font:600 12px Inter,sans-serif;cursor:pointer;}
+.filtros-aplicados button.filtros-limpiar:disabled{opacity:.45;cursor:default;}
+.filtros-ninguno{color:var(--text-secondary);font-style:italic;}
+body.rol-consulta .kpi-importe{display:none !important;}
+.lista-exportar{display:inline-flex;gap:8px;flex-wrap:wrap;}
+/* Exportación de esquemas: solo Administrador y Nómina (además se valida en JS). */
+body:not(.rol-administrador):not(.rol-nomina) #exportar-esquemas{display:none !important;}
+body.rol-consulta .kpis-personal{grid-template-columns:minmax(0,1fr);max-width:320px;margin-bottom:14px;}
+
+/* Resumen · jerarquía visual (solo presentación).
+   Escala: acento lateral 4px + banda de encabezado suave. Amarillo = marca (Vista general),
+   negro/gris = secciones de datos, azul = estructura y navegación (Desglose), rojo suave = Para revisar.
+   El verde sigue reservado para estados positivos; los colores de estatus no cambian. */
+:root{--sec-borde:#E4E2DA;--sec-texto-2:#55606B;
+  --sec-marca:#F2C200;--sec-marca-fondo:#FFFAE8;--sec-marca-linea:#F2E4B0;
+  --sec-oscura:#2F3439;--sec-oscura-fondo:#F4F3EF;--sec-oscura-linea:#E2E0D8;
+  --sec-neutra:#9A968B;--sec-neutra-fondo:#F7F6F2;--sec-neutra-linea:#E6E4DD;
+  --sec-azul:#2E6BD8;--sec-azul-fondo:#F1F5FD;--sec-azul-linea:#D8E3F7;--sec-azul-texto:#1F4FA8;
+  --sec-alerta:#C8524A;--sec-alerta-fondo:#FDF3F1;--sec-alerta-linea:#F2DAD5;
+  --tabla-cabeza:#F1F4F8;--tabla-cabeza-texto:#3E4A5A;--tabla-linea:#E9E7E0;--tabla-par:#FAFAF7;}
+#panel-resumen .card.resumen-seccion{padding:0;overflow:hidden;border:1px solid var(--sec-borde);border-left:4px solid var(--sec-acento,var(--sec-neutra));border-radius:14px;margin-bottom:20px;box-shadow:none;}
+#panel-resumen .resumen-seccion .seccion-cabeza{background:var(--sec-fondo,#F7F6F2);border-bottom:1px solid var(--sec-linea,var(--sec-borde));padding:13px 20px 12px;}
+#panel-resumen .resumen-seccion .seccion-cabeza h2{font:700 16px Montserrat,sans-serif;margin:0 0 3px;color:var(--text);}
+#panel-resumen .resumen-seccion .seccion-cabeza .hint{margin:0;font-size:12px;line-height:1.45;color:var(--sec-texto-2);}
+#panel-resumen .resumen-seccion .seccion-cuerpo{padding:16px 20px 18px;}
+#panel-resumen .resumen-seccion .summary-grid{margin-top:0;}
+#panel-resumen .seccion-marca{--sec-acento:var(--sec-marca);--sec-fondo:var(--sec-marca-fondo);--sec-linea:var(--sec-marca-linea);}
+#panel-resumen .seccion-oscura{--sec-acento:var(--sec-oscura);--sec-fondo:var(--sec-oscura-fondo);--sec-linea:var(--sec-oscura-linea);}
+#panel-resumen .seccion-neutra{--sec-acento:var(--sec-neutra);--sec-fondo:var(--sec-neutra-fondo);--sec-linea:var(--sec-neutra-linea);}
+#panel-resumen .seccion-azul{--sec-acento:var(--sec-azul);--sec-fondo:var(--sec-azul-fondo);--sec-linea:var(--sec-azul-linea);margin-top:28px;}
+#panel-resumen .seccion-azul .seccion-cabeza h2{color:var(--sec-azul-texto);}
+#panel-resumen .seccion-alerta{--sec-acento:var(--sec-alerta);--sec-fondo:var(--sec-alerta-fondo);--sec-linea:var(--sec-alerta-linea);}
+/* Selector de dimensión: control de selección claramente identificable */
+#panel-resumen .seccion-cabeza-control{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+#panel-resumen .seccion-control{display:inline-flex;align-items:center;gap:8px;margin:0;font-size:12px;font-weight:600;color:var(--sec-azul-texto);}
+#panel-resumen .seccion-control select{width:auto;min-width:210px;margin:0;padding:8px 34px 8px 12px;font:600 13.5px Inter,sans-serif;color:var(--sec-azul-texto);background-color:#fff;
+  border:1.5px solid var(--sec-azul);border-radius:9px;cursor:pointer;-webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%232E6BD8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;}
+#panel-resumen .seccion-control select:hover{background-color:var(--sec-azul-fondo);}
+#panel-resumen .seccion-control select:focus-visible{outline:3px solid rgba(46,107,216,.25);outline-offset:1px;}
+/* Tablas del Resumen */
+#panel-resumen .resumen-seccion .table-wrap{border:1px solid var(--tabla-linea);border-radius:10px;}
+#panel-resumen .resumen-seccion table{font-size:13.5px;font-variant-numeric:tabular-nums;}
+#panel-resumen .resumen-seccion thead th{background:var(--tabla-cabeza);color:var(--tabla-cabeza-texto);font-weight:600;font-size:12px;padding:9px 12px;border-bottom:1px solid #D9DFE8;white-space:normal;}
+#panel-resumen .resumen-seccion tbody td{padding:9px 12px;border-bottom:1px solid var(--tabla-linea);}
+#panel-resumen .resumen-seccion tbody tr:nth-child(even) td{background:var(--tabla-par);}
+#panel-resumen .resumen-seccion tbody tr:last-child td{border-bottom:none;}
+#resumen-grupos th:nth-child(n+3),#resumen-grupos td:nth-child(n+3),
+#resumen-desglose th:nth-child(2),#resumen-desglose td:nth-child(2),
+#resumen-desglose th:nth-child(3),#resumen-desglose td:nth-child(3),
+#resumen-desglose .hint + .table-wrap th:nth-child(4),#resumen-desglose .hint + .table-wrap td:nth-child(4){text-align:right;}
+/* Aviso informativo del desglose por registro patronal */
+#resumen-desglose > p.hint{position:relative;margin:0 0 14px;padding:11px 14px 11px 40px;font-size:12.5px;line-height:1.5;color:#22406F;
+  background:#EAF1FD;border:1px solid #C9DAF6;border-left:3px solid var(--sec-azul);border-radius:9px;}
+#resumen-desglose > p.hint::before{content:"i";position:absolute;left:13px;top:11px;width:18px;height:18px;border-radius:50%;background:var(--sec-azul);color:#fff;
+  font:700 12px/18px Georgia,serif;text-align:center;}
+#resumen-desglose > p.hint b{color:#123572;font-weight:700;}
+/* Para revisar: avisos separados */
+#panel-resumen .seccion-alerta .breakdown-row{padding:9px 0;line-height:1.5;}
+@media (max-width:720px){
+  #panel-resumen .resumen-seccion .seccion-cabeza{padding:12px 14px;}
+  #panel-resumen .resumen-seccion .seccion-cuerpo{padding:14px;}
+  #panel-resumen .seccion-control{width:100%;}
+  #panel-resumen .seccion-control select{flex:1;min-width:0;}
+}
+
+/* Roles (fase de roles y permisos). La seguridad real está en Supabase:
+   esto solo oculta lo que el rol no puede usar. */
+body:not(.rol-administrador) #panel-catalogos form,
+body:not(.rol-administrador) #panel-catalogos button,
+body:not(.rol-administrador) #panel-empresas button { display:none !important; }
+body.rol-consulta nav.tabs button[data-tab="alta"],
+body.rol-consulta #panel-alta,
+body.rol-consulta .quick-primary,
+body.rol-consulta #filtro-clasificacion,
+body.rol-consulta #filtro-pendiente,
+body.rol-consulta #panel-lista p.hint { display:none !important; }
+body.rol-consulta #tabla-personal a,
+body.rol-consulta #dashboard-personal-reciente a { pointer-events:none; color:inherit !important; font-weight:inherit; text-decoration:none; }
+body.rol-sin-acceso .app-sidebar nav.tabs,
+body.rol-sin-acceso section.panel { display:none !important; }
+#aviso-rol { display:none; }
+body.rol-sin-acceso #aviso-rol { display:block; }
+/* V2.0 M2: Consulta sin directorio de empresas, catálogos ni compensación */
+body.rol-consulta nav.tabs button[data-tab="empresas"],
+body.rol-consulta nav.tabs button[data-tab="catalogos"],
+body.rol-consulta #panel-empresas,
+body.rol-consulta #panel-catalogos,
+body.rol-consulta .sidebar-bottom > button:first-of-type,
+body.rol-consulta .quick-action[onclick*="empresas"],
+body.rol-consulta .card:has(#resumen-compensacion),
+body.rol-consulta .card:has(#resumen-grupos),
+body.rol-consulta #resumen-dimension option[value="clasificacion"] { display:none !important; }
+/* V2.0 M2: Coordinador solo ve «Mi equipo» */
+body:not(.rol-coordinador) nav.tabs button[data-tab="equipo"],
+body.rol-coordinador nav.tabs button:not([data-tab="equipo"]),
+body.rol-coordinador section.panel:not(#panel-equipo),
+body.rol-coordinador .global-search,
+body.rol-coordinador .company-switch,
+body.rol-coordinador .sidebar-bottom > button:first-of-type { display:none !important; }
+#panel-equipo .filters label.check-inline { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-secondary); margin:0; }
+#panel-equipo .filters label.check-inline input { width:auto; min-height:0; }
+body.rol-consulta #conn-status:empty, body.rol-coordinador #conn-status:empty { display:none; }
+/* V2.0 M1: aviso de número interno repetido */
+.aviso-numero { display:none; margin:6px 0 0; padding:8px 10px; border-radius:9px; font-size:12px; line-height:1.45; }
+.aviso-numero.bloquea { display:block; background:#FDECEC; color:#8A2A2A; border:1px solid #F3C4C4; }
+.aviso-numero.advierte { display:block; background:#FFF6DD; color:#6B5200; border:1px solid #F0DC9C; }
+.aviso-numero ul { margin:4px 0 0; padding-left:18px; }
+
+/* V2.0 · Logo 1 aprobado (símbolo + «beeHuman» + lema), encabezado claro.
+   Escritorio: logo completo + lema. Tableta (barra angosta): solo el símbolo.
+   Móvil ≤600px: logo completo compacto + lema. */
+.app-sidebar .brand-symbol{display:none;width:auto;height:auto;border-radius:0;background:none;box-shadow:none;transform:none;overflow:visible}
+.app-sidebar .brand-symbol svg{width:52px;height:56px;display:block}
+.app-sidebar .brand-word{gap:3px;min-width:0}
+.app-sidebar .brand-logo1{display:block;width:100%;max-width:190px;height:auto}
+.app-sidebar .brand-word small{padding-left:2px}
+@media(max-width:900px){
+  .app-sidebar .brand-symbol{display:block}
+}
+@media(max-width:600px){
+  .app-sidebar .brand-logo{display:flex;justify-content:flex-start;align-items:center;padding:2px 2px 8px;margin:0}
+  .app-sidebar .brand-symbol{display:none}
+  .app-sidebar .brand-word{display:flex;gap:1px}
+  .app-sidebar .brand-logo1{max-width:150px}
+  .app-sidebar .brand-word small{font-size:10px}
+}
 </style>
 </head>
 <body>
@@ -337,8 +523,8 @@
   <div class="app-layout">
     <aside class="app-sidebar">
       <a class="brand brand-logo" href="#" onclick="cambiarPestana('resumen');return false;" aria-label="BeeHuman, ir al resumen">
-        <span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 3 56 17v30L32 61 8 47V17Z" fill="#FFC62B" stroke="#111" stroke-width="2.6" stroke-linejoin="round"/><path d="M28 25c-6-9-16-6-19 0-4 7 2 13 11 10l8-4M36 25c6-9 16-6 19 0 4 7-2 13-11 10l-8-4" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"/><path d="M32 23c-5 0-9 5-9 12 0 9 4 16 9 19 5-3 9-10 9-19 0-7-4-12-9-12Z" fill="#111"/><path d="M26 32h12M24 39h16M27 46h10" stroke="#FFC62B" stroke-width="3" stroke-linecap="round"/><path d="M29 19c-2-5-5-7-9-8M35 19c2-5 5-7 9-8" stroke="#111" stroke-width="2.5" stroke-linecap="round"/></svg></span>
-        <span class="brand-word"><strong><i>bee</i>Human</strong><small>Gestión de personal, simplificada.</small></span>
+        <svg class="brand-defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;overflow:hidden"><defs><g id="bh-logo1-simbolo"><path fill="#f6ba38" fill-rule="evenodd" d="M130.2,35.4L79.6,6.2c-2-1.1-4.5-1.1-6.4,0l-50.6,29.2c-2,1.1-3.2,3.3-3.2,5.6v58.4c0,2.3,1.2,4.4,3.2,5.6l50.6,29.2c2,1.1,4.5,1.1,6.4,0l50.6-29.2c2-1.2,3.2-3.3,3.2-5.6v-58.4c0-2.3-1.2-4.4-3.2-5.6h0Z"/><path fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="3.6" d="M130.7,34l-36.2-20.9c-5.9-3.4-13.2-3.4-19.2,0l-36.2,20.9c-5.9,3.4-9.6,9.8-9.6,16.6v41.8c0,6.8,3.6,13.2,9.6,16.6l36.2,20.9c5.9,3.4,13.2,3.4,19.2,0l36.2-20.9c5.9-3.4,9.6-9.8,9.6-16.6v-41.8c0-6.8-3.7-13.2-9.6-16.6Z"/><g><path d="M133.1,79.8c-8.6,8.4-22.6,4.8-30.2-3.1l6.8,2.8c7.4,3.8,24.7,1.3,23.1-9.7-1.3-8.8-18.6-10.4-25.3-8.5l-9.6,2.7c8.9-5.8,20.4-9,30.6-4.5,8.6,3.9,11.8,13.3,4.6,20.3h0Z"/><path d="M71.8,64.2c-8.5-3.2-19.6-5.4-28.2-1.5-6.4,3-9.9,9.7-3.5,14.9,8,6.5,18.5,2.8,26.7-1.1-6.8,7.6-19.9,11.4-28.6,4.6-8.4-6.5-6.9-16.7,2.5-21.3,10-4.9,22.5-1.9,31.1,4.4h0Z"/><path d="M78,43.5c-1.8-1.9-3.5-3.8-5.9-5.1-3.1-1.6-9.5-1.8-8.7-6,6.7-1.9,12.5,5.3,14.5,11.1h.1Z"/><path d="M106.3,32.4c.6.9,0,2.4-.9,3-1.4,1.2-5.7,1.8-8,3.1s-3.9,3.1-5.6,4.9c1.6-5,7.1-11.9,12.9-11.5.3,0,1.6.3,1.7.5h0Z"/><g><path d="M85.3,111.1c-.9.2-.6,0-.8-.5-.8-1.2-1.6-3.4-2.4-4.5-1-1.2-3.5-2.8-4.6-4-10.5-11.1-12.7-27.6.2-37.7-8.4-5-5.6-14.3,3.2-16.8,5.7-1.7,15.3.8,16.1,7.6.5,4.2-.8,7.3-4.6,9.2,11.4,8.7,11.2,23.9,2.8,34.7-3.2,4.2-8.2,6.6-9.8,11.9h0ZM85.7,49.2c1.3,1.3,2.9,1.8,4.2,3.3,1.4,1.6,1.9,3.5,2.7,5.4,1.6.8,2.4-.7,2.2-2.2-.5-3.8-5.6-6.5-9.1-6.5h0ZM97.6,75.3c.4-.4-4.2-8.8-6.7-8.5-.6,0-.4.6-.3,1,.4,1,1.5,2,2.1,2.9,1.3,2.4,1.4,5.3,4.9,4.5h0ZM98,77.6h-26.1l-.4,5.8h26.9l-.4-5.8ZM97.6,87.2h-25.3c0,1.1,1.3,5.4,2.2,5.7h20.3c1.6.5,3.1-5.4,2.9-5.7h-.1ZM93.4,96.5h-16.9c1.3,1.9,4,5.6,6.3,5.8,1,0,4.8,0,5.6-.2.5-.2,5.3-5.3,5-5.6Z"/><polygon fill="#f6ba38" points="98 77.6 98.3 83.4 71.4 83.4 71.8 77.6 98 77.6"/><path fill="#f6ba38" d="M97.6,87.2c.3.3-1.2,6.2-2.9,5.8h-20.3c-.8-.4-2.3-4.7-2.2-5.8h25.4Z"/><path fill="#f6ba38" d="M93.3,96.5c.3.3-4.5,5.3-5,5.6-.8.4-4.6.3-5.6.2-2.3-.2-5-3.9-6.3-5.8,0,0,16.9,0,16.9,0Z"/><path fill="#fff" d="M85.7,49.2c3.5,0,8.6,2.8,9.1,6.5.2,1.5-.6,2.9-2.2,2.2-.8-1.9-1.3-3.8-2.7-5.4-1.3-1.5-2.9-1.9-4.2-3.3h0Z"/><path fill="#fff" d="M97.6,75.4c-3.5.8-3.6-2.1-4.9-4.5-.6-1-1.6-1.9-2.1-2.9-.2-.5-.4-.9.3-1,2.5-.4,7.2,8.1,6.7,8.4Z"/></g></g></g><g id="bh-logo1-texto"><g><g><path fill="#f6ba38" d="M202.3,63c-2.2-1.2-4.7-1.9-7.5-1.9s-4.8.6-6.8,1.7c-1.7,1-3.2,2.4-4.3,4.1v-17.6h-3.9v41.3h3.8v-5.9c1.1,1.9,2.6,3.3,4.4,4.4,2,1.2,4.3,1.8,6.9,1.8h0c2.8,0,5.3-.6,7.5-1.9s3.9-3,5.2-5.3c1.3-2.2,1.9-4.8,1.9-7.8s-.6-5.6-1.9-7.8c-1.3-2.2-3-4-5.2-5.2h0ZM204.1,82c-1,1.7-2.3,3.1-3.9,4s-3.5,1.4-5.6,1.4-3.9-.5-5.6-1.4c-1.7-.9-2.9-2.3-3.9-4s-1.4-3.7-1.4-6,.5-4.3,1.4-6,2.2-3,3.9-4,3.5-1.4,5.6-1.4,3.9.5,5.6,1.4c1.6,1,2.9,2.3,3.9,4s1.4,3.8,1.4,6-.5,4.3-1.4,6Z"/><path fill="#f6ba38" d="M236.2,63c-2.1-1.2-4.6-1.9-7.3-1.9s-5.1.6-7.3,1.9-3.9,3-5.1,5.3c-1.2,2.2-1.9,4.8-1.9,7.7s.6,5.5,1.9,7.7c1.3,2.2,3.1,4,5.4,5.3,2.3,1.3,5,1.9,8,1.9h0c2.3,0,4.5-.4,6.4-1.2,1.9-.8,3.6-2,4.9-3.6l-2.2-2.6c-1.1,1.3-2.4,2.3-4,2.9-1.5.6-3.2.9-5,.9s-4.3-.5-6-1.4-3.1-2.3-4.1-3.9c-.8-1.4-1.3-3-1.4-4.8h24.5v-1.2c0-2.9-.6-5.5-1.8-7.8-1.2-2.2-2.9-4-5-5.2h0ZM219.7,69.8c.9-1.7,2.1-3,3.7-3.9,1.6-.9,3.4-1.4,5.4-1.4s3.8.5,5.4,1.4,2.8,2.2,3.7,3.9c.7,1.3,1.2,2.8,1.3,4.5h-20.8c.1-1.6.6-3.1,1.3-4.4h0Z"/><path fill="#f6ba38" d="M274.8,68.2c-1.2-2.2-2.9-4-5-5.2s-4.6-1.9-7.3-1.9-5.1.6-7.3,1.9c-2.2,1.3-3.9,3-5.1,5.3-1.2,2.2-1.9,4.8-1.9,7.7s.6,5.5,1.9,7.7c1.3,2.2,3.1,4,5.4,5.3,2.3,1.3,5,1.9,8,1.9h0c2.3,0,4.5-.4,6.4-1.2,1.9-.8,3.6-2,4.9-3.6l-2.2-2.6c-1.1,1.3-2.4,2.3-4,2.9-1.5.6-3.2.9-5,.9s-4.3-.5-6-1.4-3.1-2.3-4.1-3.9c-.8-1.4-1.3-3-1.4-4.8h24.5v-1.2c0-2.9-.6-5.5-1.8-7.8h0ZM253.3,69.8c.9-1.7,2.1-3,3.7-3.9,1.6-.9,3.4-1.4,5.4-1.4s3.8.5,5.4,1.4,2.8,2.2,3.7,3.9c.7,1.3,1.2,2.8,1.3,4.5h-20.8c.1-1.6.6-3.1,1.3-4.4h0Z"/></g><g><polygon points="308.4 65.2 296.3 65.2 296.3 51.4 283.2 51.4 283.2 90.4 296.3 90.4 296.3 76 308.4 76 308.4 90.4 321.5 90.4 321.5 51.4 308.4 51.4 308.4 65.2"/><path d="M348.2,74.2c0,1.5-.2,2.7-.6,3.6s-.9,1.6-1.6,1.9-1.4.6-2.1.6c-1.2,0-2.2-.4-2.9-1.3-.7-.9-1.1-2.4-1.1-4.5v-14.6h-12.6v16.8c0,3.3.6,6,1.7,8.1s2.6,3.6,4.6,4.6,4.1,1.5,6.5,1.5h0c2.3,0,4.5-.6,6.4-1.7.8-.5,1.5-1,2.2-1.7v2.8h12v-30.4h-12.6v14.3s.1,0,.1,0Z"/><path d="M412.8,60.8c-1.8-1-3.9-1.4-6.2-1.4h0c-2.8,0-5.3.7-7.4,2.1-1,.7-1.9,1.5-2.7,2.5-.7-1-1.5-1.8-2.5-2.5-2-1.4-4.4-2.1-7.1-2.1s-4.5.6-6.5,1.7c-.8.5-1.5,1.1-2.2,1.7v-2.9h-12v30.4h12.6v-14.9c0-1.4.2-2.4.5-3.2.4-.8.8-1.4,1.4-1.8s1.3-.6,2-.6c1.1,0,1.9.4,2.5,1.2.6.8.9,2.1.9,4v15.2h12.6v-14.9c0-1.4.2-2.4.5-3.2.4-.8.8-1.4,1.4-1.8s1.3-.6,2-.6,1.8.4,2.5,1.2c.6.8,1,2.1,1,4v15.2h12.6v-17.4c0-3.2-.5-5.8-1.6-7.8s-2.5-3.5-4.3-4.4h0v.3h0Z"/><path d="M450,62.9c-2.9-2.3-6.9-3.5-12.2-3.5s-4.8.3-7.3.9c-2.5.6-4.6,1.5-6.4,2.6l4,8.3c1-.7,2.2-1.3,3.6-1.8s2.8-.6,4.2-.6c2,0,3.5.4,4.4,1.2.7.6,1.1,1.4,1.3,2.4h-5c-3.2,0-5.8.4-7.8,1.1-2.1.7-3.6,1.8-4.6,3.1-1,1.4-1.5,3-1.5,5s.4,3.3,1.3,4.8,2.1,2.6,3.8,3.4,3.7,1.3,6.2,1.3h0c2.6,0,4.7-.6,6.3-1.7,1-.7,1.8-1.7,2.3-2.9v4.1h11.7v-16.4c0-5.1-1.4-8.8-4.3-11.1h0v-.2ZM440.1,82.7c-.7.5-1.5.7-2.4.7s-1.7-.2-2.2-.7-.8-1-.8-1.8.3-1.5.9-1.9,1.6-.6,2.9-.6h3.1v2.1c-.3,1-.9,1.7-1.6,2.2,0,0,.1,0,.1,0Z"/><path d="M491.7,65.2c-1.1-2-2.6-3.5-4.5-4.4-1.9-1-4-1.4-6.3-1.4s-4.7.6-6.8,1.7c-.9.5-1.7,1.2-2.4,1.9v-3h-12v30.4h12.6v-14.3c0-1.5.2-2.7.6-3.6s1-1.5,1.7-1.9,1.5-.6,2.4-.6,2.1.4,2.7,1.2c.7.8,1,2.1,1,4v15.2h12.6v-17.4c0-3.2-.5-5.8-1.6-7.8h0Z"/><polygon points="480.9 59.4 480.9 59.4 480.9 59.4 480.9 59.4"/></g></g></g></defs></svg><span class="brand-symbol" aria-hidden="true"><svg viewBox="16 2 128 137" focusable="false"><use href="#bh-logo1-simbolo"/></svg></span>
+        <span class="brand-word" aria-hidden="true"><svg class="brand-logo1" viewBox="16 2 482 137" focusable="false"><use href="#bh-logo1-simbolo"/><use href="#bh-logo1-texto"/></svg><small>Gestión de personal, simplificada.</small></span>
       </a>
       <nav class="tabs sidebar-nav" aria-label="Navegación principal">
         <button class="active" data-tab="resumen"><span class="nav-icon">⌂</span>Resumen</button>
@@ -346,6 +532,7 @@
         <button data-tab="alta"><span class="nav-icon">＋</span>Alta de personal</button>
         <button data-tab="empresas"><span class="nav-icon">▦</span>Empresas</button>
         <button data-tab="catalogos"><span class="nav-icon">◉</span>Catálogos <span class="nav-chevron">›</span></button>
+        <button data-tab="equipo"><span class="nav-icon">♧</span>Mi equipo</button>
       </nav>
       <div class="sidebar-bottom">
         <button type="button" onclick="cambiarPestana('catalogos')"><span class="nav-icon">⚙</span>Configuración</button>
@@ -355,10 +542,23 @@
     </aside>
     <main class="app-main">
       <header class="app-topbar">
-        <div class="global-search"><span aria-hidden="true">⌕</span><input id="busqueda-global" type="search" placeholder="Buscar personas, empresas, expedientes…" aria-label="Búsqueda global" autocomplete="off"></div>
-        <div class="topbar-user"><span class="notification-dot" aria-hidden="true">♧</span><span class="avatar-initials" id="usuario-iniciales">BH</span><span class="user-copy"><b id="usuario-nombre">Usuario BeeHuman</b><small>Administrador</small></span><button type="button" class="user-menu" onclick="cerrarSesion()" aria-label="Cerrar sesión">⌄</button></div>
+        <div class="global-search"><span aria-hidden="true">⌕</span><input id="busqueda-global" type="search" placeholder="Buscar personas o empresas…" aria-label="Búsqueda global" autocomplete="off"></div>
+        <div class="topbar-user"><span class="notification-dot" aria-hidden="true">♧</span><span class="avatar-initials" id="usuario-iniciales">BH</span><span class="user-copy"><b id="usuario-nombre">Usuario BeeHuman</b><small id="usuario-rol">—</small></span><button type="button" class="user-menu" onclick="cerrarSesion()" aria-label="Cerrar sesión">⌄</button></div>
       </header>
       <div id="conn-status"></div>
+      <div class="card" id="aviso-rol"><h2 id="aviso-rol-titulo">Sin módulos habilitados</h2><p class="hint" id="aviso-rol-texto"></p></div>
+
+  <section class="panel" id="panel-equipo">
+    <div class="card">
+      <h2>Mi equipo</h2>
+      <p class="hint">Personas que te tienen asignado como coordinador. Es de solo lectura: si algún dato no es correcto, pídele al administrador que lo actualice.</p>
+      <div class="filters">
+        <input type="search" id="buscar-equipo" placeholder="Buscar por nombre, ID, puesto o proyecto" autocomplete="off" aria-label="Buscar en mi equipo">
+        <label class="check-inline"><input type="checkbox" id="equipo-incluir-bajas"> Incluir bajas</label>
+      </div>
+      <div id="equipo-contenido"><div class="empty">Cargando…</div></div>
+    </div>
+  </section>
 
   <section class="panel" id="panel-alta">
     <div class="card" id="imp-card">
@@ -416,7 +616,7 @@
         <section class="alta-card">
           <h3 class="alta-card-title">Organización</h3>
         <div class="grid3">
-          <div><label>Número interno de trabajador (opcional)</label><input id="f-numero-interno" type="text" maxlength="50" placeholder="Ej. 00125"></div>
+          <div><label>Número interno de trabajador (opcional)</label><input id="f-numero-interno" type="text" maxlength="50" placeholder="Ej. 00125"><div class="aviso-numero" id="f-numero-interno-aviso" role="status" aria-live="polite"></div></div>
           <div><label>Empresa / razón social</label><select id="f-empresa"></select></div>
           <div>
             <label>Registro patronal</label>
@@ -511,12 +711,14 @@
         </section>
 
         <section class="alta-card">
-          <h3 class="alta-card-title">Prestaciones y otros datos</h3>
+          <h3 class="alta-card-title">Prestaciones y créditos</h3>
         <div class="grid3">
           <div><label>No. FONACOT</label><input id="f-fonacot" type="text"></div>
         </div>
+        <h4 class="alta-subtitle">Salud</h4>
         <div class="grid">
           <div><label>Restricciones de salud</label><textarea id="f-restricciones"></textarea></div>
+        </div>
         </section>
 
         <section class="alta-card">
@@ -547,10 +749,17 @@
     <div class="card">
       <h2>Personal registrado</h2>
       <p class="hint">Cambia el proyecto directamente en la fila: se guarda al momento.</p>
+      <div class="kpis-personal" id="kpis-personal" aria-live="polite">
+        <div class="kpi-personal kpi-azul"><div class="kpi-cabeza"><span class="kpi-icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.1 2.8-5 5.5-5s4.9 1.9 5.5 5"/><path d="M16 4.9a3.1 3.1 0 0 1 0 6.2"/><path d="M17.5 14.3c1.7.6 2.8 2.3 3.1 4.7"/></svg></span><small>Personas</small></div><b id="kpi-personas">—</b><em id="kpi-personas-sub">En el resultado filtrado</em></div>
+        <div class="kpi-personal kpi-verde kpi-importe"><div class="kpi-cabeza"><span class="kpi-icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="4" y="7.5" width="16" height="11.5" rx="2.5"/><path d="M15.5 13.2h2"/></svg></span><small>Total de percepciones</small></div><b id="kpi-percepciones">—</b><em id="kpi-percepciones-sub"></em></div>
+        <div class="kpi-personal kpi-dorado kpi-importe"><div class="kpi-cabeza"><span class="kpi-icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9.5" r="5"/><path d="M15.2 5.8a5 5 0 1 1-5.4 12.4"/><path d="M9 7.6v3.8"/></svg></span><small>Sueldo base (IMSS)</small></div><b id="kpi-imss">—</b><em id="kpi-imss-sub"></em></div>
+      </div>
+      <div class="kpi-nota kpi-importe" id="kpi-nota">Suma los importes registrados en los esquemas de pago activos de las personas del resultado. Puede mezclar periodicidades (semanal, quincenal, mensual…) y modalidades bruto/neto: no es un costo mensual ni un total homogéneo.</div>
       <div class="filters">
         <input type="search" id="buscar-personal" placeholder="Buscar por nombre, ID, RFC, CURP o NSS" autocomplete="off" aria-label="Buscar personas">
         <select id="filtro-estatus" aria-label="Estatus">
           <option value="Activo">Activos</option>
+          <option value="__vigentes__">Vigentes (activos y suspendidos)</option>
           <option value="">Todos los estatus</option>
           <option value="Suspendido">Suspendidos</option>
           <option value="Baja">Bajas</option>
@@ -562,14 +771,18 @@
         <select id="filtro-pendiente" aria-label="Pendientes de RH">
           <option value="">Pendientes de RH: todos</option>
           <option value="sin_esquema">Sin esquema de pago activo</option>
-          <option value="sin_fiscales">Sin RFC, CURP o NSS</option>
+          <option value="requisitos">Falta un dato que exige su clasificación</option>
           <option value="contrato">Contrato vencido o por vencer (30 días)</option>
         </select>
-        <button type="button" id="limpiar-filtros">Limpiar filtros</button>
+      </div>
+      <div class="filtros-aplicados" id="filtros-aplicados" style="display:none;">
+        <span class="filtros-aplicados-titulo">Filtros aplicados</span>
+        <span id="filtros-chips" class="filtros-chips"></span>
+        <button type="button" id="limpiar-filtros" class="filtros-limpiar">Limpiar todos</button>
       </div>
       <div class="lista-barra">
         <span id="lista-conteo"></span>
-        <button type="button" id="exportar-personal" disabled>Exportar</button>
+        <span class="lista-exportar"><button type="button" id="exportar-personal" disabled>Exportar</button><button type="button" id="exportar-esquemas" disabled title="Una fila por esquema de pago activo de las personas del resultado">Exportar esquemas (CSV)</button></span>
       </div>
       <div class="table-wrap">
         <table>
@@ -590,19 +803,13 @@
   </section>
 
   <section class="panel active" id="panel-resumen">
-    <section class="dashboard-hero">
-      <div class="dashboard-hero-copy">
-        <p class="dashboard-greeting" id="saludo-usuario">Hola</p>
-        <h1>Tu organización,<br><span>en orden.</span></h1>
-        <p>Gestiona la información de tu personal, consulta expedientes y mantén todo al día, en un solo lugar.</p>
-      </div>
-      <div class="hero-team-art"><span class="hero-hex hero-hex-a" aria-hidden="true"></span><span class="hero-hex hero-hex-b" aria-hidden="true"></span><div class="hero-company-brand" id="hero-company-brand" aria-label="Marca de la empresa activa"><img id="hero-company-logo" alt="Logo de la empresa activa"><div class="hero-company-fallback"><span class="hero-company-initial" id="hero-company-initial">E</span><span class="hero-company-copy" id="hero-company-copy">Logo de tu empresa</span></div></div></div>
-      <div class="hero-quote">“Más tiempo<br>para lo humano.”<i></i></div>
+    <section class="dashboard-hero dashboard-hero-compacta">
+      <div class="hero-compacta-texto"><span class="dashboard-greeting" id="saludo-usuario">Hola</span><span class="hero-compacta-sep" aria-hidden="true">·</span><span class="hero-compacta-sub">Tablero de tu organización</span></div>
+      <div class="hero-company-brand" id="hero-company-brand" aria-label="Marca de la empresa activa"><img id="hero-company-logo" alt="Logo de la empresa activa"><div class="hero-company-fallback"><span class="hero-company-initial" id="hero-company-initial">E</span><span class="hero-company-copy" id="hero-company-copy">Logo de tu empresa</span></div></div>
     </section>
     <div class="dashboard-metrics">
       <button class="metric-card metric-green" type="button" onclick="cambiarPestana('lista')"><span class="metric-icon">♧</span><span><b id="dash-personas">—</b><small>Personas</small><em id="dash-personas-sub">Personal registrado</em></span><span class="metric-arrow">›</span></button>
       <button class="metric-card" type="button" onclick="cambiarPestana('empresas')"><span class="metric-icon">▦</span><span><b id="dash-empresas">—</b><small>Empresas</small><em>Organizaciones registradas</em></span><span class="metric-arrow">›</span></button>
-      <button class="metric-card metric-yellow" type="button" onclick="cambiarPestana('lista')"><span class="metric-icon">▤</span><span><b id="dash-expedientes">—</b><small>Expedientes</small><em id="dash-expedientes-sub">Integridad por validar</em></span><span class="metric-arrow">›</span></button>
       <button class="metric-card metric-red" type="button" onclick="cambiarPestana('lista')"><span class="metric-icon">♧</span><span><b id="dash-pendientes">—</b><small>Pendientes</small><em id="dash-pendientes-sub">Revisión de información</em></span><span class="metric-arrow">›</span></button>
     </div>
     <div class="dashboard-columns">
@@ -613,31 +820,43 @@
       <aside class="dashboard-actions">
         <div class="card quick-card"><h2>Acciones rápidas</h2>
           <button type="button" class="quick-action quick-primary" onclick="cambiarPestana('alta')"><span>＋</span>Alta de personal <b>›</b></button>
-          <button type="button" class="quick-action" onclick="cambiarPestana('lista')"><span>▤</span>Consultar expediente <b>›</b></button>
+          <button type="button" class="quick-action" onclick="cambiarPestana('lista')"><span>▤</span>Consultar personal <b>›</b></button>
           <button type="button" class="quick-action" onclick="cambiarPestana('empresas')"><span>▦</span>Empresas <b>›</b></button>
           <button type="button" class="quick-action" onclick="mostrarAyudaBeeHuman()"><span>▦</span>Herramientas <b>›</b></button>
         </div>
         <div class="plan-card"><span class="plan-crown">♛</span><div><small>BeeHuman</small><b>Administración de personal</b><p>Información organizada para tomar mejores decisiones.</p></div></div>
       </aside>
     </div>
-    <div class="card dashboard-analytics"><div class="section-heading"><div><h2>Vista general</h2><p class="hint">Indicadores operativos de tu organización.</p></div></div><div class="summary-grid" id="resumen-personal"></div></div>
-    <div class="card"><h2>Compensación</h2>
-      <p class="hint">Esquemas de pago activos de las personas que no están en Baja.</p>
-      <div class="summary-grid" id="resumen-compensacion"></div>
+    <div class="card dashboard-analytics resumen-seccion seccion-marca">
+      <div class="seccion-cabeza"><h2>Vista general</h2><p class="hint">Indicadores operativos de tu organización.</p></div>
+      <div class="seccion-cuerpo"><div class="summary-grid" id="resumen-personal"></div></div>
     </div>
-    <div class="card"><h2>Esquemas por modalidad, periodicidad y días del periodo</h2>
-      <p class="hint">Los importes solo se suman entre esquemas con la misma modalidad, la misma periodicidad y los mismos días del periodo. No hay total general: no son importes comparables entre sí.</p>
-      <div id="resumen-grupos"></div>
+    <div class="card resumen-seccion seccion-oscura">
+      <div class="seccion-cabeza"><h2>Compensación</h2><p class="hint">Esquemas de pago activos de las personas que no están en Baja.</p></div>
+      <div class="seccion-cuerpo"><div class="summary-grid" id="resumen-compensacion"></div></div>
     </div>
-    <div class="card"><h2>Desglose</h2>
-      <div class="filters"><select id="resumen-dimension">
-        <option value="clasificacion">Por clasificación</option>
-        <option value="proyecto">Por proyecto</option>
-        <option value="coordinador">Por coordinador</option>
-      </select></div>
-      <div id="resumen-desglose"></div>
+    <div class="card resumen-seccion seccion-neutra">
+      <div class="seccion-cabeza"><h2>Esquemas por modalidad, periodicidad y días del periodo</h2><p class="hint">Los importes solo se suman entre esquemas con la misma modalidad, la misma periodicidad y los mismos días del periodo. No hay total general: no son importes comparables entre sí.</p></div>
+      <div class="seccion-cuerpo"><div id="resumen-grupos"></div></div>
     </div>
-    <div class="card"><h2>Para revisar</h2><div id="resumen-revisar"></div></div>
+    <div class="card resumen-seccion seccion-azul">
+      <div class="seccion-cabeza seccion-cabeza-control">
+        <div><h2>Desglose</h2><p class="hint">Personas agrupadas por la dimensión que elijas.</p></div>
+        <label class="seccion-control" for="resumen-dimension"><span>Agrupar por</span>
+          <select id="resumen-dimension">
+            <option value="clasificacion">Por clasificación</option>
+            <option value="proyecto">Por proyecto</option>
+            <option value="coordinador">Por coordinador</option>
+            <option value="registro_patronal">Por registro patronal</option>
+          </select>
+        </label>
+      </div>
+      <div class="seccion-cuerpo"><div id="resumen-desglose"></div></div>
+    </div>
+    <div class="card resumen-seccion seccion-alerta">
+      <div class="seccion-cabeza"><h2>Para revisar</h2><p class="hint">Situaciones que conviene corregir en el expediente.</p></div>
+      <div class="seccion-cuerpo"><div id="resumen-revisar"></div></div>
+    </div>
   </section>
 
   <section class="panel" id="panel-empresas">
@@ -845,16 +1064,27 @@
   <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
     <div class="card detail-modal" style="max-width:1080px;margin:24px auto;">
       <div class="detail-heading">
-        <div class="detail-title-wrap"><div class="detail-title-line"><h2>Detalle de persona</h2><p class="hint" id="d-empleadoid"></p></div><div id="d-encabezado-persona" class="detail-person-summary"></div></div>
-        <button class="primary" style="margin-top:0;padding:6px 14px;font-size:12px;background:var(--surface-2);color:var(--text);" onclick="cerrarDetalle()">Cerrar</button>
+        <div class="detail-title-wrap">
+          <p class="detail-kicker">Ficha del empleado</p>
+          <div class="detail-title-line"><h2 id="d-nombre-titulo">—</h2><span class="detail-id" id="d-empleadoid"></span><span class="pill detail-estatus-pill" id="d-estatus-pill">Activo</span></div>
+          <div id="d-encabezado-persona" class="detail-person-summary"></div>
+        </div>
+        <div class="detail-head-actions">
+          <label class="detail-estatus-control">Estatus
+            <select id="d-estatus"><option>Activo</option><option>Baja</option><option>Suspendido</option></select>
+          </label>
+          <button class="primary" style="margin-top:0;padding:6px 14px;font-size:12px;background:var(--surface-2);color:var(--text);" onclick="cerrarDetalle()">Cerrar</button>
+        </div>
       </div>
-      <nav class="detail-tabs" aria-label="Secciones del expediente">
+      <div id="d-campos-baja" class="grid3 detail-baja-fields" style="display:none;"><div><label>Fecha de baja</label><input id="d-fechabaja" type="date"></div><div><label>Comentario de baja</label><input id="d-comentariobaja" type="text"></div><div><p class="hint" style="margin:22px 0 0;">El cambio de estatus se aplica al pulsar «Guardar cambios».</p></div></div>
+      <nav class="detail-tabs" aria-label="Secciones de la ficha">
         <button type="button" class="active" data-detail-tab="personal" onclick="cambiarSeccionDetalle('personal')"><span>01</span>Datos personales</button>
         <button type="button" data-detail-tab="organizacion" onclick="cambiarSeccionDetalle('organizacion')"><span>02</span>Organización</button>
         <button type="button" data-detail-tab="laboral" onclick="cambiarSeccionDetalle('laboral')"><span>03</span>Relación laboral</button>
         <button type="button" data-detail-tab="compensacion" onclick="cambiarSeccionDetalle('compensacion')"><span>04</span>Compensación</button>
-        <button type="button" data-detail-tab="prestaciones" onclick="cambiarSeccionDetalle('prestaciones')"><span>05</span>Contacto y emergencia</button>
-        <button type="button" data-detail-tab="movimientos" onclick="cambiarSeccionDetalle('movimientos')"><span>06</span>Movimientos</button>
+        <button type="button" data-detail-tab="prestaciones" onclick="cambiarSeccionDetalle('prestaciones')"><span>05</span>Prestaciones y créditos</button>
+        <button type="button" data-detail-tab="contacto" onclick="cambiarSeccionDetalle('contacto')"><span>06</span>Contacto y emergencia</button>
+        <button type="button" data-detail-tab="movimientos" onclick="cambiarSeccionDetalle('movimientos')"><span>07</span>Movimientos</button>
       </nav>
 
       <section class="detail-section active" data-detail-section="personal"><h3>Datos personales</h3>
@@ -893,7 +1123,7 @@
 
       </section><section class="detail-section" data-detail-section="organizacion"><h3>Laborales · Organización</h3>
       <div class="grid3">
-        <div><label>Número interno de trabajador (opcional)</label><input id="d-numero-interno" type="text" maxlength="50" placeholder="Sin asignar"></div>
+        <div><label>Número interno de trabajador (opcional)</label><input id="d-numero-interno" type="text" maxlength="50" placeholder="Sin asignar"><div class="aviso-numero" id="d-numero-interno-aviso" role="status" aria-live="polite"></div></div>
         <div><label>Empresa</label><select id="d-empresa"></select></div>
         <div>
           <label>Registro patronal</label>
@@ -944,13 +1174,13 @@
     <section class="detail-section" data-detail-section="laboral"><h3>Laborales · Relación laboral</h3>
       <div class="grid3">
         <div><label>Tipo de empleado</label>
-          <select id="d-tipoempleado"><option>Confianza</option><option>Sindicalizado</option><option>Base</option><option>Honorarios</option></select>
+          <select id="d-tipoempleado"><option value="">Sin capturar</option><option>Confianza</option><option>Sindicalizado</option><option>Base</option><option>Honorarios</option></select>
         </div>
         <div><label>Turno</label>
-          <select id="d-turno"><option>Matutino</option><option>Vespertino</option><option>Nocturno</option><option>Mixto</option></select>
+          <select id="d-turno"><option value="">Sin capturar</option><option>Matutino</option><option>Vespertino</option><option>Nocturno</option><option>Mixto</option></select>
         </div>
         <div><label>Jornada</label>
-          <select id="d-jornada"><option>Completa</option><option>Reducida</option><option>Sin semana o jornada reducida</option></select>
+          <select id="d-jornada"><option value="">Sin capturar</option><option>Completa</option><option>Reducida</option><option>Sin semana o jornada reducida</option></select>
         </div>
       </div>
       <div class="grid3">
@@ -959,11 +1189,6 @@
         <div><label>Subcontratación</label><div class="checks"><label><input type="checkbox" id="d-subcontratacion"> Sí</label></div></div>
       </div>
 
-      <h3>Laborales · Estatus</h3>
-      <div class="grid3">
-        <div><label>Estatus</label><select id="d-estatus"><option>Activo</option><option>Baja</option><option>Suspendido</option></select></div>
-        <div id="d-campos-baja" class="grid3 detail-baja-fields" style="display:none;grid-column:1/-1"><div><label>Fecha de baja</label><input id="d-fechabaja" type="date"></div><div><label>Comentario de baja</label><input id="d-comentariobaja" type="text"></div><div></div></div>
-      </div>
 
       </section><section class="detail-section" data-detail-section="compensacion"><h3>Compensación</h3>
       <!-- Componente «Esquemas de pago» (P4a–P4c), dentro de Compensación. Se
@@ -995,13 +1220,15 @@
       </div>
 
       </section><section class="detail-section" data-detail-section="prestaciones">
-      <h3>Prestaciones</h3>
+      <h3>Prestaciones y créditos</h3>
       <div class="grid3">
         <div><label>No. FONACOT</label><input id="d-fonacot"></div>
       </div>
+      <h3>Salud</h3>
       <div class="grid">
         <div><label>Restricciones de salud</label><textarea id="d-restricciones"></textarea></div>
       </div>
+      </section><section class="detail-section" data-detail-section="contacto">
       <h3>Contacto y emergencia</h3>
       <div class="grid">
         <div>
@@ -1019,12 +1246,12 @@
         <p class="hint" id="d-historial-resumen" style="margin-bottom:8px;">Cargando…</p>
         <button type="button" class="primary" id="btn-descargar-historial" style="margin-top:0;display:none;" onclick="descargarHistorialCSV()">Descargar historial (CSV)</button>
       </div>
-      
-      </div>
+      </section>
 <div class="detail-savebar" id="detail-savebar">
         <span class="detail-savehint">Los cambios generales se guardan al confirmar.</span>
         <div class="detail-save-actions"><div class="toast" id="toast-detalle"></div><button class="primary" id="btn-guardar-detalle" onclick="guardarDetalle()">Guardar cambios</button></div>
 </div>
+    </div>
     </div>
   </section></div>
     </main>
@@ -1033,9 +1260,50 @@
 </div>
 
 <script>
-const SUPABASE_URL = 'https://vovyvvpwtjdlswerfjqb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvdnl2dnB3dGpkbHN3ZXJmanFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMzMyNTcsImV4cCI6MjEwNTYwOTI1N30.R3RS3J83pqyKpWSHdZRWp4YbY82p6_obxp-2pSzgYo4';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Proyecto de Supabase por entorno. La demo comercial aislada (proyecto
+// propio) se agregará aquí como otro entorno; cambiarla será configuración,
+// no código. ENTORNO_FORZADO solo se usa en copias locales de prueba.
+const ENTORNOS_SUPABASE = {
+  produccion: { url: 'https://vovyvvpwtjdlswerfjqb.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvdnl2dnB3dGpkbHN3ZXJmanFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMzMyNTcsImV4cCI6MjEwNTYwOTI1N30.R3RS3J83pqyKpWSHdZRWp4YbY82p6_obxp-2pSzgYo4' }
+};
+const ENTORNO_FORZADO = null; // producción. Solo una copia local de prueba lo cambia.
+const ENTORNO_ACTUAL = ENTORNO_FORZADO || 'produccion';
+const sb = supabase.createClient(ENTORNOS_SUPABASE[ENTORNO_ACTUAL].url, ENTORNOS_SUPABASE[ENTORNO_ACTUAL].key);
+
+// ---------------------------------------------------------------------
+// Roles (Administrador, Nómina, Consulta, Coordinador). El rol se lee del
+// servidor; las políticas de Supabase son la barrera real.
+// ---------------------------------------------------------------------
+let rolActual = null;
+let rolPersonalId = null; // V2.0 M2: ficha vinculada del usuario (la usa «Mi equipo»)
+const ETIQUETA_ROL = { administrador: 'Administrador', nomina: 'Nómina', consulta: 'Consulta', coordinador: 'Coordinador' };
+function esConsulta(){ return rolActual === 'consulta'; }
+function puedeEscribirPersonal(){ return rolActual === 'administrador' || rolActual === 'nomina'; }
+async function cargarRolActual(){
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return null;
+  const { data, error } = await sb.from('usuarios_tenant').select('rol, personal_id').eq('user_id', user.id).maybeSingle();
+  if (error) { console.error('No se pudo leer el rol:', error); return null; }
+  rolPersonalId = data ? (data.personal_id || null) : null;
+  return data ? data.rol : null;
+}
+function aplicarRolEnInterfaz(){
+  document.body.classList.remove('rol-administrador','rol-nomina','rol-consulta','rol-coordinador','rol-sin-acceso');
+  document.body.classList.add(rolActual && ETIQUETA_ROL[rolActual] ? 'rol-' + rolActual : 'rol-sin-acceso');
+  const dimSel = document.getElementById('resumen-dimension');
+  if (dimSel) {
+    const soloConEsquemas = ['clasificacion', 'registro_patronal'];   // Consulta no ve esquemas ni RP agregados
+    Array.from(dimSel.options).forEach(o => {
+      const oculta = rolActual === 'consulta' && soloConEsquemas.includes(o.value);
+      o.hidden = oculta; o.disabled = oculta;
+    });
+    if (rolActual === 'consulta' && soloConEsquemas.includes(dimSel.value)) dimSel.value = 'proyecto';
+  }
+  const etiqueta = document.getElementById('usuario-rol');
+  if (etiqueta) etiqueta.textContent = ETIQUETA_ROL[rolActual] || 'Sin acceso';
+  const texto = document.getElementById('aviso-rol-texto');
+  if (texto) texto.textContent = 'Tu usuario no tiene acceso configurado en BeeHuman. Pide al administrador de tu cuenta que te asigne un rol.';
+}
 
 let empresas=[], proyectos=[], personal=[], periodicidades=[];
 
@@ -1051,7 +1319,19 @@ function money(n){return '$'+Number(n||0).toLocaleString('es-MX',{minimumFractio
 // de los dos campos nuevos capturados todavía.
 function nombrePersonalPorId(id){ const p=personal.find(x=>x.id===id); return p?p.nombre_completo:'—'; }
 function nombreCoordinador(p){
-  if (p.coordinador_id) return nombrePersonalPorId(p.coordinador_id);
+  // V2.0 M2 · contrato de personal_organizacional (solo lo usa Consulta): si el
+  // coordinador está fuera de su ámbito, el servidor manda coordinador_id,
+  // coordinador_nombre y coordinador_externo en nulo y coordinador_asignado =
+  // true. Aquí se muestra una etiqueta fija; nunca se intenta resolver quién es.
+  if (esConsulta() && p.coordinador_asignado && !p.coordinador_id) return 'Coordinador asignado';
+  // Coordinador del directorio. Para Consulta puede no estar en su lista;
+  // si está en su ámbito, su nombre llega en coordinador_nombre.
+  // Si el coordinador está en Baja se marca «(en Baja)» en lista, filtro, exportación y desglose (P06).
+  if (p.coordinador_id) {
+    const k = personal.find(x => x.id === p.coordinador_id);
+    if (k) return (k.nombre_completo || '—') + (k.estatus === 'Baja' ? ' (en Baja)' : '');
+    return p.coordinador_nombre || '—';
+  }
   if (p.coordinador_externo) return p.coordinador_externo + ' (externo)';
   return p.coordinador || '';
 }
@@ -1184,13 +1464,36 @@ async function cargarPorBloques(construirConsulta){
   return { data: filas, error: null };
 }
 
+// V2.0 M2: Consulta ya no lee empresas, proyectos ni catálogos. Los nombres
+// que necesita llegan en personal_organizacional (solo de su ámbito) y aquí se
+// arman las listas que usan la tabla, los filtros y la exportación.
+function derivarCatalogosConsulta(){
+  const unicos = (campoId, campoNombre) => {
+    const m = new Map();
+    personal.forEach(p => { if (p[campoId] && !m.has(p[campoId])) m.set(p[campoId], { id: p[campoId], nombre: p[campoNombre] || '—' }); });
+    return Array.from(m.values()).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  };
+  empresas = unicos('empresa_id', 'empresa_nombre');
+  proyectos = unicos('proyecto_id', 'proyecto_nombre');
+  catalogosData.puestos = unicos('puesto_id', 'puesto_nombre');
+  catalogosData.areas = unicos('area_id', 'area_nombre');
+  catalogosData.departamentos = unicos('departamento_id', 'departamento_nombre');
+  catalogosData.localidades = unicos('localidad_id', 'localidad_nombre');
+  catalogosData.centros_costo = unicos('centro_costo_id', 'centro_costo_nombre');
+  fillSelect(document.getElementById('filtro-empresa'), empresas, 'Todas las empresas');
+  fillSelect(document.getElementById('filtro-proyecto'), proyectos, 'Todos los proyectos');
+  setStatus(personal.length ? '' : 'No hay personas en tu ámbito asignado. Si esperabas ver información, pide al administrador que revise tus asignaciones de empresa o proyecto.', 'ok');
+}
+
 async function cargarPersonal() {
   document.getElementById('lista-cargando').style.display='block';
-  const p = await cargarPorBloques(() =>
-    sb.from('personal').select('*', { count: 'exact' }).order('created_at',{ascending:false}).order('id'));
+  const p = await cargarPorBloques(() => esConsulta()
+    ? sb.rpc('personal_organizacional', {}, { count: 'exact' }).order('created_at',{ascending:false}).order('id')
+    : sb.from('personal').select('*', { count: 'exact' }).order('created_at',{ascending:false}).order('id'));
   document.getElementById('lista-cargando').style.display='none';
   if (p.error) { setStatus('Error al cargar personal: '+traducirErrorSupabase(p.error),'err'); console.error(p.error); return; }
   personal = p.data||[];
+  if (esConsulta()) derivarCatalogosConsulta();
   renderTabla(); renderResumen(); actualizarDashboard();
   fillSelectPersonal(document.getElementById('f-coordinador-select'), null, 'Selecciona coordinador');
   fillSelectPersonal(document.getElementById('f-jefe'), null, 'Sin jefe asignado');
@@ -1283,24 +1586,47 @@ function sumarDias(fechaISO, dias){
   const f = new Date(a, m - 1, d + dias);
   return `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`;
 }
+// Datos que exige la clasificación de los esquemas ACTIVOS de la persona
+// (banderas requiere_* de clasificaciones_personal). Un dato que ninguna de
+// sus clasificaciones exige es opcional y NO es pendiente (DF02).
+const REQUISITOS_PENDIENTE = [
+  ['requiere_rfc', 'rfc', 'RFC'], ['requiere_curp', 'curp', 'CURP'],
+  ['requiere_nss', 'nss', 'NSS'], ['requiere_cp_fiscal', 'cp_fiscal', 'CP fiscal']
+];
+function requisitosEvaluables(){ return registrosPagoGlobalEstado === 'ok' && !clasificacionesError && clasificaciones.length > 0; }
+function datosExigidosFaltantes(p){
+  const porId = new Map(clasificaciones.map(c => [c.id, c]));
+  const esquemas = esquemasActivosDe(p.id);
+  return REQUISITOS_PENDIENTE.filter(([bandera, campo]) =>
+    esquemas.some(r => { const c = porId.get(r.clasificacion_id); return !!(c && c[bandera]); }) &&
+    !String(p[campo] == null ? '' : p[campo]).trim()).map(x => x[2]);
+}
 // Pendientes de RH: solo aplican a personas que no están en Baja.
 function tienePendiente(p, tipo, limiteContrato){
   if (personaEnBaja(p)) return false;
   if (tipo === 'sin_esquema') return registrosPagoGlobalEstado === 'ok' && esquemasActivosDe(p.id).length === 0;
-  if (tipo === 'sin_fiscales') return !p.rfc || !p.curp || !p.nss;
+  if (tipo === 'requisitos') return requisitosEvaluables() && datosExigidosFaltantes(p).length > 0;
   if (tipo === 'contrato') return !!p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0, 10) <= limiteContrato;
   return true;
 }
 
 // Rellena un filtro conservando lo elegido; solo toca el DOM si cambiaron las opciones.
 function ponerOpcionesFiltro(id, opciones, textoTodos){
+  // `opciones` admite grupos: { grupo: 'Etiqueta', opciones: [...] }.
   const sel = document.getElementById(id);
+  const opt = o => `<option value="${escapeHtml(o.valor)}">${escapeHtml(o.texto)}</option>`;
   const html = `<option value="">${escapeHtml(textoTodos)}</option>` +
-    opciones.map(o => `<option value="${escapeHtml(o.valor)}">${escapeHtml(o.texto)}</option>`).join('');
+    opciones.map(o => o.grupo ? (o.opciones.length ? `<optgroup label="${escapeHtml(o.grupo)}">${o.opciones.map(opt).join('')}</optgroup>` : '') : opt(o)).join('');
   if (sel.dataset.firma === html) return;
   const previo = sel.value;
+  const planas = opciones.flatMap(o => o.grupo ? o.opciones : [o]);
   sel.innerHTML = html; sel.dataset.firma = html;
-  sel.value = opciones.some(o => o.valor === previo) ? previo : '';
+  sel.value = planas.some(o => o.valor === previo) ? previo : '';
+}
+// Combinación exacta de clasificaciones con esquema activo de una persona
+// (ids ordenados). Vacía si no tiene esquemas activos.
+function claveCombinacionEsquemas(p){
+  return Array.from(new Set(esquemasActivosDe(p.id).map(r => r.clasificacion_id))).sort().join('+');
 }
 function actualizarOpcionesFiltrosPersonal(){
   const coords = new Map();
@@ -1310,9 +1636,19 @@ function actualizarOpcionesFiltrosPersonal(){
   ponerOpcionesFiltro('filtro-coordinador', listaCoords, 'Todos los coordinadores');
   const clas = new Map();
   registrosPagoActivos.forEach(r => { if (r.clasificacion_id) clas.set(r.clasificacion_id, r.clasificacion_nombre || 'Sin clasificación'); });
-  ponerOpcionesFiltro('filtro-clasificacion',
-    Array.from(clas.entries()).map(([valor, texto]) => ({ valor, texto })).sort((a, b) => a.texto.localeCompare(b.texto, 'es')),
-    'Todas las clasificaciones');
+  const combos = new Map();
+  personal.forEach(p => {
+    const clave = claveCombinacionEsquemas(p);
+    if (!clave || combos.has(clave)) return;
+    const nombres = clave.split('+').map(id => clas.get(id) || 'Sin clasificación').sort((a, b) => a.localeCompare(b, 'es'));
+    combos.set(clave, nombres.length === 1 ? `Exacta: solo ${nombres[0]}` : `Exacta: ${nombres.join(' + ')}`);
+  });
+  ponerOpcionesFiltro('filtro-clasificacion', [
+    { grupo: 'Tiene la clasificación (entre otras)', opciones:
+      Array.from(clas.entries()).map(([valor, texto]) => ({ valor, texto })).sort((a, b) => a.texto.localeCompare(b.texto, 'es')) },
+    { grupo: 'Combinación exacta de esquemas activos', opciones:
+      Array.from(combos.entries()).map(([clave, texto]) => ({ valor: 'combo:' + clave, texto })).sort((a, b) => a.texto.localeCompare(b.texto, 'es')) }
+  ], 'Todas las clasificaciones');
 }
 
 function filtrarYOrdenarPersonal(){
@@ -1322,11 +1658,12 @@ function filtrarYOrdenarPersonal(){
   const fc = v('filtro-coordinador'), fcl = v('filtro-clasificacion'), fpen = v('filtro-pendiente');
   const limiteContrato = sumarDias(fechaLocalHoy(), DIAS_AVISO_CONTRATO);
   const filas = personal.filter(p => {
-    if (fEst && estatusPersona(p) !== fEst) return false;
+    if (fEst === '__vigentes__' ? personaEnBaja(p) : (fEst && estatusPersona(p) !== fEst)) return false;
     if (fe && p.empresa_id !== fe) return false;
     if (fp && p.proyecto_id !== fp) return false;
     if (fc && claveCoordinador(p) !== fc) return false;
-    if (fcl && !esquemasActivosDe(p.id).some(r => r.clasificacion_id === fcl)) return false;
+    if (fcl && (fcl.startsWith('combo:') ? claveCombinacionEsquemas(p) !== fcl.slice(6)
+                                         : !esquemasActivosDe(p.id).some(r => r.clasificacion_id === fcl))) return false;
     if (fpen && !tienePendiente(p, fpen, limiteContrato)) return false;
     if (palabras.length) {
       const texto = normalizarBusqueda([p.nombre_completo, p.empleado_id, p.rfc, p.curp, p.nss].filter(Boolean).join(' '));
@@ -1344,8 +1681,11 @@ function filtrarYOrdenarPersonal(){
   return pares.map(x => x.p);
 }
 
+function columnasPersonalVisibles(){
+  return esConsulta() ? COLUMNAS_PERSONAL.filter(c => c.clave !== 'esquemas') : COLUMNAS_PERSONAL;
+}
 function renderEncabezadoPersonal(){
-  document.getElementById('encabezado-personal').innerHTML = COLUMNAS_PERSONAL.map(c => {
+  document.getElementById('encabezado-personal').innerHTML = columnasPersonalVisibles().map(c => {
     if (!c.valor) return `<th>${escapeHtml(c.titulo)}</th>`;
     const activa = c.clave === listaOrden.clave;
     const flecha = activa ? (listaOrden.sentido === 1 ? ' ▲' : ' ▼') : '';
@@ -1357,7 +1697,109 @@ function ordenarPersonalPor(clave){
   listaPagina = 1; renderTabla();
 }
 function alCambiarFiltrosPersonal(){ listaPagina = 1; renderTabla(); }
+
+// ---------------------------------------------------------------------
+// Filtros aplicados (rediseño Personal V2.0): cada filtro que restringe el
+// resultado se marca en azul y aparece como chip; el chip quita solo su
+// filtro. «Limpiar todos» vuelve a los valores iniciales (estatus = Activos).
+// ---------------------------------------------------------------------
+const FILTROS_PERSONAL = [
+  { id: 'buscar-personal',      etiqueta: 'Búsqueda',      inicial: '' },
+  { id: 'filtro-estatus',       etiqueta: 'Estatus',       inicial: 'Activo' },
+  { id: 'filtro-empresa',       etiqueta: 'Empresa',       inicial: '' },
+  { id: 'filtro-proyecto',      etiqueta: 'Proyecto',      inicial: '' },
+  { id: 'filtro-coordinador',   etiqueta: 'Coordinador',   inicial: '' },
+  { id: 'filtro-clasificacion', etiqueta: 'Clasificación', inicial: '' },
+  { id: 'filtro-pendiente',     etiqueta: 'Pendientes de RH', inicial: '' }
+];
+function filtroPersonalVisible(f){
+  // En Consulta, clasificación y pendientes no existen (están ocultos por rol).
+  return !(esConsulta() && (f.id === 'filtro-clasificacion' || f.id === 'filtro-pendiente'));
+}
+function textoValorFiltro(el){
+  if (el.tagName === 'SELECT') { const o = el.options[el.selectedIndex]; return o ? o.textContent : el.value; }
+  return '«' + el.value.trim() + '»';
+}
+function renderFiltrosAplicadosPersonal(){
+  const chips = [];
+  let distintoDelInicial = false;
+  FILTROS_PERSONAL.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (!el) return;
+    const valor = el.tagName === 'SELECT' ? el.value : el.value.trim();
+    const activo = filtroPersonalVisible(f) && valor !== '';
+    el.classList.toggle('filtro-activo', activo);
+    if (valor !== f.inicial) distintoDelInicial = true;
+    if (activo) chips.push(`<button type="button" class="filtro-chip" data-filtro="${f.id}" title="Quitar este filtro" aria-label="Quitar filtro ${escapeHtml(f.etiqueta)}: ${escapeHtml(textoValorFiltro(el))}"><span>${escapeHtml(f.etiqueta)}: ${escapeHtml(textoValorFiltro(el))}</span><i aria-hidden="true">×</i></button>`);
+  });
+  document.getElementById('filtros-chips').innerHTML = chips.length ? chips.join('')
+    : '<span class="filtros-ninguno">Ninguno: se muestran todas las personas de todos los estatus</span>';
+  document.getElementById('filtros-aplicados').style.display = (chips.length || distintoDelInicial) ? 'flex' : 'none';
+  document.getElementById('limpiar-filtros').disabled = !distintoDelInicial;
+}
+function quitarFiltroPersonal(id){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = '';  // quita solo este filtro (en estatus, '' = todos los estatus)
+  if (id === 'buscar-personal') { const g = document.getElementById('busqueda-global'); if (g) g.value = ''; }
+  alCambiarFiltrosPersonal();
+}
+
+// ---------------------------------------------------------------------
+// Indicadores del resultado filtrado: se calculan sobre TODAS las
+// coincidencias (listaFiltrada), no solo sobre la página visible.
+// Importes = suma simple de los esquemas de pago ACTIVOS de esas personas
+// (la misma regla que la columna «Total percepciones»). No convierte
+// periodicidades ni bruto/neto: por eso no se presenta como costo mensual.
+// «Sueldo base (IMSS)» = esquemas cuya clasificación exige NSS (requiere_nss).
+// Consulta no ve importes (no tiene acceso a esquemas de pago).
+// ---------------------------------------------------------------------
+function actualizarIndicadoresPersonal(filas){
+  const poner = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  const n = filas.length;
+  poner('kpi-personas', n.toLocaleString('es-MX'));
+  poner('kpi-personas-sub', personal.length ? `de ${personal.length.toLocaleString('es-MX')} en tu ámbito` : 'En el resultado filtrado');
+  if (esConsulta()) return;
+  if (registrosPagoGlobalEstado !== 'ok') {
+    const t = registrosPagoGlobalEstado === 'error' ? 'No disponible' : '…';
+    poner('kpi-percepciones', t); poner('kpi-imss', t);
+    poner('kpi-percepciones-sub', registrosPagoGlobalEstado === 'error' ? 'No se pudieron cargar los esquemas de pago' : 'Cargando esquemas de pago');
+    poner('kpi-imss-sub', '');
+    return;
+  }
+  const exigeNss = new Map(clasificaciones.map(c => [c.id, !!c.requiere_nss]));
+  let centTotal = 0, centImss = 0, esquemas = 0, esquemasImss = 0, esquemasBaja = 0, sinClasif = 0;
+  const personasImss = new Set(), periodicidades = new Set(), modalidades = new Set();
+  filas.forEach(p => esquemasActivosDe(p.id).forEach(r => {
+    const c = Math.round(Number(r.sueldo) * 100);   // centavos: sin errores de decimales
+    centTotal += c; esquemas += 1;
+    if (r.periodicidad_nombre) periodicidades.add(r.periodicidad_nombre);
+    if (r.modalidad_sueldo) modalidades.add(r.modalidad_sueldo);
+    if (personaEnBaja(p)) esquemasBaja += 1;
+    if (!exigeNss.has(r.clasificacion_id)) sinClasif += 1;
+    if (exigeNss.get(r.clasificacion_id)) { centImss += c; esquemasImss += 1; personasImss.add(p.id); }
+  }));
+  const plural = (k, s, pl) => `${k.toLocaleString('es-MX')} ${k === 1 ? s : pl}`;
+  poner('kpi-percepciones', money(centTotal / 100));
+  const detalle = [plural(esquemas, 'esquema activo', 'esquemas activos')];
+  if (periodicidades.size > 1) detalle.push(`${periodicidades.size} periodicidades`);
+  if (modalidades.size > 1) detalle.push('bruto y neto');
+  if (esquemasBaja) detalle.push(`incluye ${plural(esquemasBaja, 'de persona en Baja', 'de personas en Baja')}`);
+  poner('kpi-percepciones-sub', detalle.join(' · '));
+  if (clasificacionesError || (sinClasif && esquemas)) {
+    // Sin las banderas de clasificación no se puede saber qué es IMSS: no se estima.
+    poner('kpi-imss', 'No disponible');
+    poner('kpi-imss-sub', 'No se pudieron leer las clasificaciones');
+    return;
+  }
+  poner('kpi-imss', money(centImss / 100));
+  poner('kpi-imss-sub', esquemasImss
+    ? `${plural(esquemasImss, 'esquema', 'esquemas')} de ${plural(personasImss.size, 'persona', 'personas')}`
+    : 'Sin esquemas IMSS en el resultado');
+}
+
 function limpiarFiltrosPersonal(){
+  const g = document.getElementById('busqueda-global'); if (g) g.value = '';
   document.getElementById('buscar-personal').value = '';
   ['filtro-empresa','filtro-proyecto','filtro-coordinador','filtro-clasificacion','filtro-pendiente'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('filtro-estatus').value = 'Activo'; // la vista por defecto son los activos
@@ -1368,6 +1810,8 @@ function renderTabla(){
   actualizarOpcionesFiltrosPersonal();
   renderEncabezadoPersonal();
   listaFiltrada = filtrarYOrdenarPersonal();
+  renderFiltrosAplicadosPersonal();
+  actualizarIndicadoresPersonal(listaFiltrada);
   const total = listaFiltrada.length;
   const tamano = Number(document.getElementById('lista-tamano').value) || 50;
   const paginas = Math.max(1, Math.ceil(total / tamano));
@@ -1382,6 +1826,10 @@ function renderTabla(){
   const btnExportar = document.getElementById('exportar-personal');
   btnExportar.disabled = !total;
   btnExportar.textContent = total ? `Exportar ${total.toLocaleString('es-MX')} ${total === 1 ? 'persona' : 'personas'} (CSV)` : 'Exportar';
+  const btnEsquemas = document.getElementById('exportar-esquemas');
+  const nEsquemas = esquemasDelResultado(listaFiltrada).length;
+  btnEsquemas.disabled = !nEsquemas;
+  btnEsquemas.textContent = nEsquemas ? `Exportar ${nEsquemas.toLocaleString('es-MX')} ${nEsquemas === 1 ? 'esquema' : 'esquemas'} (CSV)` : 'Exportar esquemas (CSV)';
   document.getElementById('lista-paginador').style.display = total > 50 ? 'flex' : 'none';
   document.getElementById('pagina-texto').textContent = `Página ${listaPagina} de ${paginas}`;
   document.getElementById('pagina-anterior').disabled = listaPagina <= 1;
@@ -1402,15 +1850,16 @@ function renderTabla(){
       <td>${escapeHtml(p.empleado_id||'—')}</td>
       <td><a href="#" onclick="abrirDetalle('${p.id}');return false;" style="color:var(--accent);text-decoration:none;font-weight:500;">${nombreMostrar}</a></td>
       <td>${escapeHtml(empresaNombre(p.empresa_id))}</td>
-      <td>
+      <td>${puedeEscribirPersonal() ? `
         <select class="inline-select" onchange="actualizarCampo('${p.id}','proyecto_id',this.value)">
+          ${(!p.proyecto_id || !proyectos.some(pr => pr.id === p.proyecto_id)) ? '<option value="" selected disabled>Sin proyecto</option>' : ''}
           ${proyectos.map(pr=>`<option value="${escapeHtml(pr.id)}" ${pr.id===p.proyecto_id?'selected':''}>${escapeHtml(pr.nombre)}</option>`).join('')}
-        </select>
+        </select>` : escapeHtml(p.proyecto_id ? proyectoNombre(p.proyecto_id) : '—')}
       </td>
       <td>${escapeHtml(nombreCatalogoPersona('puestos', p.puesto_id) || '—')}</td>
       <td>${escapeHtml(nombreCoordinador(p))}</td>
       <td><span class="pill">${escapeHtml(estatusPersona(p))}</span></td>
-      <td>${resumenEsquemasPersonaHTML(p)}</td>
+      ${esConsulta() ? '' : `<td>${resumenEsquemasPersonaHTML(p)}</td>`}
     </tr>
   `;
   }).join('');
@@ -1425,14 +1874,17 @@ function celdaCSVPersonal(valor, comoTexto){
   else if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;            // evita que Excel interprete el texto como fórmula
   return /[",\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
 }
+const COLUMNAS_CSV_CONSULTA = new Set(['ID','Nombre','Estatus','Empresa','Proyecto','Puesto','Área','Departamento','Coordinador','Fecha de baja']);
 function construirCSVPersonal(filas){
   const disponible = registrosPagoGlobalEstado === 'ok';
   const fecha = v => v ? String(v).slice(0, 10) : '';
-  const columnas = [
+  let columnas = [
     ['ID', p => p.empleado_id, true],
+    ['Número interno', p => p.numero_interno_trabajador, true],
     ['Nombre', p => p.nombre_completo],
     ['Estatus', p => estatusPersona(p)],
     ['Empresa', p => p.empresa_id ? empresaNombre(p.empresa_id) : ''],
+    ['Registro patronal', p => p.registro_patronal_id ? (nombreDeRegistroPatronalPorId(p.registro_patronal_id) || '') : '', true],
     ['Proyecto', p => p.proyecto_id ? proyectoNombre(p.proyecto_id) : ''],
     ['Puesto', p => nombreCatalogoPersona('puestos', p.puesto_id)],
     ['Área', p => nombreCatalogoPersona('areas', p.area_id)],
@@ -1458,6 +1910,7 @@ function construirCSVPersonal(filas){
       return (esquemas.reduce((c, r) => c + Math.round(Number(r.sueldo) * 100), 0) / 100).toFixed(2);
     }, 'numero']
   ];
+  if (esConsulta()) columnas = columnas.filter(c => COLUMNAS_CSV_CONSULTA.has(c[0])); // sin datos sensibles ni compensación
   const lineas = [columnas.map(c => celdaCSVPersonal(c[0])).join(',')];
   filas.forEach(p => lineas.push(columnas.map(c => celdaCSVPersonal(c[1](p), c[2])).join(',')));
   return '﻿' + lineas.join('\r\n') + '\r\n';   // BOM: Excel abre los acentos correctamente
@@ -1472,10 +1925,52 @@ function exportarPersonalCSV(){
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+// Exportación de esquemas: una fila por esquema de pago ACTIVO de las personas
+// del resultado filtrado (todas las páginas). Solo Administrador y Nómina:
+// Consulta no carga esquemas y la base tampoco se los entrega (RLS).
+function puedeExportarEsquemas(){ return rolActual === 'administrador' || rolActual === 'nomina'; }
+function esquemasDelResultado(filas){
+  if (!puedeExportarEsquemas() || registrosPagoGlobalEstado !== 'ok') return [];
+  const orden = (a, b) => String(a.clasificacion_nombre || '').localeCompare(String(b.clasificacion_nombre || ''), 'es') || String(a.id).localeCompare(String(b.id));
+  return filas.flatMap(p => esquemasActivosDe(p.id).slice().sort(orden).map(r => [p, r]));
+}
+function construirCSVEsquemas(pares){
+  const fecha = v => v ? String(v).slice(0, 10) : '';
+  const columnas = [
+    ['ID', ([p]) => p.empleado_id, true],
+    ['Nombre', ([p]) => p.nombre_completo],
+    ['Estatus de la persona', ([p]) => estatusPersona(p)],
+    ['Empresa de la ficha', ([p]) => p.empresa_id ? empresaNombre(p.empresa_id) : ''],
+    ['Clasificación', ([, r]) => r.clasificacion_nombre || 'Sin clasificación'],
+    ['Importe', ([, r]) => (Math.round(Number(r.sueldo) * 100) / 100).toFixed(2), 'numero'],
+    ['Modalidad', ([, r]) => r.modalidad_sueldo || ''],
+    ['Periodicidad', ([, r]) => r.periodicidad_nombre || ''],
+    ['Días del periodo', ([, r]) => r.dias_periodo_efectivo == null ? '' : String(Number(r.dias_periodo_efectivo)), 'numero'],
+    ['Empresa del esquema', ([, r]) => r.empresa_id ? empresaNombre(r.empresa_id) : ''],
+    ['Registro patronal del esquema', ([, r]) => r.registro_patronal_id ? (nombreDeRegistroPatronalPorId(r.registro_patronal_id) || '') : '', true],
+    ['Inicio', ([, r]) => fecha(r.fecha_inicio)],
+    ['Fin', ([, r]) => fecha(r.fecha_fin)]
+  ];
+  const lineas = [columnas.map(c => celdaCSVPersonal(c[0])).join(',')];
+  pares.forEach(par => lineas.push(columnas.map(c => celdaCSVPersonal(c[1](par), c[2])).join(',')));
+  return '\ufeff' + lineas.join('\r\n') + '\r\n';
+}
+function exportarEsquemasCSV(){
+  if (!puedeExportarEsquemas()) return;   // Consulta u otro rol: nunca
+  const pares = esquemasDelResultado(listaFiltrada);
+  if (!pares.length) return;
+  const blob = new Blob([construirCSVEsquemas(pares)], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `esquemas_${fechaLocalHoy()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 async function actualizarCampo(id,campo,valor){
   const { error } = await sb.from('personal').update({[campo]:valor}).eq('id',id);
   if (error){ alert('No se pudo guardar: '+traducirErrorSupabase(error)); return; }
-  await sb.from('movimientos').insert({personal_id:id,campo,valor_nuevo:valor,usuario:'admin'});
+  await sb.from('movimientos').insert({personal_id:id,campo,valor_nuevo:valor}); // el usuario lo registra el servidor
   const p = personal.find(x=>x.id===id); if(p) p[campo]=valor;
   renderResumen();
 }
@@ -1530,7 +2025,83 @@ function enlacePersonaHTML(p){
   return `<a href="#" onclick="abrirDetalle('${escapeHtml(p.id)}');return false;" style="color:var(--accent);text-decoration:none;">${escapeHtml(nombre)}</a>`;
 }
 
+// Consulta: importes agregados calculados en el servidor, con la regla de
+// grupos pequeños (un importe se oculta si su grupo tiene menos de k personas).
+let resumenAgregado = null;
+let resumenAgregadoEstado = 'cargando'; // 'cargando' | 'ok' | 'error'
+async function cargarResumenAgregado(){
+  const { data, error } = await sb.rpc('resumen_agregado');
+  if (error || !data) { console.error('No se pudo cargar el resumen:', error); resumenAgregadoEstado = 'error'; }
+  else { resumenAgregado = data; resumenAgregadoEstado = 'ok'; }
+  renderResumen(); actualizarDashboard();
+}
+function importeAgregadoHTML(g, k){
+  return g.oculto || g.importe === null
+    ? `<span class="rp-sub" title="Se oculta porque el grupo tiene menos de ${k} personas o porque permitiría deducir otro grupo pequeño">Oculto (grupo pequeño)</span>`
+    : escapeHtml(money(g.importe));
+}
+function renderResumenAgregado(){
+  const stat = (num, lbl) => `<div class="stat"><div class="num">${escapeHtml(num)}</div><div class="lbl">${escapeHtml(lbl)}</div></div>`;
+  const ids = ['resumen-personal','resumen-compensacion','resumen-grupos','resumen-desglose','resumen-revisar'];
+  if (resumenAgregadoEstado !== 'ok') {
+    const msg = `<div class="empty">${resumenAgregadoEstado === 'error' ? 'No se pudo cargar el resumen. Recarga la página.' : 'Cargando…'}</div>`;
+    ids.forEach(id => { document.getElementById(id).innerHTML = msg; });
+    return;
+  }
+  const r = resumenAgregado, k = r.k;
+  document.getElementById('resumen-personal').innerHTML =
+    stat(r.personal.vigentes, 'Personas vigentes (sin Baja)') +
+    stat(r.personal.baja, 'Personas en Baja') +
+    stat(r.personal.empresas, 'Empresas con personal vigente') +
+    stat(r.personal.proyectos, 'Proyectos con personal vigente');
+  // V2.0 M2: para Consulta el servidor ya no manda compensación ni grupos.
+  const dimSel = document.getElementById('resumen-dimension');
+  if (!r.compensacion) {
+    document.getElementById('resumen-compensacion').innerHTML = '';
+    document.getElementById('resumen-grupos').innerHTML = '';
+    if (dimSel.value === 'clasificacion' || dimSel.value === 'registro_patronal') dimSel.value = 'proyecto';
+    const filasP = (r.desglose && r.desglose[dimSel.value]) || [];
+    document.getElementById('resumen-desglose').innerHTML = filasP.length ? `<div class="table-wrap"><table>
+      <thead><tr><th></th><th>Personas vigentes</th></tr></thead>
+      <tbody>${filasP.map(f => `<tr><td>${escapeHtml(f.nombre)}</td><td>${f.personas}</td></tr>`).join('')}</tbody>
+    </table></div>` : '<div class="empty">Sin datos en tu ámbito.</div>';
+    document.getElementById('resumen-revisar').innerHTML = '<div class="empty">Los pendientes por persona están disponibles para los roles Administrador y Nómina.</div>';
+    return;
+  }
+  document.getElementById('resumen-compensacion').innerHTML =
+    stat(r.compensacion.esquemas, 'Esquemas activos') +
+    stat(r.compensacion.bruto, 'Esquemas en bruto') +
+    stat(r.compensacion.neto, 'Esquemas en neto') +
+    stat(r.compensacion.personas_con_esquema, 'Personas con esquema') +
+    stat(r.compensacion.sin_esquema, 'Personas vigentes sin esquema');
+  const nota = `<p class="hint">Los importes de grupos con menos de ${k} personas se ocultan para reducir la posibilidad de deducir sueldos individuales. Es una medida de protección, no una garantía absoluta de anonimato.</p>`;
+  document.getElementById('resumen-grupos').innerHTML = r.grupos.length ? nota + `<div class="table-wrap"><table>
+    <thead><tr><th>Modalidad</th><th>Periodicidad</th><th>Días del periodo</th><th>Esquemas</th><th>Personas</th><th>Importe por periodo</th></tr></thead>
+    <tbody>${r.grupos.map(g => `<tr>
+      <td>${escapeHtml(etiquetaModalidad(g.modalidad))}</td>
+      <td>${escapeHtml(g.periodicidad || '—')}</td>
+      <td>${escapeHtml(numeroDias(g.dias))}</td>
+      <td>${g.esquemas}</td>
+      <td>${g.personas}</td>
+      <td>${importeAgregadoHTML(g, k)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<div class="empty">Sin esquemas de pago activos.</div>';
+  const dim = document.getElementById('resumen-dimension').value || 'clasificacion';
+  const filas = (r.desglose && r.desglose[dim]) || [];
+  document.getElementById('resumen-desglose').innerHTML = filas.length ? `<div class="table-wrap"><table>
+    <thead><tr><th></th><th>Personas</th><th>Esquemas activos</th><th>Importe por periodo (por grupo comparable)</th></tr></thead>
+    <tbody>${filas.map(f => `<tr>
+      <td>${escapeHtml(f.nombre)}</td>
+      <td>${f.personas}</td>
+      <td>${f.esquemas}</td>
+      <td>${f.grupos.map(g => `<div>${escapeHtml(etiquetaModalidad(g.modalidad) + ' · ' + (g.periodicidad || '—') + ' · ' + numeroDias(g.dias) + ' días')}: <b>${importeAgregadoHTML(g, k)}</b></div>`).join('') || '<span class="rp-sub">Sin esquemas</span>'}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<div class="empty">Sin datos.</div>';
+  document.getElementById('resumen-revisar').innerHTML = '<div class="empty">Los pendientes por persona están disponibles para los roles Administrador y Nómina.</div>';
+}
+
 function renderResumen(){
+  if (esConsulta()) return renderResumenAgregado();
   const vigentes = personal.filter(p => !personaEnBaja(p));
   const enBaja = personal.length - vigentes.length;
   const stat = (num, lbl) => `<div class="stat"><div class="num">${escapeHtml(num)}</div><div class="lbl">${escapeHtml(lbl)}</div></div>`;
@@ -1578,6 +2149,9 @@ function renderResumen(){
   </table></div>` : '<div class="empty">Sin esquemas de pago activos.</div>';
 
   // --- Desglose por la dimensión elegida
+  if (document.getElementById('resumen-dimension').value === 'registro_patronal') {
+    contDesglose.innerHTML = desgloseRegistroPatronalHTML(vigentes, esquemas);
+  } else {
   const dimension = DIMENSIONES_RESUMEN[document.getElementById('resumen-dimension').value] || DIMENSIONES_RESUMEN.clasificacion;
   const personaPorId = new Map(vigentes.map(p => [p.id, p]));
   const filas = new Map();
@@ -1598,6 +2172,7 @@ function renderResumen(){
       <td>${agruparImportesComparables(f.esquemas).map(g => `<div>${escapeHtml(etiquetaGrupoImporte(g))}: <b>${escapeHtml(money(g.centavos / 100))}</b></div>`).join('') || '<span class="rp-sub">Sin esquemas</span>'}</td>
     </tr>`).join('')}</tbody>
   </table></div>` : '<div class="empty">Sin datos.</div>';
+  }
 
   // --- Para revisar
   const bajaConEsquemas = personal.filter(p => personaEnBaja(p) && esquemasActivosDe(p.id).length);
@@ -1615,9 +2190,52 @@ function renderResumen(){
 }
 document.getElementById('resumen-dimension').addEventListener('change', renderResumen);
 
+// Desglose por registro patronal (solo Administrador y Nómina), con DOS conteos:
+//  · «RP de la ficha»: cada persona vigente cuenta una sola vez, en el RP de su expediente.
+//  · «Con esquema activo en el RP»: la persona cuenta en CADA RP donde tiene un esquema
+//    activo, así que puede aparecer en más de un grupo. En «Sin registro patronal» esta
+//    columna son las personas vigentes sin ningún esquema activo con RP.
+function desgloseRegistroPatronalHTML(vigentes, esquemas){
+  const filas = new Map();
+  const fila = id => {
+    const k = id || '';
+    if (!filas.has(k)) filas.set(k, { nombre: id ? (nombreDeRegistroPatronalPorId(id) || 'No disponible') : 'Sin registro patronal', sinRp: !id, ficha: new Set(), conEsquema: new Set(), esquemas: 0 });
+    return filas.get(k);
+  };
+  const idsVig = new Set(vigentes.map(p => p.id));
+  vigentes.forEach(p => fila(p.registro_patronal_id).ficha.add(p.id));
+  const rpsPorPersona = new Map();
+  esquemas.forEach(r => {
+    if (!r.registro_patronal_id || !idsVig.has(r.personal_id)) return;
+    const f = fila(r.registro_patronal_id); f.conEsquema.add(r.personal_id); f.esquemas += 1;
+    if (!rpsPorPersona.has(r.personal_id)) rpsPorPersona.set(r.personal_id, new Set());
+    rpsPorPersona.get(r.personal_id).add(r.registro_patronal_id);
+  });
+  const sinRp = fila(null);
+  vigentes.forEach(p => { if (!rpsPorPersona.has(p.id)) sinRp.conEsquema.add(p.id); });
+  const enVarios = Array.from(rpsPorPersona.values()).filter(s => s.size > 1).length;
+  const ordenadas = Array.from(filas.values()).sort((a, b) => (a.sinRp - b.sinRp) || String(a.nombre).localeCompare(String(b.nombre), 'es'));
+  const sumaCon = ordenadas.reduce((s, f) => s + f.conEsquema.size, 0);
+  const nota = `<p class="hint">«RP de la ficha» cuenta a cada persona vigente una sola vez. «Con esquema activo en el RP» cuenta a la persona en cada registro patronal donde tiene un esquema activo: ` +
+    (enVarios ? `<b>${enVarios.toLocaleString('es-MX')} ${enVarios === 1 ? 'persona aparece' : 'personas aparecen'} en más de un RP</b>, por eso esa columna suma ${sumaCon.toLocaleString('es-MX')} y no ${vigentes.length.toLocaleString('es-MX')}.` : 'ninguna persona aparece en más de un RP.') +
+    ` En «Sin registro patronal», la segunda columna son las personas sin ningún esquema activo con RP.</p>`;
+  return nota + `<div class="table-wrap"><table>
+    <thead><tr><th>Registro patronal</th><th>Personas (RP de la ficha)</th><th>Personas con esquema activo en el RP</th><th>Esquemas activos en el RP</th></tr></thead>
+    <tbody>${ordenadas.map(f => `<tr>
+      <td>${escapeHtml(f.nombre)}</td>
+      <td>${f.ficha.size}</td>
+      <td>${f.conEsquema.size}</td>
+      <td>${f.sinRp ? '—' : f.esquemas}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// V2.0 M2: pestañas que cada rol puede abrir (los demás roles: todas).
+const PESTANAS_POR_ROL = { consulta: ['resumen', 'lista'], coordinador: ['equipo'] };
+function pestanaPermitida(tab){ const l = PESTANAS_POR_ROL[rolActual]; return !l || l.includes(tab); }
 function cambiarPestana(tab){
   const btn = document.querySelector('nav.tabs button[data-tab="'+tab+'"]');
-  if (!btn) return;
+  if (!btn || !pestanaPermitida(tab)) return;
   document.querySelectorAll('nav.tabs button[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   const panel=document.getElementById('panel-'+tab);
@@ -1632,17 +2250,14 @@ function actualizarDashboard(){
   const vigentes=personal.filter(p=>!personaEnBaja(p));
   const empresasUnicas=empresas.length;
   const sinEsquema=registrosPagoGlobalEstado==='ok' ? vigentes.filter(p=>!esquemasActivosDe(p.id).length).length : null;
-  const sinFiscales=vigentes.filter(p=>!p.rfc||!p.curp||!p.nss).length;
   const contratos=vigentes.filter(p=>p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0,10)<=sumarDias(fechaLocalHoy(),DIAS_AVISO_CONTRATO)).length;
-  const pendientes=vigentes.filter(p => (!p.rfc||!p.curp||!p.nss) || (p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0,10)<=sumarDias(fechaLocalHoy(),DIAS_AVISO_CONTRATO)) || (sinEsquema!==null && !esquemasActivosDe(p.id).length)).length;
+  const pendientes=vigentes.filter(p => (requisitosEvaluables() && datosExigidosFaltantes(p).length) || (p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0,10)<=sumarDias(fechaLocalHoy(),DIAS_AVISO_CONTRATO)) || (sinEsquema!==null && !esquemasActivosDe(p.id).length)).length;
   const poner=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   poner('dash-personas',vigentes.length.toLocaleString('es-MX'));
   poner('dash-personas-sub',total-vigentes.length ? (total-vigentes.length)+' en baja' : 'Personal vigente');
   poner('dash-empresas',empresasUnicas.toLocaleString('es-MX'));
-  poner('dash-expedientes','—');
-  poner('dash-expedientes-sub','Integridad documental por definir');
-  poner('dash-pendientes',registrosPagoGlobalEstado==='cargando'?'…':pendientes.toLocaleString('es-MX'));
-  poner('dash-pendientes-sub','Datos fiscales, contratos y esquemas');
+  poner('dash-pendientes',esConsulta()?'—':(registrosPagoGlobalEstado==='cargando'?'…':pendientes.toLocaleString('es-MX')));
+  poner('dash-pendientes-sub',esConsulta()?'Disponible para Nómina':'Datos exigidos, contratos y esquemas');
   const recent=document.getElementById('dashboard-personal-reciente');
   if(recent){
     const filas=personal.slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))).slice(0,5);
@@ -1697,7 +2312,12 @@ document.getElementById('buscar-personal').addEventListener('input', () => {
   temporizadorBusquedaPersonal = setTimeout(alCambiarFiltrosPersonal, 150);
 });
 document.getElementById('limpiar-filtros').addEventListener('click', limpiarFiltrosPersonal);
+document.getElementById('filtros-chips').addEventListener('click', e => {
+  const chip = e.target.closest('.filtro-chip');
+  if (chip) quitarFiltroPersonal(chip.dataset.filtro);
+});
 document.getElementById('exportar-personal').addEventListener('click', exportarPersonalCSV);
+document.getElementById('exportar-esquemas').addEventListener('click', exportarEsquemasCSV);
 document.getElementById('pagina-anterior').addEventListener('click', () => { listaPagina -= 1; renderTabla(); });
 document.getElementById('pagina-siguiente').addEventListener('click', () => { listaPagina += 1; renderTabla(); });
 
@@ -1811,12 +2431,23 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     contacto_emergencia_direccion: document.getElementById('f-emerg-direccion').value.trim()
   };
 
+  // V2.0 M1: número interno repetido en el mismo registro patronal = no se guarda.
+  const revNumAlta = await revisarNumeroInterno('f');
+  if (revNumAlta && revNumAlta.bloquea) {
+    btn.disabled=false;
+    toast.textContent='No se guardó: el número interno ya existe en el mismo registro patronal. Revisa las coincidencias junto al campo.'; toast.className='toast err'; toast.style.display='block';
+    return;
+  }
+
   const { data, error } = await sb.from('personal').insert(nuevo).select().single();
   if (error) {
     btn.disabled=false;
     toast.textContent=mensajeErrorGuardarPersonal(error); toast.className='toast err'; toast.style.display='block';
+    if (restriccionDelError(error) === 'personal_numero_interno_rp_uq') revisarNumeroInterno('f');
     console.error(error); return;
   }
+  const avisosNumeroAlta = revNumAlta ? revNumAlta.coincidencias.length : 0;
+  pintarAvisoNumeroInterno('f', null);
 
   btn.disabled=false;
   toast.style.display='none';
@@ -1830,7 +2461,8 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
   altaRecienteId = data.id;
   document.getElementById('alta-guardada-texto').textContent =
     'Persona registrada: ' + (data.nombre_completo || nuevo.nombre_completo || '') + (data.empleado_id ? ' (' + data.empleado_id + ')' : '') +
-    '. Su compensación se captura en el expediente.';
+    '. Su compensación se captura en el expediente.' +
+    (avisosNumeroAlta ? ' Aviso: su número interno también aparece en ' + avisosNumeroAlta + ' persona(s) de otro registro patronal o sin registro patronal.' : '');
   document.getElementById('alta-guardada').style.display='block';
 });
 
@@ -1924,17 +2556,19 @@ function descargarHistorialCSV(){
 
 function fillSelectSimple(sel, items){ sel.innerHTML = items.map(i=>`<option value="${escapeHtml(i.id)}">${escapeHtml(i.nombre)}</option>`).join(''); }
 
-async function abrirDetalle(id){
+async function abrirDetalle(id, seccionInicial = 'personal'){
+  if (!puedeEscribirPersonal()) return; // Consulta no abre expedientes
   const p = personal.find(x=>x.id===id);
   if(!p) return;
   detalleActual = {...p};
 
-  document.getElementById('d-empleadoid').textContent = p.empleado_id ? ('ID: '+p.empleado_id) : 'ID: pendiente';
+  document.getElementById('d-empleadoid').textContent = p.empleado_id ? ('ID ' + p.empleado_id) : 'ID pendiente';
   const empresaDetalle = empresas.find(e => String(e.id) === String(p.empresa_id));
   const nombreDetalle = [p.nombres,p.primer_apellido,p.segundo_apellido].filter(Boolean).join(' ').trim() || p.nombre_completo || 'Persona sin nombre capturado';
   const puestoDetalle = nombreCatalogoPersona('puestos', p.puesto_id) || p.puesto || p.puesto_nombre || '';
-  const resumenDetalle = [puestoDetalle, empresaDetalle?.nombre, p.estatus || 'Activo'].filter(Boolean).join(' · ');
-  document.getElementById('d-encabezado-persona').innerHTML = `<strong>${escapeHtml(nombreDetalle)}</strong><span>${escapeHtml(resumenDetalle)}</span>`;
+  const resumenDetalle = [puestoDetalle, empresaDetalle?.nombre].filter(Boolean).join(' · ');
+  document.getElementById('d-nombre-titulo').textContent = nombreDetalle;
+  document.getElementById('d-encabezado-persona').innerHTML = resumenDetalle ? `<span>${escapeHtml(resumenDetalle)}</span>` : '';
   fillSelectSimple(document.getElementById('d-empresa'), empresas);
   fillSelectSimple(document.getElementById('d-proyecto'), proyectos);
 
@@ -2005,14 +2639,15 @@ async function abrirDetalle(id){
     histHint.style.display = 'none';
   }
 
-  document.getElementById('d-tipoempleado').value = p.tipo_empleado||'Confianza';
-  document.getElementById('d-turno').value = p.turno||'Matutino';
-  document.getElementById('d-jornada').value = p.tipo_jornada||'Completa';
+  fijarValorSelectDetalle('d-tipoempleado', p.tipo_empleado);
+  fijarValorSelectDetalle('d-turno', p.turno);
+  fijarValorSelectDetalle('d-jornada', p.tipo_jornada);
   document.getElementById('d-fechainicio').value = p.fecha_inicio_contrato||'';
   document.getElementById('d-fechavencimiento').value = p.fecha_vencimiento_contrato||'';
   document.getElementById('d-subcontratacion').checked = !!p.subcontratacion;
   document.getElementById('d-estatus').value = p.estatus||'Activo';
   document.getElementById('d-campos-baja').style.display = p.estatus === 'Baja' ? 'grid' : 'none';
+  actualizarPildoraEstatus(p.estatus || 'Activo');
   document.getElementById('d-fechabaja').value = p.fecha_baja||'';
   document.getElementById('d-comentariobaja').value = p.comentario_baja||'';
   document.getElementById('d-fonacot').value = p.no_fonacot||'';
@@ -2030,8 +2665,10 @@ async function abrirDetalle(id){
   document.getElementById('d-historial-resumen').textContent = 'Cargando…';
   document.getElementById('btn-descargar-historial').style.display = 'none';
   detalleHistorial = [];
-  cambiarSeccionDetalle('personal');
+  cambiarSeccionDetalle(seccionInicial);
   document.getElementById('modal-overlay').style.display = 'block';
+  pintarAvisoNumeroInterno('d', null);
+  revisarNumeroInterno('d'); // V2.0 M1: aviso informativo si el número se repite fuera de su RP
 
   // 7D-6b (P4a): los registros de pago se cargan aparte y sin esperar su
   // resultado, para que un fallo ahí no afecte al resto del Detalle.
@@ -2074,7 +2711,18 @@ function actualizarModoCoordinadorDetalle(){
   if (modo!=='externo') document.getElementById('d-coordinador-externo').value='';
 }
 document.querySelectorAll('input[name="d-coordinador-modo"]').forEach(r=>r.addEventListener('change', actualizarModoCoordinadorDetalle));
-document.getElementById('d-estatus').addEventListener('change', e => { document.getElementById('d-campos-baja').style.display = e.target.value === 'Baja' ? 'grid' : 'none'; });
+// Estatus: un solo control (en la cabecera). La etiqueta refleja ese control y
+// se guarda con «Guardar cambios», como el resto de la ficha.
+function actualizarPildoraEstatus(estatus){
+  const pildora = document.getElementById('d-estatus-pill');
+  if (!pildora) return;
+  pildora.textContent = estatus;
+  pildora.className = 'pill detail-estatus-pill estatus-' + String(estatus).toLowerCase();
+}
+document.getElementById('d-estatus').addEventListener('change', e => {
+  document.getElementById('d-campos-baja').style.display = e.target.value === 'Baja' ? 'grid' : 'none';
+  actualizarPildoraEstatus(e.target.value);
+});
 
 function cerrarDetalle(){
   document.getElementById('modal-overlay').style.display='none';
@@ -2658,11 +3306,48 @@ async function reactivarRegistroPago(id){
   await aplicarCambioRegistroPago(id, { activo: true, fecha_fin: null }, false, 'Registro de pago reactivado.');
 }
 
+// Guardado de la ficha: la ficha permanece abierta, en la misma pestaña.
+// `guardandoDetalle` impide que un doble clic envíe dos actualizaciones y
+// registre dos veces los mismos movimientos.
+let guardandoDetalle = false;
+// Campos de lista de la ficha: un valor vacío se muestra como «Sin capturar»
+// y se guarda vacío; un valor guardado que no esté en la lista se conserva
+// como opción adicional, para no perderlo ni sustituirlo al guardar.
+function fijarValorSelectDetalle(id, valor){
+  const sel = document.getElementById(id);
+  sel.querySelectorAll('option[data-historico]').forEach(o => o.remove());
+  const v = valor == null ? '' : String(valor);
+  if (v && ![...sel.options].some(o => o.value === v)) {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v + ' (valor guardado)'; o.dataset.historico = '1';
+    sel.appendChild(o);
+  }
+  sel.value = v;
+}
+// Subcontratación: si sigue igual a como se abrió la ficha, se reenvía el
+// valor original (incluido vacío); solo se escribe true/false si el usuario lo cambió.
+function valorSubcontratacionDetalle(){
+  const marcado = document.getElementById('d-subcontratacion').checked;
+  return marcado === !!detalleActual.subcontratacion ? (detalleActual.subcontratacion ?? null) : marcado;
+}
+function seccionDetalleActiva(){
+  const activa = document.querySelector('[data-detail-tab].active');
+  return activa ? activa.dataset.detailTab : 'personal';
+}
 async function guardarDetalle(){
-  if (!detalleActual) return;
+  if (!detalleActual || guardandoDetalle) return;
+  guardandoDetalle = true;
+  try { await guardarDetalleUnaVez(); }
+  finally {
+    guardandoDetalle = false;
+    document.getElementById('btn-guardar-detalle').disabled = false;
+  }
+}
+async function guardarDetalleUnaVez(){
   const btn = document.getElementById('btn-guardar-detalle');
   const toast = document.getElementById('toast-detalle');
   btn.disabled = true;
+  toast.style.display = 'none';
 
   // 7C-4b: al cambiar de modo se envía explícitamente null en el campo que no
   // corresponda, para no dejar ambas opciones guardadas. La columna de texto libre
@@ -2769,7 +3454,11 @@ async function guardarDetalle(){
       cpFiscalParaGuardar = cpChk.valor;
     }
   }
-  if (huboErrorIdentidadDet) { btn.disabled = false; return; }
+  if (huboErrorIdentidadDet) {
+    toast.textContent = 'Revisa los datos marcados en Datos personales; no se guardó ningún cambio.';
+    toast.className = 'toast err'; toast.style.display = 'block';
+    return;
+  }
 
   const nuevo = {
     ...identidad,
@@ -2785,12 +3474,12 @@ async function guardarDetalle(){
     coordinador_externo: coordinadorExternoDet,
     jefe_id: jefeIdDet,
     ...catalogosDet,
-    tipo_empleado: document.getElementById('d-tipoempleado').value,
-    turno: document.getElementById('d-turno').value,
-    tipo_jornada: document.getElementById('d-jornada').value,
+    tipo_empleado: document.getElementById('d-tipoempleado').value || null,
+    turno: document.getElementById('d-turno').value || null,
+    tipo_jornada: document.getElementById('d-jornada').value || null,
     fecha_inicio_contrato: document.getElementById('d-fechainicio').value || null,
     fecha_vencimiento_contrato: document.getElementById('d-fechavencimiento').value || null,
-    subcontratacion: document.getElementById('d-subcontratacion').checked,
+    subcontratacion: valorSubcontratacionDetalle(),
     estatus: document.getElementById('d-estatus').value,
     fecha_baja: document.getElementById('d-fechabaja').value || null,
     comentario_baja: document.getElementById('d-comentariobaja').value.trim(),
@@ -2809,22 +3498,54 @@ async function guardarDetalle(){
     if (String(antes) !== String(despues)) cambios.push({campo, antes, despues});
   });
 
-  const { error } = await sb.from('personal').update(nuevo).eq('id', detalleActual.id);
-  if (error) {
-    btn.disabled=false;
-    toast.textContent=mensajeErrorGuardarPersonal(error); toast.className='toast err'; toast.style.display='block';
+  const idPersona = detalleActual.id;
+  const seccion = seccionDetalleActiva();
+
+  // Sin cambios: no se envía nada ni se registran movimientos.
+  if (!cambios.length) {
+    toast.textContent = 'No hay cambios por guardar.'; toast.className = 'toast ok'; toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 2500);
     return;
   }
 
-  if (cambios.length) {
-    await sb.from('movimientos').insert(cambios.map(c=>({personal_id:detalleActual.id, campo:c.campo, valor_anterior:String(c.antes), valor_nuevo:String(c.despues), usuario:'admin'})));
+  // V2.0 M1: si cambió el número, la empresa o el registro patronal, se revisa
+  // de nuevo. Mismo registro patronal = no se guarda; lo demás solo avisa.
+  if (nuevo.numero_interno_trabajador && cambios.some(c => ['numero_interno_trabajador','empresa_id','registro_patronal_id'].includes(c.campo))) {
+    const revNumDet = await revisarNumeroInterno('d');
+    if (revNumDet && revNumDet.bloquea) {
+      toast.textContent = 'No se guardó: el número interno ya existe en el mismo registro patronal. Revisa las coincidencias junto al campo.'; toast.className = 'toast err'; toast.style.display = 'block';
+      return;
+    }
   }
 
-  btn.disabled=false;
-  toast.textContent='Cambios guardados.'; toast.className='toast ok'; toast.style.display='block';
-  setTimeout(()=>toast.style.display='none',2500);
+  const { data: filasActualizadas, error } = await sb.from('personal').update(nuevo).eq('id', idPersona).select('id');
+  if (!error && (!filasActualizadas || filasActualizadas.length !== 1)) {
+    toast.textContent = 'No se guardó: tu rol no puede modificar esta ficha o ya no está disponible.'; toast.className = 'toast err'; toast.style.display = 'block';
+    return;
+  }
+  if (error) {
+    // La ficha sigue abierta con lo capturado, para corregir y reintentar.
+    toast.textContent = mensajeErrorGuardarPersonal(error); toast.className = 'toast err'; toast.style.display = 'block';
+    if (restriccionDelError(error) === 'personal_numero_interno_rp_uq') revisarNumeroInterno('d');
+    return;
+  }
+
+  // Un solo registro de movimientos por guardado (el usuario lo pone el servidor).
+  const { error: errorMov } = await sb.from('movimientos').insert(cambios.map(c=>({personal_id:idPersona, campo:c.campo, valor_anterior:String(c.antes), valor_nuevo:String(c.despues)})));
+
+  // Se recarga la persona desde la base y se vuelve a pintar la ficha en la
+  // misma pestaña, para que el siguiente guardado compare contra lo guardado.
   await cargarPersonal();
-  cerrarDetalle();
+  if (detalleActual && detalleActual.id === idPersona) await abrirDetalle(idPersona, seccion);
+
+  const t = document.getElementById('toast-detalle');
+  if (errorMov) {
+    t.textContent = 'Cambios guardados, pero no se pudo registrar el historial de movimientos.';
+    t.className = 'toast err'; t.style.display = 'block';
+  } else {
+    t.textContent = 'Cambios guardados.'; t.className = 'toast ok'; t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 2500);
+  }
 }
 
 async function mostrarApp(){
@@ -2832,6 +3553,16 @@ async function mostrarApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-content').style.display='block';
   setStatus('Conectando…','ok');
+  rolActual = await cargarRolActual();
+  aplicarRolEnInterfaz();
+  if (!rolActual) { setStatus('', 'ok'); return; }
+  if (rolActual === 'coordinador') { setStatus('', 'ok'); cambiarPestana('equipo'); await cargarMiEquipo(); return; }
+  if (esConsulta()) {
+    // V2.0 M2: solo su ámbito; sin directorio de empresas ni catálogos.
+    await cargarPersonal();
+    await cargarResumenAgregado();
+    return;
+  }
   await cargarTodo();
   await cargarPersonal();
   await cargarEmpresasAdmin();
@@ -3459,6 +4190,7 @@ const MENSAJES_RESTRICCION = {
   personal_registro_patronal_empresa_fkey: 'El registro patronal seleccionado no pertenece a la empresa elegida. Verifica ambos campos.',
   personal_coordinador_excluyente: 'El coordinador no puede ser a la vez del directorio y externo. Elige solo una opción.',
   personal_empleado_id_key: 'Ya existe otra persona con ese ID de empleado.',
+  personal_numero_interno_rp_uq: 'Otra persona ya tiene ese número interno en el mismo registro patronal (pudo guardarse mientras capturabas). Usa otro número o revisa las coincidencias junto al campo.',
   empresas_registros_patronales_empresa_id_registro_patronal_key: 'Ese registro patronal ya existe para esta empresa.',
   prp_sueldo_mayor_cero: 'El sueldo debe ser mayor que cero.',
   prp_modalidad_valida: 'La modalidad del sueldo debe ser bruto o neto.',
@@ -3501,7 +4233,7 @@ function traducirErrorSupabase(error){
     case '23502': return 'Falta capturar un dato obligatorio.';
     case '22P02': case '22003': case '22007': case '22008':
       return 'Algún dato tiene un formato no válido (número o fecha).';
-    case '42501': return 'No tienes permiso para realizar esta operación o tu sesión ya no es válida. Vuelve a iniciar sesión.';
+    case '42501': return 'Tu rol no tiene permiso para realizar esta operación. Si crees que es un error, pide al administrador de tu cuenta que revise tu rol.';
     case 'PGRST301': case 'PGRST303': return 'Tu sesión expiró. Vuelve a iniciar sesión.';
     case '40001': case '40P01': return 'Otra persona modificó esta información al mismo tiempo. Recarga y vuelve a intentarlo.';
     // 7D-6b (P4b): espera por bloqueo o tiempo agotado, y tabla o vista que
@@ -4191,7 +4923,7 @@ function mostrarLogin(){
 
 async function cerrarSesion(){
   await sb.auth.signOut();
-  mostrarLogin();
+  location.reload(); // descarta en memoria los datos del usuario anterior
 }
 
 document.getElementById('form-login').addEventListener('submit', async function(e){
@@ -4215,6 +4947,113 @@ document.getElementById('form-login').addEventListener('submit', async function(
   const { data: { session } } = await sb.auth.getSession();
   if (session) { await mostrarApp(); } else { mostrarLogin(); }
 })();
+
+// ---------------------------------------------------------------------
+// V2.0 M1: número interno. Es único por tenant + registro patronal; eso lo
+// garantiza el índice personal_numero_interno_rp_uq, también ante guardados
+// simultáneos. Aquí solo se avisa antes de guardar. La búsqueda corre con los
+// permisos del usuario (RLS): no muestra personas fuera de su alcance.
+// ---------------------------------------------------------------------
+const RELACION_NUMERO_INTERNO = {
+  mismo_rp: 'mismo registro patronal',
+  otro_rp: 'otro registro patronal',
+  sin_rp_misma_empresa: 'sin registro patronal, misma empresa',
+  sin_rp_otra_empresa: 'sin registro patronal, otra empresa'
+};
+const turnoAvisoNumero = { f: 0, d: 0 };
+const temporizadorAvisoNumero = { f: null, d: null };
+function datosNumeroInterno(pref){
+  const rpSel = document.getElementById(pref + '-registro-patronal');
+  return {
+    numero: document.getElementById(pref + '-numero-interno').value.trim(),
+    empresaId: document.getElementById(pref + '-empresa').value || null,
+    rpId: rpSel.disabled ? null : (rpSel.value || null),
+    excluirId: pref === 'd' && detalleActual ? detalleActual.id : null
+  };
+}
+// Devuelve siempre { bloquea, coincidencias } de los datos que había al
+// llamarla (el guardado depende de ese resultado). Solo pinta el aviso si
+// no llegó después una revisión más nueva.
+async function revisarNumeroInterno(pref){
+  if (!puedeEscribirPersonal()) return { bloquea: false, coincidencias: [] };
+  clearTimeout(temporizadorAvisoNumero[pref]);
+  const d = datosNumeroInterno(pref);
+  const turno = ++turnoAvisoNumero[pref];
+  const pintar = res => { if (turno === turnoAvisoNumero[pref]) pintarAvisoNumeroInterno(pref, res, d); };
+  if (!d.numero) { pintar(null); return { bloquea: false, coincidencias: [] }; }
+  const { data, error } = await sb.rpc('coincidencias_numero_interno', {
+    p_numero: d.numero, p_empresa_id: d.empresaId, p_registro_patronal_id: d.rpId, p_excluir_id: d.excluirId
+  });
+  if (error) {
+    // Sin la revisión previa se puede guardar igual: el índice decide.
+    console.warn('No se pudieron revisar coincidencias del número interno:', error);
+    pintar(null);
+    return { bloquea: false, coincidencias: [], error };
+  }
+  const res = { bloquea: (data || []).some(c => c.relacion === 'mismo_rp'), coincidencias: data || [] };
+  pintar(res);
+  return res;
+}
+function pintarAvisoNumeroInterno(pref, res, d){
+  const caja = document.getElementById(pref + '-numero-interno-aviso');
+  if (!caja) return;
+  if (!res || !res.coincidencias.length) { caja.className = 'aviso-numero'; caja.innerHTML = ''; return; }
+  const item = c => `<li>${escapeHtml([c.empleado_id, c.nombre_completo].filter(Boolean).join(' · '))} — ${escapeHtml(c.empresa || 'Sin empresa')}${c.registro_patronal ? ' · RP ' + escapeHtml(c.registro_patronal) : ''} <span class="rp-sub">(${escapeHtml(RELACION_NUMERO_INTERNO[c.relacion] || c.relacion)}${personaEnBaja(c) ? ', en baja' : ''})</span></li>`;
+  const mismos = res.coincidencias.filter(c => c.relacion === 'mismo_rp');
+  const otros = res.coincidencias.filter(c => c.relacion !== 'mismo_rp');
+  let html = '';
+  if (mismos.length) html += `<div><b>No se puede guardar:</b> este número ya lo tiene otra persona en el mismo registro patronal.<ul>${mismos.map(item).join('')}</ul></div>`;
+  if (otros.length) html += `<div${mismos.length ? ' style="margin-top:6px"' : ''}><b>Aviso:</b> el número también aparece en ${otros.length === 1 ? 'otra persona' : otros.length + ' personas'} fuera de este registro patronal. Puedes guardar.${d && d.rpId ? '' : ' Esta persona no tiene registro patronal, así que no podemos confirmar si se trata de un duplicado.'}<ul>${otros.map(item).join('')}</ul></div>`;
+  caja.className = 'aviso-numero ' + (mismos.length ? 'bloquea' : 'advierte');
+  caja.innerHTML = html;
+}
+['f', 'd'].forEach(pref => {
+  const revisarLuego = (ms) => { clearTimeout(temporizadorAvisoNumero[pref]); temporizadorAvisoNumero[pref] = setTimeout(() => revisarNumeroInterno(pref), ms); };
+  document.getElementById(pref + '-numero-interno').addEventListener('input', () => revisarLuego(600));
+  document.getElementById(pref + '-numero-interno').addEventListener('change', () => revisarLuego(0));
+  // La empresa rellena antes el registro patronal (su propio listener); por eso se espera un ciclo.
+  document.getElementById(pref + '-empresa').addEventListener('change', () => revisarLuego(0));
+  document.getElementById(pref + '-registro-patronal').addEventListener('change', () => revisarLuego(0));
+});
+document.getElementById('form-alta').addEventListener('reset', () => pintarAvisoNumeroInterno('f', null));
+
+// ---------------------------------------------------------------------
+// V2.0 M2: «Mi equipo» del Coordinador. Solo lectura. La lista sale de
+// equipo_coordinador(): personas cuyo coordinador_id es la ficha vinculada
+// del usuario (jefe directo no cuenta). Sin sueldos, esquemas, banco ni salud.
+// ---------------------------------------------------------------------
+let equipoFilas = [];
+let equipoEstado = 'cargando'; // 'cargando' | 'ok' | 'error' | 'sin-ficha'
+async function cargarMiEquipo(){
+  equipoEstado = 'cargando'; renderMiEquipo();
+  if (!rolPersonalId) { equipoEstado = 'sin-ficha'; renderMiEquipo(); return; }
+  const { data, error } = await sb.rpc('equipo_coordinador');
+  if (error) { console.error('No se pudo cargar el equipo:', error); equipoEstado = 'error'; }
+  else { equipoFilas = data || []; equipoEstado = 'ok'; }
+  renderMiEquipo();
+}
+function renderMiEquipo(){
+  const cont = document.getElementById('equipo-contenido');
+  const aviso = t => { cont.innerHTML = `<div class="empty">${escapeHtml(t)}</div>`; };
+  if (equipoEstado === 'cargando') return aviso('Cargando…');
+  if (equipoEstado === 'sin-ficha') return aviso('Tu usuario no tiene una ficha de personal vinculada, así que no podemos identificar a tu equipo. Pide al administrador de tu cuenta que la vincule.');
+  if (equipoEstado === 'error') return aviso('No se pudo cargar tu equipo. Recarga la página para reintentar.');
+  if (!equipoFilas.length) return aviso('No tienes personal asignado.');
+  const q = normalizarBusqueda(document.getElementById('buscar-equipo').value.trim());
+  const conBajas = document.getElementById('equipo-incluir-bajas').checked;
+  const vigentes = equipoFilas.filter(p => !personaEnBaja(p)).length;
+  const bajas = equipoFilas.length - vigentes;
+  const filas = equipoFilas.filter(p => (conBajas || !personaEnBaja(p)) &&
+    (!q || normalizarBusqueda([p.empleado_id, p.nombre_completo, p.puesto, p.area, p.departamento, p.proyecto, p.localidad].join(' ')).includes(q)));
+  const celda = v => `<td>${escapeHtml(v || '—')}</td>`;
+  cont.innerHTML = `<p class="hint">${vigentes} persona(s) vigente(s)${bajas ? ' · ' + bajas + ' en baja' : ''}.</p>` +
+    (filas.length ? `<div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Nombre</th><th>Puesto</th><th>Área</th><th>Departamento</th><th>Proyecto</th><th>Localidad</th><th>Teléfono</th><th>Estatus</th><th>Asignado desde</th></tr></thead>
+      <tbody>${filas.map(p => `<tr>${celda(p.empleado_id)}${celda(p.nombre_completo)}${celda(p.puesto)}${celda(p.area)}${celda(p.departamento)}${celda(p.proyecto)}${celda(p.localidad)}${celda(p.telefono_celular)}<td><span class="pill">${escapeHtml(estatusPersona(p))}</span></td>${celda(p.fecha_asignacion)}</tr>`).join('')}</tbody>
+    </table></div>` : `<div class="empty">${bajas && !conBajas && !q ? 'Todo tu equipo está en baja. Marca «Incluir bajas» para verlo.' : 'Sin coincidencias con la búsqueda.'}</div>`);
+}
+document.getElementById('buscar-equipo').addEventListener('input', renderMiEquipo);
+document.getElementById('equipo-incluir-bajas').addEventListener('change', renderMiEquipo);
 </script>
 </body>
 </html>

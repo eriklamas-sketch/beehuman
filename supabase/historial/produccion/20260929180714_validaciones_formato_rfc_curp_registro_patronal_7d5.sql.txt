@@ -1,0 +1,177 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20260929180714 · validaciones_formato_rfc_curp_registro_patronal_7d5
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+
+-- =====================================================================
+-- Fase 7D-5: Validaciones estructurales de formato (RFC, CURP, registro
+-- patronal) a nivel de base de datos, como segunda capa de integridad
+-- adicional a la validación en el cliente (JavaScript).
+--
+-- Diseño clave: cada trigger SOLO valida el formato cuando el valor
+-- realmente está siendo insertado por primera vez o cuando el usuario
+-- lo está CAMBIANDO respecto al valor ya guardado. Si un registro
+-- histórico ya tiene un valor que no cumple el nuevo formato, se puede
+-- seguir editando/guardando sin que la validación lo bloquee, siempre
+-- y cuando ese campo en particular no se esté modificando. Esto evita
+-- romper la edición de registros históricos, tal como se pidió.
+--
+-- Estas validaciones son estructurales únicamente: no verifican ante
+-- el SAT, RENAPO ni el IMSS que el RFC/CURP/registro patronal exista
+-- o esté vigente.
+-- =====================================================================
+
+-- Función auxiliar: valida que un mes (01-12) y día (acorde al mes) en
+-- formato de 2 dígitos sean plausibles. Permisiva con 29 de febrero por
+-- la ambigüedad del siglo en un año de 2 dígitos (RFC/CURP).
+create or replace function public.fecha_aammdd_valida(p_mm text, p_dd text)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select case
+    when p_mm !~ '^[0-9]{2}$' or p_dd !~ '^[0-9]{2}$' then false
+    when p_mm::int not between 1 and 12 then false
+    else p_dd::int between 1 and (case p_mm::int
+      when 2 then 29
+      when 4 then 30 when 6 then 30 when 9 then 30 when 11 then 30
+      else 31 end)
+  end;
+$$;
+
+-- ---------------------------------------------------------------------
+-- RFC de empresas (persona moral) — 12 caracteres
+-- ---------------------------------------------------------------------
+create or replace function public.validar_rfc_empresa()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_debe_validar boolean;
+begin
+  if tg_op = 'INSERT' then
+    v_debe_validar := true;
+  else
+    v_debe_validar := (new.rfc is distinct from old.rfc);
+  end if;
+
+  if v_debe_validar and new.rfc is not null and new.rfc <> '' then
+    if char_length(new.rfc) <> 12
+       or new.rfc !~ '^[A-ZÑ&]{3}[0-9]{6}[A-Z0-9]{3}$'
+       or not public.fecha_aammdd_valida(substring(new.rfc from 6 for 2), substring(new.rfc from 8 for 2))
+    then
+      raise exception 'El RFC "%" no tiene el formato válido de persona moral (12 caracteres: 3 letras, 6 dígitos de fecha AAMMDD y 3 de homoclave).', new.rfc;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_validar_rfc_empresa on public.empresas;
+create trigger trg_validar_rfc_empresa
+before insert or update on public.empresas
+for each row execute function public.validar_rfc_empresa();
+
+-- ---------------------------------------------------------------------
+-- RFC de personas físicas — 13 caracteres
+-- ---------------------------------------------------------------------
+create or replace function public.validar_rfc_persona()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_debe_validar boolean;
+begin
+  if tg_op = 'INSERT' then
+    v_debe_validar := true;
+  else
+    v_debe_validar := (new.rfc is distinct from old.rfc);
+  end if;
+
+  if v_debe_validar and new.rfc is not null and new.rfc <> '' then
+    if char_length(new.rfc) <> 13
+       or new.rfc !~ '^[A-ZÑ&]{4}[0-9]{6}[A-Z0-9]{3}$'
+       or not public.fecha_aammdd_valida(substring(new.rfc from 7 for 2), substring(new.rfc from 9 for 2))
+    then
+      raise exception 'El RFC "%" no tiene el formato válido de persona física (13 caracteres: 4 letras, 6 dígitos de fecha AAMMDD y 3 de homoclave).', new.rfc;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_validar_rfc_personal on public.personal;
+create trigger trg_validar_rfc_personal
+before insert or update on public.personal
+for each row execute function public.validar_rfc_persona();
+
+-- ---------------------------------------------------------------------
+-- CURP de personas — 18 caracteres
+-- ---------------------------------------------------------------------
+create or replace function public.validar_curp_persona()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_debe_validar boolean;
+begin
+  if tg_op = 'INSERT' then
+    v_debe_validar := true;
+  else
+    v_debe_validar := (new.curp is distinct from old.curp);
+  end if;
+
+  if v_debe_validar and new.curp is not null and new.curp <> '' then
+    if char_length(new.curp) <> 18
+       or new.curp !~ '^[A-Z][AEIOUX][A-Z]{2}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[HM](AS|BC|BS|CC|CS|CH|CL|CM|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QO|QR|SP|SL|SR|TC|TL|TS|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9][0-9]$'
+    then
+      raise exception 'La CURP "%" no tiene una estructura válida de 18 caracteres.', new.curp;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_validar_curp_personal on public.personal;
+create trigger trg_validar_curp_personal
+before insert or update on public.personal
+for each row execute function public.validar_curp_persona();
+
+-- ---------------------------------------------------------------------
+-- Registro patronal — 11 caracteres (1 letra + 10 dígitos, formato IMSS)
+-- Solo aplica a inserciones o cambios reales del valor; no afecta el
+-- alternar activo/inactivo de registros existentes.
+-- ---------------------------------------------------------------------
+create or replace function public.validar_formato_registro_patronal()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_debe_validar boolean;
+begin
+  if tg_op = 'INSERT' then
+    v_debe_validar := true;
+  else
+    v_debe_validar := (new.registro_patronal is distinct from old.registro_patronal);
+  end if;
+
+  if v_debe_validar and new.registro_patronal !~ '^[A-Z][0-9]{10}$' then
+    raise exception 'El registro patronal "%" no tiene el formato de 11 caracteres (1 letra + 10 dígitos, formato IMSS).', new.registro_patronal;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_validar_formato_registro_patronal on public.empresas_registros_patronales;
+create trigger trg_validar_formato_registro_patronal
+before insert or update on public.empresas_registros_patronales
+for each row execute function public.validar_formato_registro_patronal();
+

@@ -1,0 +1,67 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20260929144906 · fase_7d2_registros_patronales
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+begin;
+
+-- ---------------------------------------------------------------------
+-- 1. Tabla nueva y sus restricciones (sin triggers todavia, para poder
+--    migrar el historico con tenant_id explicito antes de que el trigger
+--    de auto-asignacion dependa de una sesion autenticada)
+-- ---------------------------------------------------------------------
+create table empresas_registros_patronales (
+  id uuid primary key default gen_random_uuid(),
+  empresa_id uuid not null,
+  tenant_id uuid not null references tenants(id),
+  registro_patronal text not null,
+  activo boolean not null default true,
+  created_at timestamptz default now(),
+  unique (id, tenant_id),
+  unique (empresa_id, id, tenant_id),
+  unique (empresa_id, registro_patronal),
+  foreign key (empresa_id, tenant_id) references empresas (id, tenant_id)
+);
+
+-- ---------------------------------------------------------------------
+-- 2. Migracion del historico: el unico dato hoy es empresas.registro_patronal,
+--    que en el registro de prueba actual es NULL, asi que esto es un no-op,
+--    pero se deja listo para cualquier dato futuro previo a esta migracion.
+--    Se inserta con tenant_id explicito porque el trigger de auto-asignacion
+--    todavia no existe en este punto.
+-- ---------------------------------------------------------------------
+insert into empresas_registros_patronales (empresa_id, tenant_id, registro_patronal)
+select id, tenant_id, registro_patronal
+from empresas
+where registro_patronal is not null and registro_patronal <> '';
+
+-- ---------------------------------------------------------------------
+-- 3. RLS, politica y triggers de tenant (mismo patron que las 14 tablas
+--    existentes) -- se agregan DESPUES de migrar el historico
+-- ---------------------------------------------------------------------
+alter table empresas_registros_patronales enable row level security;
+
+create policy "tenant_acceso_empresas_registros_patronales" on empresas_registros_patronales for all
+  using (tenant_id = current_tenant_id()) with check (tenant_id = current_tenant_id());
+
+create trigger trg_asignar_tenant_automatico before insert on empresas_registros_patronales
+  for each row execute function asignar_tenant_automatico();
+
+create trigger trg_bloquear_cambio_tenant before update on empresas_registros_patronales
+  for each row execute function bloquear_cambio_tenant();
+
+-- ---------------------------------------------------------------------
+-- 4. Columna y FK compuesta de 3 columnas en personal: amarra el registro
+--    patronal no solo al tenant, sino a la MISMA empresa que tiene la
+--    persona, para que sea imposible (a nivel de base de datos) asignar
+--    el registro patronal de una empresa distinta.
+-- ---------------------------------------------------------------------
+alter table personal add column if not exists registro_patronal_id uuid;
+
+alter table personal add constraint personal_registro_patronal_empresa_fkey
+  foreign key (empresa_id, registro_patronal_id, tenant_id)
+  references empresas_registros_patronales (empresa_id, id, tenant_id);
+
+commit;

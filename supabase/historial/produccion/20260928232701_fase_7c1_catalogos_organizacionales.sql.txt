@@ -1,0 +1,99 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20260928232701 · fase_7c1_catalogos_organizacionales
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+
+begin;
+
+create table areas (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  tenant_id uuid not null references tenants(id),
+  created_at timestamptz default now(),
+  unique (id, tenant_id)
+);
+
+create table departamentos (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  tenant_id uuid not null references tenants(id),
+  created_at timestamptz default now(),
+  unique (id, tenant_id)
+);
+
+create table puestos (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  tenant_id uuid not null references tenants(id),
+  created_at timestamptz default now(),
+  unique (id, tenant_id)
+);
+
+create table localidades (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  tenant_id uuid not null references tenants(id),
+  created_at timestamptz default now(),
+  unique (id, tenant_id)
+);
+
+create table centros_costo (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  tenant_id uuid not null references tenants(id),
+  created_at timestamptz default now(),
+  unique (id, tenant_id)
+);
+
+alter table areas enable row level security;
+alter table departamentos enable row level security;
+alter table puestos enable row level security;
+alter table localidades enable row level security;
+alter table centros_costo enable row level security;
+
+create policy "tenant_acceso_areas" on areas for all
+  using (tenant_id = current_tenant_id()) with check (tenant_id = current_tenant_id());
+create policy "tenant_acceso_departamentos" on departamentos for all
+  using (tenant_id = current_tenant_id()) with check (tenant_id = current_tenant_id());
+create policy "tenant_acceso_puestos" on puestos for all
+  using (tenant_id = current_tenant_id()) with check (tenant_id = current_tenant_id());
+create policy "tenant_acceso_localidades" on localidades for all
+  using (tenant_id = current_tenant_id()) with check (tenant_id = current_tenant_id());
+create policy "tenant_acceso_centros_costo" on centros_costo for all
+  using (tenant_id = current_tenant_id()) with check (tenant_id = current_tenant_id());
+
+alter table personal add column area_id uuid;
+alter table personal add column departamento_id uuid;
+alter table personal add column puesto_id uuid;
+alter table personal add column localidad_id uuid;
+alter table personal add column centro_costo_id uuid;
+alter table personal add column coordinador_id uuid;
+alter table personal add column jefe_id uuid;
+alter table personal add column coordinador_externo text;
+
+alter table personal add constraint personal_area_id_tenant_fkey
+  foreign key (area_id, tenant_id) references areas(id, tenant_id);
+
+alter table personal add constraint personal_departamento_id_tenant_fkey
+  foreign key (departamento_id, tenant_id) references departamentos(id, tenant_id);
+
+alter table personal add constraint personal_puesto_id_tenant_fkey
+  foreign key (puesto_id, tenant_id) references puestos(id, tenant_id);
+
+alter table personal add constraint personal_localidad_id_tenant_fkey
+  foreign key (localidad_id, tenant_id) references localidades(id, tenant_id);
+
+alter table personal add constraint personal_centro_costo_id_tenant_fkey
+  foreign key (centro_costo_id, tenant_id) references centros_costo(id, tenant_id);
+
+alter table personal add constraint personal_coordinador_id_tenant_fkey
+  foreign key (coordinador_id, tenant_id) references personal(id, tenant_id);
+
+alter table personal add constraint personal_jefe_id_tenant_fkey
+  foreign key (jefe_id, tenant_id) references personal(id, tenant_id);
+
+commit;
+

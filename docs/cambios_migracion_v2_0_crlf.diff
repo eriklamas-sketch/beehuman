@@ -1,0 +1,77 @@
+--- V2.0 anterior (70130a6e…)
++++ V2.0 corregida (49a6369d…)
+@@ -147,37 +147,18 @@
+ alter table public.personal_registros_pago add column creado_por uuid, add column actualizado_por uuid, add column actualizado_en timestamptz;
+ alter table public.movimientos add column usuario_id uuid;
+ 
+-CREATE OR REPLACE FUNCTION public.sellar_autoria()
+- RETURNS trigger
+- LANGUAGE plpgsql
+- SET search_path TO ''
+-AS $function$
+-begin
+-  if tg_op = 'INSERT' then
+-    new.creado_por := auth.uid();
+-    new.actualizado_por := null;
+-    new.actualizado_en := null;
+-  else
+-    new.creado_por := old.creado_por;
+-    new.actualizado_por := auth.uid();
+-    new.actualizado_en := now();
+-  end if;
+-  return new;
+-end;
+-$function$;
+-CREATE OR REPLACE FUNCTION public.sellar_movimiento()
+- RETURNS trigger
+- LANGUAGE plpgsql
+- SECURITY DEFINER
+- SET search_path TO ''
+-AS $function$
+-begin
+-  new.usuario_id := auth.uid();
+-  new.usuario := coalesce((select u.email from auth.users u where u.id = auth.uid()), 'sistema');
+-  new.fecha := now();
+-  return new;
+-end;
+-$function$;
++-- sellar_autoria(): texto idéntico al de beehuman-pruebas, que contiene saltos de línea
++-- Windows (CRLF). Se crea con E'' para conservarlos byte a byte; el
++-- comportamiento es el mismo que con saltos Unix, pero la huella exige el texto exacto.
++do $v2fn$ begin
++  execute E'CREATE OR REPLACE FUNCTION public.sellar_autoria()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''''\nAS $function$\r\nbegin\r\n  if tg_op = ''INSERT'' then\r\n    new.creado_por := auth.uid();\r\n    new.actualizado_por := null;\r\n    new.actualizado_en := null;\r\n  else\r\n    new.creado_por := old.creado_por;\r\n    new.actualizado_por := auth.uid();\r\n    new.actualizado_en := now();\r\n  end if;\r\n  return new;\r\nend;\r\n$function$';
++end $v2fn$;
++-- sellar_movimiento(): texto idéntico al de beehuman-pruebas, que contiene saltos de línea
++-- Windows (CRLF). Se crea con E'' para conservarlos byte a byte; el
++-- comportamiento es el mismo que con saltos Unix, pero la huella exige el texto exacto.
++do $v2fn$ begin
++  execute E'CREATE OR REPLACE FUNCTION public.sellar_movimiento()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''''\nAS $function$\r\nbegin\r\n  new.usuario_id := auth.uid();\r\n  new.usuario := coalesce((select u.email from auth.users u where u.id = auth.uid()), ''sistema'');\r\n  new.fecha := now();\r\n  return new;\r\nend;\r\n$function$';
++end $v2fn$;
+ 
+ create trigger trg_sellar_autoria before insert or update on public.empresas for each row execute function public.sellar_autoria();
+ create trigger trg_sellar_autoria before insert or update on public.empresas_registros_patronales for each row execute function public.sellar_autoria();
+@@ -198,18 +179,12 @@
+   return new;
+ end;
+ $function$;
+-CREATE OR REPLACE FUNCTION public.generar_empleado_id()
+- RETURNS trigger
+- LANGUAGE plpgsql
+- SET search_path TO 'public'
+-AS $function$
+-begin
+-  if new.empleado_id is null then
+-    new.empleado_id := 'BEH-' || lpad(nextval('personal_empleado_id_seq')::text, 6, '0');
+-  end if;
+-  return new;
+-end;
+-$function$;
++-- generar_empleado_id(): texto idéntico al de beehuman-pruebas, que contiene saltos de línea
++-- Windows (CRLF). Se crea con E'' para conservarlos byte a byte; el
++-- comportamiento es el mismo que con saltos Unix, pero la huella exige el texto exacto.
++do $v2fn$ begin
++  execute E'CREATE OR REPLACE FUNCTION public.generar_empleado_id()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''public''\nAS $function$\r\nbegin\r\n  if new.empleado_id is null then\r\n    new.empleado_id := ''BEH-'' || lpad(nextval(''personal_empleado_id_seq'')::text, 6, ''0'');\r\n  end if;\r\n  return new;\r\nend;\r\n$function$';
++end $v2fn$;
+ 
+ -- =====================================================================
+ -- B. M1 · Número interno

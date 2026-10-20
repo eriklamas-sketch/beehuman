@@ -1,0 +1,555 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20261001173928 · registros_pago_por_persona_7d6a
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+-- =====================================================================
+-- BeeHuman — Fase 7D-6a — PROPUESTA AJUSTADA v7.1 CANDIDATA (NO EJECUTADA)
+-- Migración: registros_pago_por_persona_7d6a
+--
+-- Cambios v7 respecto a v6 (alternativa A de la etapa K5):
+--   - Paso 6a (validar_requisitos_registro_pago): el mecanismo de
+--     coordinación con el expediente pasa de SELECT ... FOR UPDATE a una
+--     actualización SIN EFECTO de la fila de la persona
+--     (nombre_completo = nombre_completo), seguida de la lectura normal.
+--     Motivo: en LOCAL (K5b/K5e) un bloqueo sin modificación no impide que
+--     una transacción REPEATABLE READ o SERIALIZABLE concurrente vacíe
+--     RFC/CURP/NSS/CP con su foto de datos anterior; una fila modificada sí
+--     provoca 40001. En READ COMMITTED el comportamiento no cambia.
+--   - Efectos documentados: no cambia ningún valor funcional de personal,
+--     pero genera una nueva versión física de la fila y, si Realtime está
+--     habilitado sobre public.personal, puede emitir un evento UPDATE sin
+--     cambios de valores. Solo ocurre al dar de alta, reactivar o cambiar
+--     de clasificación un registro activo cuya clasificación exige datos.
+--   - Ningún otro cambio (tabla, restricciones, RLS, permisos, borrado,
+--     vista y pasos 0/8/9 idénticos a v6).
+--
+-- Cambios v6 respecto a v5:
+--   - Paso 9: la revisión de privilegios efectivos de anon/authenticated
+--     incluye MAINTAIN (privilegio de PostgreSQL 17; Supabase lo concede
+--     por defecto a anon/authenticated). Se agrega solo si el servidor es
+--     PostgreSQL 17 o superior, para no fallar en versiones sin MAINTAIN.
+--
+-- Cambios v5 respecto a v4:
+--   - Paso 9: la comprobación de PUBLIC ya no usa has_table_privilege;
+--     consulta directamente el catálogo de privilegios (aclexplode sobre
+--     pg_class.relacl y pg_attribute.attacl, grantee = 0 = PUBLIC).
+--
+-- Cambios v4 respecto a v3:
+--   - ATOMICIDAD: toda la migración es UNA sola sentencia (un bloque DO).
+--     PostgreSQL ejecuta cada sentencia de forma atómica: si cualquier
+--     paso falla (verificación, DDL o comprobación final), no queda
+--     ningún objeto creado. No depende de que la herramienta que la
+--     aplique abra una transacción, ni de un BEGIN/COMMIT manual.
+--   - PRIVILEGIOS: el paso 8 también revoca a PUBLIC, y el paso 9
+--     comprueba los privilegios EFECTIVOS (has_table_privilege /
+--     has_any_column_privilege), que incluyen lo heredado de PUBLIC y de
+--     roles de los que anon/authenticated sean miembros. Si no coinciden
+--     con lo esperado, la migración completa se revierte.
+--   - Los cuerpos de funciones usan el delimitador $fn$ para poder ir
+--     dentro del bloque; su contenido es idéntico al de v3.
+--
+-- Decisiones confirmadas por Erik (29-sep-2026):
+--   - Expediente único por persona; N registros de pago por persona.
+--   - Cada registro: clasificación, sueldo (importe POR PERIODO, > 0),
+--     modalidad bruto/neto, periodicidad propia.
+--   - Empresa y registro patronal OPCIONALES por registro, con la misma
+--     integridad de 7D-2 (el registro patronal debe ser de esa empresa).
+--   - Varios registros activos de una misma clasificación: permitidos.
+--   - `activo` = única fuente de verdad de vigencia; fecha_fin informativa.
+--   - dias_periodo NULL = usar periodicidades.dias_default.
+--   - Sin borrado físico de registros de pago.
+--   - Cambios en requisitos de una clasificación NO son retroactivos.
+--   - Sin índices únicos de CURP/NSS/RFC en esta fase.
+--   - movimientos.registro_pago_id se pospone a 7D-6b.
+--
+-- NO modifica datos existentes.
+-- NO elimina ni modifica columnas, funciones, triggers ni políticas
+-- existentes (personal.clasificacion_id y su trigger quedan intactos).
+-- NO toca combos, percepciones ni columnas antiguas de pago.
+-- NO crea registros de pago a partir del histórico.
+-- =====================================================================
+
+do $migracion_7d6a$
+declare
+  faltantes text[] := '{}';
+  v_priv    text;
+  v_errores text[] := '{}';
+  v_privs   text[] := array['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'];
+begin
+
+  -- -------------------------------------------------------------------
+  -- 0) VERIFICACIONES PREVIAS
+  -- -------------------------------------------------------------------
+  -- Versión: la vista del paso 7 usa security_invoker (PostgreSQL 15+).
+  if current_setting('server_version_num')::int < 150000 then
+    faltantes := faltantes || 'PostgreSQL 15 o superior (security_invoker)'::text;
+  end if;
+
+  -- Tablas y funciones reutilizadas
+  if to_regclass('public.personal') is null then faltantes := faltantes || 'tabla personal'::text; end if;
+  if to_regclass('public.clasificaciones_personal') is null then faltantes := faltantes || 'tabla clasificaciones_personal'::text; end if;
+  if to_regclass('public.periodicidades') is null then faltantes := faltantes || 'tabla periodicidades'::text; end if;
+  if to_regclass('public.empresas') is null then faltantes := faltantes || 'tabla empresas'::text; end if;
+  if to_regclass('public.empresas_registros_patronales') is null then faltantes := faltantes || 'tabla empresas_registros_patronales'::text; end if;
+  if to_regclass('public.personal_registros_pago') is not null then faltantes := faltantes || 'personal_registros_pago YA EXISTE'::text; end if;
+  if to_regclass('public.v_personal_registros_pago') is not null then faltantes := faltantes || 'v_personal_registros_pago YA EXISTE'::text; end if;
+  if to_regprocedure('public.current_tenant_id()') is null then faltantes := faltantes || 'current_tenant_id()'::text; end if;
+  if to_regprocedure('public.asignar_tenant_automatico()') is null then faltantes := faltantes || 'asignar_tenant_automatico()'::text; end if;
+  if to_regprocedure('public.bloquear_cambio_tenant()') is null then faltantes := faltantes || 'bloquear_cambio_tenant()'::text; end if;
+  if to_regprocedure('public.es_rfc_persona_valido(text)') is null then faltantes := faltantes || 'es_rfc_persona_valido(text)'::text; end if;
+  if to_regprocedure('public.es_curp_valida(text)') is null then faltantes := faltantes || 'es_curp_valida(text)'::text; end if;
+  if to_regprocedure('public.es_nss_valido(text)') is null then faltantes := faltantes || 'es_nss_valido(text)'::text; end if;
+  if to_regprocedure('public.es_cp_valido(text)') is null then faltantes := faltantes || 'es_cp_valido(text)'::text; end if;
+
+  -- Columna real del catálogo de periodicidades usada por la regla de dias_periodo:
+  -- periodicidades.dias_default, numeric, NOT NULL.
+  if not exists (select 1 from information_schema.columns
+                  where table_schema = 'public' and table_name = 'periodicidades'
+                    and column_name = 'dias_default' and data_type = 'numeric' and is_nullable = 'NO') then
+    faltantes := faltantes || 'periodicidades.dias_default (numeric NOT NULL)'::text;
+  end if;
+  -- Columnas de identidad del expediente
+  if (select count(*) from information_schema.columns
+       where table_schema = 'public' and table_name = 'personal'
+         and column_name in ('rfc', 'curp', 'nss', 'cp_fiscal')) <> 4 then
+    faltantes := faltantes || 'personal.rfc/curp/nss/cp_fiscal'::text;
+  end if;
+  -- Banderas de requisitos del catálogo de clasificaciones
+  if (select count(*) from information_schema.columns
+       where table_schema = 'public' and table_name = 'clasificaciones_personal'
+         and column_name in ('requiere_rfc', 'requiere_curp', 'requiere_nss', 'requiere_cp_fiscal')) <> 4 then
+    faltantes := faltantes || 'clasificaciones_personal.requiere_*'::text;
+  end if;
+
+  -- Llaves únicas que necesitan las FK compuestas (llaves estructurales,
+  -- NO son reglas de duplicidad de personas).
+  if not exists (select 1 from pg_constraint where conrelid = 'public.personal'::regclass and contype = 'u'
+                 and pg_get_constraintdef(oid) = 'UNIQUE (id, tenant_id)') then
+    faltantes := faltantes || 'UNIQUE(id, tenant_id) en personal'::text; end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.clasificaciones_personal'::regclass and contype = 'u'
+                 and pg_get_constraintdef(oid) = 'UNIQUE (id, tenant_id)') then
+    faltantes := faltantes || 'UNIQUE(id, tenant_id) en clasificaciones_personal'::text; end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.periodicidades'::regclass and contype = 'u'
+                 and pg_get_constraintdef(oid) = 'UNIQUE (id, tenant_id)') then
+    faltantes := faltantes || 'UNIQUE(id, tenant_id) en periodicidades'::text; end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.empresas'::regclass and contype = 'u'
+                 and pg_get_constraintdef(oid) = 'UNIQUE (id, tenant_id)') then
+    faltantes := faltantes || 'UNIQUE(id, tenant_id) en empresas'::text; end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.empresas_registros_patronales'::regclass and contype = 'u'
+                 and pg_get_constraintdef(oid) = 'UNIQUE (empresa_id, id, tenant_id)') then
+    faltantes := faltantes || 'UNIQUE(empresa_id, id, tenant_id) en empresas_registros_patronales'::text; end if;
+
+  if array_length(faltantes, 1) > 0 then
+    raise exception '7D-6a abortada: el esquema no coincide con lo esperado: %', array_to_string(faltantes, '; ');
+  end if;
+
+  -- Roles de Supabase usados en el paso 8.
+  if not exists (select 1 from pg_roles where rolname = 'anon') then faltantes := faltantes || 'rol anon'::text; end if;
+  if not exists (select 1 from pg_roles where rolname = 'authenticated') then faltantes := faltantes || 'rol authenticated'::text; end if;
+  if array_length(faltantes, 1) > 0 then
+    raise exception '7D-6a abortada: faltan roles: %', array_to_string(faltantes, '; ');
+  end if;
+
+  -- Privilegios que YA debe tener `authenticated` (no se otorgan aquí):
+  --  - SELECT en periodicidades y clasificaciones_personal: la vista con
+  --    security_invoker lee esas tablas con los permisos de quien consulta.
+  --  - SELECT y UPDATE en personal: el trigger de requisitos (SECURITY
+  --    INVOKER) hace un UPDATE sin cambios sobre la fila de personal
+  --    (set nombre_completo = nombre_completo) y después la lee con SELECT.
+  if not has_table_privilege('authenticated', 'public.periodicidades', 'SELECT') then faltantes := faltantes || 'authenticated: SELECT periodicidades'::text; end if;
+  if not has_table_privilege('authenticated', 'public.clasificaciones_personal', 'SELECT') then faltantes := faltantes || 'authenticated: SELECT clasificaciones_personal'::text; end if;
+  if not has_table_privilege('authenticated', 'public.personal', 'SELECT') then faltantes := faltantes || 'authenticated: SELECT personal'::text; end if;
+  if not has_table_privilege('authenticated', 'public.personal', 'UPDATE') then faltantes := faltantes || 'authenticated: UPDATE personal'::text; end if;
+  if array_length(faltantes, 1) > 0 then
+    raise exception '7D-6a abortada: faltan privilegios existentes: %', array_to_string(faltantes, '; ');
+  end if;
+  -- ---------------------------------------------------------------------
+  -- 1) TABLA HIJA: personal_registros_pago
+  -- ---------------------------------------------------------------------
+  create table public.personal_registros_pago (
+    id                   uuid primary key default gen_random_uuid(),
+    tenant_id            uuid not null references public.tenants(id),
+    personal_id          uuid not null,
+    clasificacion_id     uuid not null,
+    periodicidad_id      uuid not null,
+    sueldo               numeric(12,2) not null,   -- importe POR PERIODO de la periodicidad elegida
+    modalidad_sueldo     text not null,            -- 'bruto' | 'neto'
+    dias_periodo         numeric(6,2),             -- NULL = periodicidades.dias_default (ver vista, paso 7)
+    empresa_id           uuid,                     -- opcional
+    registro_patronal_id uuid,                     -- opcional; si existe, exige empresa_id y debe pertenecer a ella
+    fecha_inicio         date not null default current_date,
+    fecha_fin            date,                     -- informativa
+    activo               boolean not null default true,  -- ÚNICA fuente de verdad de vigencia
+    notas                text,
+    created_at           timestamptz not null default now(),
+
+    -- Llave estructural para FK compuestas futuras (p. ej. movimientos en 7D-6b).
+    constraint personal_registros_pago_id_tenant_key unique (id, tenant_id),
+
+    constraint prp_sueldo_mayor_cero         check (sueldo > 0),
+    constraint prp_modalidad_valida          check (modalidad_sueldo in ('bruto', 'neto')),
+    constraint prp_dias_periodo_positivo     check (dias_periodo is null or dias_periodo > 0),
+    constraint prp_fechas_coherentes         check (fecha_fin is null or fecha_fin >= fecha_inicio),
+    -- Sin esta regla, la FK de 3 columnas (MATCH SIMPLE) no se evaluaría si empresa_id es NULL.
+    constraint prp_registro_patronal_con_empresa check (registro_patronal_id is null or empresa_id is not null),
+
+    -- FK compuestas con tenant: impiden relacionar entidades de otro tenant.
+    constraint prp_personal_fkey          foreign key (personal_id, tenant_id)
+      references public.personal(id, tenant_id) on delete restrict,
+    constraint prp_clasificacion_fkey     foreign key (clasificacion_id, tenant_id)
+      references public.clasificaciones_personal(id, tenant_id),
+    constraint prp_periodicidad_fkey      foreign key (periodicidad_id, tenant_id)
+      references public.periodicidades(id, tenant_id),
+    constraint prp_empresa_fkey           foreign key (empresa_id, tenant_id)
+      references public.empresas(id, tenant_id),
+    constraint prp_registro_patronal_fkey foreign key (empresa_id, registro_patronal_id, tenant_id)
+      references public.empresas_registros_patronales(empresa_id, id, tenant_id)
+  );
+
+  comment on table  public.personal_registros_pago is '7D-6a: registros de pago de un expediente (N por persona). Sin borrado físico: se cierran con activo=false.';
+  comment on column public.personal_registros_pago.sueldo is 'Importe correspondiente a la periodicidad seleccionada (por periodo), en la modalidad indicada. Mayor que cero.';
+  comment on column public.personal_registros_pago.dias_periodo is 'Días del periodo. NULL = usar periodicidades.dias_default vigente (ver v_personal_registros_pago.dias_periodo_efectivo).';
+  comment on column public.personal_registros_pago.activo is 'Única fuente de verdad de vigencia y de exigencia de requisitos del expediente.';
+  comment on column public.personal_registros_pago.fecha_fin is 'Informativa. No cierra el registro automáticamente.';
+
+  -- Índices NO únicos (rendimiento de FK y de la consulta de requisitos).
+  create index prp_personal_activo_idx on public.personal_registros_pago (tenant_id, personal_id) where activo;
+  create index prp_personal_idx        on public.personal_registros_pago (personal_id);
+  create index prp_clasificacion_idx   on public.personal_registros_pago (clasificacion_id);
+  create index prp_periodicidad_idx    on public.personal_registros_pago (periodicidad_id);
+  create index prp_empresa_rp_idx      on public.personal_registros_pago (empresa_id, registro_patronal_id);
+
+
+  -- ---------------------------------------------------------------------
+  -- 2) RLS por tenant. No hay política DELETE: un DELETE de un usuario
+  --    sujeto a RLS no alcanza ninguna fila. Además, el paso 8 le retira el
+  --    privilegio DELETE a anon/authenticated, y el paso 5 agrega un trigger.
+  -- ---------------------------------------------------------------------
+  alter table public.personal_registros_pago enable row level security;
+
+  create policy tenant_select_personal_registros_pago on public.personal_registros_pago
+    for select using (tenant_id = public.current_tenant_id());
+  create policy tenant_insert_personal_registros_pago on public.personal_registros_pago
+    for insert with check (tenant_id = public.current_tenant_id());
+  create policy tenant_update_personal_registros_pago on public.personal_registros_pago
+    for update using (tenant_id = public.current_tenant_id())
+               with check (tenant_id = public.current_tenant_id());
+
+
+  -- ---------------------------------------------------------------------
+  -- 3) TRIGGERS DE TENANT (reutilizados; mismo patrón que las 17 tablas)
+  --    Disparo en orden alfabético: trg_asignar… / trg_bloquear… antes de
+  --    trg_validar…, así la validación ya ve el tenant_id forzado.
+  -- ---------------------------------------------------------------------
+  create trigger trg_asignar_tenant_automatico before insert on public.personal_registros_pago
+    for each row execute function public.asignar_tenant_automatico();
+  create trigger trg_bloquear_cambio_tenant before update on public.personal_registros_pago
+    for each row execute function public.bloquear_cambio_tenant();
+
+
+  -- ---------------------------------------------------------------------
+  -- 4) UN REGISTRO DE PAGO NO PUEDE CAMBIAR DE PERSONA
+  -- ---------------------------------------------------------------------
+  create or replace function public.bloquear_cambio_persona_registro_pago()
+  returns trigger language plpgsql set search_path = '' as $fn$
+  begin
+    if new.personal_id is distinct from old.personal_id then
+      raise exception 'Un registro de pago no puede reasignarse a otra persona. Ciérralo y crea uno nuevo.';
+    end if;
+    return new;
+  end; $fn$;
+
+  create trigger trg_bloquear_cambio_persona before update on public.personal_registros_pago
+    for each row execute function public.bloquear_cambio_persona_registro_pago();
+
+
+  -- ---------------------------------------------------------------------
+  -- 5) BLOQUEO DE DELETE Y TRUNCATE MEDIANTE TRIGGERS.
+  --    Alcance real:
+  --    - Rechaza cualquier DELETE o TRUNCATE sobre esta tabla mientras los
+  --      triggers estén habilitados, sin importar el rol que lo ejecute,
+  --      incluidos roles que omiten RLS (propietario, service_role).
+  --    - NO protege frente a quien pueda deshabilitar o eludir triggers:
+  --      el propietario de la tabla o un superusuario puede ejecutar
+  --      ALTER TABLE ... DISABLE TRIGGER, un rol autorizado puede usar
+  --      session_replication_role = replica, y DROP TABLE o una
+  --      restauración de respaldo tampoco disparan estos triggers.
+  --    - Es una salvaguarda contra borrados accidentales o desde la app,
+  --      no un control contra administradores de la base de datos.
+  --    DROP TABLE (plan de reversión) sigue funcionando.
+  -- ---------------------------------------------------------------------
+  create or replace function public.bloquear_borrado_registro_pago()
+  returns trigger language plpgsql set search_path = '' as $fn$
+  begin
+    raise exception 'Los registros de pago no se eliminan. Ciérralos marcándolos como inactivos.';
+  end; $fn$;
+
+  create trigger trg_bloquear_borrado before delete on public.personal_registros_pago
+    for each row execute function public.bloquear_borrado_registro_pago();
+  create trigger trg_bloquear_truncate before truncate on public.personal_registros_pago
+    for each statement execute function public.bloquear_borrado_registro_pago();
+
+
+  -- ---------------------------------------------------------------------
+  -- 6a) REQUISITOS DESDE EL REGISTRO DE PAGO
+  --     Revisa el expediente COMPLETO (vacíos y formato) solo cuando el
+  --     registro queda activo por: alta activa, reactivación, o cambio de
+  --     clasificación de un registro activo. Editar sueldo, periodicidad,
+  --     notas, etc. no vuelve a exigir nada. Cerrar nunca se bloquea.
+  --     No retroactivo: usa las banderas vigentes de la clasificación en el
+  --     momento de la operación; no revisa registros ya existentes.
+  --     CONCURRENCIA: actualiza SIN EFECTO la fila del expediente (ver abajo).
+  -- ---------------------------------------------------------------------
+  create or replace function public.validar_requisitos_registro_pago()
+  returns trigger language plpgsql set search_path = '' as $fn$
+  declare
+    v_revisar boolean;
+    c record;
+    p record;
+    faltan text[] := '{}';
+  begin
+    if not new.activo then
+      return new;
+    end if;
+
+    if tg_op = 'INSERT' then
+      v_revisar := true;
+    else
+      v_revisar := (new.clasificacion_id is distinct from old.clasificacion_id)
+                or (not old.activo);
+    end if;
+    if not v_revisar then
+      return new;
+    end if;
+
+    select nombre, requiere_rfc, requiere_curp, requiere_nss, requiere_cp_fiscal
+      into c
+      from public.clasificaciones_personal
+     where id = new.clasificacion_id and tenant_id = new.tenant_id;
+    if not found then
+      return new; -- la FK compuesta rechaza la clasificación inexistente o de otro tenant
+    end if;
+    if not (c.requiere_rfc or c.requiere_curp or c.requiere_nss or c.requiere_cp_fiscal) then
+      return new;
+    end if;
+
+    -- Coordinación con cambios concurrentes al expediente: se actualiza la
+    -- fila de la persona SIN cambiar ningún valor. Un simple bloqueo
+    -- (FOR UPDATE / FOR NO KEY UPDATE) no basta: en REPEATABLE READ o
+    -- SERIALIZABLE, una transacción concurrente que vacíe RFC/CURP/NSS/CP
+    -- con su foto de datos anterior no detecta un bloqueo, pero sí una fila
+    -- modificada (recibe 40001). En READ COMMITTED, la transacción que
+    -- espera vuelve a evaluar la fila y su trigger ve este registro.
+    -- Efectos: nueva versión física de la fila; posible evento UPDATE de
+    -- Realtime (si está habilitado en personal). Ningún valor cambia.
+    update public.personal
+       set nombre_completo = nombre_completo
+     where id = new.personal_id and tenant_id = new.tenant_id;
+
+    select rfc, curp, nss, cp_fiscal
+      into p
+      from public.personal
+     where id = new.personal_id and tenant_id = new.tenant_id;
+    if not found then
+      return new; -- la FK compuesta rechaza la persona inexistente o de otro tenant
+    end if;
+
+    if c.requiere_rfc       and not public.es_rfc_persona_valido(nullif(p.rfc, ''))  then faltan := faltan || 'RFC'::text; end if;
+    if c.requiere_curp      and not public.es_curp_valida(nullif(p.curp, ''))        then faltan := faltan || 'CURP'::text; end if;
+    if c.requiere_nss       and not public.es_nss_valido(nullif(p.nss, ''))          then faltan := faltan || 'NSS'::text; end if;
+    if c.requiere_cp_fiscal and not public.es_cp_valido(nullif(p.cp_fiscal, ''))     then faltan := faltan || 'Código postal fiscal'::text; end if;
+
+    if array_length(faltan, 1) > 0 then
+      raise exception 'Para un registro de pago "%", el expediente debe tener completos y con formato válido: %.',
+        c.nombre, array_to_string(faltan, ', ')
+        using errcode = 'P0001', hint = 'requisitos_registro_pago';
+    end if;
+    return new;
+  end; $fn$;
+
+  create trigger trg_validar_requisitos_registro_pago before insert or update on public.personal_registros_pago
+    for each row execute function public.validar_requisitos_registro_pago();
+
+
+  -- ---------------------------------------------------------------------
+  -- 6b) REQUISITOS DESDE EL EXPEDIENTE (personal) — trigger NUEVO.
+  --     Solo en UPDATE y solo si cambió RFC, CURP, NSS o CP fiscal. Si un
+  --     registro ACTIVO de la persona exige un campo que cambió, el valor
+  --     nuevo debe estar presente y con formato válido (unión de requisitos
+  --     de todos los registros activos). Nunca bloquea editar otros campos.
+  --     CONCURRENCIA: un UPDATE con trigger BEFORE ROW bloquea la fila de
+  --     personal antes de disparar el trigger; la función (VOLATILE) toma
+  --     una instantánea nueva y ve registros confirmados mientras esperaba.
+  --     El trigger viejo trg_validar_requisitos_clasificacion (7D-6) NO se
+  --     toca: solo actúa si personal.clasificacion_id tiene valor.
+  -- ---------------------------------------------------------------------
+  create or replace function public.validar_requisitos_expediente()
+  returns trigger language plpgsql set search_path = '' as $fn$
+  declare
+    r record;
+    faltan text[] := '{}';
+  begin
+    if tg_op <> 'UPDATE' then
+      return new;
+    end if;
+    if  new.rfc       is not distinct from old.rfc
+    and new.curp      is not distinct from old.curp
+    and new.nss       is not distinct from old.nss
+    and new.cp_fiscal is not distinct from old.cp_fiscal then
+      return new;
+    end if;
+
+    select coalesce(bool_or(c.requiere_rfc), false)       as req_rfc,
+           coalesce(bool_or(c.requiere_curp), false)      as req_curp,
+           coalesce(bool_or(c.requiere_nss), false)       as req_nss,
+           coalesce(bool_or(c.requiere_cp_fiscal), false) as req_cp,
+           string_agg(distinct c.nombre, ', ')            as clasificaciones
+      into r
+      from public.personal_registros_pago rp
+      join public.clasificaciones_personal c
+        on c.id = rp.clasificacion_id and c.tenant_id = rp.tenant_id
+     where rp.personal_id = new.id
+       and rp.tenant_id  = new.tenant_id
+       and rp.activo;
+
+    if r.req_rfc  and new.rfc       is distinct from old.rfc       and not public.es_rfc_persona_valido(nullif(new.rfc, ''))  then faltan := faltan || 'RFC'::text; end if;
+    if r.req_curp and new.curp      is distinct from old.curp      and not public.es_curp_valida(nullif(new.curp, ''))        then faltan := faltan || 'CURP'::text; end if;
+    if r.req_nss  and new.nss       is distinct from old.nss       and not public.es_nss_valido(nullif(new.nss, ''))          then faltan := faltan || 'NSS'::text; end if;
+    if r.req_cp   and new.cp_fiscal is distinct from old.cp_fiscal and not public.es_cp_valido(nullif(new.cp_fiscal, ''))     then faltan := faltan || 'Código postal fiscal'::text; end if;
+
+    if array_length(faltan, 1) > 0 then
+      raise exception 'No se puede dejar vacío o inválido: %. Lo exige(n) el/los registro(s) de pago activo(s): %.',
+        array_to_string(faltan, ', '), r.clasificaciones
+        using errcode = 'P0001', hint = 'requisitos_expediente';
+    end if;
+    return new;
+  end; $fn$;
+
+  create trigger trg_validar_requisitos_expediente before update on public.personal
+    for each row execute function public.validar_requisitos_expediente();
+
+
+  -- ---------------------------------------------------------------------
+  -- 7) VISTA DE LECTURA con los días efectivos del periodo.
+  --    Implementa la regla "dias_periodo NULL = periodicidades.dias_default"
+  --    en un solo lugar (interfaz y Resumen la leerán en 7D-6b).
+  --    security_invoker = true: la vista se evalúa con los permisos y el
+  --    RLS de quien consulta. SIN esto, una vista en Supabase se evalúa
+  --    como su propietario y OMITIRÍA el RLS por tenant.
+  -- ---------------------------------------------------------------------
+  create view public.v_personal_registros_pago
+  with (security_invoker = true) as
+  select rp.*,
+         coalesce(rp.dias_periodo, pe.dias_default) as dias_periodo_efectivo,
+         pe.nombre as periodicidad_nombre,
+         c.nombre  as clasificacion_nombre
+    from public.personal_registros_pago rp
+    join public.periodicidades pe
+      on pe.id = rp.periodicidad_id and pe.tenant_id = rp.tenant_id
+    join public.clasificaciones_personal c
+      on c.id = rp.clasificacion_id and c.tenant_id = rp.tenant_id;
+
+  comment on view public.v_personal_registros_pago is '7D-6a: lectura de registros de pago con dias_periodo_efectivo = coalesce(dias_periodo, periodicidades.dias_default). security_invoker: respeta RLS.';
+
+
+  -- ---------------------------------------------------------------------
+  -- 8) PRIVILEGIOS EXPLÍCITOS (mínimo necesario; no dependen de los
+  --    privilegios por defecto del esquema public).
+  --    - La app solo usa usuarios autenticados: anon no recibe nada.
+  --    - authenticated: SELECT/INSERT/UPDATE en la tabla (sin DELETE ni
+  --      TRUNCATE) y solo SELECT en la vista.
+  --    - Los privilegios solo abren la puerta; qué filas se ven lo decide
+  --      RLS: la tabla por sus políticas y la vista, al ser
+  --      security_invoker, por las políticas de sus tres tablas base.
+  --    - La vista tiene JOIN, así que no es actualizable automáticamente.
+  --    - service_role conserva los privilegios por defecto (uso administrativo).
+  -- ---------------------------------------------------------------------
+  revoke all on table public.personal_registros_pago from public, anon, authenticated;
+  grant select, insert, update on table public.personal_registros_pago to authenticated;
+
+  revoke all on table public.v_personal_registros_pago from public, anon, authenticated;
+  grant select on table public.v_personal_registros_pago to authenticated;
+
+  -- ---------------------------------------------------------------------
+  -- 9) COMPROBACIÓN FINAL DE PRIVILEGIOS.
+  --    a) anon y authenticated: privilegio EFECTIVO con has_table_privilege /
+  --       has_any_column_privilege (incluye concesiones directas, las
+  --       hechas a PUBLIC y las heredadas de roles de los que sea miembro).
+  --    b) PUBLIC: consulta directa al catálogo de privilegios. PUBLIC no es
+  --       un rol ordinario; en las listas de privilegios (relacl / attacl)
+  --       aparece como grantee = 0 al desglosarlas con aclexplode().
+  --       Si relacl es NULL se evalúan los privilegios por defecto
+  --       (acldefault), que para tablas y vistas no incluyen a PUBLIC.
+  --    Si algo no coincide, se lanza una excepción y TODA la migración se
+  --    revierte (es una sola sentencia).
+  -- ---------------------------------------------------------------------
+  if current_setting('server_version_num')::int >= 170000 then
+    v_privs := v_privs || 'MAINTAIN'::text;  -- privilegio existente desde PostgreSQL 17
+  end if;
+  foreach v_priv in array v_privs loop
+    -- anon: ningún privilegio efectivo sobre la tabla ni sobre la vista.
+    if has_table_privilege('anon', 'public.personal_registros_pago', v_priv) then v_errores := v_errores || ('anon tiene ' || v_priv || ' en la tabla'); end if;
+    if has_table_privilege('anon', 'public.v_personal_registros_pago', v_priv) then v_errores := v_errores || ('anon tiene ' || v_priv || ' en la vista'); end if;
+
+    -- authenticated en la tabla: exactamente SELECT, INSERT, UPDATE.
+    if v_priv in ('SELECT','INSERT','UPDATE') then
+      if not has_table_privilege('authenticated', 'public.personal_registros_pago', v_priv) then v_errores := v_errores || ('authenticated NO tiene ' || v_priv || ' en la tabla'); end if;
+    else
+      if has_table_privilege('authenticated', 'public.personal_registros_pago', v_priv) then v_errores := v_errores || ('authenticated tiene ' || v_priv || ' en la tabla'); end if;
+    end if;
+
+    -- authenticated en la vista: solo SELECT.
+    if v_priv = 'SELECT' then
+      if not has_table_privilege('authenticated', 'public.v_personal_registros_pago', v_priv) then v_errores := v_errores || 'authenticated NO tiene SELECT en la vista'::text; end if;
+    else
+      if has_table_privilege('authenticated', 'public.v_personal_registros_pago', v_priv) then v_errores := v_errores || ('authenticated tiene ' || v_priv || ' en la vista'); end if;
+    end if;
+  end loop;
+
+  -- Privilegios a nivel columna (no los cubre has_table_privilege).
+  foreach v_priv in array array['SELECT','INSERT','UPDATE','REFERENCES'] loop
+    if has_any_column_privilege('anon', 'public.personal_registros_pago', v_priv) then v_errores := v_errores || ('anon tiene ' || v_priv || ' en columnas de la tabla'); end if;
+    if has_any_column_privilege('anon', 'public.v_personal_registros_pago', v_priv) then v_errores := v_errores || ('anon tiene ' || v_priv || ' en columnas de la vista'); end if;
+  end loop;
+
+  -- PUBLIC a nivel tabla/vista (catálogo, grantee = 0).
+  if exists (select 1
+               from pg_class c
+               cross join lateral aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+              where c.oid in ('public.personal_registros_pago'::regclass, 'public.v_personal_registros_pago'::regclass)
+                and a.grantee = 0) then
+    v_errores := v_errores || 'PUBLIC conserva privilegios sobre la tabla o la vista (pg_class.relacl)'::text;
+  end if;
+
+  -- PUBLIC a nivel columna (catálogo, grantee = 0; attacl NULL = sin concesiones de columna).
+  if exists (select 1
+               from pg_attribute att
+               cross join lateral aclexplode(att.attacl) a
+              where att.attrelid in ('public.personal_registros_pago'::regclass, 'public.v_personal_registros_pago'::regclass)
+                and att.attnum > 0 and not att.attisdropped
+                and a.grantee = 0) then
+    v_errores := v_errores || 'PUBLIC conserva privilegios de columna (pg_attribute.attacl)'::text;
+  end if;
+
+  -- La vista debe haberse creado con security_invoker (respeta RLS).
+  if not exists (select 1 from pg_class c
+                  where c.oid = 'public.v_personal_registros_pago'::regclass
+                    and c.reloptions @> array['security_invoker=true']) then
+    v_errores := v_errores || 'la vista no tiene security_invoker=true'::text;
+  end if;
+
+  -- RLS habilitado en la tabla nueva.
+  if not (select relrowsecurity from pg_class where oid = 'public.personal_registros_pago'::regclass) then
+    v_errores := v_errores || 'RLS no está habilitado en personal_registros_pago'::text;
+  end if;
+
+  if array_length(v_errores, 1) > 0 then
+    raise exception '7D-6a revertida: comprobación final fallida: %', array_to_string(v_errores, '; ');
+  end if;
+
+end
+$migracion_7d6a$;
+

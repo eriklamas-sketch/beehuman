@@ -1,0 +1,18 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20260928235220 · fase_7c4a_columna_activo_catalogos
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+
+begin;
+
+alter table areas add column if not exists activo boolean not null default true;
+alter table departamentos add column if not exists activo boolean not null default true;
+alter table puestos add column if not exists activo boolean not null default true;
+alter table localidades add column if not exists activo boolean not null default true;
+alter table centros_costo add column if not exists activo boolean not null default true;
+
+commit;
+

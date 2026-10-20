@@ -1,0 +1,21 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20260929144837 · fase_7d1_ampliar_empresas
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+begin;
+
+alter table empresas add column if not exists razon_social text;
+alter table empresas add column if not exists rfc text;
+alter table empresas add column if not exists codigo_postal text;
+alter table empresas add column if not exists estado text;
+alter table empresas add column if not exists municipio text;
+alter table empresas add column if not exists colonia text;
+alter table empresas add column if not exists calle text;
+alter table empresas add column if not exists numero_exterior text;
+alter table empresas add column if not exists numero_interior text;
+alter table empresas add column if not exists activo boolean not null default true;
+
+commit;

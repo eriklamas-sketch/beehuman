@@ -1,0 +1,28 @@
+EVIDENCIA ANTES DE LA PRUEBA · 18-oct-2026 ~12:10 (CDMX)
+beehuman-pruebas (sflvpgkmtaxzogpgetxn)
+ESQUEMA total ebcd0aad4284c492ae7b44b379d6e208
+ funciones 0684303d51a234233dfc9151c130fc88 · politicas 92de4a77e596b9c14b56871e68f370f1
+ triggers 66a4be408f99397bac0a4f5ef2d29993 · columnas 6856eabf2f7b5015fa4af76711b4eacb
+ restricciones 54446afa03bfb553cc77380a3105872c · indices e18adb5754518e3104c08c5e8251099f
+ tablas_permisos 496bcb51b88039c2b641c48516eccbc9 · vistas db616d8a7664ce06bb1348e4dc6b31a6
+DATOS (filas · md5 fila completa)
+ areas 10 26500423dff6789bfdd4433e3949923b
+ centros_costo 10 b3ea0dcc89e551fa449302d6191836d4
+ clasificaciones_personal 8 d786204a59a0ccf5da948d7710c7b5d2
+ departamentos 18 80e07e91ab9c41ff42e1f3e558e29412
+ empresas 7 52db308e9bed4dd51d93eafb8d2d71b0
+ empresas_registros_patronales 8 8a4576dd86c59ad7f18fa70c62eb7883
+ localidades 6 745a5a3b1e21d990dd05dbec9afe3c69
+ movimientos 23 71056f1e1c06b6b766c78a2053240dd4
+ periodicidades 8 7489031789d995d3e391a6b401df2e95
+ personal 513 4af8c6163ba6b75efaeee80f7ce9fca8
+ personal_registros_pago 646 88dd3f25536ff04d8be14dc840531a74
+ proyectos 14 44faf4d01e5050da4ae7959b4e33b4d3
+ puestos 31 802473a323cb1e13f6d01832b201c0d1
+ tenants 3 8cb3f08025ac8302af9c1e7c1c04205a
+ usuarios_tenant 6 8f76d336b95c3ad839eb71c9eb4287a6
+ usuario_alcances 0 (vacía)
+ combos/combo_conceptos/conceptos_percepcion/personal_percepciones 0 (vacías)
+SECUENCIA personal_empleado_id_seq last_value 70
+ESQUEMAS _probe*: ninguno
+producción (vovyvvpwtjdlswerfjqb): ESQUEMA total 03e98353d5e19d32ad52fd84b464f608 (sin cambios desde 17-oct)

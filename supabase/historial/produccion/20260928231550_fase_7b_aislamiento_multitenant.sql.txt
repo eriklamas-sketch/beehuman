@@ -1,0 +1,141 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20260928231550 · fase_7b_aislamiento_multitenant
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+
+begin;
+
+create or replace function current_tenant_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select tenant_id from public.usuarios_tenant where user_id = auth.uid();
+$$;
+
+drop policy "auth_acceso_empresas" on empresas;
+create policy "tenant_acceso_empresas" on empresas for all
+  using (tenant_id = current_tenant_id())
+  with check (tenant_id = current_tenant_id());
+
+drop policy "auth_acceso_proyectos" on proyectos;
+create policy "tenant_acceso_proyectos" on proyectos for all
+  using (tenant_id = current_tenant_id())
+  with check (tenant_id = current_tenant_id());
+
+drop policy "auth_acceso_personal" on personal;
+create policy "tenant_acceso_personal" on personal for all
+  using (tenant_id = current_tenant_id())
+  with check (tenant_id = current_tenant_id());
+
+drop policy "auth_acceso_movimientos" on movimientos;
+create policy "tenant_acceso_movimientos" on movimientos for all
+  using (tenant_id = current_tenant_id())
+  with check (tenant_id = current_tenant_id());
+
+drop policy "auth_acceso_periodicidades" on periodicidades;
+create policy "tenant_acceso_periodicidades" on periodicidades for all
+  using (tenant_id = current_tenant_id())
+  with check (tenant_id = current_tenant_id());
+
+drop policy "auth_acceso_conceptos" on conceptos_percepcion;
+create policy "tenant_acceso_conceptos" on conceptos_percepcion for all
+  using (tenant_id = current_tenant_id())
+  with check (tenant_id = current_tenant_id());
+
+drop policy "auth_acceso_combos" on combos;
+create policy "tenant_acceso_combos" on combos for all
+  using (tenant_id = current_tenant_id())
+  with check (tenant_id = current_tenant_id());
+
+drop policy "auth_acceso_combo_conceptos" on combo_conceptos;
+create policy "tenant_acceso_combo_conceptos" on combo_conceptos for all
+  using (tenant_id = current_tenant_id())
+  with check (tenant_id = current_tenant_id());
+
+drop policy "auth_acceso_personal_percepciones" on personal_percepciones;
+create policy "tenant_acceso_personal_percepciones" on personal_percepciones for all
+  using (tenant_id = current_tenant_id())
+  with check (tenant_id = current_tenant_id());
+
+alter table empresas add constraint empresas_id_tenant_key unique (id, tenant_id);
+alter table proyectos add constraint proyectos_id_tenant_key unique (id, tenant_id);
+alter table personal add constraint personal_id_tenant_key unique (id, tenant_id);
+alter table periodicidades add constraint periodicidades_id_tenant_key unique (id, tenant_id);
+alter table conceptos_percepcion add constraint conceptos_percepcion_id_tenant_key unique (id, tenant_id);
+alter table combos add constraint combos_id_tenant_key unique (id, tenant_id);
+
+alter table personal drop constraint personal_empresa_id_fkey;
+alter table personal add constraint personal_empresa_id_tenant_fkey
+  foreign key (empresa_id, tenant_id) references empresas(id, tenant_id);
+
+alter table personal drop constraint personal_proyecto_id_fkey;
+alter table personal add constraint personal_proyecto_id_tenant_fkey
+  foreign key (proyecto_id, tenant_id) references proyectos(id, tenant_id);
+
+alter table personal drop constraint personal_periodicidad_id_fkey;
+alter table personal add constraint personal_periodicidad_id_tenant_fkey
+  foreign key (periodicidad_id, tenant_id) references periodicidades(id, tenant_id);
+
+alter table personal drop constraint personal_combo_id_fkey;
+alter table personal add constraint personal_combo_id_tenant_fkey
+  foreign key (combo_id, tenant_id) references combos(id, tenant_id);
+
+alter table movimientos drop constraint movimientos_personal_id_fkey;
+alter table movimientos add constraint movimientos_personal_id_tenant_fkey
+  foreign key (personal_id, tenant_id) references personal(id, tenant_id);
+
+alter table combo_conceptos drop constraint combo_conceptos_combo_id_fkey;
+alter table combo_conceptos add constraint combo_conceptos_combo_id_tenant_fkey
+  foreign key (combo_id, tenant_id) references combos(id, tenant_id) on delete cascade;
+
+alter table combo_conceptos drop constraint combo_conceptos_concepto_id_fkey;
+alter table combo_conceptos add constraint combo_conceptos_concepto_id_tenant_fkey
+  foreign key (concepto_id, tenant_id) references conceptos_percepcion(id, tenant_id);
+
+alter table personal_percepciones drop constraint personal_percepciones_personal_id_fkey;
+alter table personal_percepciones add constraint personal_percepciones_personal_id_tenant_fkey
+  foreign key (personal_id, tenant_id) references personal(id, tenant_id) on delete cascade;
+
+alter table personal_percepciones drop constraint personal_percepciones_concepto_id_fkey;
+alter table personal_percepciones add constraint personal_percepciones_concepto_id_tenant_fkey
+  foreign key (concepto_id, tenant_id) references conceptos_percepcion(id, tenant_id);
+
+create or replace function bloquear_cambio_tenant()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.tenant_id is distinct from old.tenant_id then
+    raise exception 'No está permitido reasignar tenant_id de un registro existente';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_bloquear_cambio_tenant before update on empresas
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on proyectos
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on personal
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on movimientos
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on periodicidades
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on conceptos_percepcion
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on combos
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on combo_conceptos
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on personal_percepciones
+  for each row execute function bloquear_cambio_tenant();
+
+commit;
+

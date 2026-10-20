@@ -1,0 +1,155 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20260929195237 · clasificacion_personal_requisitos_7d6
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+-- 7D-6: clasificación de personal con requisitos explícitos por tipo.
+-- Aditiva: no modifica ningún registro existente de personal.
+
+-- 1) Funciones de formato reutilizables (única fuente de verdad del formato).
+create or replace function public.es_rfc_persona_valido(v text)
+returns boolean language sql immutable set search_path = '' as $$
+  select v is not null and char_length(v) = 13
+    and v ~ '^[A-ZÑ&]{4}[0-9]{6}[A-Z0-9]{3}$'
+    and public.fecha_aammdd_valida(substring(v from 7 for 2), substring(v from 9 for 2));
+$$;
+
+create or replace function public.es_curp_valida(v text)
+returns boolean language sql immutable set search_path = '' as $$
+  select v is not null and char_length(v) = 18
+    and v ~ '^[A-Z][AEIOUX][A-Z]{2}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[HM](AS|BC|BS|CC|CS|CH|CL|CM|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QO|QR|SP|SL|SR|TC|TL|TS|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9][0-9]$';
+$$;
+
+-- NSS: 11 dígitos (estructural; no se valida dígito verificador por decisión de producto).
+create or replace function public.es_nss_valido(v text)
+returns boolean language sql immutable set search_path = '' as $$
+  select v is not null and v ~ '^[0-9]{11}$';
+$$;
+
+-- CP fiscal: 5 dígitos, no inicia con "00" (los CP de México van de 01000 a 99999).
+create or replace function public.es_cp_valido(v text)
+returns boolean language sql immutable set search_path = '' as $$
+  select v is not null and v ~ '^[0-9]{5}$' and v !~ '^00';
+$$;
+
+-- 2) 7D-5 reescritas para usar las funciones compartidas (mismo comportamiento y mensajes).
+create or replace function public.validar_rfc_persona()
+returns trigger language plpgsql set search_path = '' as $$
+declare v_debe_validar boolean;
+begin
+  if tg_op = 'INSERT' then v_debe_validar := true;
+  else v_debe_validar := (new.rfc is distinct from old.rfc); end if;
+  if v_debe_validar and new.rfc is not null and new.rfc <> '' and not public.es_rfc_persona_valido(new.rfc) then
+    raise exception 'El RFC "%" no tiene el formato válido de persona física (13 caracteres: 4 letras, 6 dígitos de fecha AAMMDD y 3 de homoclave).', new.rfc;
+  end if;
+  return new;
+end; $$;
+
+create or replace function public.validar_curp_persona()
+returns trigger language plpgsql set search_path = '' as $$
+declare v_debe_validar boolean;
+begin
+  if tg_op = 'INSERT' then v_debe_validar := true;
+  else v_debe_validar := (new.curp is distinct from old.curp); end if;
+  if v_debe_validar and new.curp is not null and new.curp <> '' and not public.es_curp_valida(new.curp) then
+    raise exception 'La CURP "%" no tiene una estructura válida de 18 caracteres.', new.curp;
+  end if;
+  return new;
+end; $$;
+
+-- 3) Formato de NSS y CP fiscal: solo al insertar o cuando el valor cambia.
+create or replace function public.validar_nss_cp_persona()
+returns trigger language plpgsql set search_path = '' as $$
+declare v_nss boolean; v_cp boolean;
+begin
+  if tg_op = 'INSERT' then v_nss := true; v_cp := true;
+  else
+    v_nss := (new.nss is distinct from old.nss);
+    v_cp := (new.cp_fiscal is distinct from old.cp_fiscal);
+  end if;
+  if v_nss and new.nss is not null and new.nss <> '' and not public.es_nss_valido(new.nss) then
+    raise exception 'El NSS "%" debe tener exactamente 11 dígitos.', new.nss;
+  end if;
+  if v_cp and new.cp_fiscal is not null and new.cp_fiscal <> '' and not public.es_cp_valido(new.cp_fiscal) then
+    raise exception 'El código postal fiscal "%" debe tener 5 dígitos (01000 a 99999).', new.cp_fiscal;
+  end if;
+  return new;
+end; $$;
+
+-- 4) Catálogo de clasificaciones (por tenant). Los requisitos nacen en false:
+--    un tipo nuevo nunca hereda reglas de otro.
+create table public.clasificaciones_personal (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id),
+  nombre text not null,
+  activo boolean not null default true,
+  requiere_rfc boolean not null default false,
+  requiere_curp boolean not null default false,
+  requiere_nss boolean not null default false,
+  requiere_cp_fiscal boolean not null default false,
+  created_at timestamptz default now(),
+  unique (id, tenant_id)
+);
+
+-- Semilla por tenant existente, con tenant_id explícito ANTES de activar triggers de tenant.
+insert into public.clasificaciones_personal (tenant_id, nombre, requiere_rfc, requiere_curp, requiere_nss, requiere_cp_fiscal)
+select t.id, x.nombre, x.req, x.req, x.req, x.req
+from public.tenants t
+cross join (values ('Efectivo', false), ('Base / IMSS', true)) as x(nombre, req);
+
+alter table public.clasificaciones_personal enable row level security;
+create policy tenant_acceso_clasificaciones_personal on public.clasificaciones_personal
+  for all using (tenant_id = public.current_tenant_id()) with check (tenant_id = public.current_tenant_id());
+create trigger trg_asignar_tenant_automatico before insert on public.clasificaciones_personal
+  for each row execute function public.asignar_tenant_automatico();
+create trigger trg_bloquear_cambio_tenant before update on public.clasificaciones_personal
+  for each row execute function public.bloquear_cambio_tenant();
+
+-- 5) Relación en personal (nullable: los registros actuales quedan "Sin clasificar").
+alter table public.personal add column if not exists clasificacion_id uuid;
+alter table public.personal add constraint personal_clasificacion_id_tenant_fkey
+  foreign key (clasificacion_id, tenant_id) references public.clasificaciones_personal(id, tenant_id);
+
+-- 6) Requisitos por clasificación. Se exigen solo:
+--    - al insertar con una clasificación,
+--    - al cambiar la clasificación (se revisan TODOS los requeridos, formato incluido),
+--    - al modificar uno de los campos requeridos (no puede vaciarse ni quedar inválido).
+--    Editar cualquier otro campo de un registro histórico incompleto nunca se bloquea.
+create or replace function public.validar_requisitos_clasificacion()
+returns trigger language plpgsql set search_path = '' as $$
+declare
+  c record;
+  v_todo boolean;
+  faltan text[] := '{}';
+begin
+  if new.clasificacion_id is null then return new; end if;
+  select nombre, requiere_rfc, requiere_curp, requiere_nss, requiere_cp_fiscal into c
+    from public.clasificaciones_personal
+   where id = new.clasificacion_id and tenant_id = new.tenant_id;
+  if not found then return new; end if; -- la FK compuesta se encarga de la integridad
+
+  v_todo := (tg_op = 'INSERT') or (new.clasificacion_id is distinct from old.clasificacion_id);
+
+  if c.requiere_rfc and (v_todo or new.rfc is distinct from old.rfc)
+     and not public.es_rfc_persona_valido(nullif(new.rfc, '')) then faltan := faltan || 'RFC'::text; end if;
+  if c.requiere_curp and (v_todo or new.curp is distinct from old.curp)
+     and not public.es_curp_valida(nullif(new.curp, '')) then faltan := faltan || 'CURP'::text; end if;
+  if c.requiere_nss and (v_todo or new.nss is distinct from old.nss)
+     and not public.es_nss_valido(nullif(new.nss, '')) then faltan := faltan || 'NSS'::text; end if;
+  if c.requiere_cp_fiscal and (v_todo or new.cp_fiscal is distinct from old.cp_fiscal)
+     and not public.es_cp_valido(nullif(new.cp_fiscal, '')) then faltan := faltan || 'Código postal fiscal'::text; end if;
+
+  if array_length(faltan, 1) > 0 then
+    raise exception 'La clasificación "%" requiere estos campos completos y con formato válido: %.', c.nombre, array_to_string(faltan, ', ')
+      using errcode = 'P0001', hint = 'requisitos_clasificacion';
+  end if;
+  return new;
+end; $$;
+
+create trigger trg_validar_nss_cp_personal before insert or update on public.personal
+  for each row execute function public.validar_nss_cp_persona();
+create trigger trg_validar_requisitos_clasificacion before insert or update on public.personal
+  for each row execute function public.validar_requisitos_clasificacion();
+

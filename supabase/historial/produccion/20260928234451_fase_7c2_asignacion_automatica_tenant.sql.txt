@@ -1,0 +1,79 @@
+-- =====================================================================
+-- HISTORIAL · copia de supabase_migrations.schema_migrations de PRODUCCIÓN
+-- versión 20260928234451 · fase_7c2_asignacion_automatica_tenant
+-- SOLO REFERENCIA. NO APLICAR: ya está aplicada en producción y, para
+-- entornos nuevos, la sustituye 20261001173928_base_v1_esquema_reconstruido.sql.
+-- Las sentencias se separan con «-- ;;» tal como las guarda Supabase.
+-- =====================================================================
+
+begin;
+
+create or replace function asignar_tenant_automatico()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_tenant uuid;
+begin
+  v_tenant := public.current_tenant_id();
+  if v_tenant is null then
+    raise exception 'No se pudo determinar el tenant del usuario autenticado; el alta fue rechazada';
+  end if;
+  new.tenant_id := v_tenant;
+  return new;
+end;
+$$;
+
+create trigger trg_asignar_tenant_automatico before insert on empresas
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on proyectos
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on personal
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on movimientos
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on periodicidades
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on conceptos_percepcion
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on combos
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on combo_conceptos
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on personal_percepciones
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on areas
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on departamentos
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on puestos
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on localidades
+  for each row execute function asignar_tenant_automatico();
+create trigger trg_asignar_tenant_automatico before insert on centros_costo
+  for each row execute function asignar_tenant_automatico();
+
+create trigger trg_bloquear_cambio_tenant before update on areas
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on departamentos
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on puestos
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on localidades
+  for each row execute function bloquear_cambio_tenant();
+create trigger trg_bloquear_cambio_tenant before update on centros_costo
+  for each row execute function bloquear_cambio_tenant();
+
+alter table empresas alter column tenant_id drop default;
+alter table proyectos alter column tenant_id drop default;
+alter table personal alter column tenant_id drop default;
+alter table movimientos alter column tenant_id drop default;
+alter table periodicidades alter column tenant_id drop default;
+alter table conceptos_percepcion alter column tenant_id drop default;
+alter table combos alter column tenant_id drop default;
+alter table combo_conceptos alter column tenant_id drop default;
+alter table personal_percepciones alter column tenant_id drop default;
+
+commit;
+

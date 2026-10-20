@@ -793,6 +793,15 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
 #panel-catalogos .checks label:has(input:checked){background:var(--v21-azul-suave);border-color:#B9CBF3;color:#22489E}
 #panel-catalogos .checks input{accent-color:var(--v21-navy);margin:0}
 
+/* Navegación compacta de Catálogos (enlaces de desplazamiento) */
+#panel-catalogos>.catnav{grid-column:1/-1;min-width:0;position:sticky;top:34px;z-index:5;display:flex;align-items:center;gap:14px;padding:10px 12px;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border:1px solid var(--v21-tarjeta-borde);border-radius:12px}
+#panel-catalogos .catnav-titulo{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--v21-texto-2);white-space:nowrap;padding-left:4px}
+#panel-catalogos .catnav-lista{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+#panel-catalogos .catnav-item{display:inline-block;padding:6px 11px;border:1px solid var(--v21-borde);border-radius:8px;background:#fff;color:var(--v21-navy);font-size:12.5px;font-weight:500;text-decoration:none;white-space:nowrap}
+#panel-catalogos .catnav-item:hover{background:var(--v21-hover);border-color:#C9D5EE}
+#panel-catalogos>.card{scroll-margin-top:96px}
+
 /* ---- Celular y tableta ---- */
 @media(max-width:900px){
   .app-sidebar .sidebar-nav button,.app-sidebar .sidebar-bottom>button{font-size:0!important;justify-content:center;padding:12px 8px;gap:0}
@@ -803,8 +812,12 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
   #panel-alta #form-alta>section.alta-card{grid-template-columns:1fr;padding:18px}
   #panel-alta #form-alta>section.alta-card>.alta-card-title{grid-row:auto;margin-bottom:16px}
   #panel-alta #form-alta>section.alta-card>*{grid-column:1}
-  #panel-catalogos.active{grid-template-columns:1fr}
+  #panel-catalogos.active{grid-template-columns:minmax(0,1fr)}
   #panel-catalogos>#card-clasificaciones{grid-column:auto}
+  #panel-catalogos>.catnav{top:30px;gap:8px;padding:8px}
+  #panel-catalogos .catnav-titulo{display:none}
+  #panel-catalogos .catnav-lista{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #panel-catalogos .catnav-lista::-webkit-scrollbar{display:none}
 }
 @media(max-width:600px){
   .app-sidebar{background:var(--v21-superficie);border-bottom:1px solid var(--v21-borde);box-shadow:0 2px 10px rgba(22,38,74,.05)}
@@ -1223,6 +1236,9 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
   </section>
 
   <section class="panel" id="panel-catalogos">
+    <!-- @@V21_NAV_INICIO -->
+    <nav class="catnav" aria-label="Ir a un catálogo"><span class="catnav-titulo">Catálogos</span><span class="catnav-lista"><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos #card-proyectos').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Proyectos</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos #card-periodicidades').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Periodicidades</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos #card-clasificaciones').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Clasificaciones</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;areas&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Áreas</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;departamentos&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Departamentos</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;puestos&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Puestos</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;localidades&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Localidades</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;centros_costo&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Centros de costo</a></span></nav>
+    <!-- @@V21_NAV_FIN -->
     <div class="card" id="card-proyectos">
       <h2>Proyectos</h2>
       <p class="hint">Obras o proyectos a los que se asigna el personal.</p>

@@ -671,6 +671,78 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
 .stat .num{font-size:26px;font-weight:600;letter-spacing:-.03em;color:var(--v21-cifra)}
 .stat .lbl{font-size:12.5px;margin-top:4px}
 
+/* ---- Iteración 3 · Alta de personal (solo presentación) ----
+   Mismo HTML, mismos campos e ids. Cada bloque: título y descripción a la
+   izquierda, campos a la derecha. Orden visual: personales, organización,
+   relación laboral, contacto, prestaciones, compensación. */
+#panel-alta>.card:not(#imp-card){background:transparent;border:0;box-shadow:none;padding:0}
+#panel-alta>.card:not(#imp-card)>h2{font-size:24px;font-weight:600;letter-spacing:-.025em;margin:6px 0 4px}
+#panel-alta>.card:not(#imp-card)>p.hint{margin-bottom:18px}
+#panel-alta #imp-card{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:20px;align-items:center;padding:16px 20px;margin-bottom:22px;border-style:dashed;border-color:#D5DCE8;box-shadow:none;background:#FBFCFE}
+#panel-alta #imp-card>h2{font-size:15px;margin:0 0 2px}
+#panel-alta #imp-card>p.hint{grid-column:1;margin:0;font-size:12.5px}
+#panel-alta #imp-card>p.hint+p.hint{margin-top:4px!important}
+#panel-alta #imp-card>#imp-inicio{grid-column:2;grid-row:1/span 3;margin:0}
+#panel-alta #imp-card>#imp-toast,#panel-alta #imp-card>#imp-contenido{grid-column:1/-1}
+#panel-alta .imp-acciones button.secundario,#panel-alta .imp-acciones label.secundario{background:#fff;color:var(--v21-navy);border:1px solid var(--v21-borde);border-radius:10px;font-weight:500}
+#panel-alta #form-alta{display:flex;flex-direction:column;gap:14px}
+#panel-alta #form-alta>section.alta-card{display:grid;grid-template-columns:230px minmax(0,1fr);column-gap:32px;align-items:start;
+  background:var(--v21-superficie);border:1px solid var(--v21-tarjeta-borde);border-radius:12px;padding:22px 24px;box-shadow:none}
+#panel-alta #form-alta>section.alta-card>*{grid-column:2}
+#panel-alta #form-alta>section.alta-card>.alta-card-title{grid-column:1;grid-row:1/span 30;margin:0;padding:0;border:0;font-size:15px;font-weight:600;color:var(--v21-navy);line-height:1.35;text-transform:none;letter-spacing:-.01em}
+#panel-alta #form-alta>section.alta-card>.alta-card-title::before{display:inline-grid;place-items:center;width:24px;height:24px;margin:0 10px 0 0;border-radius:7px;background:var(--v21-fondo);border:1px solid var(--v21-borde);font-size:12px;font-weight:600;color:var(--v21-texto-2);vertical-align:1px}
+#panel-alta #form-alta>section.alta-card>.alta-card-title::after{display:block;margin:8px 0 0 34px;font-size:12.5px;font-weight:400;line-height:1.5;color:var(--v21-texto-2);letter-spacing:0}
+#panel-alta #form-alta>section.alta-card:nth-of-type(1){order:1}
+#panel-alta #form-alta>section.alta-card:nth-of-type(2){order:2}
+#panel-alta #form-alta>section.alta-card:nth-of-type(3){order:3}
+#panel-alta #form-alta>section.alta-card:nth-of-type(6){order:4}
+#panel-alta #form-alta>section.alta-card:nth-of-type(5){order:5}
+#panel-alta #form-alta>section.alta-card:nth-of-type(4){order:6}
+#panel-alta #form-alta>section.alta-card:nth-of-type(1)>.alta-card-title::before{content:"1"}
+#panel-alta #form-alta>section.alta-card:nth-of-type(2)>.alta-card-title::before{content:"2"}
+#panel-alta #form-alta>section.alta-card:nth-of-type(3)>.alta-card-title::before{content:"3"}
+#panel-alta #form-alta>section.alta-card:nth-of-type(6)>.alta-card-title::before{content:"4"}
+#panel-alta #form-alta>section.alta-card:nth-of-type(5)>.alta-card-title::before{content:"5"}
+#panel-alta #form-alta>section.alta-card:nth-of-type(4)>.alta-card-title::before{content:"6"}
+#panel-alta #form-alta>section.alta-card:nth-of-type(1)>.alta-card-title::after{content:"Identificación de la persona. Nombre y primer apellido son obligatorios."}
+#panel-alta #form-alta>section.alta-card:nth-of-type(2)>.alta-card-title::after{content:"Empresa, registro patronal, proyecto, coordinador, jefe y clasificación organizacional."}
+#panel-alta #form-alta>section.alta-card:nth-of-type(3)>.alta-card-title::after{content:"Jornada, descansos y vigencia del contrato."}
+#panel-alta #form-alta>section.alta-card:nth-of-type(6)>.alta-card-title::after{content:"A quién avisar en caso de emergencia."}
+#panel-alta #form-alta>section.alta-card:nth-of-type(5)>.alta-card-title::after{content:"FONACOT y restricciones de salud."}
+#panel-alta #form-alta>section.alta-card:nth-of-type(4)>.alta-card-title::after{content:"Los esquemas de pago se capturan después, en el expediente."}
+#panel-alta #form-alta>#btn-alta{order:7}
+#panel-alta #form-alta>.toast{order:8}
+/* Subgrupos dentro de un bloque */
+#panel-alta #form-alta .alta-subtitle{margin:22px 0 12px;padding-top:18px;border-top:1px solid var(--v21-borde-2);font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--v21-texto-2)}
+#panel-alta #form-alta .alta-card-title+.alta-subtitle{margin-top:0;padding-top:0;border-top:0}
+#panel-alta #form-alta .grid,#panel-alta #form-alta .grid3{gap:14px 16px;margin-bottom:14px}
+#panel-alta #form-alta section>.grid:last-child,#panel-alta #form-alta section>.grid3:last-child{margin-bottom:0}
+#panel-alta #form-alta .grid3>div:empty,#panel-alta #form-alta .grid>div:empty{display:none}
+/* Etiquetas y controles */
+#panel-alta #form-alta label{font-size:12.5px;font-weight:500;color:var(--v21-texto);margin-bottom:6px}
+#panel-alta #form-alta div:has(>input[required])>label::after,#panel-alta #form-alta div:has(>select[required])>label::after{content:" *";color:var(--v21-rojo)}
+#panel-alta #form-alta input:not([type=checkbox]):not([type=radio]),#panel-alta #form-alta select{height:40px;padding:8px 12px;font-size:13.5px;border:1px solid #DDE2EB;border-radius:9px;background-color:#fff}
+#panel-alta #form-alta textarea{border:1px solid #DDE2EB;border-radius:9px;min-height:72px;font-size:13.5px}
+#panel-alta #form-alta input::placeholder,#panel-alta #form-alta textarea::placeholder{color:#A3ABBC}
+#panel-alta #form-alta input:hover:not(:focus),#panel-alta #form-alta select:hover:not(:focus){border-color:#C6CEDC}
+/* Elecciones (coordinador, descansos, subcontratación) como controles segmentados */
+#panel-alta #form-alta .checks{gap:6px}
+#panel-alta #form-alta .checks label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:7px 12px;border:1px solid #DDE2EB;border-radius:9px;background:#fff;font-size:12.5px;font-weight:500;color:var(--v21-texto-2);cursor:pointer}
+#panel-alta #form-alta .checks label:hover{border-color:#C6CEDC}
+#panel-alta #form-alta .checks label:has(input:checked){background:var(--v21-azul-suave);border-color:#B9CBF3;color:#22489E}
+#panel-alta #form-alta .checks input{accent-color:var(--v21-navy);margin:0}
+#panel-alta #form-alta #f-descanso label{min-width:52px;justify-content:center}
+#panel-alta #form-alta #f-descanso input{position:absolute;opacity:0;width:1px;height:1px}
+/* Contacto de emergencia en dos columnas */
+#panel-alta #form-alta div:has(>#f-emerg-nombre){display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+#panel-alta #form-alta div:has(>#f-emerg-nombre)>label{grid-column:1/-1;margin:0}
+#panel-alta #form-alta div:has(>#f-emerg-nombre)>input{margin:0!important}
+#panel-alta #form-alta section>.grid:has(#f-emerg-nombre),#panel-alta #form-alta section>.grid:has(#f-restricciones){grid-template-columns:1fr}
+/* Compensación: nota informativa */
+#panel-alta #form-alta>section.alta-card:nth-of-type(4)>p.hint{margin:0;padding:12px 14px;background:var(--v21-fondo);border:1px solid var(--v21-borde-2);border-radius:9px;font-size:12.5px}
+/* Botón final */
+#panel-alta #form-alta>#btn-alta{align-self:flex-end;margin-top:6px;padding:12px 26px;border-radius:10px;font-weight:600;font-size:14px;background:var(--v21-amarillo);color:var(--v21-navy)}
+
 /* ---- Celular y tableta ---- */
 @media(max-width:900px){
   .app-sidebar .sidebar-nav button,.app-sidebar .sidebar-bottom>button{font-size:0!important;justify-content:center;padding:12px 8px;gap:0}
@@ -678,6 +750,9 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
   .app-sidebar .company-switch{justify-content:center;padding:8px}
   #panel-lista .kpi-personal b{font-size:24px}
   .dashboard-metrics .metric-card b{font-size:28px}
+  #panel-alta #form-alta>section.alta-card{grid-template-columns:1fr;padding:18px}
+  #panel-alta #form-alta>section.alta-card>.alta-card-title{grid-row:auto;margin-bottom:16px}
+  #panel-alta #form-alta>section.alta-card>*{grid-column:1}
 }
 @media(max-width:600px){
   .app-sidebar{background:var(--v21-superficie);border-bottom:1px solid var(--v21-borde);box-shadow:0 2px 10px rgba(22,38,74,.05)}
@@ -691,6 +766,9 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
   #panel-lista>.card{padding:16px 14px}
   #panel-lista>.card>h2{font-size:20px}
   #panel-lista .filters{padding:10px}
+  #panel-alta #imp-card{grid-template-columns:1fr}
+  #panel-alta #imp-card>#imp-inicio{grid-column:1;grid-row:auto;margin-top:12px}
+  #panel-alta #form-alta>#btn-alta{align-self:stretch}
 }
 
 /* Iconos de línea (máscaras CSS sobre los elementos existentes) */

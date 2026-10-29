@@ -486,8 +486,12 @@ body.rol-consulta .card:has(#resumen-grupos),
 body.rol-consulta #resumen-dimension option[value="clasificacion"] { display:none !important; }
 /* V2.0 M2: Coordinador solo ve «Mi equipo» */
 body:not(.rol-coordinador) nav.tabs button[data-tab="equipo"],
-body.rol-coordinador nav.tabs button:not([data-tab="equipo"]),
-body.rol-coordinador section.panel:not(#panel-equipo),
+body.rol-coordinador nav.tabs button:not([data-tab="equipo"]):not([data-tab="incidencias"]),
+body.rol-coordinador section.panel:not(#panel-equipo):not(#panel-incidencias),
+body.rol-consulta nav.tabs button[data-tab="incidencias"],
+body.rol-consulta #panel-incidencias,
+body:not(.ola1-activa) [data-tab="incidencias"],
+body:not(.ola1-activa) #panel-incidencias,
 body.rol-coordinador .global-search,
 body.rol-coordinador .company-switch,
 body.rol-coordinador .sidebar-bottom > button:first-of-type { display:none !important; }
@@ -956,6 +960,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
 .app-sidebar .sidebar-nav button[data-tab="empresas"] .nav-icon{font-size:0!important;line-height:0!important}.app-sidebar .sidebar-nav button[data-tab="empresas"] .nav-icon::before{content:"";display:inline-block;width:20px;height:20px;flex:none;vertical-align:middle;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4.5' y='3.5' width='15' height='17' rx='1.6'/%3E%3Cpath d='M8.5 7.5h1.5M14 7.5h1.5M8.5 11.5h1.5M14 11.5h1.5M8.5 15.5h1.5M14 15.5h1.5M10.5 20.5v-2.8h3v2.8'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4.5' y='3.5' width='15' height='17' rx='1.6'/%3E%3Cpath d='M8.5 7.5h1.5M14 7.5h1.5M8.5 11.5h1.5M14 11.5h1.5M8.5 15.5h1.5M14 15.5h1.5M10.5 20.5v-2.8h3v2.8'/%3E%3C/svg%3E") center/contain no-repeat}
 .app-sidebar .sidebar-nav button[data-tab="catalogos"] .nav-icon{font-size:0!important;line-height:0!important}.app-sidebar .sidebar-nav button[data-tab="catalogos"] .nav-icon::before{content:"";display:inline-block;width:20px;height:20px;flex:none;vertical-align:middle;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='5.8' rx='7.5' ry='2.6'/%3E%3Cpath d='M4.5 5.8v12.4c0 1.4 3.4 2.6 7.5 2.6s7.5-1.2 7.5-2.6V5.8'/%3E%3Cpath d='M4.5 12c0 1.4 3.4 2.6 7.5 2.6s7.5-1.2 7.5-2.6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='5.8' rx='7.5' ry='2.6'/%3E%3Cpath d='M4.5 5.8v12.4c0 1.4 3.4 2.6 7.5 2.6s7.5-1.2 7.5-2.6V5.8'/%3E%3Cpath d='M4.5 12c0 1.4 3.4 2.6 7.5 2.6s7.5-1.2 7.5-2.6'/%3E%3C/svg%3E") center/contain no-repeat}
 .app-sidebar .sidebar-nav button[data-tab="equipo"] .nav-icon{font-size:0!important;line-height:0!important}.app-sidebar .sidebar-nav button[data-tab="equipo"] .nav-icon::before{content:"";display:inline-block;width:20px;height:20px;flex:none;vertical-align:middle;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.4'/%3E%3Cpath d='M2.8 20c.4-3.4 3-5.6 6.2-5.6s5.8 2.2 6.2 5.6'/%3E%3Cpath d='M15.6 4.8a3.3 3.3 0 0 1 0 6.4'/%3E%3Cpath d='M17.6 14.6c2 .6 3.3 2.6 3.6 5.4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.4'/%3E%3Cpath d='M2.8 20c.4-3.4 3-5.6 6.2-5.6s5.8 2.2 6.2 5.6'/%3E%3Cpath d='M15.6 4.8a3.3 3.3 0 0 1 0 6.4'/%3E%3Cpath d='M17.6 14.6c2 .6 3.3 2.6 3.6 5.4'/%3E%3C/svg%3E") center/contain no-repeat}
+.app-sidebar .sidebar-nav button[data-tab="incidencias"] .nav-icon{font-size:0!important;line-height:0!important}.app-sidebar .sidebar-nav button[data-tab="incidencias"] .nav-icon::before{content:"";display:inline-block;width:20px;height:20px;flex:none;vertical-align:middle;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15.5' rx='2'/%3E%3Cpath d='M3.5 9.5h17M8 3v4M16 3v4M8 13.5h2M14 13.5h2M8 17h2'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15.5' rx='2'/%3E%3Cpath d='M3.5 9.5h17M8 3v4M16 3v4M8 13.5h2M14 13.5h2M8 17h2'/%3E%3C/svg%3E") center/contain no-repeat}
 .app-sidebar .sidebar-bottom>button:nth-of-type(1) .nav-icon{font-size:0!important;line-height:0!important}.app-sidebar .sidebar-bottom>button:nth-of-type(1) .nav-icon::before{content:"";display:inline-block;width:20px;height:20px;flex:none;vertical-align:middle;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h9M17 7h3M4 17h3M11 17h9'/%3E%3Ccircle cx='15' cy='7' r='2.2'/%3E%3Ccircle cx='9' cy='17' r='2.2'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h9M17 7h3M4 17h3M11 17h9'/%3E%3Ccircle cx='15' cy='7' r='2.2'/%3E%3Ccircle cx='9' cy='17' r='2.2'/%3E%3C/svg%3E") center/contain no-repeat}
 .app-sidebar .sidebar-bottom>button:nth-of-type(2) .nav-icon{font-size:0!important;line-height:0!important}.app-sidebar .sidebar-bottom>button:nth-of-type(2) .nav-icon::before{content:"";display:inline-block;width:20px;height:20px;flex:none;vertical-align:middle;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.6'/%3E%3Cpath d='M9.6 9.6a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.2 1-1.2 1.8v.6'/%3E%3Cpath d='M12 17.1v.1'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.6'/%3E%3Cpath d='M9.6 9.6a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.2 1-1.2 1.8v.6'/%3E%3Cpath d='M12 17.1v.1'/%3E%3C/svg%3E") center/contain no-repeat}
 .app-sidebar .company-switch .company-icon{font-size:0!important;line-height:0!important}.app-sidebar .company-switch .company-icon::before{content:"";display:inline-block;width:20px;height:20px;flex:none;vertical-align:middle;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4.5' y='3.5' width='15' height='17' rx='1.6'/%3E%3Cpath d='M8.5 7.5h1.5M14 7.5h1.5M8.5 11.5h1.5M14 11.5h1.5M8.5 15.5h1.5M14 15.5h1.5M10.5 20.5v-2.8h3v2.8'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4.5' y='3.5' width='15' height='17' rx='1.6'/%3E%3Cpath d='M8.5 7.5h1.5M14 7.5h1.5M8.5 11.5h1.5M14 11.5h1.5M8.5 15.5h1.5M14 15.5h1.5M10.5 20.5v-2.8h3v2.8'/%3E%3C/svg%3E") center/contain no-repeat}
@@ -1003,6 +1008,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
         <button data-tab="empresas"><span class="nav-icon">▦</span>Empresas</button>
         <button data-tab="catalogos"><span class="nav-icon">◉</span>Catálogos <span class="nav-chevron">›</span></button>
         <button data-tab="equipo"><span class="nav-icon">♧</span>Mi equipo</button>
+        <button data-tab="incidencias"><span class="nav-icon">◷</span>Incidencias</button>
       </nav>
       <div class="sidebar-bottom">
         <button type="button" onclick="cambiarPestana('catalogos')"><span class="nav-icon">⚙</span>Configuración</button>
@@ -1029,6 +1035,8 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
       <div id="equipo-contenido"><div class="empty">Cargando…</div></div>
     </div>
   </section>
+
+  <section class="panel" id="panel-incidencias"><div id="inc-raiz"></div></section>
 
   <section class="panel" id="panel-alta">
     <div class="card" id="imp-card">
@@ -1761,6 +1769,8 @@ const ENTORNOS_SUPABASE = {
 };
 const ENTORNO_FORZADO = null; // producción. Solo una copia local de prueba lo cambia.
 const ENTORNO_ACTUAL = ENTORNO_FORZADO || 'produccion';
+// Ola 1 (Incidencias): apagada en producción hasta aplicar su migración y autorizar su activación.
+const OLA1_ACTIVA = false;
 const sb = supabase.createClient(ENTORNOS_SUPABASE[ENTORNO_ACTUAL].url, ENTORNOS_SUPABASE[ENTORNO_ACTUAL].key);
 
 // ---------------------------------------------------------------------
@@ -2727,7 +2737,7 @@ function desgloseRegistroPatronalHTML(vigentes, esquemas){
 }
 
 // V2.0 M2: pestañas que cada rol puede abrir (los demás roles: todas).
-const PESTANAS_POR_ROL = { consulta: ['resumen', 'lista'], coordinador: ['equipo'] };
+const PESTANAS_POR_ROL = { consulta: ['resumen', 'lista'], coordinador: ['equipo', 'incidencias'] };
 function pestanaPermitida(tab){ const l = PESTANAS_POR_ROL[rolActual]; return !l || l.includes(tab); }
 function cambiarPestana(tab){
   const btn = document.querySelector('nav.tabs button[data-tab="'+tab+'"]');
@@ -5839,6 +5849,13 @@ function renderMiEquipo(){
 }
 document.getElementById('buscar-equipo').addEventListener('input', renderMiEquipo);
 document.getElementById('equipo-incluir-bajas').addEventListener('change', renderMiEquipo);
+</script>
+<script>
+// Ola 1: la pestaña y el módulo solo existen con el interruptor encendido.
+if (OLA1_ACTIVA) {
+  document.body.classList.add('ola1-activa');
+  const s = document.createElement('script'); s.src = 'incidencias.js'; document.body.appendChild(s);
+}
 </script>
 </body>
 </html>

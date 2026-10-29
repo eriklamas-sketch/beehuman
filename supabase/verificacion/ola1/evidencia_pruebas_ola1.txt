@@ -1,0 +1,110 @@
+BeeHuman Ola 1 · Pruebas en base Postgres LOCAL con permisos de beehuman-pruebas · 2026-10-27 17:29
+Periodo de prueba: 2026-11-02 a 2026-11-08
+
+== Bloqueante 1 · Historial de asignaciones ==
+OK    Carga inicial: ningún tramo anterior a hoy (no se supone historial)
+OK    Carga inicial: 9 personas con coordinador, tramo desde hoy
+OK    Periodo anterior al historial: se rechaza  [ERROR:  BeeHuman: no hay historial de asignaciones antes del 2026-10-27; no se puede crear el periodo.]
+OK    Nómina crea el periodo semanal
+OK    Fecha efectiva explícita: tramo A cierra el miércoles, B inicia el jueves  [0a100000-0000-4000-8000-000000000001 2026-10-27 2026-11-04 | 0a100000-0000-4000-8000-000000000002 2026-11-05 ∞]
+OK    Tramos traslapados: la base los rechaza aun como dueño  [ERROR:  conflicting key value violates exclusion constraint "inc_asignaciones_personal_id_daterange_excl"]
+OK    Registro sin motivo o fuente: rechazado  [ERROR:  BeeHuman: indica el motivo o la fuente de la fecha.]
+OK    Coordinador no puede registrar asignaciones  [ERROR:  BeeHuman: sin permiso.]
+OK    Cambio en el expediente el mismo día de la carga: reemplaza el tramo de hoy  [∞/cambio_expediente]
+OK    A10: PSW aparece 3 días con A y 4 días con B, sin duplicarse  [A=3 B=4]
+OK    A12: persona con baja el jueves solo aparece hasta el jueves
+OK    Coordinador A no puede capturar a PSW el viernes  [ERROR:  BeeHuman: la persona no estaba asignada a este coordinador el 2026-11-06.]
+OK    Coordinador A no ve las personas de la hoja de B
+
+== Configuración (Administrador) ==
+OK    Nómina no puede configurar conceptos  [ERROR:  new row violates row-level security policy for table "inc_parametros"]
+OK    Coordinador lee los conceptos (sin sueldos)
+
+== Captura del coordinador ==
+OK    (d) Misma persona, día y concepto dos veces: rechazado  [ERROR:  duplicate key value violates unique constraint "inc_cant_captura"]
+OK    C14: descuento sin motivo rechazado  [ERROR:  BeeHuman: el descuento operativo requiere motivo.]
+OK    Conformidad declarada: queda quién la declaró
+OK    Coordinador A no escribe en la hoja de B  [ERROR:  new row violates row-level security policy for table "inc_celdas"]
+
+== Bloqueante 2 · Versiones y duplicados ==
+OK    Envío: hoja enviada, versión 1
+OK    Hoja enviada: ninguna cantidad cambió
+OK    Hoja enviada: ni el dueño de la base puede editar la captura (disparador)  [ERROR:  BeeHuman: la hoja ya fue enviada; corrige con devolución o complemento.]
+OK    Firma duplicada de RH en la misma versión: rechazada  [ERROR:  duplicate key value violates unique constraint "inc_eventos_firma_unica"]
+OK    Corrección: nace la versión 2; la 1 se conserva
+OK    Captura operativa: se corrige en su lugar, sin duplicar renglones  [11 → +1 línea nueva (viernes)]
+OK    La versión 1 conserva lo revisado (2 h); la 2 trae la corrección (3 h + 1 h)  [v1=2.00 v2=3.00,1.00]
+OK    Versión: no se puede editar ni como dueño de la base  [ERROR:  BeeHuman: inc_versiones es un registro histórico y no se puede update .]
+OK    Eventos: no se pueden borrar ni como dueño de la base  [ERROR:  BeeHuman: inc_eventos es un registro histórico y no se puede delete .]
+OK    D3/E6: la firma de RH queda ligada a la versión 1 y no aparece en la 2  [firma_rh@v1]
+OK    D4: Nómina firma la versión 2 de forma independiente
+OK    (b) Misma persona y día en dos hojas normales: la base lo rechaza aun sin disparador  [ERROR:  duplicate key value violates unique constraint "inc_celdas_periodo_dia"]
+OK    (e) Misma persona, día y concepto en dos hojas normales: rechazado aun sin disparador  [ERROR:  duplicate key value violates unique constraint "inc_cant_periodo"]
+
+== Cálculo (Nómina) ==
+OK    C2/C15: 12 h extra con $20,000/30 → $2,250.00 (9 dobles + 3 triples, sin redondeo intermedio)  [2250.00/pendiente]
+OK    Corrección recalculada: 4 h extra de P4 → $666.67  [666.67/pendiente]
+OK    C1: en la versión 1, 2 h extra → $333.33  [333.33/pendiente]
+OK    C7: domingo al 25 % de $666.67 → $166.67  [166.67/pendiente]
+OK    C8: domingo con tarifa del área B → $700 (sustituye la prima)  [700.00/aceptado]
+OK    C9: domingo con tarifa general → $600  [600.00/aceptado]
+OK    C6: tarifa propia 19 × $50 → $950  [950.00/aceptado]
+OK    C10: sin esquema de pago → sin importe, no se inventa sueldo  [null/sin_sueldo]
+OK    B4: concepto sin importe → sin monto  [null/sin_importe]
+OK    Descuento operativo: queda pendiente de decisión de Nómina  [150.00/pendiente]
+OK    B8: el importe registra la base usada (mixto por defecto)  [mixto]
+OK    B5–B7: sueldo diario base mixto  [1000.000]
+OK    B5–B7: sueldo diario base bruto  [800.000]
+OK    B5–B7: sueldo diario base neto  [200.000]
+OK    Sueldo manual capturado por Nómina: 3 h × 400/8 × 2 → $300  [300.00/pendiente]
+OK    C11: Nómina acepta la sugerencia
+OK    C12: Nómina modifica; se conservan sugerido y final
+OK    Un recálculo no pisa el importe modificado por Nómina
+
+== Bloqueante 3 · Privacidad salarial (base local) ==
+OK    coordA: 0 esquemas de pago por consulta directa
+OK    coordA: 0 esquemas por la vista
+OK    coordA: 0 renglones de personal (sd, sueldo_bruto, sdi_imss)
+OK    coordA: 0 importes de la Ola 1
+OK    coordA: 0 sueldos manuales
+OK    coordA: no puede ejecutar el cálculo de sueldo diario  [ERROR:  permission denied for function inc_sueldo_diario]
+OK    coordA: no puede ejecutar el cálculo de importes  [ERROR:  permission denied for function inc_calcular_version]
+OK    coordA: las versiones que puede leer no contienen sueldos ni importes
+OK    coordA: resumen_agregado no entrega compensación  [null]
+OK    coordA: 0 percepciones (montos)
+OK    coordA: 0 movimientos del expediente (traen valores anteriores y nuevos)
+OK    consulta: 0 esquemas de pago por consulta directa
+OK    consulta: 0 esquemas por la vista
+OK    consulta: 0 renglones de personal (sd, sueldo_bruto, sdi_imss)
+OK    consulta: 0 importes de la Ola 1
+OK    consulta: 0 sueldos manuales
+OK    consulta: no puede ejecutar el cálculo de sueldo diario  [ERROR:  permission denied for function inc_sueldo_diario]
+OK    consulta: no puede ejecutar el cálculo de importes  [ERROR:  permission denied for function inc_calcular_version]
+OK    consulta: las versiones que puede leer no contienen sueldos ni importes
+OK    consulta: resumen_agregado no entrega compensación  [null]
+OK    consulta: 0 percepciones (montos)
+OK    consulta: 0 movimientos del expediente (traen valores anteriores y nuevos)
+OK    Funciones cuyo resultado expone sueldos o importes: solo la interna inc_sueldo_diario
+OK    equipo_coordinador sigue funcionando (sin columnas de sueldo)
+
+== Separación de permisos ==
+OK    I10: Coordinador no acepta ni modifica importes  [ERROR:  BeeHuman: sin permiso.]
+OK    Nómina NO designada: puede ver importes pero no firmar  [ERROR:  BeeHuman: solo el responsable designado de nomina puede firmar.]
+OK    Nómina NO designada: sí ve importes
+OK    Responsable de Nómina no puede firmar como RH  [ERROR:  BeeHuman: solo el responsable designado de rh puede firmar.]
+OK    Coordinador no devuelve hojas  [ERROR:  BeeHuman: sin permiso para devolver.]
+OK    D2: devolución sin motivo rechazada  [ERROR:  BeeHuman: la devolución requiere motivo.]
+OK    I5: Consulta no marca procesado  [ERROR:  BeeHuman: sin permiso.]
+OK    I5: Consulta no firma  [ERROR:  BeeHuman: solo el responsable designado de rh puede firmar.]
+OK    Consulta ve cantidades de su alcance (sin importes)
+
+== Procesado y complementos ==
+OK    D7: marcar procesado dos veces no duplica el procesamiento  [Ya estaba procesado el 2026-10-27 17:29; no se reg]
+OK    Periodo procesado: no se abre otra hoja normal  [ERROR:  BeeHuman: el periodo ya fue procesado; usa un complemento.]
+OK    La hoja normal queda procesada
+OK    D6: complemento posterior al procesamiento identificado
+OK    D5: el complemento no repite persona-día-concepto ya enviado  [ERROR:  duplicate key value violates unique constraint "inc_cant_captura"]
+OK    (f) Un solo ajuste por línea original en el complemento  [ERROR:  duplicate key value violates unique constraint "inc_cant_ajuste"]
+OK    D6: enviar el complemento no reabre el periodo ni la hoja procesada
+
+RESULTADO: 90 de 90 verificaciones OK

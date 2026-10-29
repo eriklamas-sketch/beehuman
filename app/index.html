@@ -383,6 +383,20 @@ body.rol-consulta .kpi-importe{display:none !important;}
 .lista-exportar{display:inline-flex;gap:8px;flex-wrap:wrap;}
 /* Exportación de esquemas: solo Administrador y Nómina (además se valida en JS). */
 body:not(.rol-administrador):not(.rol-nomina) #exportar-esquemas{display:none !important;}
+body:not(.rol-administrador):not(.rol-nomina) #exportar-noi{display:none !important;}
+#modal-noi-overlay .noi-opciones{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:12px 0}
+#modal-noi-overlay .noi-tabla-wrap{max-height:52vh;overflow:auto;border:1px solid var(--border,#e5e7eb);border-radius:10px}
+#modal-noi-overlay table{width:100%;border-collapse:collapse;font-size:13px}
+#modal-noi-overlay td{padding:8px 10px;border-top:1px solid var(--border,#e5e7eb);vertical-align:top}
+#modal-noi-overlay .noi-detalle{font-size:12px;min-width:0;overflow-wrap:anywhere}
+#modal-noi-overlay .noi-err{color:#b42318}
+#modal-noi-overlay .noi-avi{color:#8a5a00}
+#modal-noi-overlay .noi-pill-error{background:#fde8e8;color:#b42318}
+#modal-noi-overlay .noi-pill-aviso{background:#fff4d6;color:#8a5a00}
+#modal-noi-overlay .noi-pill-off{background:#f1f2f4;color:#6b7280}
+#modal-noi-overlay .noi-alerta{background:#fde8e8;color:#b42318;padding:8px 10px;border-radius:8px;margin-bottom:8px}
+#modal-noi-overlay .noi-nota{font-size:12px;color:var(--muted,#6b7280);margin-top:6px}
+#modal-noi-overlay .noi-acciones{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-top:12px}
 body.rol-consulta .kpis-personal{grid-template-columns:minmax(0,1fr);max-width:320px;margin-bottom:14px;}
 
 /* Resumen · jerarquía visual (solo presentación).
@@ -1238,7 +1252,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
       </div>
       <div class="lista-barra">
         <span id="lista-conteo"></span>
-        <span class="lista-exportar"><button type="button" id="exportar-personal" disabled>Exportar</button><button type="button" id="exportar-esquemas" disabled title="Una fila por esquema de pago activo de las personas del resultado">Exportar esquemas (CSV)</button></span>
+        <span class="lista-exportar"><button type="button" id="exportar-personal" disabled>Exportar</button><button type="button" id="exportar-esquemas" disabled title="Una fila por esquema de pago activo de las personas del resultado">Exportar esquemas (CSV)</button><button type="button" id="exportar-noi" disabled title="Archivo de altas de trabajadores para importar en Aspel NOI 11">Exportar a NOI</button></span>
       </div>
       <div class="table-wrap">
         <table>
@@ -1520,6 +1534,26 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
     </div>
   </div>
 
+  <div id="modal-noi-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
+    <div class="card" style="max-width:1080px;margin:24px auto;" role="dialog" aria-modal="true" aria-labelledby="noi-titulo">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div><h2 id="noi-titulo" style="margin:0">Exportar trabajadores a Aspel NOI 11</h2>
+        <p class="hint" style="margin:4px 0 0">Altas de trabajadores en el layout de 56 columnas. Toma las personas del resultado actual de Personal. Solo se incluyen las que no tienen errores; nada se guarda en BeeHuman.</p></div>
+        <button type="button" class="secundario" id="noi-cerrar">Cerrar</button>
+      </div>
+      <div class="noi-opciones">
+        <div><label for="noi-clave">Clave del trabajador (A)</label><select id="noi-clave"><option value="numero_interno_trabajador">Número interno de trabajador</option><option value="noi">Clave NOI del expediente</option><option value="empleado_id">ID de BeeHuman</option></select></div>
+        <div><label for="noi-fecha-alta">Fecha de alta (H)</label><select id="noi-fecha-alta"><option value="fecha_alta_imss">Fecha de alta IMSS</option><option value="fecha_inicio_contrato">Fecha de inicio de contrato</option><option value="fecha_antiguedad">Fecha de antigüedad</option></select></div>
+        <div><label for="noi-salario">Salario diario (E)</label><select id="noi-salario"><option value="sd">Salario diario del expediente</option><option value="esquema">Calcular de un esquema de pago (sueldo bruto ÷ días del periodo)</option></select></div>
+        <div id="noi-clasificacion-campo" style="display:none"><label for="noi-clasificacion">Clasificación del esquema</label><select id="noi-clasificacion"></select></div>
+      </div>
+      <div id="noi-resumen"></div>
+      <div class="noi-acciones" style="margin:8px 0"><span><button type="button" class="secundario" id="noi-todas">Seleccionar todas</button> <button type="button" class="secundario" id="noi-ninguna">Quitar todas</button></span><span class="hint">Las personas en Baja empiezan sin seleccionar.</span></div>
+      <div class="noi-tabla-wrap"><table><tbody id="noi-tabla"></tbody></table></div>
+      <div class="noi-acciones"><span class="hint">Después de descargar, impórtalo en NOI (empresa de prueba primero) y revisa el resultado.</span><button type="button" class="primary" id="noi-descargar" disabled style="margin-top:0">Descargar archivo NOI</button></div>
+      <div class="toast" id="noi-toast"></div>
+    </div>
+  </div>
   <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;overflow-y:auto;">
     <div class="card detail-modal" style="max-width:1080px;margin:24px auto;">
       <div class="detail-heading">
@@ -2289,6 +2323,9 @@ function renderTabla(){
   const nEsquemas = esquemasDelResultado(listaFiltrada).length;
   btnEsquemas.disabled = !nEsquemas;
   btnEsquemas.textContent = nEsquemas ? `Exportar ${nEsquemas.toLocaleString('es-MX')} ${nEsquemas === 1 ? 'esquema' : 'esquemas'} (CSV)` : 'Exportar esquemas (CSV)';
+  const btnNOI = document.getElementById('exportar-noi');
+  btnNOI.disabled = !total;
+  btnNOI.textContent = total ? `Exportar a NOI (${total.toLocaleString('es-MX')})` : 'Exportar a NOI';
   document.getElementById('lista-paginador').style.display = total > 50 ? 'flex' : 'none';
   document.getElementById('pagina-texto').textContent = `Página ${listaPagina} de ${paginas}`;
   document.getElementById('pagina-anterior').disabled = listaPagina <= 1;
@@ -2777,6 +2814,295 @@ document.getElementById('filtros-chips').addEventListener('click', e => {
 });
 document.getElementById('exportar-personal').addEventListener('click', exportarPersonalCSV);
 document.getElementById('exportar-esquemas').addEventListener('click', exportarEsquemasCSV);
+// ---------------------------------------------------------------------
+// Exportación de trabajadores a Aspel NOI 11.00.18.
+// Layout de 56 columnas (A–BD) según la documentación de importación de
+// trabajadores de NOI. Solo LEE datos: no escribe nada en la base.
+// Genera un archivo Excel 97-2003 (.xls, BIFF8), como el que importa NOI.
+// Reglas que dependen de una decisión (clave, fecha de alta, salario diario)
+// las elige quien exporta en la ventana; nada se supone en silencio.
+// ---------------------------------------------------------------------
+const NOI_XLSX_URL = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+const NOI_XLSX_SRI = 'sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw';
+let noiXlsxPromesa = null;
+function cargarXlsxNOI(){
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (!noiXlsxPromesa) noiXlsxPromesa = new Promise((ok, mal) => {
+    const s = document.createElement('script');
+    s.src = NOI_XLSX_URL; s.integrity = NOI_XLSX_SRI; s.crossOrigin = 'anonymous';
+    s.onload = () => window.XLSX ? ok(window.XLSX) : mal(new Error('El generador de Excel no se cargó.'));
+    s.onerror = () => { noiXlsxPromesa = null; mal(new Error('No se pudo cargar el generador de Excel. Revisa tu conexión e intenta de nuevo.')); };
+    document.head.appendChild(s);
+  });
+  return noiXlsxPromesa;
+}
+
+// Equivalencias definidas por la documentación de NOI.
+const NOI_SEXO = { H: 'M', M: 'F' };            // BeeHuman guarda H/M como la CURP; NOI usa M=masculino, F=femenino
+const NOI_TIPO_EMPLEADO = { Sindicalizado: 'S', Confianza: 'C' };
+const NOI_TURNO = { Matutino: 'M', Vespertino: 'V', Nocturno: 'N', Mixto: 'X' };
+const NOI_FORMA_PAGO = { T: 'T', E: 'E', C: 'C', Transferencia: 'T', Efectivo: 'E', Cheque: 'C' };
+const NOI_ESTADO_CIVIL = ['S', 'C', 'D', 'V', 'U'];
+
+const noiTxt = v => (v == null ? '' : String(v).trim());
+const noiFecha = v => { const s = noiTxt(v).slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ''; };
+const noiAviso = (texto) => ({ aviso: texto });
+const noiError = (texto) => ({ error: texto });
+
+// Opciones que decide quien exporta.
+const NOI_OPCIONES_CLAVE = [
+  ['numero_interno_trabajador', 'Número interno de trabajador'],
+  ['noi', 'Clave NOI guardada en el expediente'],
+  ['empleado_id', 'ID de BeeHuman (BEH-000000)']
+];
+const NOI_OPCIONES_FECHA_ALTA = [
+  ['fecha_alta_imss', 'Fecha de alta IMSS'],
+  ['fecha_inicio_contrato', 'Fecha de inicio de contrato'],
+  ['fecha_antiguedad', 'Fecha de antigüedad']
+];
+
+function noiClave(p, ctx){
+  const v = noiTxt(p[ctx.clave]);
+  if (!v) return noiError('Falta la clave del trabajador (' + (NOI_OPCIONES_CLAVE.find(o => o[0] === ctx.clave) || [, ctx.clave])[1] + ').');
+  if (v.length > 10) return noiError('La clave tiene ' + v.length + ' caracteres; NOI admite 10.');
+  return /^\d+$/.test(v) ? v.padStart(10, ' ') : v;   // numérica: justificada con espacios a la izquierda
+}
+function noiSalarioDiario(p, ctx){
+  if (ctx.salario === 'sd') {
+    const n = Number(p.sd);
+    if (p.sd == null || p.sd === '' || !isFinite(n) || n <= 0) return noiError('Falta el salario diario en el expediente.');
+    return Math.round(n * 100) / 100;
+  }
+  // Desde un esquema de pago activo de la clasificación elegida: sueldo ÷ días del periodo.
+  const esquemas = esquemasActivosDe(p.id).filter(r => r.clasificacion_id === ctx.clasificacionId);
+  if (!esquemas.length) return noiError('No tiene un esquema activo de la clasificación elegida.');
+  if (esquemas.length > 1) return noiError('Tiene ' + esquemas.length + ' esquemas activos de esa clasificación; deja uno solo.');
+  const r = esquemas[0];
+  if (r.modalidad_sueldo !== 'bruto') return noiError('El esquema es neto; el salario diario de NOI debe salir de un sueldo bruto.');
+  const dias = Number(r.dias_periodo_efectivo);
+  if (!isFinite(dias) || dias <= 0) return noiError('El esquema no tiene días del periodo.');
+  return Math.round(Number(r.sueldo) / dias * 100) / 100;
+}
+function noiSexo(p){
+  const s = noiTxt(p.sexo).toUpperCase();
+  if (!s) return noiAviso('Sin sexo.');
+  if (!NOI_SEXO[s]) return noiError('Sexo con valor no reconocido («' + s + '»).');
+  const curp = noiTxt(p.curp).toUpperCase();
+  if (curp.length === 18 && 'HM'.includes(curp[10]) && curp[10] !== s) return noiError('El sexo no coincide con la CURP.');
+  return NOI_SEXO[s];
+}
+function noiDigitos(v, n, nombre){
+  const s = noiTxt(v);
+  if (!s) return '';
+  return new RegExp('^\\d{' + n + '}$').test(s) ? s : noiError(nombre + ' debe tener ' + n + ' dígitos.');
+}
+function noiCatalogo(v, mapa, nombre){
+  const s = noiTxt(v);
+  if (!s) return '';
+  return Object.prototype.hasOwnProperty.call(mapa, s) ? mapa[s] : noiAviso(nombre + ' «' + s + '» no tiene equivalente en NOI; se deja vacío.');
+}
+
+// Las 56 columnas, en orden. tipo: texto | numero | decimal | fecha.
+// max: longitud máxima de la documentación. falta: 'error' bloquea la fila,
+// 'aviso' la deja exportar con la celda vacía.
+const NOI_COLUMNAS = [
+  { c: 'A', campo: 'Clave trabajador', tipo: 'texto', max: 10, falta: 'error', conservaEspacios: true, valor: noiClave },
+  { c: 'B', campo: 'A. paterno', tipo: 'texto', max: 20, falta: 'error', valor: p => p.primer_apellido },
+  { c: 'C', campo: 'A. materno', tipo: 'texto', max: 20, valor: p => p.segundo_apellido },
+  { c: 'D', campo: 'Nombre (s)', tipo: 'texto', max: 20, falta: 'error', valor: p => p.nombres },
+  { c: 'E', campo: 'Salario diario', tipo: 'decimal', falta: 'error', valor: noiSalarioDiario },
+  { c: 'F', campo: 'Sexo', tipo: 'texto', max: 1, valor: noiSexo },
+  { c: 'G', campo: 'Fecha de nacimiento', tipo: 'fecha', falta: 'aviso', valor: p => noiFecha(p.fecha_nacimiento) },
+  { c: 'H', campo: 'Fecha de alta', tipo: 'fecha', falta: 'error', valor: (p, ctx) => noiFecha(p[ctx.fechaAlta]) },
+  { c: 'I', campo: 'IMSS', tipo: 'texto', max: 11, falta: 'aviso', valor: p => noiDigitos(p.nss, 11, 'El NSS') },
+  { c: 'J', campo: 'Lugar de nacimiento', tipo: 'texto', valor: p => p.lugar_nacimiento },
+  { c: 'K', campo: 'CURP', tipo: 'texto', max: 18, falta: 'aviso', valor: p => { const s = noiTxt(p.curp).toUpperCase(); return !s || s.length === 18 ? s : noiError('La CURP debe tener 18 caracteres.'); } },
+  { c: 'L', campo: 'RFC', tipo: 'texto', max: 15, falta: 'aviso', valor: p => noiTxt(p.rfc).toUpperCase() },
+  { c: 'M', campo: 'Calle', tipo: 'texto', max: 40, falta: 'aviso', valor: p => p.calle_numero },
+  { c: 'N', campo: 'Colonia', tipo: 'texto', max: 25, valor: p => p.colonia },
+  { c: 'O', campo: 'Población', tipo: 'texto', max: 35, valor: p => p.poblacion },
+  { c: 'P', campo: 'Código postal', tipo: 'texto', max: 5, falta: 'aviso', valor: p => noiDigitos(p.codigo_postal, 5, 'El código postal') },
+  { c: 'Q', campo: 'Código postal fiscal', tipo: 'texto', max: 5, valor: p => noiDigitos(p.cp_fiscal, 5, 'El código postal fiscal') },
+  { c: 'R', campo: 'Entidad federativa', tipo: 'numero', falta: 'aviso', valor: p => { const s = noiTxt(p.entidad_federativa); if (!s) return ''; const n = Number(s); return /^\d{1,2}$/.test(s) && n >= 1 && n <= 32 ? n : noiAviso('Entidad «' + s + '»: NOI pide su clave del 1 al 32; se deja vacía.'); } },
+  { c: 'S', campo: 'Teléfono 1', tipo: 'texto', max: 15, valor: p => p.telefono_celular },
+  { c: 'T', campo: 'Teléfono 2', tipo: 'texto', max: 15, valor: p => p.telefono_casa },
+  { c: 'U', campo: 'Correo electrónico', tipo: 'texto', max: 60, valor: p => p.correo_electronico },
+  { c: 'V', campo: 'Correo electrónico 2', tipo: 'texto', max: 60, valor: () => '' },
+  { c: 'W', campo: 'Nivel de estudios', tipo: 'numero', valor: p => { const s = noiTxt(p.nivel_estudios); return !s ? '' : (/^[0-6]$/.test(s) ? Number(s) : noiAviso('Nivel de estudios «' + s + '»: NOI pide una clave del 0 al 6; se deja vacío.')); } },
+  { c: 'X', campo: 'Profesión', tipo: 'texto', max: 25, valor: p => p.profesion },
+  { c: 'Y', campo: 'Estado civil', tipo: 'texto', max: 1, valor: p => { const s = noiTxt(p.estado_civil).toUpperCase(); return !s ? '' : (NOI_ESTADO_CIVIL.includes(s) ? s : noiAviso('Estado civil «' + s + '» no es S, C, D, V o U; se deja vacío.')); } },
+  { c: 'Z', campo: 'Tipo de sangre', tipo: 'numero', valor: () => '' },
+  { c: 'AA', campo: 'Nombre de emergencia', tipo: 'texto', valor: p => p.contacto_emergencia_nombre },
+  { c: 'AB', campo: 'Teléfono de emergencia', tipo: 'texto', valor: p => p.contacto_emergencia_telefono },
+  { c: 'AC', campo: 'Forma de pago', tipo: 'texto', max: 1, falta: 'aviso', valor: p => noiCatalogo(p.tipo_pago_1, NOI_FORMA_PAGO, 'La forma de pago') },
+  { c: 'AD', campo: 'Banco operador', tipo: 'numero', valor: p => { const s = noiTxt(p.banco); if (!s) return ''; const n = Number(s); return /^\d{1,3}$/.test(s) && n >= 1 ? n : noiAviso('Banco «' + s + '»: NOI pide su clave numérica; se deja vacío.'); } },
+  { c: 'AE', campo: 'Localidad / sucursal', tipo: 'texto', max: 20, valor: () => '' },
+  { c: 'AF', campo: 'Control de banco', tipo: 'texto', max: 15, valor: () => '' },
+  { c: 'AG', campo: 'Cuenta depósito', tipo: 'texto', max: 16, valor: p => { const s = noiTxt(p.cuenta); if (s) return s; return noiTxt(p.clabe) ? noiAviso('Solo hay CLABE (18 dígitos) y NOI admite 16 en la cuenta; se deja vacía.') : ''; } },
+  { c: 'AH', campo: 'Tipo de empleado', tipo: 'texto', max: 1, valor: p => noiCatalogo(p.tipo_empleado, NOI_TIPO_EMPLEADO, 'El tipo de empleado') },
+  { c: 'AI', campo: 'Tipo de jornada', tipo: 'numero', valor: p => { const s = noiTxt(p.tipo_jornada); if (!s) return ''; if (s === 'Completa') return 0; return noiAviso('Jornada «' + s + '»: NOI pide el número de días (1 a 6); se deja vacía.'); } },
+  { c: 'AJ', campo: 'Turno', tipo: 'texto', max: 1, valor: p => noiCatalogo(p.turno, NOI_TURNO, 'El turno') },
+  { c: 'AK', campo: 'Unidad médica familiar', tipo: 'numero', valor: () => '' },
+  { c: 'AL', campo: 'Descuenta pensión alimenticia', tipo: 'texto', max: 1, valor: () => '' },
+  { c: 'AM', campo: 'Registro patronal', tipo: 'texto', max: 14, falta: 'aviso', valor: p => p.registro_patronal_id ? (nombreDeRegistroPatronalPorId(p.registro_patronal_id) || '') : '' },
+  { c: 'AN', campo: 'Clasificación', tipo: 'texto', max: 10, valor: () => '' },
+  { c: 'AO', campo: 'Departamento', tipo: 'texto', max: 5, falta: 'aviso', valor: () => '' },
+  { c: 'AP', campo: 'Puesto', tipo: 'texto', max: 5, falta: 'aviso', valor: () => '' },
+  { c: 'AQ', campo: 'Tipo de contrato', tipo: 'texto', max: 1, valor: () => '' },
+  { c: 'AR', campo: 'Tipo de ingresos', tipo: 'numero', valor: () => '' },
+  { c: 'AS', campo: 'País', tipo: 'texto', max: 30, valor: () => '' },
+  { c: 'AT', campo: 'Clave de régimen de contratación', tipo: 'numero', valor: () => '' },
+  { c: 'AU', campo: 'Base cotización', tipo: 'texto', max: 1, valor: () => '' },
+  { c: 'AV', campo: 'Clave de tipo contrato V12', tipo: 'numero', valor: () => '' },
+  { c: 'AW', campo: 'Clave de tipo jornada V12', tipo: 'numero', valor: () => '' },
+  { c: 'AX', campo: 'Clave de entidad federativa V12', tipo: 'texto', max: 3, valor: () => '' },
+  { c: 'AY', campo: 'Ruta plantilla', tipo: 'texto', valor: () => '' },
+  { c: 'AZ', campo: 'Clave régimen contrato V12', tipo: 'numero', valor: () => '' },
+  { c: 'BA', campo: 'Clave de banco operador V12', tipo: 'numero', valor: () => '' },
+  { c: 'BB', campo: 'Tabla de vacaciones', tipo: 'numero', valor: () => '' },
+  { c: 'BC', campo: 'Tabla de Sal. Diario', tipo: 'numero', valor: () => '' },
+  { c: 'BD', campo: 'Días de duración', tipo: 'numero', valor: () => '' }
+];
+// Columnas sin dato en BeeHuman que NOI suele necesitar: se avisa una sola vez por archivo.
+const NOI_PENDIENTES_ARCHIVO = 'Departamento (AO) y puesto (AP) van vacíos: falta registrar la clave NOI de cada departamento y puesto.';
+
+// Valida y transforma una persona. Devuelve { celdas: [56], errores, avisos }.
+function noiEvaluarPersona(p, ctx){
+  const celdas = [], errores = [], avisos = [];
+  NOI_COLUMNAS.forEach(col => {
+    let v = col.valor(p, ctx);
+    if (v && typeof v === 'object' && 'error' in v) { errores.push(col.c + ' ' + col.campo + ': ' + v.error); celdas.push(''); return; }
+    if (v && typeof v === 'object' && 'aviso' in v) { avisos.push(col.c + ' ' + col.campo + ': ' + v.aviso); celdas.push(''); return; }
+    if (typeof v === 'string' && !col.conservaEspacios) v = v.trim();   // la clave numérica lleva espacios a la izquierda a propósito
+    if (v === '' || v == null) {
+      if (col.falta === 'error') errores.push(col.c + ' ' + col.campo + ': falta.');
+      else if (col.falta === 'aviso' && col.c !== 'AO' && col.c !== 'AP') avisos.push(col.c + ' ' + col.campo + ': vacío.');
+      celdas.push(''); return;
+    }
+    if (col.max && String(v).length > col.max) { errores.push(col.c + ' ' + col.campo + ': tiene ' + String(v).length + ' caracteres; NOI admite ' + col.max + '.'); celdas.push(''); return; }
+    celdas.push(v);
+  });
+  return { celdas, errores, avisos };
+}
+// Una exportación válida contiene personas de UNA empresa: NOI importa por empresa.
+function noiEvaluarSeleccion(personas, ctx){
+  const filas = personas.map(p => ({ p, ...noiEvaluarPersona(p, ctx) }));
+  const empresasSel = [...new Set(personas.map(p => p.empresa_id || ''))];
+  const errorArchivo = !personas.length ? 'No hay personas seleccionadas.'
+    : (empresasSel.length > 1 ? 'Las personas seleccionadas son de ' + empresasSel.length + ' empresas distintas. NOI importa por empresa: filtra o selecciona una sola.'
+    : (!empresasSel[0] ? 'Las personas seleccionadas no tienen empresa asignada.' : ''));
+  return { filas, errorArchivo, empresaId: empresasSel.length === 1 ? empresasSel[0] : null };
+}
+
+// Celdas del libro: texto como texto (conserva ceros y espacios), fechas como
+// fecha de Excel con formato dd/mm/aaaa, importes con dos decimales.
+function noiCeldaXLS(col, v){
+  if (v === '' || v == null) return null;
+  if (col.tipo === 'fecha') { const [y, m, d] = v.split('-').map(Number); return { t: 'n', v: (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 864e5, z: 'dd/mm/yyyy' }; }
+  if (col.tipo === 'decimal') return { t: 'n', v: Number(v), z: '0.00' };
+  if (col.tipo === 'numero') return { t: 'n', v: Number(v) };
+  return { t: 's', v: String(v), z: '@' };
+}
+function noiConstruirLibro(XLSX, filasValidas){
+  const ws = {};
+  NOI_COLUMNAS.forEach((col, j) => { ws[XLSX.utils.encode_cell({ r: 0, c: j })] = { t: 's', v: col.campo }; });
+  filasValidas.forEach((f, i) => NOI_COLUMNAS.forEach((col, j) => {
+    const celda = noiCeldaXLS(col, f.celdas[j]);
+    if (celda) ws[XLSX.utils.encode_cell({ r: i + 1, c: j })] = celda;
+  }));
+  ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: filasValidas.length, c: NOI_COLUMNAS.length - 1 } });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Layout NOI');
+  return XLSX.write(wb, { bookType: 'biff8', type: 'array' });
+}
+function noiNombreArchivo(empresaId){
+  const d = new Date(), hh = String(d.getHours()).padStart(2, '0'), mm = String(d.getMinutes()).padStart(2, '0');
+  const empresa = (empresaNombre(empresaId) || 'empresa').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+  return `NOI_altas_${empresa}_${fechaLocalHoy()}_${hh}${mm}.xls`;
+}
+
+// --- Ventana de exportación ---------------------------------------------
+let noiEstado = null;   // { personas, excluidos:Set, ctx }
+function puedeExportarNOI(){ return rolActual === 'administrador' || rolActual === 'nomina'; }
+function abrirExportarNOI(){
+  if (!puedeExportarNOI() || !listaFiltrada.length) return;
+  const clas = new Map();
+  listaFiltrada.forEach(p => esquemasActivosDe(p.id).forEach(r => { if (r.clasificacion_id) clas.set(r.clasificacion_id, r.clasificacion_nombre || 'Sin nombre'); }));
+  const selClas = document.getElementById('noi-clasificacion');
+  selClas.innerHTML = [...clas].sort((a, b) => a[1].localeCompare(b[1], 'es')).map(([id, n]) => `<option value="${escapeHtml(id)}">${escapeHtml(n)}</option>`).join('');
+  noiEstado = { personas: listaFiltrada.slice(), excluidos: new Set(listaFiltrada.filter(p => estatusPersona(p) === 'Baja').map(p => p.id)) };
+  document.getElementById('noi-toast').style.display = 'none';
+  document.getElementById('modal-noi-overlay').style.display = 'block';
+  renderExportarNOI();
+}
+function cerrarExportarNOI(){ document.getElementById('modal-noi-overlay').style.display = 'none'; noiEstado = null; }
+function noiContexto(){
+  const salario = document.getElementById('noi-salario').value;
+  document.getElementById('noi-clasificacion-campo').style.display = salario === 'esquema' ? '' : 'none';
+  return { clave: document.getElementById('noi-clave').value, fechaAlta: document.getElementById('noi-fecha-alta').value,
+           salario, clasificacionId: document.getElementById('noi-clasificacion').value || null };
+}
+function renderExportarNOI(){
+  if (!noiEstado) return;
+  const ctx = noiContexto();
+  const elegidas = noiEstado.personas.filter(p => !noiEstado.excluidos.has(p.id));
+  const ev = noiEvaluarSeleccion(elegidas, ctx);
+  const porId = new Map(ev.filas.map(f => [f.p.id, f]));
+  const validas = ev.filas.filter(f => !f.errores.length);
+  const conError = ev.filas.length - validas.length;
+  const avisosTot = validas.reduce((n, f) => n + f.avisos.length, 0);
+  noiEstado.ev = ev; noiEstado.validas = validas;
+  document.getElementById('noi-resumen').innerHTML =
+    (ev.errorArchivo ? `<div class="noi-alerta">${escapeHtml(ev.errorArchivo)}</div>` : '') +
+    `<b>${validas.length.toLocaleString('es-MX')}</b> listas para exportar · <b>${conError.toLocaleString('es-MX')}</b> con errores (no se incluyen) · ${noiEstado.excluidos.size.toLocaleString('es-MX')} sin seleccionar` +
+    (validas.length ? `<div class="noi-nota">${escapeHtml(NOI_PENDIENTES_ARCHIVO)}${avisosTot ? ' Hay ' + avisosTot.toLocaleString('es-MX') + ' avisos de campos vacíos o sin equivalente.' : ''}</div>` : '');
+  const fila = p => {
+    const sel = !noiEstado.excluidos.has(p.id), f = porId.get(p.id);
+    const estado = !sel ? '<span class="pill noi-pill-off">No seleccionada</span>'
+      : (f.errores.length ? `<span class="pill noi-pill-error">${f.errores.length} ${f.errores.length === 1 ? 'error' : 'errores'}</span>`
+      : `<span class="pill">Lista</span>${f.avisos.length ? ` <span class="pill noi-pill-aviso">${f.avisos.length} ${f.avisos.length === 1 ? 'aviso' : 'avisos'}</span>` : ''}`);
+    const detalle = sel && f ? [...f.errores.map(t => `<div class="noi-err">${escapeHtml(t)}</div>`), ...f.avisos.map(t => `<div class="noi-avi">${escapeHtml(t)}</div>`)].join('') : '';
+    return `<tr><td><input type="checkbox" data-noi-id="${escapeHtml(p.id)}" ${sel ? 'checked' : ''} aria-label="Incluir a ${escapeHtml(p.nombre_completo || '')}"></td>
+      <td>${escapeHtml(p.empleado_id || '')}</td><td>${escapeHtml(p.nombre_completo || '')}<div class="rp-sub">${escapeHtml(p.empresa_id ? empresaNombre(p.empresa_id) : 'Sin empresa')} · ${escapeHtml(estatusPersona(p))}</div></td>
+      <td>${estado}</td><td class="noi-detalle">${detalle}</td></tr>`;
+  };
+  document.getElementById('noi-tabla').innerHTML = noiEstado.personas.map(fila).join('');
+  const btn = document.getElementById('noi-descargar');
+  btn.disabled = !!ev.errorArchivo || !validas.length;
+  btn.textContent = validas.length ? `Descargar archivo NOI (${validas.length.toLocaleString('es-MX')} ${validas.length === 1 ? 'trabajador' : 'trabajadores'})` : 'Descargar archivo NOI';
+}
+async function descargarExportarNOI(){
+  if (!noiEstado || !puedeExportarNOI()) return;
+  const btn = document.getElementById('noi-descargar'), toast = document.getElementById('noi-toast');
+  const { ev, validas } = noiEstado;
+  if (ev.errorArchivo || !validas.length) return;
+  btn.disabled = true;
+  try {
+    const XLSX = await cargarXlsxNOI();
+    const datos = noiConstruirLibro(XLSX, validas);
+    const blob = new Blob([datos], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = noiNombreArchivo(ev.empresaId);
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast.className = 'toast ok'; toast.textContent = `Archivo generado con ${validas.length} trabajadores: ${a.download}. Impórtalo en NOI y revisa el resultado.`;
+  } catch (e) {
+    toast.className = 'toast err'; toast.textContent = e.message || 'No se pudo generar el archivo.';
+  }
+  toast.style.display = 'block';
+  btn.disabled = false;
+}
+document.getElementById('exportar-noi').addEventListener('click', abrirExportarNOI);
+['noi-clave', 'noi-fecha-alta', 'noi-salario', 'noi-clasificacion'].forEach(id => document.getElementById(id).addEventListener('change', renderExportarNOI));
+document.getElementById('noi-tabla').addEventListener('change', e => {
+  const id = e.target && e.target.getAttribute('data-noi-id'); if (!id || !noiEstado) return;
+  if (e.target.checked) noiEstado.excluidos.delete(id); else noiEstado.excluidos.add(id);
+  renderExportarNOI();
+});
+document.getElementById('noi-todas').addEventListener('click', () => { if (!noiEstado) return; noiEstado.excluidos.clear(); renderExportarNOI(); });
+document.getElementById('noi-ninguna').addEventListener('click', () => { if (!noiEstado) return; noiEstado.personas.forEach(p => noiEstado.excluidos.add(p.id)); renderExportarNOI(); });
+document.getElementById('noi-descargar').addEventListener('click', descargarExportarNOI);
+document.getElementById('noi-cerrar').addEventListener('click', cerrarExportarNOI);
 document.getElementById('pagina-anterior').addEventListener('click', () => { listaPagina -= 1; renderTabla(); });
 document.getElementById('pagina-siguiente').addEventListener('click', () => { listaPagina += 1; renderTabla(); });
 

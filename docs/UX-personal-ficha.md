@@ -18,3 +18,11 @@ Estilos en el bloque `@@UX_PERSONAL_FICHA` al final de la hoja; se puede retirar
 - Envíos de escritura a la base idénticos antes/después (5 operaciones).
 - Única diferencia, la esperada: con cambios sin guardar, cerrar pide confirmación; cancelar conserva lo escrito; aceptar descarta (no se guarda nada). Sin cambios, o cambiando y regresando al valor original, no avisa.
 - Regresión: pantallas Ola 1 33/33; inicio de sesión sin cambios.
+
+## Comparativo de personal por empresa (Resumen)
+Sección «Participación de personal por empresa» debajo de las tarjetas del tablero (`renderComparativoEmpresas`, llamada desde `actualizarDashboard`).
+- Base: personas vigentes (sin Baja) que el usuario ya puede ver; cada rol ve solo su ámbito (Consulta, su empresa o proyecto). Solo conteos: sin sueldos ni importes.
+- Por empresa: personas, porcentaje del total, lugar (los empates comparten lugar) y barra proporcional a la empresa más grande. Las empresas sin personal vigente aparecen al final; las personas sin empresa se cuentan en el total y se indican aparte.
+- Al elegir una empresa: lugar de N, personas, porcentaje, y diferencia en personas y puntos porcentuales frente a la más grande y la más pequeña.
+- La comparación económica queda pendiente (decisión de Erik, 30-oct).
+- Pruebas: `supabase/verificacion/ux/comparativo.py` (Administrador, Nómina y Consulta; escritorio y móvil; 46/18 personas = 71.9% / 28.1%; Consulta ve solo su empresa). Regresión de Personal y ficha idéntica; Ola 1 33/33.

@@ -1053,6 +1053,37 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
 #d-registros-pago .rp-t-acciones button.primary:hover{background:var(--v21-hover)!important}
 #d-registros-pago .rp-t-acciones button[onclick^="cerrarRegistroPago"]{color:var(--v21-rojo)!important;border-color:#F4D9D5!important}
 /* @@UX_PERSONAL_FICHA_FIN */
+/* @@COMPARATIVO_EMPRESAS · participación de personal por empresa (solo conteos) */
+#panel-resumen .comparativo-card .seccion-cuerpo{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:22px;align-items:start}
+#comparativo-empresas{display:contents}
+.comparativo-detalle{border:1px solid var(--v21-borde);border-radius:12px;padding:18px;background:var(--v21-fondo)}
+.comparativo-detalle-cabeza{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.comparativo-detalle-cabeza b{display:block;font-size:15px;color:var(--v21-cifra);line-height:1.25}
+.comparativo-detalle-cabeza small{font-size:12px;color:var(--v21-texto-2)}
+.comparativo-lugar{flex:none;width:44px;height:44px;border-radius:12px;background:var(--v21-navy);color:#fff;display:grid;place-items:center;font-weight:600;font-size:16px}
+.comparativo-cifras{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.comparativo-cifras div{background:#fff;border:1px solid var(--v21-borde-2);border-radius:10px;padding:10px 12px}
+.comparativo-cifras b{display:block;font-size:22px;font-weight:600;letter-spacing:-.02em;color:var(--v21-cifra);font-variant-numeric:tabular-nums}
+.comparativo-cifras small{font-size:11.5px;color:var(--v21-texto-2)}
+.comparativo-notas{margin:0;padding:0 0 0 16px;font-size:12.5px;color:var(--v21-texto);line-height:1.5}
+.comparativo-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.comparativo-fila{width:100%;display:grid;grid-template-columns:28px minmax(120px,220px) minmax(0,1fr) 120px;align-items:center;gap:12px;margin:0!important;padding:9px 10px!important;border:1px solid transparent!important;border-radius:10px!important;background:transparent!important;color:var(--v21-texto)!important;font:inherit!important;font-size:13px!important;text-align:left;cursor:pointer}
+.comparativo-fila:hover{background:var(--v21-hover)!important}
+.comparativo-fila.activa{background:#fff!important;border-color:var(--v21-borde)!important;box-shadow:var(--v21-sombra)}
+.comparativo-pos{width:24px;height:24px;border-radius:7px;background:var(--v21-fondo);border:1px solid var(--v21-borde);display:grid;place-items:center;font-size:11.5px;font-weight:600;color:var(--v21-texto-2)}
+.comparativo-fila.activa .comparativo-pos{background:var(--v21-navy);border-color:var(--v21-navy);color:#fff}
+.comparativo-nombre{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.comparativo-barra{height:10px;border-radius:999px;background:var(--v21-borde-2);overflow:hidden}
+.comparativo-barra span{display:block;height:100%;border-radius:999px;background:var(--v21-azul);min-width:2px}
+.comparativo-fila.activa .comparativo-barra span{background:var(--v21-navy)}
+.comparativo-valor{text-align:right;font-variant-numeric:tabular-nums;color:var(--v21-texto-2);white-space:nowrap}
+.comparativo-valor b{color:var(--v21-cifra);font-weight:600}
+.comparativo-nota{grid-column:1/-1;margin:4px 0 0}
+@media(max-width:900px){
+  #panel-resumen .comparativo-card .seccion-cuerpo{grid-template-columns:1fr}
+  .comparativo-fila{grid-template-columns:24px minmax(0,1fr) auto;grid-template-areas:"pos nombre valor" "barra barra barra";row-gap:6px}
+  .comparativo-pos{grid-area:pos}.comparativo-nombre{grid-area:nombre}.comparativo-valor{grid-area:valor}.comparativo-barra{grid-area:barra}
+}
 </style>
 </head>
 <body>
@@ -1365,6 +1396,10 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
       <button class="metric-card metric-green" type="button" onclick="cambiarPestana('lista')"><span class="metric-icon">♧</span><span><b id="dash-personas">—</b><small>Personas</small><em id="dash-personas-sub">Personal registrado</em></span><span class="metric-arrow">›</span></button>
       <button class="metric-card" type="button" onclick="cambiarPestana('empresas')"><span class="metric-icon">▦</span><span><b id="dash-empresas">—</b><small>Empresas</small><em>Organizaciones registradas</em></span><span class="metric-arrow">›</span></button>
       <button class="metric-card metric-red" type="button" onclick="cambiarPestana('lista')"><span class="metric-icon">♧</span><span><b id="dash-pendientes">—</b><small>Pendientes</small><em id="dash-pendientes-sub">Revisión de información</em></span><span class="metric-arrow">›</span></button>
+    </div>
+    <div class="card resumen-seccion seccion-neutra comparativo-card" id="comparativo-empresas-card">
+      <div class="seccion-cabeza"><h2>Participación de personal por empresa</h2><p class="hint">Personas vigentes (sin Baja) de cada empresa y su porcentaje del total. Elige una empresa para ver su lugar y su diferencia frente a las demás.</p></div>
+      <div class="seccion-cuerpo"><div id="comparativo-empresas"><div class="empty">Cargando…</div></div></div>
     </div>
     <div class="dashboard-columns">
       <div class="card dashboard-recent">
@@ -2845,7 +2880,66 @@ function cambiarPestana(tab){
 function mostrarAyudaBeeHuman(){
   alert('BeeHuman organiza la información de tu personal, empresas, expedientes y catálogos. Algunas herramientas se habilitarán en próximas versiones.');
 }
+// Comparativo de personal por empresa: solo cuenta personas vigentes (sin
+// Baja) de lo que el usuario ya puede ver. No usa sueldos ni importes.
+let comparativoEmpresaSel = null;
+function datosComparativoEmpresas(){
+  const vigentes = personal.filter(p => !personaEnBaja(p));
+  const conteo = new Map(empresas.map(e => [String(e.id), 0]));
+  let sinEmpresa = 0;
+  vigentes.forEach(p => {
+    const k = p.empresa_id ? String(p.empresa_id) : null;
+    if (k && conteo.has(k)) conteo.set(k, conteo.get(k) + 1); else sinEmpresa += 1;
+  });
+  const total = vigentes.length;
+  const filas = [...conteo.entries()].map(([id, n]) => ({ id, nombre: empresaNombre(id), personas: n }))
+    .sort((a, b) => b.personas - a.personas || String(a.nombre).localeCompare(String(b.nombre), 'es'));
+  filas.forEach((f, i) => {
+    f.lugar = i && f.personas === filas[i - 1].personas ? filas[i - 1].lugar : i + 1; // empates comparten lugar
+    f.pct = total ? f.personas * 100 / total : 0;
+  });
+  return { filas, total, sinEmpresa };
+}
+function pctTexto(v){ return v.toLocaleString('es-MX', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
+function renderComparativoEmpresas(){
+  const cont = document.getElementById('comparativo-empresas');
+  if (!cont) return;
+  const { filas, total, sinEmpresa } = datosComparativoEmpresas();
+  if (!filas.length || !total) { cont.innerHTML = '<div class="empty">Todavía no hay personal vigente asignado a empresas.</div>'; return; }
+  if (!filas.some(f => f.id === comparativoEmpresaSel)) comparativoEmpresaSel = filas[0].id;
+  const max = filas[0].personas || 1;
+  const sel = filas.find(f => f.id === comparativoEmpresaSel);
+  const mayor = filas[0], menor = filas[filas.length - 1];
+  const personasTxt = n => n.toLocaleString('es-MX') + (n === 1 ? ' persona' : ' personas');
+  const dif = (a, b, etiqueta) => {
+    const d = a.personas - b.personas, pts = a.pct - b.pct;
+    if (!d) return `Igual que ${etiqueta} (${escapeHtml(b.nombre)}).`;
+    return `${personasTxt(Math.abs(d))} ${d > 0 ? 'más' : 'menos'} que ${etiqueta} (${escapeHtml(b.nombre)}), ${d > 0 ? '+' : '−'}${pctTexto(Math.abs(pts)).replace('%', ' pts')}.`;
+  };
+  const lineas = [];
+  if (filas.length > 1) {
+    lineas.push(sel.lugar === 1 ? 'Es la empresa con más personal.' : dif(sel, mayor, 'la más grande'));
+    if (sel.personas !== menor.personas) lineas.push(dif(sel, menor, 'la más pequeña'));
+    else if (sel.lugar !== 1) lineas.push('Es la empresa con menos personal.');
+  }
+  cont.innerHTML = `
+    <div class="comparativo-detalle" aria-live="polite">
+      <div class="comparativo-detalle-cabeza"><span class="comparativo-lugar">${sel.lugar}º</span><div><b>${escapeHtml(sel.nombre)}</b><small>Lugar ${sel.lugar} de ${filas.length}</small></div></div>
+      <div class="comparativo-cifras"><div><b>${sel.personas.toLocaleString('es-MX')}</b><small>Personas vigentes</small></div><div><b>${pctTexto(sel.pct)}</b><small>Del total (${total.toLocaleString('es-MX')})</small></div></div>
+      ${lineas.length ? `<ul class="comparativo-notas">${lineas.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}
+    </div>
+    <ol class="comparativo-lista">${filas.map(f => `
+      <li><button type="button" class="comparativo-fila${f.id === sel.id ? ' activa' : ''}" aria-pressed="${f.id === sel.id}" onclick="comparativoEmpresaSel='${escapeHtml(f.id)}';renderComparativoEmpresas()">
+        <span class="comparativo-pos">${f.lugar}</span>
+        <span class="comparativo-nombre" title="${escapeHtml(f.nombre)}">${escapeHtml(f.nombre)}</span>
+        <span class="comparativo-barra" aria-hidden="true"><span style="width:${(f.personas * 100 / max).toFixed(2)}%"></span></span>
+        <span class="comparativo-valor"><b>${f.personas.toLocaleString('es-MX')}</b> · ${pctTexto(f.pct)}</span>
+      </button></li>`).join('')}
+    </ol>
+    ${sinEmpresa ? `<p class="hint comparativo-nota">${personasTxt(sinEmpresa)} vigente${sinEmpresa === 1 ? '' : 's'} sin empresa asignada (incluidas en el total).</p>` : ''}`;
+}
 function actualizarDashboard(){
+  renderComparativoEmpresas();
   const total=personal.length;
   const vigentes=personal.filter(p=>!personaEnBaja(p));
   const empresasUnicas=empresas.length;

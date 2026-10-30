@@ -1,0 +1,37 @@
+// Pruebas de la lógica de aniversarios (extraída de app/index.html).
+const fs = require('fs');
+const html = fs.readFileSync(process.argv[2], 'utf8');
+const ini = html.indexOf('const ANIVERSARIO_DIAS_ANTES'), fin = html.indexOf('\n}', html.indexOf('function textoAniversario')) + 2;
+const personaEnBaja = p => p.estatus === 'Baja';
+eval(html.slice(ini, fin).replace(/^const /gm, 'var '));
+let ok = 0, falla = 0;
+const prueba = (nombre, p, hoy, esperado) => {
+  const r = aniversarioDe(p, hoy);
+  const res = r ? (r.estado === 'sin_fecha' ? 'sin_fecha' : `${r.estado} ${r.fecha} ${r.anios}a ${r.dias}d ${r.fuente}`) : 'ninguna';
+  const bien = res === esperado; bien ? ok++ : falla++;
+  console.log((bien ? 'OK    ' : 'FALLA ') + nombre + ' → ' + res + (bien ? '' : '   (esperado: ' + esperado + ')'));
+};
+prueba('Futuro dentro de la ventana', { fecha_antiguedad: '2020-11-09' }, '2026-10-30', 'proximo 2026-11-09 6a 10d antigüedad');
+prueba('Límite: exactamente 30 días antes', { fecha_antiguedad: '2020-11-29' }, '2026-10-30', 'proximo 2026-11-29 6a 30d antigüedad');
+prueba('Fuera: 31 días antes', { fecha_antiguedad: '2020-11-30' }, '2026-10-30', 'ninguna');
+prueba('Del día', { fecha_antiguedad: '2019-10-30' }, '2026-10-30', 'hoy 2026-10-30 7a 0d antigüedad');
+prueba('Pasado dentro de la ventana', { fecha_antiguedad: '2021-10-25' }, '2026-10-30', 'cumplido 2026-10-25 5a -5d antigüedad');
+prueba('Límite: hace 30 días', { fecha_antiguedad: '2021-09-30' }, '2026-10-30', 'cumplido 2026-09-30 5a -30d antigüedad');
+prueba('Fuera: hace 31 días', { fecha_antiguedad: '2021-09-29' }, '2026-10-30', 'ninguna');
+prueba('Cambio de año hacia adelante (dic → ene)', { fecha_antiguedad: '2022-01-05' }, '2026-12-20', 'proximo 2027-01-05 5a 16d antigüedad');
+prueba('Cambio de año hacia atrás (ene → dic)', { fecha_antiguedad: '2022-12-28' }, '2027-01-03', 'cumplido 2026-12-28 4a -6d antigüedad');
+prueba('29 de febrero en año no bisiesto → 28', { fecha_antiguedad: '2020-02-29' }, '2026-02-20', 'proximo 2026-02-28 6a 8d antigüedad');
+prueba('29 de febrero en año bisiesto', { fecha_antiguedad: '2020-02-29' }, '2028-02-20', 'proximo 2028-02-29 8a 9d antigüedad');
+prueba('Ingreso este año: aún no cumple un año', { fecha_antiguedad: '2026-11-05' }, '2026-10-30', 'ninguna');
+prueba('Ingreso hace menos de un año, primer aniversario próximo', { fecha_antiguedad: '2025-11-10' }, '2026-10-30', 'proximo 2026-11-10 1a 11d antigüedad');
+prueba('Sin antigüedad: usa alta IMSS', { fecha_alta_imss: '2018-11-01' }, '2026-10-30', 'proximo 2026-11-01 8a 2d alta IMSS');
+prueba('Sin antigüedad ni alta: usa ingreso', { fecha_inicio_contrato: '2024-10-31' }, '2026-10-30', 'proximo 2026-10-31 2a 1d ingreso');
+prueba('Antigüedad tiene prioridad sobre ingreso', { fecha_antiguedad: '2015-11-02', fecha_inicio_contrato: '2020-10-31' }, '2026-10-30', 'proximo 2026-11-02 11a 3d antigüedad');
+prueba('Información incompleta: sin fechas', {}, '2026-10-30', 'sin_fecha');
+prueba('Fecha inválida se trata como faltante', { fecha_antiguedad: '2020-02-31' }, '2026-10-30', 'sin_fecha');
+prueba('Fecha inválida usa la siguiente fuente', { fecha_antiguedad: 'xx', fecha_inicio_contrato: '2023-11-15' }, '2026-10-30', 'proximo 2026-11-15 3a 16d ingreso');
+prueba('Fecha con hora (timestamp)', { fecha_alta_imss: '2017-11-03T00:00:00' }, '2026-10-30', 'proximo 2026-11-03 9a 4d alta IMSS');
+prueba('Persona en Baja: sin alerta', { estatus: 'Baja', fecha_antiguedad: '2020-11-09' }, '2026-10-30', 'ninguna');
+prueba('Una sola alerta por aniversario (no se duplica)', { fecha_antiguedad: '2020-10-30' }, '2026-10-30', 'hoy 2026-10-30 6a 0d antigüedad');
+console.log(`\nRESULTADO: ${ok} de ${ok + falla} OK`);
+process.exit(falla ? 1 : 0);

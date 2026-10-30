@@ -1,0 +1,24 @@
+OK    Futuro dentro de la ventana → proximo 2026-11-09 6a 10d antigüedad
+OK    Límite: exactamente 30 días antes → proximo 2026-11-29 6a 30d antigüedad
+OK    Fuera: 31 días antes → ninguna
+OK    Del día → hoy 2026-10-30 7a 0d antigüedad
+OK    Pasado dentro de la ventana → cumplido 2026-10-25 5a -5d antigüedad
+OK    Límite: hace 30 días → cumplido 2026-09-30 5a -30d antigüedad
+OK    Fuera: hace 31 días → ninguna
+OK    Cambio de año hacia adelante (dic → ene) → proximo 2027-01-05 5a 16d antigüedad
+OK    Cambio de año hacia atrás (ene → dic) → cumplido 2026-12-28 4a -6d antigüedad
+OK    29 de febrero en año no bisiesto → 28 → proximo 2026-02-28 6a 8d antigüedad
+OK    29 de febrero en año bisiesto → proximo 2028-02-29 8a 9d antigüedad
+OK    Ingreso este año: aún no cumple un año → ninguna
+OK    Ingreso hace menos de un año, primer aniversario próximo → proximo 2026-11-10 1a 11d antigüedad
+OK    Sin antigüedad: usa alta IMSS → proximo 2026-11-01 8a 2d alta IMSS
+OK    Sin antigüedad ni alta: usa ingreso → proximo 2026-10-31 2a 1d ingreso
+OK    Antigüedad tiene prioridad sobre ingreso → proximo 2026-11-02 11a 3d antigüedad
+OK    Información incompleta: sin fechas → sin_fecha
+OK    Fecha inválida se trata como faltante → sin_fecha
+OK    Fecha inválida usa la siguiente fuente → proximo 2026-11-15 3a 16d ingreso
+OK    Fecha con hora (timestamp) → proximo 2026-11-03 9a 4d alta IMSS
+OK    Persona en Baja: sin alerta → ninguna
+OK    Una sola alerta por aniversario (no se duplica) → hoy 2026-10-30 6a 0d antigüedad
+
+RESULTADO: 22 de 22 OK

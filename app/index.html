@@ -1053,6 +1053,12 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
 #d-registros-pago .rp-t-acciones button.primary:hover{background:var(--v21-hover)!important}
 #d-registros-pago .rp-t-acciones button[onclick^="cerrarRegistroPago"]{color:var(--v21-rojo)!important;border-color:#F4D9D5!important}
 /* @@UX_PERSONAL_FICHA_FIN */
+/* Aniversarios para revisar SBC */
+.aniversarios-bloque .table-wrap{margin:8px 0 12px}
+.aniversarios-tabla td,.aniversarios-tabla th{font-size:12.5px}
+.aniversarios-tabla .aniv-pill{white-space:nowrap}
+.aniversarios-tabla tr.aniv-proximo .aniv-pill{background:var(--v21-azul-suave);color:#22489E}
+.aniversarios-tabla tr.aniv-hoy .aniv-pill,.aniversarios-tabla tr.aniv-cumplido .aniv-pill{background:var(--v21-amarillo-suave);color:#8A6100}
 /* @@COMPARATIVO_EMPRESAS · participación de personal por empresa (solo conteos) */
 #panel-resumen .comparativo-card .seccion-cuerpo{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:22px;align-items:start}
 #comparativo-empresas{display:contents}
@@ -1358,6 +1364,8 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
           <option value="sin_esquema">Sin esquema de pago activo</option>
           <option value="requisitos">Falta un dato que exige su clasificación</option>
           <option value="contrato">Contrato vencido o por vencer (30 días)</option>
+          <option value="aniversario">Aniversario para revisar SBC (±30 días)</option>
+          <option value="sin_fecha_aniversario">Sin fecha de antigüedad, alta IMSS ni ingreso</option>
         </select>
       </div>
       <div class="filtros-aplicados" id="filtros-aplicados" style="display:none;">
@@ -2193,6 +2201,55 @@ function claseEstatusPersona(estatus){
 // de pantalla: la exportación incluye todas las coincidencias.
 // ---------------------------------------------------------------------
 const DIAS_AVISO_CONTRATO = 30;
+// ---------------------------------------------------------------------
+// Alertas de aniversario laboral para revisar el SBC (solo aviso).
+// Fecha base: antigüedad; si falta, alta IMSS; si falta, ingreso (inicio
+// de contrato). Ventana: 30 días antes y 30 días después del aniversario.
+// Una alerta por persona y aniversario. No genera ni marca movimientos ante
+// el IMSS: el aniversario no siempre implica modificación del SBC.
+// ---------------------------------------------------------------------
+const ANIVERSARIO_DIAS_ANTES = 30, ANIVERSARIO_DIAS_DESPUES = 30;
+const ANIVERSARIO_FUENTES = [
+  ['fecha_antiguedad', 'antigüedad'],
+  ['fecha_alta_imss', 'alta IMSS'],
+  ['fecha_inicio_contrato', 'ingreso']
+];
+function fechaISOValida(v){
+  const t = String(v == null ? '' : v).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return null;
+  const [a, m, d] = t.split('-').map(Number);
+  const f = new Date(a, m - 1, d);
+  return (f.getFullYear() === a && f.getMonth() === m - 1 && f.getDate() === d) ? t : null;
+}
+function diasEntreISO(desde, hasta){
+  const [a1, m1, d1] = desde.split('-').map(Number), [a2, m2, d2] = hasta.split('-').map(Number);
+  return Math.round((Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1)) / 86400000);
+}
+// Devuelve null (sin alerta), { estado: 'sin_fecha' } o el aniversario dentro de la ventana.
+function aniversarioDe(p, hoyISO){
+  if (personaEnBaja(p)) return null;
+  const fuente = ANIVERSARIO_FUENTES.find(([campo]) => fechaISOValida(p[campo]));
+  if (!fuente) return { estado: 'sin_fecha' };
+  const base = fechaISOValida(p[fuente[0]]);
+  const [ab, mb, db] = base.split('-').map(Number);
+  const anioHoy = Number(hoyISO.slice(0, 4));
+  for (const anio of [anioHoy - 1, anioHoy, anioHoy + 1]) {
+    const anios = anio - ab;
+    if (anios < 1) continue;
+    const bisiesto = (anio % 4 === 0 && anio % 100 !== 0) || anio % 400 === 0;
+    const dia = (mb === 2 && db === 29 && !bisiesto) ? 28 : db; // 29 de febrero → 28 en años no bisiestos
+    const fecha = `${anio}-${String(mb).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+    const dias = diasEntreISO(hoyISO, fecha);
+    if (dias <= ANIVERSARIO_DIAS_ANTES && dias >= -ANIVERSARIO_DIAS_DESPUES) {
+      return { estado: dias > 0 ? 'proximo' : (dias === 0 ? 'hoy' : 'cumplido'), fecha, anios, dias, base, fuente: fuente[1] };
+    }
+  }
+  return null;
+}
+function textoAniversario(a){
+  if (a.estado === 'hoy') return 'Cumple hoy';
+  return a.estado === 'proximo' ? `En ${a.dias} día${a.dias === 1 ? '' : 's'}` : `Hace ${-a.dias} día${a.dias === -1 ? '' : 's'}`;
+}
 const COLUMNAS_PERSONAL = [
   { clave: 'id',          titulo: 'ID',          valor: p => p.empleado_id || '' },
   { clave: 'nombre',      titulo: 'Nombre',      valor: p => p.nombre_completo || '' },
@@ -2239,6 +2296,8 @@ function tienePendiente(p, tipo, limiteContrato){
   if (tipo === 'sin_esquema') return registrosPagoGlobalEstado === 'ok' && esquemasActivosDe(p.id).length === 0;
   if (tipo === 'requisitos') return requisitosEvaluables() && datosExigidosFaltantes(p).length > 0;
   if (tipo === 'contrato') return !!p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0, 10) <= limiteContrato;
+  if (tipo === 'aniversario') { const a = aniversarioDe(p, fechaLocalHoy()); return !!a && a.estado !== 'sin_fecha'; }
+  if (tipo === 'sin_fecha_aniversario') { const a = aniversarioDe(p, fechaLocalHoy()); return !!a && a.estado === 'sin_fecha'; }
   return true;
 }
 
@@ -2820,6 +2879,21 @@ function renderResumen(){
   }
   if (sinEsquema.length) {
     avisos.push(`<div class="breakdown-row"><span><b>${sinEsquema.length}</b> persona(s) vigente(s) sin ningún esquema de pago activo: ${lista(sinEsquema)}</span></div>`);
+  }
+  // Aniversarios: aviso para revisar el SBC (no genera movimientos).
+  const hoyISO = fechaLocalHoy();
+  const aniversarios = [], sinFecha = [];
+  vigentes.forEach(p => { const a = aniversarioDe(p, hoyISO); if (!a) return; if (a.estado === 'sin_fecha') sinFecha.push(p); else aniversarios.push({ p, a }); });
+  aniversarios.sort((x, y) => x.a.fecha.localeCompare(y.a.fecha) || String(x.p.nombre_completo).localeCompare(String(y.p.nombre_completo), 'es'));
+  if (aniversarios.length) {
+    const fechaCorta = iso => iso.split('-').reverse().join('/');
+    avisos.push(`<div class="aniversarios-bloque"><div class="breakdown-row"><span><b>${aniversarios.length}</b> aniversario(s) laboral(es) en los últimos ${ANIVERSARIO_DIAS_DESPUES} días o los próximos ${ANIVERSARIO_DIAS_ANTES}. Revisa si cambia el factor de integración y, si corresponde, prepara la modificación de salario ante el IMSS. El aniversario no siempre implica una modificación.</span></div>
+      <div class="table-wrap"><table class="aniversarios-tabla"><thead><tr><th>Persona</th><th>Empresa</th><th>Aniversario</th><th>Años</th><th>Cuándo</th><th>Fecha base</th></tr></thead><tbody>
+      ${aniversarios.map(({ p, a }) => `<tr class="aniv-${a.estado}"><td>${enlacePersonaHTML(p)}</td><td>${escapeHtml(empresaNombre(p.empresa_id))}</td><td>${escapeHtml(fechaCorta(a.fecha))}</td><td>${a.anios}</td><td><span class="pill aniv-pill">${escapeHtml(textoAniversario(a))}</span></td><td>${escapeHtml(a.fuente)} · ${escapeHtml(fechaCorta(a.base))}</td></tr>`).join('')}
+      </tbody></table></div></div>`);
+  }
+  if (sinFecha.length) {
+    avisos.push(`<div class="breakdown-row"><span><b>${sinFecha.length}</b> persona(s) vigente(s) sin fecha de antigüedad, alta IMSS ni ingreso: no se puede calcular su aniversario. ${lista(sinFecha)}</span></div>`);
   }
   contRevisar.innerHTML = avisos.join('') || '<div class="empty">Nada pendiente de revisar.</div>';
 }

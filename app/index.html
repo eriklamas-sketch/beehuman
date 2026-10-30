@@ -1056,6 +1056,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
 </style>
 </head>
 <body>
+<div style="position:sticky;top:0;z-index:9999;background:#b91c1c;color:#fff;text-align:center;font:600 13px/1.6 system-ui;padding:4px;">VISTA PREVIA DE DISEÑO V2.1 · beehuman-pruebas · datos sintéticos</div>
 <div class="shell">
   <div id="login-screen" class="card" style="max-width:360px;margin:80px auto;">
     <h2>Iniciar sesión</h2>
@@ -1840,12 +1841,13 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
 // propio) se agregará aquí como otro entorno; cambiarla será configuración,
 // no código. ENTORNO_FORZADO solo se usa en copias locales de prueba.
 const ENTORNOS_SUPABASE = {
-  produccion: { url: 'https://vovyvvpwtjdlswerfjqb.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvdnl2dnB3dGpkbHN3ZXJmanFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMzMyNTcsImV4cCI6MjEwNTYwOTI1N30.R3RS3J83pqyKpWSHdZRWp4YbY82p6_obxp-2pSzgYo4' }
+  // VISTA PREVIA DE DISEÑO: solo beehuman-pruebas. Producción no existe en este archivo.
+  pruebas: { url: 'https://sflvpgkmtaxzogpgetxn.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmbHZwZ2ttdGF4em9ncGdldHhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NjczODYsImV4cCI6MjEwNjM0MzM4Nn0.M-xUBwJwrNgN3Z8qhMSHyhzbyLkRqQynRVsqe1kKhn8' }
 };
-const ENTORNO_FORZADO = null; // producción. Solo una copia local de prueba lo cambia.
-const ENTORNO_ACTUAL = ENTORNO_FORZADO || 'produccion';
-// Ola 1 (Incidencias): apagada en producción hasta aplicar su migración y autorizar su activación.
-const OLA1_ACTIVA = false;
+const ENTORNO_FORZADO = 'pruebas'; // VISTA PREVIA: beehuman-pruebas
+const ENTORNO_ACTUAL = 'pruebas';
+// VISTA PREVIA: Ola 1 encendida solo contra beehuman-pruebas.
+const OLA1_ACTIVA = true;
 const sb = supabase.createClient(ENTORNOS_SUPABASE[ENTORNO_ACTUAL].url, ENTORNOS_SUPABASE[ENTORNO_ACTUAL].key);
 
 // ---------------------------------------------------------------------

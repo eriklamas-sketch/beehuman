@@ -23,3 +23,9 @@ En producción los nombres parecidos están en **tenants distintos**; cada usuar
 
 ## Producción
 Pendiente de autorización. Efecto esperado: 0 periodicidades unificadas; solo se agrega el índice único.
+
+## Mensual = 30 días
+`supabase/pendiente/20261030000100_mensual_30_dias.sql` (reversión en `supabase/reversion/`): las periodicidades llamadas MENSUAL con días distintos de 30 pasan a 30; respaldo del valor anterior en `respaldo.periodicidad_mensual_20261030`. No toca sueldos ni días propios de los esquemas.
+- Local: 30.4 → 30; sueldos y días propios con la misma huella; la reversión devuelve 30.4.
+- beehuman-pruebas (aplicada el 30-oct, `mensual_30_dias`): PILOTO MENSUAL 30.4 → 30; ningún esquema usaba los días por omisión (todos tienen días propios); huella de los 646 esquemas idéntica.
+- Producción (pendiente de autorización): «Entorno inicial» Mensual 30.4 → 30, sin esquemas que la usen.

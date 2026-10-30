@@ -1,0 +1,18 @@
+/* Fuente Inter alojada en el proyecto (SIL Open Font License 1.1, ver assets/fonts/Inter-OFL.txt) */
+@font-face{font-family:'Inter';font-style:normal;font-weight:300;font-display:swap;src:url(fonts/inter-latin-300-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/inter-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/inter-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/inter-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/inter-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:800;font-display:swap;src:url(fonts/inter-latin-800-normal.woff2) format('woff2')}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Iconos Font Awesome Free 6.7.2 incrustados como SVG (iconos: CC BY 4.0, fontawesome.com) */
+  .bh-i { display:inline-block; height:1em; width:auto; vertical-align:-0.125em; overflow:visible; flex-shrink:0 }
+  .demo-badge { background:rgba(245,158,11,.15); border:1px dashed rgba(245,158,11,.4) }
+  .dark .demo-badge { background:rgba(245,158,11,.1); border:1px dashed rgba(245,158,11,.3) }
+}

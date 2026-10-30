@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BeeHuman | La gestión de tu personal, fácil de verdad.</title>
-<meta name="description" content="BeeHuman simplifica la captura, administración y consulta de toda la información de tu personal.">
+<meta name="description" content="BeeHuman es un software para organizar, consultar y administrar la información de tu personal, diseñado desde la práctica en nóminas y Recursos Humanos.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -38,6 +38,16 @@ footer{border-top:1px solid var(--line);padding:25px 0 35px;color:#7b838b;font-s
 .context-grid>*{min-width:0}
 .context{overflow-x:clip}
 @media(max-width:900px){.context-card .tabs{flex-wrap:wrap;row-gap:8px}}
+
+/* Propuesta: funciones disponibles, experiencia y servicios complementarios (mismos tokens y componentes) */
+.section-title{font-family:Montserrat;text-align:center;font-size:clamp(30px,3.6vw,44px);line-height:1.05;letter-spacing:-1.8px;margin:0 auto 12px;max-width:720px}.section-title span{color:var(--yellow)}
+.section-sub{text-align:center;color:var(--muted);font-size:15px;line-height:1.5;max-width:600px;margin:0 auto 34px}
+.card h3{max-width:none}
+.exp-points{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px;width:100%;text-align:left}.exp-point{border:1px solid #eceeee;border-radius:12px;padding:18px;background:#fff}.exp-point i{font-style:normal;width:38px;height:38px;border-radius:11px;background:#fff0bf;display:grid;place-items:center;font-size:18px;margin-bottom:12px}.exp-point b{display:block;font-size:14px;margin-bottom:5px}.exp-point span{font-size:12px;color:var(--muted);line-height:1.45}
+.services{padding:70px 0;background:var(--cream);border-top:1px solid #f1ead6;border-bottom:1px solid #f1ead6}.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px}.svc{background:#fff;border:1px solid #e7e4d8;border-radius:16px;padding:26px 24px;position:relative}.svc h3{font-family:Montserrat;font-size:20px;margin:0 0 4px}.svc .lead{font-weight:700;color:#b98200;font-size:14px;margin:0 0 14px}.svc ul{margin:0;padding:0;list-style:none}.svc li{font-size:13px;color:var(--muted);line-height:1.45;padding:6px 0 6px 24px;position:relative}.svc li:before{content:"";position:absolute;left:0;top:10px;width:12px;height:12px;border-radius:4px;background:var(--yellow);border:1.5px solid #171717}.svc .note{font-size:11.5px;color:#7b838b;border-top:1px dashed #e4dfcf;margin-top:14px;padding-top:12px;line-height:1.45}
+.combo{margin-top:17px;border:1.5px solid #171717;background:var(--yellow);border-radius:16px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}.combo b{font-family:Montserrat;font-size:17px}.combo span{display:block;font-size:13px;margin-top:4px;color:#3b3a30}.combo .btn{background:#fff;border:1px solid #171717;flex:0 0 auto}
+@media(max-width:900px){.exp-points{grid-template-columns:repeat(2,1fr)}.svc-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.exp-points{grid-template-columns:1fr}.combo{flex-direction:column;align-items:flex-start}.services{padding:55px 0}}
 </style>
 </head>
 <body>
@@ -45,8 +55,8 @@ footer{border-top:1px solid var(--line);padding:25px 0 35px;color:#7b838b;font-s
   <div class="wrap nav">
     <a class="logo" href="/" aria-label="BeeHuman, inicio"><span class="bee" aria-hidden="true"></span><b><span>bee</span>Human</b></a>
     <nav class="navlinks">
-      <a href="#soluciones">Qué resuelve</a><a href="#como">Cómo funciona</a><a href="#beneficios">Beneficios</a>
-      <a class="navcta" href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman%20y%20solicitar%20una%20demostraci%C3%B3n." target="_blank" rel="noopener noreferrer">Solicitar demo&nbsp;&nbsp;→</a>
+      <a href="#problema">Qué resuelve</a><a href="#funciones">Funciones</a><a href="#experiencia">Experiencia</a><a href="#servicios">Servicios</a>
+      <a class="navcta" href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman." target="_blank" rel="noopener noreferrer">Conocer BeeHuman&nbsp;&nbsp;→</a>
     </nav>
   </div>
 </header>
@@ -54,10 +64,10 @@ footer{border-top:1px solid var(--line);padding:25px 0 35px;color:#7b838b;font-s
 <main>
 <section class="wrap hero">
   <div>
-    <div class="eyebrow">PERSONAL · ORGANIZACIÓN · COMPENSACIÓN</div>
+    <div class="eyebrow">SOFTWARE DE ADMINISTRACIÓN DE PERSONAL</div>
     <h1>La gestión de tu personal,<br><span>fácil de verdad.</span></h1>
-    <p>BeeHuman simplifica la captura, administración y consulta de toda la información de tu personal, para que te enfoques en lo más importante: tu equipo.</p>
-    <div class="actions"><a class="btn btn-main" href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman%20y%20solicitar%20una%20demostraci%C3%B3n." target="_blank" rel="noopener noreferrer">Solicitar una demo&nbsp;&nbsp;→</a><a class="btn btn-ghost" href="#como">Conocer la plataforma</a></div>
+    <p>Organiza, consulta y administra la información de tus trabajadores en un solo lugar, con una estructura pensada desde la práctica real en nóminas y Recursos Humanos.</p>
+    <div class="actions"><a class="btn btn-main" href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman." target="_blank" rel="noopener noreferrer">Conocer BeeHuman&nbsp;&nbsp;→</a><a class="btn btn-ghost" href="#funciones">Ver funciones</a></div>
   </div>
   <div class="hero-art"><svg class="hex" style="left:0;top:0;transform:rotate(-12deg)" viewBox="0 0 100 100"><polygon points="28,8 72,8 92,30 92,70 72,92 28,92 8,70 8,30"/></svg><svg class="hex" style="right:20px;bottom:8px;width:58px;height:58px;opacity:.65" viewBox="0 0 100 100"><polygon points="28,8 72,8 92,30 92,70 72,92 28,92 8,70 8,30"/></svg>
     <div class="halo"></div><div class="spark a">⌁</div><div class="spark b">⌁</div>
@@ -80,27 +90,59 @@ footer{border-top:1px solid var(--line);padding:25px 0 35px;color:#7b838b;font-s
   <div class="feature"><div class="feature-icon">▤</div><div><strong>Captura sencilla</strong><small>Menos tiempo,<br>más productividad.</small></div></div>
   <div class="feature"><div class="feature-icon">□</div><div><strong>Información ordenada</strong><small>Todo en su lugar,<br>siempre disponible.</small></div></div>
   <div class="feature"><div class="feature-icon">☁</div><div><strong>Todo en un solo lugar</strong><small>Personal, empresas,<br>estructura y pagos.</small></div></div>
-  <div class="feature"><div class="feature-icon">⚙</div><div><strong>Experiencia en nómina y RH</strong><small>Hecho por expertos,<br>para tu realidad.</small></div></div>
+  <div class="feature"><div class="feature-icon">⚙</div><div><strong>Experiencia en nómina y RH</strong><small>Diseñado desde la práctica,<br>para tu realidad.</small></div></div>
 </div></section>
 
-<section class="story" id="problema"><div class="wrap story-grid"><div class="story-copy"><div class="kicker">EL PROBLEMA NO SON LAS PERSONAS</div><h2>Las personas no son complicadas.<br><span>La información dispersa, sí.</span></h2><p>Cuando los datos viven en hojas, correos, carpetas y sistemas separados, administrar personal se vuelve innecesariamente difícil. BeeHuman pone orden sin hacerte trabajar de más.</p></div><div class="story-panels"><div class="mini-panel"><h3>Información dispersa</h3><div class="mini-line"></div><div class="mini-line" style="width:78%"></div><div class="mini-line" style="width:60%"></div><div class="mini-line" style="width:88%"></div><small style="color:#777">Datos duplicados y difíciles de consultar.</small></div><div class="mini-panel yellow"><h3>Con BeeHuman</h3><div class="mini-line"></div><div class="mini-line" style="width:84%"></div><div class="mini-line" style="width:68%"></div><div class="mini-line" style="width:92%"></div><small>Un solo lugar. Una sola fuente de información.</small></div></div></div></section><section class="context"><div class="wrap context-grid"><div class="context-card"><div style="font-size:10px;color:#8b939a;margin-bottom:15px">PERSONAL &nbsp;›&nbsp; DETALLE DEL COLABORADOR</div><div style="display:flex;gap:12px;align-items:center;border-bottom:1px solid #eee;padding-bottom:14px"><div class="person">CH</div><div><strong>CESAR DELGADILLO HINOJOSA</strong><div style="font-size:9px;color:#7a838c">Analista de nómina</div></div><span class="status" style="font-size:7px;margin-left:auto">Activo</span></div><div class="tabs"><span class="on">Datos personales</span><span>Organización</span><span>Relación laboral</span><span>Compensación</span><span>Contacto y emergencia</span><span>Movimientos</span></div><div class="info-grid"><div class="info"><label>Empresa</label><b>Servicios Cumbre Demo</b></div><div class="info"><label>Proyecto</label><b>Organización por proyecto</b></div><div class="info"><label>Esquemas de pago</label><b>Nómina IMSS · Efectivo</b></div><div class="info"><label>Centro de costo</label><b>CC-200 Administración</b></div></div></div><div class="context-copy"><div class="kicker">UN EXPEDIENTE. UNA PERSONA. TODO SU CONTEXTO.</div><h2>La información que necesitas, <span>cuando la necesitas.</span></h2><p>Desde los datos personales y laborales hasta la organización, los proyectos y los esquemas de pago. BeeHuman concentra el contexto de cada persona para que consultar sea tan sencillo como capturar.</p></div></div></section><section class="wrap dark-band"><svg class="hex" viewBox="0 0 100 100"><polygon points="28,8 72,8 92,30 92,70 72,92 28,92 8,70 8,30"/></svg><div style="font-size:10px;letter-spacing:3px;color:#ffc62b;margin-bottom:14px">BEEHUMAN = INFORMACIÓN ORDENADA</div><h2>Todo en un lugar. Más espacio para lo humano.</h2><p>Menos tiempo buscando información. Más tiempo para atender a las personas, resolver problemas y hacer que tu operación avance.</p><div class="dark-points"><div><b>Personal</b><span>Expedientes organizados</span></div><div><b>Empresas</b><span>Varias organizaciones</span></div><div><b>Proyectos</b><span>Asignación por persona</span></div><div><b>Compensación</b><span>Múltiples esquemas de pago</span></div></div></section><section class="section" id="soluciones"><div class="wrap">
-  <div class="section-label">TRES FORMAS EN LAS QUE BEEHUMAN TE HACE LA VIDA MÁS FÁCIL</div>
+<section class="story" id="problema"><div class="wrap story-grid"><div class="story-copy"><div class="kicker">EL PROBLEMA NO SON LAS PERSONAS</div><h2>Las personas no son complicadas.<br><span>La información dispersa, sí.</span></h2><p>Cuando los datos viven en hojas, correos, carpetas y sistemas separados, administrar personal se vuelve innecesariamente difícil. BeeHuman pone orden sin hacerte trabajar de más.</p></div><div class="story-panels"><div class="mini-panel"><h3>Información dispersa</h3><div class="mini-line"></div><div class="mini-line" style="width:78%"></div><div class="mini-line" style="width:60%"></div><div class="mini-line" style="width:88%"></div><small style="color:#777">Datos duplicados y difíciles de consultar.</small></div><div class="mini-panel yellow"><h3>Con BeeHuman</h3><div class="mini-line"></div><div class="mini-line" style="width:84%"></div><div class="mini-line" style="width:68%"></div><div class="mini-line" style="width:92%"></div><small>Un solo lugar. Una sola fuente de información.</small></div></div></div></section><section class="context"><div class="wrap context-grid"><div class="context-card"><div style="font-size:10px;color:#8b939a;margin-bottom:15px">PERSONAL &nbsp;›&nbsp; DETALLE DEL COLABORADOR</div><div style="display:flex;gap:12px;align-items:center;border-bottom:1px solid #eee;padding-bottom:14px"><div class="person">CH</div><div><strong>CESAR DELGADILLO HINOJOSA</strong><div style="font-size:9px;color:#7a838c">Analista de nómina</div></div><span class="status" style="font-size:7px;margin-left:auto">Activo</span></div><div class="tabs"><span class="on">Datos personales</span><span>Organización</span><span>Relación laboral</span><span>Compensación</span><span>Contacto y emergencia</span><span>Movimientos</span></div><div class="info-grid"><div class="info"><label>Empresa</label><b>Servicios Cumbre Demo</b></div><div class="info"><label>Proyecto</label><b>Organización por proyecto</b></div><div class="info"><label>Esquemas de pago</label><b>Nómina IMSS · Efectivo</b></div><div class="info"><label>Centro de costo</label><b>CC-200 Administración</b></div></div></div><div class="context-copy"><div class="kicker">UN EXPEDIENTE. UNA PERSONA. TODO SU CONTEXTO.</div><h2>La información que necesitas, <span>cuando la necesitas.</span></h2><p>Desde los datos personales y laborales hasta la organización, los proyectos y los esquemas de pago. BeeHuman concentra el contexto de cada persona para que consultar sea tan sencillo como capturar.</p></div></div></section><section class="wrap dark-band"><svg class="hex" viewBox="0 0 100 100"><polygon points="28,8 72,8 92,30 92,70 72,92 28,92 8,70 8,30"/></svg><div style="font-size:10px;letter-spacing:3px;color:#ffc62b;margin-bottom:14px">BEEHUMAN = INFORMACIÓN ORDENADA</div><h2>Todo en un lugar. Más espacio para lo humano.</h2><p>Menos tiempo buscando información. Más tiempo para atender a las personas, resolver problemas y hacer que tu operación avance.</p><div class="dark-points"><div><b>Personal</b><span>Expedientes organizados</span></div><div><b>Empresas</b><span>Varias organizaciones</span></div><div><b>Proyectos</b><span>Asignación por persona</span></div><div><b>Compensación</b><span>Múltiples esquemas de pago</span></div></div></section><section class="section" id="funciones"><div class="wrap">
+  <div class="section-label">LO QUE BEEHUMAN HACE HOY</div>
+  <h2 class="section-title">Todo lo que necesitas para <span>administrar a tu personal.</span></h2>
+  <p class="section-sub">Funciones disponibles en la plataforma, listas para usarse desde el primer día.</p>
   <div class="cards">
-    <article class="card"><div class="card-icon">▤</div><h3>Captura sin complicaciones</h3><p>Registra la información de tu personal de forma rápida, simple y estructurada. Olvídate de hojas interminables.</p><div class="arrow">→</div></article>
-    <article class="card"><div class="card-icon">♧</div><h3>Administra con claridad</h3><p>Mantén actualizada la información de tu equipo, su estructura y sus movimientos, con orden y control.</p><div class="arrow">→</div></article>
-    <article class="card"><div class="card-icon">▥</div><h3>Decide con información</h3><p>Consulta la información de tu organización para tomar decisiones con mayor claridad.</p><div class="arrow">→</div></article>
+    <article class="card"><div class="card-icon">▤</div><h3>Expediente completo por persona</h3><p>Datos personales, relación laboral, organización, compensación, prestaciones, contacto y emergencia, en un solo expediente.</p></article>
+    <article class="card"><div class="card-icon">▦</div><h3>Varias empresas en una cuenta</h3><p>Administra distintas razones sociales con sus registros patronales y domicilio fiscal, sin duplicar información.</p></article>
+    <article class="card"><div class="card-icon">◎</div><h3>Tu estructura, a tu medida</h3><p>Catálogos de áreas, departamentos, puestos, proyectos, centros de costo y localidades que definen cómo se organiza tu operación.</p></article>
+    <article class="card"><div class="card-icon">▥</div><h3>Esquemas de pago por persona</h3><p>Registra cómo se paga a cada persona por modalidad, periodicidad y días del periodo, incluso con más de un esquema.</p></article>
+    <article class="card"><div class="card-icon">♧</div><h3>Accesos por rol</h3><p>Administración, nómina, coordinación y consulta: cada usuario ve solo lo que le corresponde, y cada coordinador, a su equipo.</p></article>
+    <article class="card"><div class="card-icon">↗</div><h3>Carga masiva y control</h3><p>Importa a tu personal desde un archivo con vista previa y reporte de errores, y consulta el historial de movimientos de cada persona.</p></article>
   </div>
 </div></section>
 
-<section class="wrap experience" id="como">
-  <div class="experience-copy"><div class="label">TECNOLOGÍA + EXPERIENCIA</div><h2>La tecnología simplifica.<br><span>La experiencia hace la diferencia.</span></h2><p>BeeHuman combina una plataforma moderna y fácil de usar con el conocimiento real en administración de personal, para ofrecerte una solución completa, confiable y hecha para tu día a día.</p><a class="btn btn-main" href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman%20y%20solicitar%20una%20demostraci%C3%B3n." target="_blank" rel="noopener noreferrer">Solicitar demo&nbsp;&nbsp;→</a></div>
+<section class="wrap experience" id="experiencia">
+  <div class="experience-copy"><div class="label">TECNOLOGÍA + EXPERIENCIA</div><h2>La tecnología simplifica.<br><span>La experiencia hace la diferencia.</span></h2><p>BeeHuman nace de años operando nóminas y administración de personal en empresas con varias razones sociales, proyectos y esquemas de pago. Esa experiencia está en la estructura del producto y también está disponible como servicio.</p></div>
+  <div class="exp-points">
+    <div class="exp-point"><i>▤</i><b>Nóminas</b><span>Operación de periodos, incidencias, percepciones y deducciones.</span></div>
+    <div class="exp-point"><i>♧</i><b>Recursos Humanos</b><span>Altas, expedientes, estructura organizacional y movimientos del personal.</span></div>
+    <div class="exp-point"><i>⚙</i><b>Procesos administrativos</b><span>Flujos claros entre operación, coordinación y nómina.</span></div>
+    <div class="exp-point"><i>☰</i><b>Herramientas de gestión</b><span>Formatos, cuestionarios y controles hechos a la medida.</span></div>
+  </div>
 </section>
 
+<section class="services" id="servicios"><div class="wrap">
+  <div class="section-label">SERVICIOS COMPLEMENTARIOS</div>
+  <h2 class="section-title">Tu nómina en buenas manos. <span>Tu administración bajo control.</span></h2>
+  <p class="section-sub">Además del software, puedes apoyarte en nuestra experiencia para la operación de nómina y los procesos de Recursos Humanos. Se contratan por separado.</p>
+  <div class="svc-grid">
+    <article class="svc"><h3>Maquila de nómina</h3><p class="lead">Nosotros operamos tu nómina.</p><ul>
+      <li>Recepción y revisión de incidencias del periodo.</li>
+      <li>Cálculo de percepciones y deducciones conforme a la información y las reglas acordadas, y determinación de importes netos.</li>
+      <li>Resumen por periodo, detalle por trabajador y archivos de apoyo para la revisión y el pago.</li>
+      <li>Acceso a BeeHuman para consultar la información comprendida en el servicio.</li>
+    </ul><p class="note">El timbrado de CFDI, las obligaciones fiscales y los movimientos ante el IMSS se acuerdan por separado, según el alcance de cada empresa.</p></article>
+    <article class="svc"><h3>Apoyo en Recursos Humanos</h3><p class="lead">Orden en tus procesos de personal.</p><ul>
+      <li>Revisión y diseño de procesos administrativos de personal.</li>
+      <li>Organización de expedientes y de la estructura de tu operación.</li>
+      <li>Formatos, cuestionarios y controles para tu equipo de RH.</li>
+      <li>Acompañamiento para poner en marcha BeeHuman con tu información.</li>
+    </ul></article>
+  </div>
+  <div class="combo"><div><b>Servicio integral: software + operación de nómina</b><span>Usa BeeHuman para administrar a tu personal y deja la operación de la nómina con especialistas.</span></div><a class="btn" href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20los%20servicios%20de%20n%C3%B3mina%20y%20Recursos%20Humanos%20de%20BeeHuman." target="_blank" rel="noopener noreferrer">Consultar servicios&nbsp;&nbsp;→</a></div>
+</div></section>
+
 <section class="wrap final" id="contacto">
-  <div class="label">CONOCE BEEHUMAN</div><h2>Organiza tu personal con más claridad.</h2><p>Agenda una demostración y conoce cómo BeeHuman reúne la información de tu equipo, empresas, proyectos y esquemas de pago.</p>
-  <div class="final-row"><div class="final-item"><i>♧</i><b>Personal</b></div><div class="final-item"><i>▦</i><b>Empresas y proyectos</b></div><div class="final-item"><i>▤</i><b>Compensación</b></div><div class="final-item"><i>↗</i><b>Movimientos</b></div></div><p style="margin-top:22px"><a class="btn btn-main" href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman%20y%20solicitar%20una%20demostraci%C3%B3n." target="_blank" rel="noopener noreferrer">Solicitar demo por WhatsApp&nbsp;&nbsp;→</a></p>
+  <div class="label">CONOCE BEEHUMAN</div><h2>Organiza tu personal con más claridad.</h2><p>Escríbenos y conoce cómo BeeHuman reúne la información de tu equipo, empresas, proyectos y esquemas de pago.</p>
+  <div class="final-row"><div class="final-item"><i>♧</i><b>Personal</b></div><div class="final-item"><i>▦</i><b>Empresas y proyectos</b></div><div class="final-item"><i>▤</i><b>Compensación</b></div><div class="final-item"><i>⚙</i><b>Accesos por rol</b></div></div><p style="margin-top:22px"><a class="btn btn-main" href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman." target="_blank" rel="noopener noreferrer">Conocer BeeHuman por WhatsApp&nbsp;&nbsp;→</a></p>
 </section>
 </main>
-<footer class="wrap"><span class="footerlogo">beeHuman</span><span>Administración de personal · 2026</span><a href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman%20y%20solicitar%20una%20demostraci%C3%B3n." target="_blank" rel="noopener noreferrer">Contacto por WhatsApp</a></footer>
+<footer class="wrap"><span class="footerlogo">beeHuman</span><span>Administración de personal · 2026</span><a href="https://wa.me/525543606862?text=Hola%2C%20me%20interesa%20conocer%20BeeHuman." target="_blank" rel="noopener noreferrer">Contacto por WhatsApp</a></footer>
 </body>
 </html>

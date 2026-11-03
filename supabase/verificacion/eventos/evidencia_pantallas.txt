@@ -1,0 +1,38 @@
+--- Historia laboral: relación migrada
+OK    ADELA: relación migrada con RP, ingreso y antigüedad reconocida por separado
+OK    con historial, empresa, RP y número interno quedan bloqueados en la ficha
+OK    la opción «Baja» del estatus queda deshabilitada
+OK    corregir datos de una relación migrada  [Corrección registrada.]
+OK    la corrección aparece en la línea de tiempo con antes → después
+--- Esquema ambiguo
+OK    BENITO: el esquema sin relación aparece para que Nómina lo asigne
+OK    Nómina asigna el esquema a la relación correcta  [Esquema asignado a su relación laboral.]
+--- Ingreso IMSS de alguien que solo tenía efectivo
+OK    el RP de la empresa se propone solo
+OK    ingreso registrado con su movimiento IDSE pendiente  [Ingreso registrado.]
+OK    la ficha pasa a mostrar la relación con RP (v3.1)
+OK    modificación de salario  [Modificación de salario registrada.]
+OK    anular la modificación deja el evento marcado como anulado  [Movimiento anulado.]
+OK    baja sin causa: la base la rechaza y la pantalla lo explica  [indica una causa de baja válida.]
+--- Bandeja IDSE
+OK    sin guía, la bandeja dice qué falta
+OK    con guía: el alta queda lista, con el aviso de la Ñ
+OK    se descarga el .dat: 1 movimiento + renglón final, 168 posiciones, CRLF  [IDSE_ALTAS_Y1234567101_20261103_1428.dat]
+OK    contenido: apellidos (Ñ → #), SBC y clave del trabajador en su posición
+OK    archivo marcado como presentado con su lote
+OK    resultado registrado con folio del acuse
+OK    en la ficha, el ingreso queda confirmado y ya no se puede anular
+--- Alta de personal conectada al historial
+OK    el alta tiene el campo de fecha de ingreso
+OK    el alta registra el ingreso en la Historia laboral  [Persona registrada: PRUEBA ALTA HISTORIA (BEH-001001). Su compensación se captura en el expediente. Ingreso registrado en su Historia laboral. Completa SBC, UMF]
+--- Móvil y errores
+OK    sin errores de JavaScript (Administrador)
+OK    en móvil la Historia laboral no desborda la pantalla
+OK    Nómina opera la historia; la guía del RP solo la edita Administrador
+OK    sin errores de JavaScript (Nómina, móvil)
+OK    consulta: no ve la pestaña IDSE
+OK    sin errores de JavaScript (consulta)
+OK    coord: no ve la pestaña IDSE
+OK    sin errores de JavaScript (coord)
+
+30/30 pruebas de pantalla correctas

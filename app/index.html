@@ -491,6 +491,11 @@ body.rol-coordinador section.panel:not(#panel-equipo):not(#panel-incidencias),
 body.rol-consulta nav.tabs button[data-tab="incidencias"],
 body.rol-consulta #panel-incidencias,
 body:not(.ola1-activa) [data-tab="incidencias"],
+body.rol-consulta nav.tabs button[data-tab="idse"],
+body.rol-consulta #panel-idse,
+body:not(.laboral-activo) [data-tab="idse"],
+body:not(.laboral-activo) #panel-idse,
+body:not(.laboral-activo) [data-detail-tab="historia"],
 body:not(.ola1-activa) #panel-incidencias,
 body.rol-coordinador .global-search,
 body.rol-coordinador .company-switch,
@@ -1122,6 +1127,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
         <button data-tab="catalogos"><span class="nav-icon">◉</span>Catálogos <span class="nav-chevron">›</span></button>
         <button data-tab="equipo"><span class="nav-icon">♧</span>Mi equipo</button>
         <button data-tab="incidencias"><span class="nav-icon">◷</span>Incidencias</button>
+        <button data-tab="idse"><span class="nav-icon">⇪</span>IDSE</button>
       </nav>
       <div class="sidebar-bottom">
         <button type="button" onclick="cambiarPestana('catalogos')"><span class="nav-icon">⚙</span>Configuración</button>
@@ -1475,6 +1481,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
     </div>
   </section>
 
+  <section class="panel" id="panel-idse"><div id="idse-raiz"></div></section>
   <section class="panel" id="panel-catalogos">
     <!-- @@V21_NAV_INICIO -->
     <nav class="catnav" aria-label="Ir a un catálogo"><span class="catnav-titulo">Catálogos</span><span class="catnav-lista"><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos #card-proyectos').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Proyectos</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos #card-periodicidades').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Periodicidades</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos #card-clasificaciones').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Clasificaciones</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;areas&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Áreas</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;departamentos&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Departamentos</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;puestos&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Puestos</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;localidades&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Localidades</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;centros_costo&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Centros de costo</a></span></nav>
@@ -1705,6 +1712,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
         <button type="button" data-detail-tab="prestaciones" onclick="cambiarSeccionDetalle('prestaciones')"><span>05</span>Prestaciones y créditos</button>
         <button type="button" data-detail-tab="contacto" onclick="cambiarSeccionDetalle('contacto')"><span>06</span>Contacto y emergencia</button>
         <button type="button" data-detail-tab="movimientos" onclick="cambiarSeccionDetalle('movimientos')"><span>07</span>Movimientos</button>
+        <button type="button" data-detail-tab="historia" onclick="cambiarSeccionDetalle('historia')"><span>08</span>Historia laboral</button>
       </nav>
 
       <section class="detail-section active" data-detail-section="personal"><h3>Datos personales</h3>
@@ -1861,6 +1869,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
       </div>
 
 
+      </section><section class="detail-section" data-detail-section="historia"><div id="hl-raiz"></div>
       </section><section class="detail-section" data-detail-section="movimientos"><h3>Movimientos</h3>
       <div id="d-historial">
         <p class="hint" id="d-historial-resumen" style="margin-bottom:8px;">Cargando…</p>
@@ -1891,6 +1900,9 @@ const ENTORNO_FORZADO = 'pruebas'; // VISTA PREVIA: beehuman-pruebas
 const ENTORNO_ACTUAL = 'pruebas';
 // VISTA PREVIA: Ola 1 encendida solo contra beehuman-pruebas.
 const OLA1_ACTIVA = true;
+// VISTA PREVIA: Etapa 1 (Historia laboral e IDSE) solo contra beehuman-pruebas.
+// Antes de publicar en producción debe quedar en false hasta aplicar allí la migración.
+const LABORAL_ACTIVO = true;
 const sb = supabase.createClient(ENTORNOS_SUPABASE[ENTORNO_ACTUAL].url, ENTORNOS_SUPABASE[ENTORNO_ACTUAL].key);
 
 // ---------------------------------------------------------------------
@@ -3505,6 +3517,7 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
   }
   const avisosNumeroAlta = revNumAlta ? revNumAlta.coincidencias.length : 0;
   pintarAvisoNumeroInterno('f', null);
+  const notaLaboral = window.BH_laboral ? await BH_laboral.trasAlta(data, nuevo) : ''; // Etapa 1: ingreso en Historia laboral
 
   btn.disabled=false;
   toast.style.display='none';
@@ -3519,7 +3532,8 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
   document.getElementById('alta-guardada-texto').textContent =
     'Persona registrada: ' + (data.nombre_completo || nuevo.nombre_completo || '') + (data.empleado_id ? ' (' + data.empleado_id + ')' : '') +
     '. Su compensación se captura en el expediente.' +
-    (avisosNumeroAlta ? ' Aviso: su número interno también aparece en ' + avisosNumeroAlta + ' persona(s) de otro registro patronal o sin registro patronal.' : '');
+    (avisosNumeroAlta ? ' Aviso: su número interno también aparece en ' + avisosNumeroAlta + ' persona(s) de otro registro patronal o sin registro patronal.' : '') +
+    (notaLaboral ? ' ' + notaLaboral : '');
   document.getElementById('alta-guardada').style.display='block';
 });
 
@@ -3725,6 +3739,7 @@ async function abrirDetalle(id, seccionInicial = 'personal'){
   cambiarSeccionDetalle(seccionInicial);
   document.getElementById('modal-overlay').style.display = 'block';
   detalleEstadoBase = estadoCampos(camposDetalle()); // UX: punto de comparación para avisar de cambios sin guardar
+  if (window.BH_laboral) BH_laboral.alAbrirDetalle(p); // Etapa 1: historia laboral y bloqueo de campos controlados
   pintarAvisoNumeroInterno('d', null);
   revisarNumeroInterno('d'); // V2.0 M1: aviso informativo si el número se repite fuera de su RP
 
@@ -3750,7 +3765,7 @@ async function abrirDetalle(id, seccionInicial = 'personal'){
 
 function cambiarSeccionDetalle(seccion){
   const savebar = document.getElementById('detail-savebar');
-  if (savebar) savebar.style.display = ['compensacion','movimientos'].includes(seccion) ? 'none' : 'flex';
+  if (savebar) savebar.style.display = ['compensacion','movimientos','historia'].includes(seccion) ? 'none' : 'flex';
   document.querySelectorAll('[data-detail-tab]').forEach(btn=>{
     const activo=btn.dataset.detailTab===seccion;
     btn.classList.toggle('active',activo);
@@ -3800,7 +3815,7 @@ document.getElementById('d-estatus').addEventListener('change', e => {
 
 function camposDetalle(){
   return [...document.querySelectorAll('#modal-overlay .detail-modal input, #modal-overlay .detail-modal select, #modal-overlay .detail-modal textarea')]
-    .filter(el => !el.closest('#rp-form'));
+    .filter(el => !el.closest('#rp-form') && !el.closest('#hl-raiz')); // Historia laboral guarda con sus propios botones
 }
 function camposRegistroPago(){ return [...document.querySelectorAll('#rp-form input, #rp-form select, #rp-form textarea')]; }
 function estadoCampos(lista){
@@ -5367,6 +5382,7 @@ function traducirErrorSupabase(error){
 // patronal no pertenece a la empresa"; ahora ese mensaje solo aparece si la
 // restricción que falló es realmente personal_registro_patronal_empresa_fkey.
 function mensajeErrorGuardarPersonal(error){
+  if (error && error.hint === 'historia_laboral') return 'No se pudo guardar: ' + String(error.message || '').replace(/^BeeHuman:\s*/, '');
   return 'No se pudo guardar: ' + traducirErrorSupabase(error);
 }
 
@@ -6184,6 +6200,11 @@ document.getElementById('equipo-incluir-bajas').addEventListener('change', rende
 if (OLA1_ACTIVA) {
   document.body.classList.add('ola1-activa');
   const s = document.createElement('script'); s.src = 'incidencias.js'; document.body.appendChild(s);
+}
+// Etapa 1: Historia laboral e IDSE, con su propio interruptor.
+if (LABORAL_ACTIVO) {
+  document.body.classList.add('laboral-activo');
+  const s2 = document.createElement('script'); s2.src = 'laboral.js'; document.body.appendChild(s2);
 }
 </script>
 </body>

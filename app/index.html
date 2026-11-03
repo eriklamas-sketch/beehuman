@@ -503,6 +503,19 @@ body.rol-coordinador .sidebar-bottom > button:first-of-type { display:none !impo
 #panel-equipo .filters label.check-inline { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-secondary); margin:0; }
 #panel-equipo .filters label.check-inline input { width:auto; min-height:0; }
 body.rol-consulta #conn-status:empty, body.rol-coordinador #conn-status:empty { display:none; }
+/* Encabezado: el bloque de usuario siempre a la derecha (al Coordinador se le oculta la búsqueda) */
+.app-topbar .topbar-user { margin-left:auto; }
+/* Salida explícita, visible también en móvil */
+.app-topbar .user-menu.btn-salir { display:inline-flex !important; align-items:center; gap:6px; font-size:13px; font-weight:600; line-height:1; padding:8px 12px; margin-left:4px; border:1px solid var(--v21-borde, #E3E0D8); border-radius:10px; background:#fff; color:var(--v21-navy, #1F2A44); cursor:pointer; }
+.app-topbar .user-menu.btn-salir:hover { background:#F6F4EE; }
+.app-topbar .user-menu.btn-salir .salir-corto { display:none; }
+@media(max-width:600px){ .app-topbar .user-menu.btn-salir { padding:7px 9px; font-size:12px; } .app-topbar .user-menu.btn-salir .salir-largo { display:none; } .app-topbar .user-menu.btn-salir .salir-corto { display:inline; } }
+/* Aviso de cierre por inactividad */
+#aviso-inactividad { position:fixed; inset:0; background:rgba(20,24,33,.45); display:flex; align-items:center; justify-content:center; z-index:9999; padding:16px; }
+#aviso-inactividad .caja { background:#fff; border-radius:14px; max-width:380px; width:100%; padding:22px; box-shadow:0 18px 50px rgba(0,0,0,.2); }
+#aviso-inactividad h2 { margin:0 0 8px; font-size:18px; }
+#aviso-inactividad p { margin:0 0 16px; color:#4A5361; font-size:14px; }
+#aviso-inactividad .acciones { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
 /* V2.0 M1: aviso de número interno repetido */
 .aviso-numero { display:none; margin:6px 0 0; padding:8px 10px; border-radius:9px; font-size:12px; line-height:1.45; }
 .aviso-numero.bloquea { display:block; background:#FDECEC; color:#8A2A2A; border:1px solid #F3C4C4; }
@@ -1138,7 +1151,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
     <main class="app-main">
       <header class="app-topbar">
         <div class="global-search"><span aria-hidden="true">⌕</span><input id="busqueda-global" type="search" placeholder="Buscar personas o empresas…" aria-label="Búsqueda global" autocomplete="off"></div>
-        <div class="topbar-user"><span class="notification-dot" aria-hidden="true">♧</span><span class="avatar-initials" id="usuario-iniciales">BH</span><span class="user-copy"><b id="usuario-nombre">Usuario BeeHuman</b><small id="usuario-rol">—</small></span><button type="button" class="user-menu" onclick="cerrarSesion()" aria-label="Cerrar sesión">⌄</button></div>
+        <div class="topbar-user"><span class="notification-dot" aria-hidden="true">♧</span><span class="avatar-initials" id="usuario-iniciales">BH</span><span class="user-copy"><b id="usuario-nombre">Usuario BeeHuman</b><small id="usuario-rol">—</small></span><button type="button" class="user-menu btn-salir" onclick="cerrarSesion()" title="Cerrar sesión"><span aria-hidden="true">⏻</span><span class="salir-largo">Cerrar sesión</span><span class="salir-corto">Salir</span></button></div>
       </header>
       <div id="conn-status"></div>
       <div class="card" id="aviso-rol"><h2 id="aviso-rol-titulo">Sin módulos habilitados</h2><p class="hint" id="aviso-rol-texto"></p></div>
@@ -6053,9 +6066,113 @@ function mostrarLogin(){
   document.getElementById('login-screen').style.display='block';
 }
 
+// Cierra la sesión en el servidor y, si no hay red, al menos en este navegador.
+async function salirDeSupabase(){
+  let fallo = false;
+  try { const { error } = await sb.auth.signOut(); fallo = !!error; } catch (e) { fallo = true; }
+  if (fallo) { try { localStorage.removeItem(sb.auth.storageKey); } catch (e) {} }
+}
 async function cerrarSesion(){
-  await sb.auth.signOut();
+  detenerControlInactividad();
+  await salirDeSupabase();
   location.reload(); // descarta en memoria los datos del usuario anterior
+}
+
+// ---------------------------------------------------------------------
+// Cierre de sesión por inactividad (30 min, aviso 2 min antes).
+// La última actividad se comparte entre pestañas (localStorage), así que
+// trabajar en una pestaña mantiene viva la sesión en las demás. Si el
+// almacenamiento no está disponible, cuenta solo la pestaña actual.
+// Escribir, hacer clic, desplazarse o mover el ratón cuenta como actividad:
+// a quien está trabajando nunca le aparece el aviso.
+// ---------------------------------------------------------------------
+const INACTIVIDAD_MS = window.BH_PRUEBA_INACTIVIDAD_MS || 30 * 60 * 1000;
+const AVISO_INACTIVIDAD_MS = window.BH_PRUEBA_AVISO_MS || 2 * 60 * 1000;
+const CLAVE_ACTIVIDAD = 'bh_ultima_actividad';
+let actividadLocal = Date.now();
+let controlInactividad = null;
+let ultimaEscrituraActividad = 0;
+function leerUltimaActividad(){
+  let compartida = 0;
+  try { compartida = Number(localStorage.getItem(CLAVE_ACTIVIDAD)) || 0; } catch (e) {}
+  return Math.max(actividadLocal, compartida);
+}
+function marcarActividad(forzar){
+  const ahora = Date.now();
+  actividadLocal = ahora;
+  if (forzar || ahora - ultimaEscrituraActividad > 5000) {
+    ultimaEscrituraActividad = ahora;
+    try { localStorage.setItem(CLAVE_ACTIVIDAD, String(ahora)); } catch (e) {}
+  }
+  if (document.getElementById('aviso-inactividad')) ocultarAvisoInactividad();
+}
+function sesionVencidaPorInactividad(){
+  let compartida = 0;
+  try { compartida = Number(localStorage.getItem(CLAVE_ACTIVIDAD)) || 0; } catch (e) {}
+  return compartida > 0 && Date.now() - compartida >= INACTIVIDAD_MS;
+}
+function mostrarAvisoInactividad(restanteMs){
+  let caja = document.getElementById('aviso-inactividad');
+  if (!caja) {
+    caja = document.createElement('div');
+    caja.id = 'aviso-inactividad';
+    caja.setAttribute('role', 'alertdialog');
+    caja.setAttribute('aria-modal', 'true');
+    caja.setAttribute('aria-labelledby', 'aviso-inactividad-titulo');
+    caja.innerHTML = '<div class="caja"><h2 id="aviso-inactividad-titulo">¿Sigues ahí?</h2>'
+      + '<p>Por seguridad, tu sesión se cerrará por inactividad en <b id="aviso-inactividad-tiempo"></b>.</p>'
+      + '<div class="acciones"><button type="button" id="aviso-inactividad-salir" style="margin:0">Cerrar sesión</button>'
+      + '<button type="button" class="primary" id="aviso-inactividad-seguir" style="margin:0">Seguir trabajando</button></div></div>';
+    document.body.appendChild(caja);
+    document.getElementById('aviso-inactividad-seguir').addEventListener('click', () => marcarActividad(true));
+    document.getElementById('aviso-inactividad-salir').addEventListener('click', (e) => { e.stopPropagation(); cerrarSesion(); });
+    document.getElementById('aviso-inactividad-seguir').focus();
+  }
+  const seg = Math.max(0, Math.ceil(restanteMs / 1000));
+  document.getElementById('aviso-inactividad-tiempo').textContent = Math.floor(seg / 60) + ':' + String(seg % 60).padStart(2, '0');
+}
+function ocultarAvisoInactividad(){
+  const caja = document.getElementById('aviso-inactividad');
+  if (caja) caja.remove();
+}
+async function expirarPorInactividad(){
+  detenerControlInactividad();
+  try { sessionStorage.setItem('bh_motivo_salida', 'inactividad'); } catch (e) {}
+  await salirDeSupabase();
+  location.reload();
+}
+function revisarInactividad(){
+  const inactivo = Date.now() - leerUltimaActividad();
+  if (inactivo >= INACTIVIDAD_MS) { expirarPorInactividad(); return; }
+  const restante = INACTIVIDAD_MS - inactivo;
+  if (restante <= AVISO_INACTIVIDAD_MS) mostrarAvisoInactividad(restante);
+  else ocultarAvisoInactividad();
+}
+const EVENTOS_ACTIVIDAD = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll', 'mousemove'];
+function alActuar(ev){
+  // Con el aviso abierto, mover el ratón o desplazarse no lo cierra: hace falta un clic, una tecla o un toque.
+  const aviso = document.getElementById('aviso-inactividad');
+  if (aviso) {
+    if (['mousemove', 'scroll', 'wheel'].includes(ev.type)) return;
+    // Dentro del aviso, el clic y Enter/Espacio los atienden sus botones («Seguir» o «Cerrar sesión»).
+    const accionaBoton = ev.type === 'keydown' ? (ev.key === 'Enter' || ev.key === ' ') : true;
+    if (aviso.contains(ev.target) && accionaBoton) return;
+  }
+  marcarActividad(false);
+}
+function iniciarControlInactividad(){
+  if (controlInactividad) return;
+  marcarActividad(true);
+  EVENTOS_ACTIVIDAD.forEach(ev => window.addEventListener(ev, alActuar, { passive: true, capture: true }));
+  document.addEventListener('visibilitychange', revisarInactividad);
+  controlInactividad = setInterval(revisarInactividad, 1000);
+}
+function detenerControlInactividad(){
+  if (controlInactividad) clearInterval(controlInactividad);
+  controlInactividad = null;
+  EVENTOS_ACTIVIDAD.forEach(ev => window.removeEventListener(ev, alActuar, { capture: true }));
+  document.removeEventListener('visibilitychange', revisarInactividad);
+  ocultarAvisoInactividad();
 }
 
 // Presentación: mostrar u ocultar la contraseña (no interviene en el envío).
@@ -6080,12 +6197,27 @@ document.getElementById('form-login').addEventListener('submit', async function(
     toast.className = 'toast err'; toast.style.display = 'block';
     return;
   }
+  iniciarControlInactividad();
   await mostrarApp();
 });
 
 (async function init(){
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) { await mostrarApp(); } else { mostrarLogin(); }
+  let { data: { session } } = await sb.auth.getSession();
+  // Quien cerró el navegador y vuelve después de 30 min sin actividad entra al login.
+  if (session && sesionVencidaPorInactividad()) {
+    await salirDeSupabase();
+    try { sessionStorage.setItem('bh_motivo_salida', 'inactividad'); } catch (e) {}
+    session = null;
+  }
+  if (session) { iniciarControlInactividad(); await mostrarApp(); return; }
+  mostrarLogin();
+  let motivo = null;
+  try { motivo = sessionStorage.getItem('bh_motivo_salida'); sessionStorage.removeItem('bh_motivo_salida'); } catch (e) {}
+  if (motivo === 'inactividad') {
+    const toast = document.getElementById('toast-login');
+    toast.textContent = 'Tu sesión se cerró por inactividad. Vuelve a iniciar sesión.';
+    toast.className = 'toast ok'; toast.style.display = 'block';
+  }
 })();
 
 // ---------------------------------------------------------------------

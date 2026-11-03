@@ -88,3 +88,99 @@ Las 30 pruebas de pantalla cubren:
 ## Siguiente paso (requiere autorización)
 1. Aplicar en beehuman-pruebas la v3 (mismo texto del ensayo, comprobado por md5) y la v3.1.
 2. Hacer commit y push de `integracion/app` para la vista previa contra beehuman-pruebas.
+
+## Aplicación en beehuman-pruebas (3-nov-2026, autorizada)
+- **v3:** se aplicó como migración `eventos_laborales_idse`, usando el mismo texto del ensayo. La propia migración revisó que el md5 fuera `0b2fa2c2…` antes de ejecutarse.
+- **v3.1 corregida:** se aplicó como migración `relacion_principal_con_rp`.
+- **Verificación posterior:**
+  - cada migración quedó registrada una sola vez (14 en total) y la función contiene la regla nueva;
+  - la base tiene 537 relaciones, 83 en baja, 7 relaciones históricas, 201 sin fecha de ingreso, 620 eventos y 0 movimientos IDSE;
+  - las fichas y los esquemas de pago tienen el mismo md5 que en la línea base;
+  - quedan 19 esquemas activos pendientes de relación;
+  - las 8 tablas tienen RLS; los usuarios de la app no pueden escribir en ellas y los usuarios sin sesión no tienen acceso;
+  - hay 14 funciones de API; las internas no quedan expuestas;
+  - la tabla temporal se borró.
+- **Commit** `8a7cec7` en `integracion/app`, con push. La vista previa de Vercel quedó lista contra beehuman-pruebas.
+- **Producción no se tocó.** `LABORAL_ACTIVO` debe ir en false en `main` hasta que la migración exista allí. El `.dat` no se presenta con datos reales hasta compararlo byte a byte con el archivo aceptado.
+
+## Cierre de la validación funcional (3-nov-2026, tarde)
+
+### Cuentas de prueba (solo datos de beehuman-pruebas; no cambian las reglas)
+- **Causa:** Nómina, Consulta y Coordinador estaban en el tenant sintético chico (12 personas), no en «PILOTO SINTETICO 500», donde están el Administrador y la historia migrada. Además, Consulta no tenía empresa asignada y Coordinador no tenía a nadie asignado.
+- **Cambio:** las tres cuentas pasaron al piloto de 500.
+  - Consulta quedó con el ámbito EMPRESA PILOTO E (30 personas).
+  - Coordinador quedó vinculado a PERSONA 0016, que coordina a 21 personas tanto en la ficha como en las asignaciones de Incidencias.
+  - Respaldo: `respaldo.usuarios_prueba_20261103` y `respaldo.alcances_prueba_20261103`.
+- **Comprobado con las reglas de acceso reales:**
+
+  | Cuenta | Qué ve |
+  |---|---|
+  | Administrador y Nómina | 500 personas |
+  | Consulta | 30 personas, solo de EMPRESA PILOTO E, y nada de «Mi equipo» |
+  | Coordinador | Su equipo de 21 y nada de la vista de Consulta |
+
+### Encabezado
+- El bloque de usuario queda alineado a la derecha en los cuatro roles. Al Coordinador se le oculta la búsqueda y el bloque se iba a la izquierda.
+- La flecha «⌄» se cambió por un botón «⏻ Cerrar sesión» («Salir» en móvil). Antes, en móvil no había forma de salir.
+- Si no hay red, el cierre de sesión igual borra la sesión del navegador.
+
+### Sesión: cómo funcionaba
+- La app usa `supabase-js` con sus valores por defecto: la sesión se guarda en el navegador y se renueva sola cada hora.
+- No había límite por inactividad ni por duración. En beehuman-pruebas hay una sesión abierta desde el 13-oct que sigue vigente.
+- Quien deja abierta la pestaña o cierra el navegador y vuelve días después entra directo a los datos.
+
+### Sesión: cierre por inactividad (nuevo)
+- Se cierra a los **30 minutos sin actividad**. El aviso «¿Sigues ahí?» aparece 2 minutos antes, con cuenta regresiva y dos botones: «Seguir trabajando» y «Cerrar sesión».
+- Escribir, hacer clic, desplazarse o mover el ratón cuenta como actividad, así que a quien está trabajando nunca le aparece el aviso.
+- La actividad se comparte entre pestañas.
+- Quien vuelve con más de 30 minutos sin actividad entra al inicio de sesión, con el mensaje «Tu sesión se cerró por inactividad».
+- **Límite:** es un control del navegador. El límite del lado del servidor (tiempo de inactividad de Supabase Auth) queda como opción para producción y depende del plan.
+
+### Pruebas
+| Batería | Resultado |
+|---|---|
+| Sesión y encabezado (`ui_sesion.py`, nueva) | **25/25**, tres corridas seguidas |
+| Etapa 1, pantallas | **30/30** |
+| Ola 1, pantallas | **33/33** |
+
+Al probar aparecieron y se corrigieron dos fallas del aviso:
+1. Acercar el ratón lo cerraba.
+2. Al presionar «Cerrar sesión» dentro del aviso, el aviso desaparecía antes del clic y la sesión seguía abierta.
+
+### Pendiente
+- Commit y push: autorizados por Erik (3-nov, 17:35).
+- ~~Guardar el `.dat` de alta aceptado~~ → hecho (ver la sección siguiente).
+
+## Archivo IDSE de alta aceptado por el IMSS (referencia de formato, 3-nov-2026)
+- El IMSS ya **aceptó** el alta. Su archivo queda como referencia de formato.
+  - El original, con datos reales, está solo en el proyecto: `claude/eventos/referencia/IDSE_alta_aceptada_20261103.dat`, sha256 `e8d4c5e1…68832`.
+  - **No se sube al repositorio** porque contiene NSS y CURP.
+- **Comparación byte a byte:** se tomaron los datos de ese archivo y se generó el alta con el código de la etapa 1 (`laboral_registrar_ingreso` → `idse_generar_archivo`), en una base local que se borró al terminar.
+  - Resultado: **idénticos**, 340 bytes (renglón de alta, renglón final y CRLF).
+  - Script: `supabase/verificacion/eventos/compara_dat.py`. Lee los datos del archivo que recibe y no guarda ninguno.
+- Formato confirmado (168 posiciones más CRLF; las posiciones empiezan en 1):
+
+| Posiciones | Campo |
+|---|---|
+| 1–11 | Registro patronal |
+| 12–22 | NSS |
+| 23–49 | Primer apellido |
+| 50–76 | Segundo apellido |
+| 77–103 | Nombre(s) |
+| 104–109 | SBC, sin punto (2 decimales implícitos) |
+| 110–115 | Espacios |
+| 116 | Tipo de trabajador |
+| 117 | Tipo de salario |
+| 118 | Jornada |
+| 119–126 | Fecha DDMMAAAA |
+| 127–129 | UMF |
+| 130–131 | Espacios |
+| 132–133 | `08` |
+| 134–138 | Guía |
+| 139–148 | Clave del trabajador, alineada a la derecha |
+| 149 | Espacio |
+| 150–167 | CURP |
+| 168 | `9` |
+
+- **Renglón final:** 13 `*`, número de registros (6 dígitos) en las posiciones 57–62, guía en 134–138 y `9` en 168.
+- **Sigue pendiente:** la regla de la Ñ (este archivo no la contiene) y los formatos de baja (02) y modificación (07).

@@ -442,7 +442,8 @@
         <div><label>Zona de salario mínimo</label><select id="idse-zona" ${esAdmin() ? '' : 'disabled'}><option value="general">General</option><option value="zlfn">Zona libre de la frontera norte</option></select></div>
         ${esAdmin() ? '<div><button type="button" class="hl-btn2" id="idse-guardar-rp">Guardar datos del RP</button></div>' : ''}</div>
       <div class="hl-msg" id="idse-msg"></div>
-      <h4 style="margin:18px 0 6px">Altas y reingresos pendientes</h4><div id="idse-pend"></div>
+      <h4 style="margin:18px 0 6px">Altas y reingresos pendientes</h4><div id="idse-pend-08"></div>
+      <h4 style="margin:18px 0 6px">Bajas pendientes</h4><div id="idse-pend-02"></div><div id="idse-pend-07"></div>
       <h4 style="margin:18px 0 6px">Archivos generados</h4><div id="idse-arch"></div></div>`;
     document.getElementById('idse-rp').onchange = (e) => { idse.rp = e.target.value; abrirIdse(); };
     const g = document.getElementById('idse-guardar-rp');
@@ -464,36 +465,48 @@
     await cargarCatalogos(); await refrescarIdse(); idseMsg('Datos del registro patronal guardados.', true);
   }
 
+  const TITULO_TIPO = { '08': 'altas', '02': 'bajas' };
+  function pintarPendientes(tipo, v, movs) {
+    const pend = document.getElementById('idse-pend-' + tipo);
+    if (!pend) return;
+    if (v.error) {
+      // si la base todavía no habilita este tipo, se explica sin marcarlo como error
+      const msg = msgError(v.error);
+      pend.innerHTML = /se habilita cuando/.test(msg) ? `<p class="hint">${esc(msg)}</p>` : `<div class="hl-msg err">${esc(msg)}</div>`;
+      return;
+    }
+    const filas = v.data || [];
+    if (!filas.length) { pend.innerHTML = `<p class="hint">No hay ${TITULO_TIPO[tipo]} pendientes en este registro patronal.</p>`; return; }
+    const causaDe = (id) => { const m = movs.find((x) => x.id === id); if (!m || !m.causa_baja) return '—'; const c = causas.find((x) => x.codigo === m.causa_baja); return m.causa_baja + (c ? ' · ' + c.descripcion : ''); };
+    let h = `<div style="overflow-x:auto"><table class="idse-tabla"><thead><tr><th><input type="checkbox" class="idse-todos" data-tipo="${tipo}" aria-label="Seleccionar todos"></th><th>Persona</th><th>${tipo === '02' ? 'Fecha de baja' : 'Fecha'}</th>${tipo === '02' ? '<th>Causa</th>' : ''}<th>Revisión</th></tr></thead><tbody>`;
+    filas.forEach((f) => {
+      const okF = !(f.errores || []).length;
+      h += `<tr><td><input type="checkbox" class="idse-sel" data-tipo="${tipo}" value="${f.movimiento_id}" ${okF ? '' : 'disabled'}></td><td>${esc(f.nombre)}</td><td>${fechaMx(f.fecha_movimiento)}</td>${tipo === '02' ? `<td>${esc(causaDe(f.movimiento_id))}</td>` : ''}
+        <td>${(f.errores || []).map((x) => `<div class="idse-err">Falta: ${esc(x)}</div>`).join('')}${(f.avisos || []).map((x) => `<div class="idse-aviso">${esc(x)}</div>`).join('')}${okF && !(f.avisos || []).length ? '<span class="hl-chip vigente">Lista</span>' : ''}</td></tr>`;
+    });
+    h += `</tbody></table></div><div class="hl-acc"><button type="button" class="primary" style="margin:0" data-generar="${tipo}">Generar archivo de ${TITULO_TIPO[tipo]} con los seleccionados</button></div>`;
+    pend.innerHTML = h;
+    const t = pend.querySelector('.idse-todos');
+    if (t) t.onchange = () => pend.querySelectorAll('.idse-sel:not(:disabled)').forEach((c) => { c.checked = t.checked; });
+    pend.querySelector('[data-generar]').onclick = () => generar(tipo);
+  }
+
   async function refrescarIdse() {
-    const pend = document.getElementById('idse-pend'), arch = document.getElementById('idse-arch');
-    const [v, a, otros] = await Promise.all([
+    const arch = document.getElementById('idse-arch');
+    const [v08, v02, a, otros] = await Promise.all([
       sb.rpc('idse_validar', { p_registro_patronal_id: idse.rp, p_tipo: '08' }),
+      sb.rpc('idse_validar', { p_registro_patronal_id: idse.rp, p_tipo: '02' }),
       sb.from('idse_archivos').select('id,nombre_archivo,num_registros,estado,lote_idse,fecha_presentacion,acuse_folio,generado_en,hash_sha256,tipo_movimiento')
         .eq('registro_patronal_id', idse.rp).order('generado_en', { ascending: false }),
-      sb.from('idse_movimientos').select('tipo_movimiento').eq('registro_patronal_id', idse.rp).in('tipo_movimiento', ['02', '07']).in('estado', ['pendiente', 'rechazado']),
+      sb.from('idse_movimientos').select('id,tipo_movimiento,causa_baja').eq('registro_patronal_id', idse.rp).in('tipo_movimiento', ['02', '07']).in('estado', ['pendiente', 'rechazado']),
     ]);
-    if (v.error) { pend.innerHTML = `<div class="hl-msg err">${esc(msgError(v.error))}</div>`; }
-    else {
-      idse.filas = v.data || [];
-      const nb = (otros.data || []).filter((x) => x.tipo_movimiento === '02').length, nm = (otros.data || []).filter((x) => x.tipo_movimiento === '07').length;
-      let h = '';
-      if (!idse.filas.length) h += '<p class="hint">No hay altas pendientes en este registro patronal.</p>';
-      else {
-        h += `<div style="overflow-x:auto"><table class="idse-tabla"><thead><tr><th><input type="checkbox" id="idse-todos" aria-label="Seleccionar todos"></th><th>Persona</th><th>Fecha</th><th>Revisión</th></tr></thead><tbody>`;
-        idse.filas.forEach((f) => {
-          const okF = !(f.errores || []).length;
-          h += `<tr><td><input type="checkbox" class="idse-sel" value="${f.movimiento_id}" ${okF ? '' : 'disabled'}></td><td>${esc(f.nombre)}</td><td>${fechaMx(f.fecha_movimiento)}</td>
-            <td>${(f.errores || []).map((x) => `<div class="idse-err">Falta: ${esc(x)}</div>`).join('')}${(f.avisos || []).map((x) => `<div class="idse-aviso">${esc(x)}</div>`).join('')}${okF && !(f.avisos || []).length ? '<span class="hl-chip vigente">Lista</span>' : ''}</td></tr>`;
-        });
-        h += `</tbody></table></div><div class="hl-acc"><button type="button" class="primary" style="margin:0" id="idse-generar">Generar archivo con los seleccionados</button></div>`;
-      }
-      if (nb || nm) h += `<p class="hint">También hay ${nb} baja(s) y ${nm} modificación(es) de salario registradas. Su archivo se habilita cuando confirmemos el formato con un archivo real.</p>`;
-      pend.innerHTML = h;
-      const t = document.getElementById('idse-todos');
-      if (t) t.onchange = () => document.querySelectorAll('.idse-sel:not(:disabled)').forEach((c) => { c.checked = t.checked; });
-      const gb = document.getElementById('idse-generar');
-      if (gb) gb.onclick = generar;
-    }
+    const movs = otros.data || [];
+    idse.filas = [...(v08.data || []), ...(v02.data || [])];
+    pintarPendientes('08', v08, movs);
+    pintarPendientes('02', v02, movs);
+    const nm = movs.filter((x) => x.tipo_movimiento === '07').length;
+    const p07 = document.getElementById('idse-pend-07');
+    if (p07) p07.innerHTML = nm ? `<p class="hint">También hay ${nm} modificación(es) de salario registradas. Su archivo se habilita cuando confirmemos el formato con un archivo real.</p>` : '';
     idse.archivos = a.error ? [] : (a.data || []);
     const ESTA = { generado: 'Generado', presentado: 'Presentado', con_resultado: 'Con resultado', cancelado: 'Cancelado' };
     arch.innerHTML = !idse.archivos.length ? '<p class="hint">Todavía no hay archivos.</p>' :
@@ -510,10 +523,10 @@
     arch.querySelectorAll('[data-res]').forEach((b) => { b.onclick = () => formResultado(b.dataset.res); });
   }
 
-  async function generar() {
-    const ids = [...document.querySelectorAll('.idse-sel:checked')].map((c) => c.value);
+  async function generar(tipo) {
+    const ids = [...document.querySelectorAll(`.idse-sel[data-tipo="${tipo}"]:checked`)].map((c) => c.value);
     if (!ids.length) { idseMsg('Selecciona al menos un movimiento.', false); return; }
-    const { data, error } = await sb.rpc('idse_generar_archivo', { p_registro_patronal_id: idse.rp, p_tipo: '08', p_movimientos: ids });
+    const { data, error } = await sb.rpc('idse_generar_archivo', { p_registro_patronal_id: idse.rp, p_tipo: tipo, p_movimientos: ids });
     if (error) { idseMsg(msgError(error), false); return; }
     await refrescarIdse(); await descargar(data);
     idseMsg('Archivo generado y descargado. Cuando lo subas al IDSE, registra aquí el número de lote.', true);

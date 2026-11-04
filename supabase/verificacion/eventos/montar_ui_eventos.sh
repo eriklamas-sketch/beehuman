@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 (cd ../ola1 && ./montar_ui.sh >/dev/null)
 P="psql -X -q -v ON_ERROR_STOP=1 -h /tmp -p 55432 -U postgres -d bhui"
 $P -f semilla_ui_eventos.sql >/dev/null
-for m in 20261104000000_eventos_laborales_idse 20261104000100_relacion_principal_con_rp; do
+for m in 20261104000000_eventos_laborales_idse 20261104000100_relacion_principal_con_rp 20261105000000_idse_bajas; do
   $P -f ../repo/beehuman-int/supabase/pendiente/$m.sql 2>&1 | grep -E "ERROR" || true
 done
 echo "bhui lista"

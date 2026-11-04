@@ -184,3 +184,81 @@ Al probar aparecieron y se corrigieron dos fallas del aviso:
 
 - **Renglón final:** 13 `*`, número de registros (6 dígitos) en las posiciones 57–62, guía en 134–138 y `9` en 168.
 - **Sigue pendiente:** la regla de la Ñ (este archivo no la contiene) y los formatos de baja (02) y modificación (07).
+
+## Archivo IDSE de bajas (02) (4-nov-2026)
+**Referencia.** Erik compartió un archivo con 2 bajas presentadas con el formato que ya usa. Al 4-nov el IMSS todavía lo estaba procesando.
+- El original, con datos reales, quedó solo en el proyecto: `claude/eventos/referencia/IDSE_bajas_referencia_20261104.dat` (sha256 `761e5eac…19bea2`).
+- No se sube al repositorio.
+
+**Formato.** Es el mismo renglón de 168 posiciones del alta, con estas diferencias:
+
+| Posiciones | Alta | Baja |
+|---|---|---|
+| 104–118 | SBC, espacios, tipos de trabajador, salario y jornada | 15 ceros |
+| 127–131 | UMF y 2 espacios | 5 espacios |
+| 132–133 | `08` | `02` |
+| 149 | Espacio | Causa de baja |
+| 150–167 | CURP | 18 espacios |
+
+Lo demás no cambia: RP, NSS, apellidos, nombre(s), fecha DDMMAAAA, guía, clave alineada a la derecha y `9` final. El renglón final es igual que en el alta.
+
+**Migración `20261105000000_idse_bajas.sql`.** Solo cambia funciones; no toca tablas ni datos. Tiene su reversión.
+1. Nueva función interna `idse_linea_baja`.
+2. `idse_validar` acepta `02`.
+   - La baja exige NSS, primer apellido, nombre(s), clave del trabajador y causa.
+   - CURP, SBC, tipos y UMF siguen siendo requisitos solo del alta.
+   - Los renglones se ordenan por fecha del movimiento y luego por apellidos; el archivo de referencia viene en ese orden.
+3. `idse_generar_archivo` arma cada renglón según el tipo.
+4. Las modificaciones (07) siguen bloqueadas hasta tener su archivo de referencia.
+
+**Comparación byte a byte** (`compara_dat.py`, ahora para alta y baja):
+
+| Archivo | Resultado |
+|---|---|
+| Bajas, 2 renglones | **Idénticos**, 510 bytes; mismo orden y causa en la posición 149 |
+| Alta aceptada, con la migración nueva | Sigue **idéntico**, 340 bytes |
+
+**Pantalla.** La bandeja IDSE tiene una sección «Bajas pendientes».
+- Muestra fecha de baja, causa con su descripción, revisión, selección y el botón «Generar archivo de bajas».
+- Si la base todavía no habilita un tipo de movimiento, la sección lo explica sin marcarlo como error.
+
+**Pruebas:**
+
+| Batería | Resultado |
+|---|---|
+| Base de datos | **163/163**: 140 anteriores, 18 de bajas y 5 de reversión |
+| Pantallas | **36/36**: 30 anteriores y 6 del recorrido de bajas (registrar baja → bandeja → `.dat` → archivos generados) |
+
+Las 23 pruebas nuevas de base cubren:
+- requisitos de la baja (CURP no, clave sí);
+- aviso de la Ñ;
+- un alta mezclada en la selección de bajas;
+- bloqueo de las modificaciones;
+- que Consulta y Coordinador no generen bajas;
+- posiciones del renglón y renglón final;
+- orden y nombre del archivo;
+- que una baja en archivo no se anule;
+- presentación y resultado;
+- que la reversión restaure exactamente las funciones de la v3 y conserve el archivo ya generado.
+
+**Aplicado** en beehuman-pruebas y en commit (autorizado el 4-nov, 9:25).
+### Aplicación en beehuman-pruebas (4-nov-2026, autorizada)
+- Migración `idse_bajas` aplicada y registrada una sola vez (15 en total).
+- Las funciones en pruebas tienen la misma huella que las que pasaron la comparación byte a byte en local:
+
+  | Función | Huella |
+  |---|---|
+  | `idse_validar` + `idse_generar_archivo` | `87f6a362…` |
+  | `idse_linea_baja` | `3df8bb42…` |
+  | `idse_linea_alta` (sin cambios) | `91699cec…` |
+
+  Por eso el alta sigue generando los mismos 340 bytes y las bajas los 510 del archivo de referencia. Los datos reales no se cargaron en pruebas.
+- `idse_linea_baja` no queda expuesta: ni authenticated ni anon pueden llamarla.
+- **Ensayo en pruebas con una persona sintética.** Se deshizo todo al terminar.
+  - Generó un alta de 340 bytes y una baja con todas sus posiciones correctas.
+  - Los dos movimientos quedaron `en_archivo`, ligados a su archivo, con su renglón de traza y una huella SHA-256 válida.
+  - La reversión quitó `idse_linea_baja` y conservó los dos archivos.
+- **Precisión sobre la reversión.** El código que restaura es idéntico al de la v3, pero el texto de la función no es idéntico al que hay en pruebas.
+  - La razón: en pruebas la v3 se aplicó en versión compacta, sin líneas de comentario, y la reversión trae 3 comentarios y 3 líneas en blanco dentro de las funciones.
+  - El comportamiento no cambia.
+  - En una base donde la v3 se aplicó desde el archivo completo, la restauración es exacta byte a byte; así lo comprueba `pruebas_eventos.py`.

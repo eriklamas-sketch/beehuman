@@ -100,14 +100,14 @@ with sync_playwright() as p:
     print('--- Bandeja IDSE')
     pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
     ir(pg, 'idse'); pg.wait_for_timeout(1200)
-    ok('Falta: El registro patronal no tiene número de guía IDSE' in (pg.text_content('#idse-pend') or ''), 'sin guía, la bandeja dice qué falta')
+    ok('Falta: El registro patronal no tiene número de guía IDSE' in (pg.text_content('#idse-pend-08') or ''), 'sin guía, la bandeja dice qué falta')
     pg.fill('#idse-guia', '40001'); pg.click('#idse-guardar-rp'); pg.wait_for_timeout(1500)
-    t = pg.text_content('#idse-pend') or ''
+    t = pg.text_content('#idse-pend-08') or ''
     ok('EDGAR MORALES PEÑA' in t and 'Contiene Ñ' in t, 'con guía: el alta queda lista, con el aviso de la Ñ')
     foto(pg, '04-bandeja-idse')
-    pg.check('.idse-sel')
+    pg.check('.idse-sel[data-tipo="08"]')
     with pg.expect_download() as d:
-        pg.click('#idse-generar')
+        pg.click('[data-generar="08"]')
     ruta = d.value.path(); nombre = d.value.suggested_filename
     cont = open(ruta, 'rb').read().decode('ascii')
     lineas = cont.split('\r\n')
@@ -128,8 +128,32 @@ with sync_playwright() as p:
     t = pg.text_content('#hl-raiz') or ''
     ok('IDSE confirmado' in t and not pg.is_visible('[data-anular]'), 'en la ficha, el ingreso queda confirmado y ya no se puede anular')
 
-    print('--- Alta de personal conectada al historial')
+    print('--- Baja y su archivo IDSE (02)')
+    pg.click(f'[data-accion="baja"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
+    f = f'#hl-form-{rel} form'
+    pg.fill(f + ' [name=fecha]', '2026-11-03'); pg.select_option(f + ' [name=causa]', '2'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2000)
+    ok('Baja registrada' in msg(pg), 'baja registrada con su causa', msg(pg))
     pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
+    ir(pg, 'idse'); pg.wait_for_timeout(1500)
+    t = pg.text_content('#idse-pend-02') or ''
+    ok('EDGAR MORALES PEÑA' in t and '2 · Separación voluntaria' in t and '03/11/2026' in t, 'la bandeja muestra la baja con fecha y causa', t[:160])
+    ok('No hay altas pendientes' in (pg.text_content('#idse-pend-08') or ''), 'la baja no aparece entre las altas')
+    foto(pg, '05b-bandeja-bajas')
+    pg.check('.idse-sel[data-tipo="02"]')
+    with pg.expect_download() as d:
+        pg.click('[data-generar="02"]')
+    nombre = d.value.suggested_filename; cont = open(d.value.path(), 'rb').read().decode('ascii'); lineas = cont.split('\r\n')
+    b0 = lineas[0]
+    ok(nombre.startswith('IDSE_BAJAS_') and nombre.endswith('.dat') and len(lineas) == 3 and lineas[2] == '' and all(len(l) == 168 for l in lineas[:2]),
+       'se descarga el .dat de bajas: 1 baja + renglón final, 168 posiciones, CRLF', nombre)
+    ok(b0[103:118] == '0' * 15 and b0[118:126] == '03112026' and b0[131:138] == '0240001' and b0[138:148] == '        77' and b0[148] == '2' and b0[149:167] == ' ' * 18,
+       'contenido de la baja: ceros, fecha, tipo 02 + guía, clave, causa en 149 y sin CURP', repr(b0[103:168]))
+    pg.wait_for_timeout(800)
+    ok('IDSE_BAJAS_' in (pg.text_content('#idse-arch') or '') and 'No hay bajas pendientes' in (pg.text_content('#idse-pend-02') or ''), 'el archivo de bajas aparece en «Archivos generados» y la baja sale de pendientes')
+    foto(pg, '05c-archivo-bajas')
+
+    print('--- Alta de personal conectada al historial')
+    if pg.is_visible('#modal-overlay'): pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
     ir(pg, 'alta')
     ok(pg.is_visible('#f-fecha-ingreso-laboral'), 'el alta tiene el campo de fecha de ingreso')
     pg.fill('#f-nombres', 'PRUEBA'); pg.fill('#f-apellido1', 'ALTA'); pg.fill('#f-apellido2', 'HISTORIA')

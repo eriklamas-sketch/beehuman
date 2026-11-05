@@ -8,6 +8,7 @@ NOTICE:  Personas sin relación laboral (sin empresa): 4
 NOTICE:  NSS repetidos en un mismo RP entre relaciones vigentes: 0
 OK    v3.1 (relación principal con RP) se aplica sin errores
 OK    bajas IDSE (02) se aplica sin errores
+OK    modificaciones IDSE (07) se aplica sin errores
 OK    la migración se aplica sin errores
 OK    la migración no modifica ninguna fila de personal
 OK    registros de pago: solo cambia el enlace (sin sellar autoría)
@@ -113,7 +114,7 @@ OK    V3.1: si la empresa de la ficha ya no tiene relación vigente, la ficha pa
 OK    sin guía IDSE la validación lo señala  [2|true]
 OK    con errores no se genera nada  [ERROR:  BeeHuman: faltan datos para el archivo IDSE — PERSONA P4: El registro patronal no tiene número de guía IDSE | PERSONA P7: El registro patronal]
 OK    la Ñ se avisa antes de generar
-OK    H6: un movimiento de otro RP en la selección: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: 6c552490-0748-412f-a9a2-a34008185110]
+OK    H6: un movimiento de otro RP en la selección: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: fe8b7e8c-4bf9-419c-baa8-7243cdb932e8]
 OK    H6: selección con repetidos: rechazada  [ERROR:  BeeHuman: la selección tiene movimientos repetidos.]
 OK    H6: selección vacía: rechazada  [ERROR:  BeeHuman: no seleccionaste movimientos.]
 OK    H6: ninguna selección inválida dejó archivo
@@ -138,9 +139,8 @@ OK    el contenido de un archivo generado no cambia  [ERROR:  BeeHuman: el conte
 OK    la baja no exige CURP, SBC, tipos ni UMF (B2 no tiene CURP y está lista)  [af100000-0000-4000-8000-000000000002= # af100000-0000-4000-8000-000000000003=Número interno (clave del trabajador) # af100000-0000-4000-8000-000000000001=]
 OK    la baja sí exige la clave del trabajador
 OK    la Ñ también se avisa en bajas
-OK    un alta en la selección de bajas: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: 25b34812-1b6a-4706-9593-df1a8859f278]
+OK    un alta en la selección de bajas: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: 175bcd85-eca8-4bf8-a746-fc8ed3bf3a46]
 OK    una baja sin clave no se genera  [ERROR:  BeeHuman: faltan datos para el archivo IDSE — SIN CLAVE PRUEBA: Número interno (clave del trabajador)]
-OK    las modificaciones (07) siguen bloqueadas  [ERROR:  BeeHuman: el archivo de modificaciones se habilita cuando confirmemos el formato con un archivo real.]
 OK    Consulta no genera bajas  [ERROR:  BeeHuman: tu rol no permite esta operación.]
 OK    Coordinador no genera bajas  [ERROR:  BeeHuman: tu rol no permite esta operación.]
 OK    archivo de bajas: 2 bajas + final, 168 posiciones y CRLF  [[168, 168, 168]]
@@ -153,6 +153,20 @@ OK    nombre del archivo: IDSE_BAJAS_<RP>_<fecha>.dat
 OK    una baja que ya está en un archivo no se anula  [ERROR:  BeeHuman: el movimiento IDSE está en_archivo; cancela el archivo o, si ya se presentó, corrígelo ante el IMSS.]
 OK    presentado y con resultado: las bajas quedan confirmadas
 OK    la bandeja de altas no mezcla bajas
+--- IDSE modificaciones de salario (07)
+OK    la modificación con CURP, SBC, tipos y clave queda lista (no pide UMF)  [{'af200000-0000-4000-8000-000000000001': '', 'af200000-0000-4000-8000-000000000002': '', 'af200000-0000-4000-8000-000000000003': 'CURP válida'}]
+OK    la modificación sí exige CURP  [CURP válida]
+OK    una baja en la selección de modificaciones: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: d762f08e-ef1a-46ce-9ca1-9b5e0e5dc920]
+OK    Consulta no genera modificaciones  [ERROR:  BeeHuman: tu rol no permite esta operación.]
+OK    un tipo de movimiento inexistente se rechaza  [ERROR:  BeeHuman: tipo de movimiento IDSE no válido (09).]
+OK    archivo de modificaciones: 2 + final, 168 posiciones y CRLF  [[168, 168, 168]]
+OK    misma fecha: orden por apellidos
+OK    SBC nuevo con centavos, tipos y fecha  ['065540      10005102026']
+OK    sin UMF, tipo 07 + guía, clave, CURP y 9 final  ['     0740001        81 AAVL900101HDFRGS019']
+OK    renglón final de modificaciones: total y guía
+OK    nombre del archivo: IDSE_MODIFICACIONES_<RP>_<fecha>.dat
+OK    las modificaciones quedan en_archivo y ligadas a su archivo
+OK    una modificación que ya está en un archivo no se anula  [ERROR:  BeeHuman: el movimiento IDSE está en_archivo; cancela el archivo o, si ya se presentó, corrígelo ante el IMSS.]
 --- Historial por rol y aislamiento
 OK    Administrador ve el historial con importes  [2|true]
 OK    Consulta ve el historial sin importes  [2|false]
@@ -168,13 +182,16 @@ OK    solo el Administrador registra la prima  [ERROR:  BeeHuman: tu rol no perm
 OK    la UMA cambia el 1 de febrero
 OK    no se traslapan vigencias de un parámetro  [ERROR:  conflicting key value violates exclusion constraint "parametros_generales_clave_daterange_excl"]
 --- Reversión
+OK    la reversión de modificaciones restaura exactamente la versión de bajas y quita idse_linea_modificacion
+OK    tras revertir, las modificaciones vuelven a estar bloqueadas  [ERROR:  BeeHuman: el archivo de modificaciones se habilita cuando confirmemos el formato con un archivo real.]
+OK    el archivo de modificaciones ya generado se conserva tras revertir
 OK    la migración de bajas sí cambió las funciones IDSE
 OK    la reversión de bajas restaura exactamente las funciones de la v3 y quita idse_linea_baja
 OK    tras revertir, las bajas vuelven a estar bloqueadas  [ERROR:  BeeHuman: el archivo de bajas se habilita cuando confirmemos el formato con un archivo real.]
 OK    el archivo de bajas ya generado se conserva tras revertir
 OK    la v3.1 sí cambió la función de relación principal
 OK    la reversión de la v3.1 restaura exactamente la función de la v3
-OK    H7: con operaciones reales la reversión se bloquea sin confirmación expresa  [ERROR:  BeeHuman: hay datos capturados por usuarios (28 eventos, 5 archivos IDSE, 1 primas de riesgo, 2 registros patron]
+OK    H7: con operaciones reales la reversión se bloquea sin confirmación expresa  [ERROR:  BeeHuman: hay datos capturados por usuarios (34 eventos, 6 archivos IDSE, 1 primas de riesgo, 2 registros patron]
 OK    con confirmación expresa la reversión se aplica
 OK    la reversión deja el esquema idéntico al de antes
 OK    la migración se puede volver a aplicar  [
@@ -185,4 +202,4 @@ OK    V3-2: la guía IDSE capturada en un RP también bloquea la reversión  [ER
 OK    tras confirmar, el esquema público queda como antes (se conservan el respaldo y btree_gist)
 OK    el respaldo de la ficha se conserva tras revertir
 
-163/163 pruebas correctas
+179/179 pruebas correctas

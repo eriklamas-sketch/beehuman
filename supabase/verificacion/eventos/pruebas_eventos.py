@@ -13,6 +13,8 @@ MIG31 = os.path.join(S, 'pendiente', '20261104000100_relacion_principal_con_rp.s
 REV31 = os.path.join(S, 'reversion', '20261104000100_reversion_relacion_principal_con_rp.sql')
 MIGB = os.path.join(S, 'pendiente', '20261105000000_idse_bajas.sql')
 REVB = os.path.join(S, 'reversion', '20261105000000_reversion_idse_bajas.sql')
+MIGM = os.path.join(S, 'pendiente', '20261105000100_idse_modificaciones.sql')
+REVM = os.path.join(S, 'reversion', '20261105000100_reversion_idse_modificaciones.sql')
 DEF_IDSE = "select md5(pg_get_functiondef('public.idse_validar(uuid,text)'::regprocedure) || pg_get_functiondef('public.idse_generar_archivo(uuid,text,uuid[])'::regprocedure))"
 DEF_PRINCIPAL = "select md5(pg_get_functiondef('public.laboral_relacion_principal(uuid)'::regprocedure))"
 HUELLA = os.path.join(S, 'verificacion', 'huella_esquema.sql')
@@ -118,6 +120,9 @@ ok('ERROR' not in salida31, 'v3.1 (relación principal con RP) se aplica sin err
 def_idse_v3 = val(DEF_IDSE)
 salidab = archivo(MIGB)
 ok('ERROR' not in salidab, 'bajas IDSE (02) se aplica sin errores', salidab[salidab.find('ERROR'):][:150])
+def_idse_bajas = val(DEF_IDSE)
+salidam = archivo(MIGM)
+ok('ERROR' not in salidam, 'modificaciones IDSE (07) se aplica sin errores', salidam[salidam.find('ERROR'):][:150])
 ok('ERROR' not in salida, 'la migración se aplica sin errores')
 ok(val("select md5(string_agg(to_jsonb(p)::text, '' order by id)) from public.personal p") == antes_personal,
    'la migración no modifica ninguna fila de personal')
@@ -366,7 +371,6 @@ ok('Contiene Ñ' in val(f"select array_to_string(avisos,';') from public.idse_va
 m_alta = val(f"select id from public.idse_movimientos where relacion_laboral_id='{rb1}' and tipo_movimiento='08'")
 falla_con(f"select public.idse_generar_archivo('{RP1}','02',array['{mb['B1']}','{m_alta}']::uuid[])", 'admin', 'no están disponibles', 'un alta en la selección de bajas: no se genera nada')
 falla_con(f"select public.idse_generar_archivo('{RP1}','02',array['{mb['B3']}']::uuid[])", 'admin', 'faltan datos', 'una baja sin clave no se genera')
-falla_con(f"select public.idse_validar('{RP1}','07')", 'admin', 'modificaciones se habilita', 'las modificaciones (07) siguen bloqueadas')
 falla_con(f"select public.idse_generar_archivo('{RP1}','02',array['{mb['B1']}']::uuid[])", 'consulta', 'tu rol no permite', 'Consulta no genera bajas')
 falla_con(f"select public.idse_generar_archivo('{RP1}','02',array['{mb['B1']}']::uuid[])", 'coord', 'tu rol no permite', 'Coordinador no genera bajas')
 ab = val(f"select public.idse_generar_archivo('{RP1}','02',array['{mb['B1']}','{mb['B2']}']::uuid[])", 'nomina')
@@ -385,6 +389,36 @@ sql(f"select public.idse_marcar_presentado('{ab}','LOTE-B1','2026-11-04')", 'nom
 sql(f"select public.idse_registrar_resultado('{ab}', '[]', 'ACUSE-B1', '2026-11-05')", 'nomina')
 ok(val(f"select string_agg(distinct estado, ',') from public.idse_movimientos where archivo_id='{ab}'") == 'confirmado', 'presentado y con resultado: las bajas quedan confirmadas')
 ok(val(f"select (count(*) = 0)::text from public.idse_validar('{RP1}','08') v join public.idse_movimientos m on m.id = v.movimiento_id where m.tipo_movimiento <> '08'", 'admin') == 'true', 'la bandeja de altas no mezcla bajas')
+
+print('--- IDSE modificaciones de salario (07)')
+PM = {k: f'af200000-0000-4000-8000-0000000000{i:02d}' for i, k in enumerate(['M1', 'M2', 'M3'], 1)}
+sql(f"""insert into public.personal (id, tenant_id, empleado_id, nombre_completo, nombres, primer_apellido, segundo_apellido, nss, curp) values
+ ('{PM['M1']}','{T}','BEH-M1','LUIS ARANDA VEGA','LUIS','ARANDA','VEGA','92345678901','AAVL900101HDFRGS01'),
+ ('{PM['M2']}','{T}','BEH-M2','RITA BRAVO OCHOA','RITA','BRAVO','OCHOA','92345678902','BAOR910202MDFRCT02'),
+ ('{PM['M3']}','{T}','BEH-M3','SIN CURP MODIFICACION','SIN CURP','MODIFICACION','PRUEBA','92345678903',null)""", replica=True)
+rm = {k: val(f"select public.laboral_registrar_ingreso('{PM[k]}','{E1}','{RP1}','2026-03-01', null, 400, null, '1', '0', '0', '010', '{n}')", 'admin')
+      for k, n in (('M1', '81'), ('M2', '141'), ('M3', '303'))}
+for k in rm: sql(f"select public.laboral_modificar_salario('{rm[k]}','2026-10-05', {dict(M1=655.40, M2=410.25, M3=500)[k]})", 'nomina')
+mm = {k: val(f"select id from public.idse_movimientos where relacion_laboral_id='{r}' and tipo_movimiento='07'") for k, r in rm.items()}
+vm = {r.split('=')[0]: r.split('=')[1] for r in val(f"select string_agg(personal_id||'='||array_to_string(errores,';'), ' # ') from public.idse_validar('{RP1}','07') where movimiento_id in ('{mm['M1']}','{mm['M2']}','{mm['M3']}')", 'nomina').split(' # ')}
+ok(vm[PM['M1']] == '' and vm[PM['M2']] == '', 'la modificación con CURP, SBC, tipos y clave queda lista (no pide UMF)', str(vm)[:200])
+ok('CURP válida' in vm[PM['M3']], 'la modificación sí exige CURP', vm[PM['M3']])
+falla_con(f"select public.idse_generar_archivo('{RP1}','07',array['{mm['M1']}','{mb['B1']}']::uuid[])", 'admin', 'no están disponibles', 'una baja en la selección de modificaciones: no se genera nada')
+falla_con(f"select public.idse_generar_archivo('{RP1}','07',array['{mm['M1']}']::uuid[])", 'consulta', 'tu rol no permite', 'Consulta no genera modificaciones')
+falla_con(f"select public.idse_validar('{RP1}','09')", 'admin', 'no válido', 'un tipo de movimiento inexistente se rechaza')
+am = val(f"select public.idse_generar_archivo('{RP1}','07',array['{mm['M2']}','{mm['M1']}']::uuid[])", 'nomina')
+cont = val(f"select replace(replace(contenido, E'\\r', '<CR>'), E'\\n', '<LF>') from public.idse_archivos where id='{am}'", 'nomina')
+lm = cont.split('<CR><LF>')[:-1]
+ok(len(lm) == 3 and all(len(l) == 168 for l in lm) and cont.endswith('<CR><LF>'), 'archivo de modificaciones: 2 + final, 168 posiciones y CRLF', str([len(l) for l in lm]))
+ok(lm[0][22:49].rstrip() == 'ARANDA' and lm[1][22:49].rstrip() == 'BRAVO', 'misma fecha: orden por apellidos')
+m0 = lm[0]
+ok(m0[103:109] == '065540' and m0[109:115] == ' ' * 6 and m0[115:118] == '100' and m0[118:126] == '05102026', 'SBC nuevo con centavos, tipos y fecha', repr(m0[103:126]))
+ok(m0[126:131] == ' ' * 5 and m0[131:138] == '0740001' and m0[138:148] == '        81' and m0[148] == ' ' and m0[149:167] == 'AAVL900101HDFRGS01' and m0[167] == '9',
+   'sin UMF, tipo 07 + guía, clave, CURP y 9 final', repr(m0[126:168]))
+ok(lm[2][56:62] == '000002' and lm[2][133:138] == '40001', 'renglón final de modificaciones: total y guía')
+ok(val(f"select nombre_archivo like 'IDSE_MODIFICACIONES_Y1234567101_%.dat' from public.idse_archivos where id='{am}'") == 't', 'nombre del archivo: IDSE_MODIFICACIONES_<RP>_<fecha>.dat')
+ok(val(f"select string_agg(distinct estado||':'||(archivo_id='{am}'), ',') from public.idse_movimientos where id in ('{mm['M1']}','{mm['M2']}')") == 'en_archivo:true', 'las modificaciones quedan en_archivo y ligadas a su archivo')
+falla_con(f"select public.laboral_anular_evento((select evento_id from public.idse_movimientos where id='{mm['M1']}'),'x')", 'admin', 'en_archivo', 'una modificación que ya está en un archivo no se anula')
 
 print('--- Historial por rol y aislamiento')
 h = val(f"select count(*)||'|'||bool_or(valores_nuevos ? 'sbc') from public.laboral_historial('{P['P1']}')", 'admin')
@@ -406,6 +440,11 @@ ok(val("select public.parametro_vigente('UMA_DIARIA','2026-01-15')||'|'||public.
 falla_con("insert into public.parametros_generales (clave, valor, vigente_desde, fuente) values ('UMA_DIARIA', 1, '2026-06-01', 'x')", None, 'conflicting key', 'no se traslapan vigencias de un parámetro')
 
 print('--- Reversión')
+salida = archivo(REVM)
+ok('ERROR' not in salida and val(DEF_IDSE) == def_idse_bajas and val("select to_regprocedure('public.idse_linea_modificacion(uuid,text)') is null") == 't',
+   'la reversión de modificaciones restaura exactamente la versión de bajas y quita idse_linea_modificacion', salida[salida.find('ERROR'):][:150])
+falla_con(f"select public.idse_validar('{RP1}','07')", 'admin', 'modificaciones se habilita', 'tras revertir, las modificaciones vuelven a estar bloqueadas')
+ok(val(f"select count(*) from public.idse_archivos where tipo_movimiento='07'") == '1', 'el archivo de modificaciones ya generado se conserva tras revertir')
 ok(val(DEF_IDSE) != def_idse_v3, 'la migración de bajas sí cambió las funciones IDSE')
 salida = archivo(REVB)
 ok('ERROR' not in salida and val(DEF_IDSE) == def_idse_v3 and val("select to_regprocedure('public.idse_linea_baja(uuid,text)') is null") == 't',

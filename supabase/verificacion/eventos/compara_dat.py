@@ -1,4 +1,4 @@
-"""Comparación byte a byte de archivos IDSE (alta 08 o baja 02).
+"""Comparación byte a byte de archivos IDSE (alta 08, baja 02 o modificación 07).
 Lee un archivo de referencia, reproduce sus movimientos con el código de BeeHuman
 (migraciones de la etapa 1, base LOCAL desechable bhev) y compara el archivo generado.
 Uso: ./montar.sh && python3 compara_dat.py <archivo_referencia.dat>
@@ -9,13 +9,13 @@ renglones = [r.decode('ascii') for r in REF.split(b'\r\n') if r]
 movs, final = renglones[:-1], renglones[-1]
 c = lambda l, a, b: l[a-1:b]                      # posiciones 1-based, inclusivas
 tipo = c(movs[0], 132, 133)
-assert tipo in ('08', '02') and all(c(l, 132, 133) == tipo for l in movs), 'tipo de movimiento no soportado o mezclado'
+assert tipo in ('08', '02', '07') and all(c(l, 132, 133) == tipo for l in movs), 'tipo de movimiento no soportado o mezclado'
 rp, guia = c(movs[0], 1, 11), c(movs[0], 134, 138)
 iso = lambda f: f'{f[4:]}-{f[2:4]}-{f[:2]}'
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 S = os.path.join(AQUI, '..', 'repo', 'beehuman-int', 'supabase', 'pendiente')
-MIGS = ['20261104000000_eventos_laborales_idse.sql', '20261104000100_relacion_principal_con_rp.sql', '20261105000000_idse_bajas.sql']
+MIGS = ['20261104000000_eventos_laborales_idse.sql', '20261104000100_relacion_principal_con_rp.sql', '20261105000000_idse_bajas.sql', '20261105000100_idse_modificaciones.sql']
 PSQL = ['psql', '-X', '-q', '-At', '-v', 'ON_ERROR_STOP=1', '-h', '/tmp', '-p', '55432', '-U', 'postgres', '-d', 'bhev']
 def run(q):
     p = subprocess.run(PSQL, input=q, capture_output=True, text=True)
@@ -35,8 +35,8 @@ for n, l in enumerate(movs, 1):
     pid = str(uuid.uuid4())
     d = dict(id=pid, nss=c(l, 12, 22), pat=c(l, 23, 49).strip(), mat=c(l, 50, 76).strip(), nom=c(l, 77, 103).strip(),
              fecha=iso(c(l, 119, 126)), clave=c(l, 139, 148).strip())
-    if tipo == '08':
-        d.update(sbc=int(c(l, 104, 109)) / 100, tt=c(l, 116, 116), ts=c(l, 117, 117), jo=c(l, 118, 118), umf=c(l, 127, 129), curp=c(l, 150, 167))
+    if tipo in ('08', '07'):
+        d.update(sbc=int(c(l, 104, 109)) / 100, tt=c(l, 116, 116), ts=c(l, 117, 117), jo=c(l, 118, 118), umf=c(l, 127, 129).strip() or '001', curp=c(l, 150, 167))
     else:
         d.update(causa=c(l, 149, 149), curp=None)
     personas.append(d)
@@ -51,6 +51,9 @@ como = f"begin; select set_config('request.jwt.claims', '{json.dumps({'sub': U})
 for d in personas:
     if tipo == '08':
         run(como + f"select public.laboral_registrar_ingreso('{d['id']}','{E}','{R}','{d['fecha']}', null, {d['sbc']}, null, '{d['tt']}', '{d['ts']}', '{d['jo']}', '{d['umf']}', {lit(d['clave'])}); commit;")
+    elif tipo == '07':   # ingreso previo con otro SBC y luego la modificación
+        rel = run(como + f"select public.laboral_registrar_ingreso('{d['id']}','{E}','{R}','2026-01-05', null, 400, null, '{d['tt']}', '{d['ts']}', '{d['jo']}', '001', {lit(d['clave'])}); commit;")[-1]
+        run(como + f"select public.laboral_modificar_salario('{rel}','{d['fecha']}', {d['sbc']}); commit;")
     else:   # la persona necesita una relación vigente con RP para poder darla de baja
         rel = run(como + f"select public.laboral_registrar_ingreso('{d['id']}','{E}','{R}','2026-01-05', null, 400, null, '1', '0', '0', '001', {lit(d['clave'])}); commit;")[-1]
         run(como + f"select public.laboral_registrar_baja('{rel}','{d['fecha']}','{d['causa']}'); commit;")

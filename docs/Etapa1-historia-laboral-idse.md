@@ -262,3 +262,78 @@ Las 23 pruebas nuevas de base cubren:
   - La razón: en pruebas la v3 se aplicó en versión compacta, sin líneas de comentario, y la reversión trae 3 comentarios y 3 líneas en blanco dentro de las funciones.
   - El comportamiento no cambia.
   - En una base donde la v3 se aplicó desde el archivo completo, la restauración es exacta byte a byte; así lo comprueba `pruebas_eventos.py`.
+
+## Archivo IDSE de modificaciones de salario (07) (4-nov-2026)
+**Referencia.** Erik compartió un archivo verificado con 2 modificaciones.
+- El original, con datos reales, quedó solo en el proyecto: `claude/eventos/referencia/IDSE_modificaciones_referencia_20261104.dat`.
+- No se sube al repositorio.
+
+**Formato.** Es el renglón del alta con dos diferencias:
+- **127–129:** en blanco, porque la modificación no lleva UMF.
+- **132–133:** `07`.
+
+El SBC de las posiciones 104–109 es el nuevo. Tipos de trabajador, salario y jornada, fecha, guía, clave y CURP van igual que en el alta, y el renglón final también.
+
+**Migración `20261105000100_idse_modificaciones.sql`.** Se aplica sobre la de bajas, solo cambia funciones y tiene su reversión.
+1. Nueva función interna `idse_linea_modificacion`.
+2. `idse_validar` acepta `07` y exige lo mismo que el alta, salvo la UMF. Un tipo inexistente se rechaza.
+3. `idse_generar_archivo` arma el renglón `07`.
+
+Con esto quedan habilitados los tres tipos: alta, baja y modificación.
+
+**Comparación byte a byte:**
+
+| Archivo | Resultado |
+|---|---|
+| Modificaciones | **Idénticas**, 510 bytes |
+| Bajas | **Idénticas**, 510 bytes |
+| Alta | **Idéntica**, 340 bytes |
+
+**Pantalla.** La bandeja IDSE tiene una sección «Modificaciones de salario pendientes», con fecha, SBC nuevo, revisión y el botón «Generar archivo de modificaciones».
+
+**Pruebas:**
+
+| Batería | Resultado |
+|---|---|
+| Base de datos | **179/179** |
+| Pantallas | **41/41**: registrar modificación → bandeja → `.dat` → sale de pendientes |
+
+Las pruebas nuevas de base cubren:
+- la modificación no pide UMF, pero sí CURP;
+- una baja mezclada en la selección de modificaciones;
+- un tipo inexistente;
+- que Consulta no genere modificaciones;
+- las posiciones del renglón, el orden y el nombre del archivo;
+- el estado `en_archivo` y que una modificación en archivo no se anule;
+- que la reversión restaure exactamente la versión de bajas y conserve el archivo generado.
+
+**Sigue abierta la regla de la Ñ.** Ninguno de los tres archivos de referencia contiene Ñ.
+
+### Aplicación en beehuman-pruebas (5-nov-2026, autorizada)
+- La migración `idse_modificaciones` se aplicó sobre la versión de bajas (`87f6a362…`) y quedó registrada una sola vez (16 en total).
+- Las cuatro funciones en pruebas tienen la misma huella que en la base local donde los tres archivos de referencia acaban de salir **idénticos byte a byte**:
+
+  | Función | Huella |
+  |---|---|
+  | `idse_validar` + `idse_generar_archivo` | `6ad49a60…` |
+  | `idse_linea_modificacion` | `a88bea73…` |
+  | `idse_linea_baja` | `3df8bb42…` |
+  | `idse_linea_alta` | `91699cec…` |
+
+  Resultado: modificaciones 510 bytes, bajas 510 y alta 340. No se cargaron datos reales en pruebas.
+- `idse_linea_modificacion` no queda expuesta, y anon no puede generar archivos.
+- **Ensayo en pruebas con una persona sintética** (alta → modificación → baja). Se deshizo todo al terminar.
+  - Generó tres archivos con sus posiciones correctas.
+  - Cada movimiento quedó `en_archivo` y ligado a su archivo, con 3 renglones de traza y huellas válidas.
+  - La reversión restauró **exactamente** la versión de bajas (`87f6a362…`), quitó `idse_linea_modificacion` y conservó los tres archivos.
+- Después del ensayo, pruebas no tiene ningún archivo, movimiento ni persona de ensayo.
+
+**Estado:**
+
+| Movimiento | Formato |
+|---|---|
+| Alta (08) | Verificado |
+| Baja (02) | Verificado |
+| Modificación (07) | Verificado |
+
+Los tres se generan en la vista previa. La regla de la Ñ sigue provisional (`#`).

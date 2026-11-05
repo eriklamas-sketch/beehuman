@@ -443,7 +443,8 @@
         ${esAdmin() ? '<div><button type="button" class="hl-btn2" id="idse-guardar-rp">Guardar datos del RP</button></div>' : ''}</div>
       <div class="hl-msg" id="idse-msg"></div>
       <h4 style="margin:18px 0 6px">Altas y reingresos pendientes</h4><div id="idse-pend-08"></div>
-      <h4 style="margin:18px 0 6px">Bajas pendientes</h4><div id="idse-pend-02"></div><div id="idse-pend-07"></div>
+      <h4 style="margin:18px 0 6px">Bajas pendientes</h4><div id="idse-pend-02"></div>
+      <h4 style="margin:18px 0 6px">Modificaciones de salario pendientes</h4><div id="idse-pend-07"></div>
       <h4 style="margin:18px 0 6px">Archivos generados</h4><div id="idse-arch"></div></div>`;
     document.getElementById('idse-rp').onchange = (e) => { idse.rp = e.target.value; abrirIdse(); };
     const g = document.getElementById('idse-guardar-rp');
@@ -465,7 +466,7 @@
     await cargarCatalogos(); await refrescarIdse(); idseMsg('Datos del registro patronal guardados.', true);
   }
 
-  const TITULO_TIPO = { '08': 'altas', '02': 'bajas' };
+  const TITULO_TIPO = { '08': 'altas', '02': 'bajas', '07': 'modificaciones' };
   function pintarPendientes(tipo, v, movs) {
     const pend = document.getElementById('idse-pend-' + tipo);
     if (!pend) return;
@@ -477,11 +478,12 @@
     }
     const filas = v.data || [];
     if (!filas.length) { pend.innerHTML = `<p class="hint">No hay ${TITULO_TIPO[tipo]} pendientes en este registro patronal.</p>`; return; }
+    const sbcDe = (id) => { const m = movs.find((x) => x.id === id); return m && m.sbc != null ? Number(m.sbc).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) : '—'; };
     const causaDe = (id) => { const m = movs.find((x) => x.id === id); if (!m || !m.causa_baja) return '—'; const c = causas.find((x) => x.codigo === m.causa_baja); return m.causa_baja + (c ? ' · ' + c.descripcion : ''); };
-    let h = `<div style="overflow-x:auto"><table class="idse-tabla"><thead><tr><th><input type="checkbox" class="idse-todos" data-tipo="${tipo}" aria-label="Seleccionar todos"></th><th>Persona</th><th>${tipo === '02' ? 'Fecha de baja' : 'Fecha'}</th>${tipo === '02' ? '<th>Causa</th>' : ''}<th>Revisión</th></tr></thead><tbody>`;
+    let h = `<div style="overflow-x:auto"><table class="idse-tabla"><thead><tr><th><input type="checkbox" class="idse-todos" data-tipo="${tipo}" aria-label="Seleccionar todos"></th><th>Persona</th><th>${tipo === '02' ? 'Fecha de baja' : 'Fecha'}</th>${tipo === '02' ? '<th>Causa</th>' : ''}${tipo === '07' ? '<th>SBC nuevo</th>' : ''}<th>Revisión</th></tr></thead><tbody>`;
     filas.forEach((f) => {
       const okF = !(f.errores || []).length;
-      h += `<tr><td><input type="checkbox" class="idse-sel" data-tipo="${tipo}" value="${f.movimiento_id}" ${okF ? '' : 'disabled'}></td><td>${esc(f.nombre)}</td><td>${fechaMx(f.fecha_movimiento)}</td>${tipo === '02' ? `<td>${esc(causaDe(f.movimiento_id))}</td>` : ''}
+      h += `<tr><td><input type="checkbox" class="idse-sel" data-tipo="${tipo}" value="${f.movimiento_id}" ${okF ? '' : 'disabled'}></td><td>${esc(f.nombre)}</td><td>${fechaMx(f.fecha_movimiento)}</td>${tipo === '02' ? `<td>${esc(causaDe(f.movimiento_id))}</td>` : ''}${tipo === '07' ? `<td>${esc(sbcDe(f.movimiento_id))}</td>` : ''}
         <td>${(f.errores || []).map((x) => `<div class="idse-err">Falta: ${esc(x)}</div>`).join('')}${(f.avisos || []).map((x) => `<div class="idse-aviso">${esc(x)}</div>`).join('')}${okF && !(f.avisos || []).length ? '<span class="hl-chip vigente">Lista</span>' : ''}</td></tr>`;
     });
     h += `</tbody></table></div><div class="hl-acc"><button type="button" class="primary" style="margin:0" data-generar="${tipo}">Generar archivo de ${TITULO_TIPO[tipo]} con los seleccionados</button></div>`;
@@ -493,20 +495,19 @@
 
   async function refrescarIdse() {
     const arch = document.getElementById('idse-arch');
-    const [v08, v02, a, otros] = await Promise.all([
+    const [v08, v02, v07, a, otros] = await Promise.all([
       sb.rpc('idse_validar', { p_registro_patronal_id: idse.rp, p_tipo: '08' }),
       sb.rpc('idse_validar', { p_registro_patronal_id: idse.rp, p_tipo: '02' }),
+      sb.rpc('idse_validar', { p_registro_patronal_id: idse.rp, p_tipo: '07' }),
       sb.from('idse_archivos').select('id,nombre_archivo,num_registros,estado,lote_idse,fecha_presentacion,acuse_folio,generado_en,hash_sha256,tipo_movimiento')
         .eq('registro_patronal_id', idse.rp).order('generado_en', { ascending: false }),
-      sb.from('idse_movimientos').select('id,tipo_movimiento,causa_baja').eq('registro_patronal_id', idse.rp).in('tipo_movimiento', ['02', '07']).in('estado', ['pendiente', 'rechazado']),
+      sb.from('idse_movimientos').select('id,tipo_movimiento,causa_baja,sbc').eq('registro_patronal_id', idse.rp).in('tipo_movimiento', ['02', '07']).in('estado', ['pendiente', 'rechazado']),
     ]);
     const movs = otros.data || [];
-    idse.filas = [...(v08.data || []), ...(v02.data || [])];
+    idse.filas = [...(v08.data || []), ...(v02.data || []), ...(v07.data || [])];
     pintarPendientes('08', v08, movs);
     pintarPendientes('02', v02, movs);
-    const nm = movs.filter((x) => x.tipo_movimiento === '07').length;
-    const p07 = document.getElementById('idse-pend-07');
-    if (p07) p07.innerHTML = nm ? `<p class="hint">También hay ${nm} modificación(es) de salario registradas. Su archivo se habilita cuando confirmemos el formato con un archivo real.</p>` : '';
+    pintarPendientes('07', v07, movs);
     idse.archivos = a.error ? [] : (a.data || []);
     const ESTA = { generado: 'Generado', presentado: 'Presentado', con_resultado: 'Con resultado', cancelado: 'Cancelado' };
     arch.innerHTML = !idse.archivos.length ? '<p class="hint">Todavía no hay archivos.</p>' :

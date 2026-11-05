@@ -128,6 +128,28 @@ with sync_playwright() as p:
     t = pg.text_content('#hl-raiz') or ''
     ok('IDSE confirmado' in t and not pg.is_visible('[data-anular]'), 'en la ficha, el ingreso queda confirmado y ya no se puede anular')
 
+    print('--- Modificación de salario y su archivo IDSE (07)')
+    pg.click(f'[data-accion="salario"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
+    f = f'#hl-form-{rel} form'
+    pg.fill(f + ' [name=fecha]', '2026-10-28'); pg.fill(f + ' [name=sbc]', '420'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
+    ok('Modificación de salario registrada' in msg(pg), 'modificación de salario registrada para el archivo', msg(pg))
+    pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
+    ir(pg, 'idse'); pg.wait_for_timeout(1500)
+    t = pg.text_content('#idse-pend-07') or ''
+    ok('EDGAR MORALES PEÑA' in t and '28/10/2026' in t and '420.00' in t, 'la bandeja muestra la modificación con fecha y SBC nuevo', t[:160])
+    foto(pg, '05a-bandeja-modificaciones')
+    pg.check('.idse-sel[data-tipo="07"]')
+    with pg.expect_download() as d:
+        pg.click('[data-generar="07"]')
+    nombre = d.value.suggested_filename; lineas = open(d.value.path(), 'rb').read().decode('ascii').split('\r\n')
+    m0 = lineas[0]
+    ok(nombre.startswith('IDSE_MODIFICACIONES_') and len(lineas) == 3 and all(len(l) == 168 for l in lineas[:2]), 'se descarga el .dat de modificaciones: 1 + final, 168 posiciones, CRLF', nombre)
+    ok(m0[103:109] == '042000' and m0[115:118] == '100' and m0[118:126] == '28102026' and m0[126:131] == ' ' * 5 and m0[131:138] == '0740001' and m0[149:167] == 'MOPE920303HDFRXD08',
+       'contenido de la modificación: SBC nuevo, tipos, fecha, sin UMF, tipo 07 + guía y CURP', repr(m0[103:168]))
+    pg.wait_for_timeout(800)
+    ok('No hay modificaciones pendientes' in (pg.text_content('#idse-pend-07') or ''), 'la modificación sale de pendientes al generar su archivo')
+    ficha(pg, 'EDGAR MORALES PEÑA')
+
     print('--- Baja y su archivo IDSE (02)')
     pg.click(f'[data-accion="baja"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#hl-form-{rel} form'

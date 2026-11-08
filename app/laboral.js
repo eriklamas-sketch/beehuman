@@ -111,13 +111,14 @@
   // =====================================================================
   // Historia laboral (sección de la ficha)
   // =====================================================================
-  let estado = { personaId: null, relaciones: [], eventos: [], pendientes: [], formAbierto: null };
+  let estado = { personaId: null, persona: null, relaciones: [], eventos: [], pendientes: [], formAbierto: null };
+  let fichaBloqueadaPara = null; // id de la persona cuya ficha tiene bloqueados los datos de Historia laboral
   let msgPendiente = null; // mensaje a mostrar después de volver a pintar
 
   async function alAbrirDetalle(p) {
     const raiz = document.getElementById('hl-raiz');
     if (!raiz || !p) return;
-    estado = { personaId: p.id, relaciones: [], eventos: [], pendientes: [], formAbierto: null };
+    estado = { personaId: p.id, persona: p, relaciones: [], eventos: [], pendientes: [], formAbierto: null };
     bloquearFicha(false);
     raiz.innerHTML = '<p class="hint">Cargando historia laboral…</p>';
     if (!causas.length || !rps.length) await cargarCatalogos();
@@ -142,6 +143,7 @@
 
   // Con historial, estos datos solo cambian desde aquí (la base lo exige).
   function bloquearFicha(si) {
+    fichaBloqueadaPara = si ? estado.personaId : null;
     ['d-empresa', 'd-registro-patronal', 'd-numero-interno', 'd-fechabaja', 'd-comentariobaja'].forEach((idc) => {
       const el = document.getElementById(idc); if (!el) return;
       el.disabled = si; el.title = si ? 'Se registra en Historia laboral' : '';
@@ -353,7 +355,8 @@
     const r = estado.relaciones.find((x) => x.id === relId) || {};
     montar('hl-form-' + relId, `<b>Modificación de salario</b>
       <p class="hint" style="margin:4px 0 8px">SBC actual: ${dinero(r.sbc)}. La fecha debe ser posterior a la última modificación.</p>
-      <div class="hl-grid"><div><label>Fecha efectiva</label><input name="fecha" type="date" required></div>
+      <div id="hl-faltan-07-${relId}"></div>
+      <div class="hl-grid"><div><label>Fecha efectiva del cambio (no la fecha de captura)</label><input name="fecha" type="date" required value="${hoyMexico()}"></div>
         <div><label>Nuevo SBC diario</label><input name="sbc" inputmode="decimal" required></div>
         <div><label>SDI (si es distinto)</label><input name="sdi" inputmode="decimal"></div>
         <div><label>Tipo de salario</label><select name="ts">${opciones(TIPO_SAL, r.tipo_salario)}</select></div>
@@ -361,6 +364,43 @@
       await ejecutar('laboral_modificar_salario', { p_relacion_id: relId, p_fecha_efectiva: val(f, 'fecha') || null, p_sbc: num(f, 'sbc'),
         p_sdi: num(f, 'sdi'), p_tipo_salario: val(f, 'ts') || null, p_motivo: val(f, 'motivo') || null }, 'Modificación de salario registrada.');
     });
+    const form = document.querySelector('#hl-form-' + relId + ' form');
+    const pintarFaltantes = () => {
+      const caja = document.getElementById('hl-faltan-07-' + relId);
+      if (!caja) return;
+      const faltan = faltantesIdse07(r, form ? val(form, 'ts') : null);
+      caja.innerHTML = faltan.length
+        ? `<div class="hl-msg err" style="margin:0 0 8px">Puedes registrar la modificación, pero para generar su archivo IDSE falta: ${faltan.map(esc).join(', ')}. `
+          + 'Los datos de la relación se completan con «Corregir datos»; los de la persona, en su ficha.</div>'
+        : '';
+    };
+    if (form) { const ts = form.querySelector('[name=ts]'); if (ts) ts.addEventListener('change', pintarFaltantes); }
+    pintarFaltantes();
+  }
+
+  // Fecha de hoy en la hora de México (no UTC: después de las 18:00 UTC ya sería «mañana»).
+  function hoyMexico() {
+    try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+    catch (e) { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  }
+
+  // Lo mismo que exige idse_validar para un 07. Es solo un aviso anticipado:
+  // la base vuelve a validar al generar el archivo.
+  function faltantesIdse07(r, tipoSalarioElegido) {
+    const p = estado.persona || {};
+    const rp = rps.find((x) => x.id === r.registro_patronal_id) || {};
+    const curpOk = typeof CURP_REGEX !== 'undefined' ? CURP_REGEX.test(String(p.curp || '')) : String(p.curp || '').length === 18;
+    const f = [];
+    if (!rp.guia_idse) f.push('número de guía IDSE del registro patronal');
+    if (!/^[0-9]{11}$/.test(String(p.nss || ''))) f.push('NSS de 11 dígitos');
+    if (!String(p.primer_apellido || '').trim()) f.push('primer apellido');
+    if (!String(p.nombres || '').trim()) f.push('nombre(s) separado del apellido');
+    if (!curpOk) f.push('CURP válida');
+    if (!r.numero_interno) f.push('número interno (clave del trabajador)');
+    if (!r.tipo_trabajador) f.push('tipo de trabajador');
+    if (!(tipoSalarioElegido || r.tipo_salario)) f.push('tipo de salario');
+    if (!r.jornada) f.push('jornada');
+    return f;
   }
 
   function formCorregir(relId) {
@@ -573,7 +613,10 @@
   }
 
   // ---------- conexión con el archivo principal ----------
-  window.BH_laboral = { alAbrirDetalle, trasAlta, abrirIdse };
+  // La ficha general no debe enviar los datos que administra Historia laboral
+  // cuando esta persona ya tiene historial (la base los rechaza).
+  function fichaBloqueada(personaId) { return !!personaId && fichaBloqueadaPara === personaId; }
+  window.BH_laboral = { alAbrirDetalle, trasAlta, abrirIdse, fichaBloqueada };
   prepararAlta();
   const bIdse = document.querySelector('nav.tabs button[data-tab="idse"]');
   if (bIdse) bIdse.addEventListener('click', () => { abrirIdse(); });

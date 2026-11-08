@@ -3645,6 +3645,11 @@ async function abrirDetalle(id, seccionInicial = 'personal'){
   const p = personal.find(x=>x.id===id);
   if(!p) return;
   detalleActual = {...p};
+  // Una ficha nueva no hereda mensajes de la anterior.
+  ['toast-detalle', 'toast-registros-pago'].forEach(idToast => {
+    const t = document.getElementById(idToast);
+    if (t) { t.textContent = ''; t.className = 'toast'; t.style.display = 'none'; }
+  });
 
   document.getElementById('d-empleadoid').textContent = p.empleado_id ? ('ID ' + p.empleado_id) : 'ID pendiente';
   const empresaDetalle = empresas.find(e => String(e.id) === String(p.empresa_id));
@@ -3778,7 +3783,9 @@ async function abrirDetalle(id, seccionInicial = 'personal'){
 
 function cambiarSeccionDetalle(seccion){
   const savebar = document.getElementById('detail-savebar');
-  if (savebar) savebar.style.display = ['compensacion','movimientos','historia'].includes(seccion) ? 'none' : 'flex';
+  // Con !important: una regla de estilo del modal fija display:flex!important y
+  // anulaba el ocultado (el botón general se veía en Compensación e Historia laboral).
+  if (savebar) savebar.style.setProperty('display', ['compensacion','movimientos','historia'].includes(seccion) ? 'none' : 'flex', 'important');
   document.querySelectorAll('[data-detail-tab]').forEach(btn=>{
     const activo=btn.dataset.detailTab===seccion;
     btn.classList.toggle('active',activo);
@@ -4626,7 +4633,7 @@ async function guardarDetalleUnaVez(){
     subcontratacion: valorSubcontratacionDetalle(),
     estatus: document.getElementById('d-estatus').value,
     fecha_baja: document.getElementById('d-fechabaja').value || null,
-    comentario_baja: document.getElementById('d-comentariobaja').value.trim(),
+    comentario_baja: document.getElementById('d-comentariobaja').value.trim() || null,
     no_fonacot: document.getElementById('d-fonacot').value.trim(),
     restricciones_salud: document.getElementById('d-restricciones').value.trim(),
     contacto_emergencia_nombre: document.getElementById('d-emerg-nombre').value.trim(),
@@ -4634,6 +4641,14 @@ async function guardarDetalleUnaVez(){
     contacto_emergencia_parentesco: document.getElementById('d-emerg-parentesco').value.trim(),
     contacto_emergencia_direccion: document.getElementById('d-emerg-direccion').value.trim()
   };
+
+  // Con Historia laboral: estos datos solo cambian desde la Historia laboral de
+  // la persona (la base rechaza cualquier valor distinto). Se dejan fuera del
+  // guardado general para no reenviarlos, aunque el usuario no los haya tocado.
+  if (window.BH_laboral && typeof BH_laboral.fichaBloqueada === 'function' && BH_laboral.fichaBloqueada(detalleActual.id)) {
+    ['empresa_id', 'registro_patronal_id', 'numero_interno_trabajador', 'fecha_baja', 'comentario_baja'].forEach(c => { delete nuevo[c]; });
+    if (nuevo.estatus === 'Baja' || detalleActual.estatus === 'Baja') delete nuevo.estatus;
+  }
 
   const cambios = [];
   Object.keys(nuevo).forEach(campo=>{

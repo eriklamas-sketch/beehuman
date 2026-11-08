@@ -1,0 +1,33 @@
+--- Ficha con historial y registro patronal (ADELA)
+OK    sin modificaciones: «No hay cambios por guardar» y no se envía nada  [No hay cambios por guardar.]
+OK    con una modificación: se guarda y no envía ningún dato de Historia laboral  [Cambios guardados. | claves=[]]
+OK    el teléfono quedó guardado en la base
+OK    registro patronal, número interno y empresa no cambiaron
+OK    Activo → Suspendido sigue permitido con historial  [Cambios guardados.]
+--- Ficha con historial sin registro patronal (CESAR, solo efectivo)
+OK    sin modificaciones: no se envía nada  [No hay cambios por guardar.]
+OK    con una modificación: se guarda sin enviar datos de Historia laboral  [Cambios guardados.]
+OK    el comentario de baja sigue en NULL (antes se intentaba guardar como texto vacío)
+--- Persona sin historial (sigue como antes)
+OK    sin historial, empresa y número interno se editan en la ficha
+OK    sin historial, el guardado sigue enviando empresa, registro patronal y número interno  [{'numero_interno_trabajador': '777', 'registro_patronal_id': '0f900000-0000-4000-8000-000000000001'}]
+OK    quedó guardado; el comentario de baja vacío se normaliza a NULL
+OK    empresa sin registros patronales: guarda como antes, con el registro patronal en NULL  [['Sin asignar']]
+--- Mensajes: una ficha nueva no hereda los de la anterior
+OK    un error en una ficha no aparece al abrir la siguiente  [antes: 'Revisa los datos marcados en Datos personales; no se guardó ']
+OK    tampoco un aviso de éxito, al abrir varias fichas seguidas  [antes: 'No hay cambios por guardar.']
+--- Registro de pago independiente y barra de guardado por sección
+OK    «Guardar cambios» se ve en Datos personales
+OK    «Guardar cambios» de la ficha no se ve en Compensación
+OK    guardar el registro de pago solo escribe el registro de pago, nunca la ficha  [[('PATCH', 'personal_registros_pago')]]
+OK    el registro de pago confirma su propio guardado  [Cambios del registro de pago guardados.]
+OK    el aviso del registro de pago no pasa a la siguiente ficha
+OK    «Guardar cambios» de la ficha no se ve en Historia laboral
+--- Modificación de salario: fecha de hoy (México) y datos que faltan para el IDSE
+OK    la fecha efectiva aparece con la fecha de hoy en México  [2026-11-05 / esperado 2026-11-05]
+OK    antes de registrar se ve qué falta para el IDSE (tipos)  [Puedes registrar la modificación, pero para generar su archivo IDSE falta: número de guía IDSE del registro patronal, tipo de trabajador, tipo de salario, jorna]
+OK    al elegir el tipo de salario en el formulario, deja de marcarse como faltante
+OK    la fecha se puede editar y la modificación queda con la fecha efectiva elegida  [Modificación de salario registrada.]
+OK    ningún error de JavaScript
+
+25/25 pruebas correctas

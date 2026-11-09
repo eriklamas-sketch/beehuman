@@ -1,12 +1,15 @@
-# pruebas_datos_sinteticos · 09-nov-2026 · base local bhev con la cadena completa; réplica sintética del tenant piloto
+# pruebas_datos_sinteticos (script corregido en la revisión del 9-nov 14:3x) · base local bhev, cadena completa; réplica del tenant piloto con autoría previa
     bandeja antes: PERSONA 0001 PILOTO SINTETICO:NSS inválido: el dígito verificador no corresponde; revisa los 11 dígitos/Nombre con dígitos: el IMSS no acepta números en el nombre ni en los apellidos | PERSONA 0002 PI
 OK    antes: el piloto queda bloqueado en la bandeja (NSS y nombre)
     plan esperado: 8 NSS, 12 nombres
 --- Guardas
-OK    con conteos distintos a los del precheck no cambia nada  [ERROR:  BeeHuman: el plan da 8 NSS y 12 nombres; se esperaban 300 y 500. No se cambió nada.
-CONTEXT:  PL/pgSQL function ]
+OK    con conteos distintos a los del precheck no cambia nada  [ERROR:  BeeHuman: el plan da 8 NSS, 12 nombres y 12 nombres completos; se esperaban 300, 500 y 500. No se cambió nada.
+C]
+OK    si hubiera dos tenants con ese nombre no cambia nada  [ERROR:  BeeHuman: debe existir exactamente un tenant «PILOTO SINTETICO 500»; no se cambió nada.
+CONT]
 --- Adaptación
-OK    se aplica sin errores
+OK    se aplica sin errores  [
+]
      ['P500-000001', '99000000010', 'PERSONA AAAB', 'PERSONA AAAB PILOTO SINTETICO'] ['P500-000005', '00000000000', 'PERSONA AAAF', 'PERSONA AAAF PILOTO SINTETICO'] ['P500-000004', '', 'PERSONA AAAE', 'PERSONA AAAE PILOTO SINTETICO']
 OK    todos los NSS no vacíos tienen dígito verificador correcto
 OK    los NSS son únicos
@@ -16,14 +19,18 @@ OK    NSS nuevo = 9900 + número del empleado + dígito verificador  [9900000007
 OK    nombres sin dígitos: «PERSONA 0007» → «PERSONA AAAH» (también en nombre completo)
 OK    sin nombres duplicados
 OK    no cambian relaciones, eventos, movimientos ni archivos IDSE, ni ids/empleado_id/tenant de personas
-OK    el otro tenant sintético no se toca
+OK    el otro tenant sintético no se toca (fila completa)
+OK    en el piloto no cambia ninguna otra columna, ni actualizado_por ni actualizado_en
 OK    una fila en Movimientos por campo cambiado, con valor anterior y nuevo  [32]
 OK    respaldo con los valores anteriores de las 12 personas
 OK    después: la bandeja ya no los bloquea  [PERSONA AAAB PILOTO SINTETICO: | PERSONA AAAC PILOTO SINTETICO:]
 OK    una segunda ejecución se rechaza
 --- Reversión
-OK    la reversión devuelve exactamente los valores anteriores
+OK    la reversión devuelve exactamente las filas anteriores (incluida la autoría)  [
+]
 OK    la reversión deja constancia en Movimientos y no borra la traza
-OK    se puede volver a aplicar
+OK    se puede volver a aplicar  [
+]
 OK    guarda: si alguien editó un dato después, la reversión no se ejecuta
-OK    TOTAL: 20/20 pruebas OK
+OK    guarda: si una persona del respaldo se borró, la reversión no se ejecuta  [ERROR:  BeeHuman: alguna persona del respaldo ya no existe o cambió de tenant; revisa caso por caso.]
+OK    TOTAL: 23/23 pruebas OK

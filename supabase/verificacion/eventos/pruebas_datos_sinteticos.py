@@ -51,8 +51,8 @@ insert into auth.users (id, email) values ('{U['admin']}','admin.sint@beehuman.i
 insert into public.usuarios_tenant (user_id, tenant_id, rol) values ('{U['admin']}','{T}','administrador');
 insert into public.empresas (id, tenant_id, nombre) values ('{E}','{T}','EMPRESA PILOTO');
 insert into public.empresas_registros_patronales (id, empresa_id, tenant_id, registro_patronal) values ('{RP}','{E}','{T}','Z9900000901');
-""" + ''.join(f"insert into public.personal (id, tenant_id, empleado_id, nombre_completo, nombres, primer_apellido, segundo_apellido, nss, curp, empresa_id) "
-              f"values ('{pid}','{T}','{eid}','{nom} PILOTO SINTETICO','{nom}','PILOTO','SINTETICO',{repr(nss) if nss else 'null'},'{curp}','{E}');\n"
+""" + ''.join(f"insert into public.personal (id, tenant_id, empleado_id, nombre_completo, nombres, primer_apellido, segundo_apellido, nss, curp, empresa_id, actualizado_por, actualizado_en) "
+              f"values ('{pid}','{T}','{eid}','{nom} PILOTO SINTETICO','{nom}','PILOTO','SINTETICO',{repr(nss) if nss else 'null'},'{curp}','{E}','{U['admin']}','2026-10-01 10:00:00+00');\n"
               for pid, eid, nom, nss, curp in personas) + \
     f"insert into public.personal (id, tenant_id, empleado_id, nombre_completo, nombres, primer_apellido, nss) values ('ce300000-0000-4000-8000-999999999999','{T2}','OTRO-1','PRUEBA 7D6B 01','PRUEBA 01','7D6B','00000000001');"
 o, e = sql(seed, replica=True)
@@ -75,14 +75,19 @@ huellas = lambda: val("select md5(string_agg(t, '|')) from (select md5(coalesce(
                       "union all select md5(coalesce(string_agg(to_jsonb(x)::text,'' order by x.id),'')) from public.idse_movimientos x "
                       "union all select md5(coalesce(string_agg(to_jsonb(x)::text,'' order by x.id),'')) from public.idse_archivos x "
                       "union all select md5(coalesce(string_agg(x.id||x.empleado_id||x.tenant_id,'' order by x.id),'')) from public.personal x) z")
-datos = lambda: val(f"select md5(string_agg(coalesce(nss,'-')||nombres||nombre_completo, '|' order by id)) from public.personal where tenant_id = '{T}'")
-otro = lambda: val(f"select nss||'|'||nombres from public.personal where tenant_id = '{T2}'")
-H0, D0, O0 = huellas(), datos(), otro()
+datos = lambda: val(f"select md5(string_agg(to_jsonb(x)::text, '|' order by id)) from public.personal x where tenant_id = '{T}'")   # fila completa, incluida la autoría
+otro = lambda: val(f"select md5(string_agg(to_jsonb(x)::text, '|' order by id)) from public.personal x where tenant_id = '{T2}'")
+resto = lambda: val(f"select md5(string_agg((to_jsonb(x) - 'nss' - 'nombres' - 'nombre_completo')::text, '|' order by id)) from public.personal x where tenant_id = '{T}'")
+H0, D0, O0, X0 = huellas(), datos(), otro(), resto()
 
 print('--- Guardas')
 s = archivo(DAT)
-ok('se esperaban 300 y 500' in s and datos() == D0, 'con conteos distintos a los del precheck no cambia nada', s[s.find('ERROR'):][:120])
-CAMBIOS = [('c_nss      constant int := 300', f'c_nss      constant int := {inv}'), ('c_nombres  constant int := 500', 'c_nombres  constant int := 12')]
+ok('se esperaban 300, 500 y 500' in s and datos() == D0, 'con conteos distintos a los del precheck no cambia nada', s[s.find('ERROR'):][:120])
+CAMBIOS = [('c_nss      constant int := 300', f'c_nss      constant int := {inv}'), ('c_nombres  constant int := 500', 'c_nombres  constant int := 12'), ('c_completo constant int := 500', 'c_completo constant int := 12')]
+sql("insert into public.tenants (id, nombre) values ('ca300000-0000-4000-8000-000000000003','PILOTO SINTETICO 500')", replica=True)
+s = archivo(DAT, CAMBIOS)
+ok('exactamente un tenant' in s and datos() == D0, 'si hubiera dos tenants con ese nombre no cambia nada', s[s.find('ERROR'):][:100])
+sql("delete from public.tenants where id = 'ca300000-0000-4000-8000-000000000003'", replica=True)
 
 print('--- Adaptación')
 s = archivo(DAT, CAMBIOS)
@@ -98,7 +103,8 @@ ok(all(not any(c.isdigit() for c in f[2] + f[3]) for f in filas) and next(f for 
    'nombres sin dígitos: «PERSONA 0007» → «PERSONA AAAH» (también en nombre completo)')
 ok(len({f[3] for f in filas}) == len(filas), 'sin nombres duplicados')
 ok(huellas() == H0, 'no cambian relaciones, eventos, movimientos ni archivos IDSE, ni ids/empleado_id/tenant de personas')
-ok(otro() == O0, 'el otro tenant sintético no se toca')
+ok(otro() == O0, 'el otro tenant sintético no se toca (fila completa)')
+ok(resto() == X0, 'en el piloto no cambia ninguna otra columna, ni actualizado_por ni actualizado_en')
 n_mov = val("select count(*) from public.movimientos where usuario = 'sistema · adaptación datos sintéticos IDSE 20261109'")
 ok(n_mov == str(inv + 12 + 12), 'una fila en Movimientos por campo cambiado, con valor anterior y nuevo', n_mov)
 ok(val("select count(*) from respaldo.datos_sinteticos_idse_20261109") == '12', 'respaldo con los valores anteriores de las 12 personas')
@@ -108,13 +114,17 @@ ok('ya se aplicó' in archivo(DAT, CAMBIOS), 'una segunda ejecución se rechaza'
 
 print('--- Reversión')
 s = archivo(DREV)
-ok('ERROR' not in s and datos() == D0 and huellas() == H0, 'la reversión devuelve exactamente los valores anteriores', s[s.find('ERROR'):][:150])
+ok('ERROR' not in s and datos() == D0 and huellas() == H0 and otro() == O0, 'la reversión devuelve exactamente las filas anteriores (incluida la autoría)', s[s.find('ERROR'):][:150])
 ok(val("select count(*) from public.movimientos where usuario like 'sistema · %adaptación datos sintéticos IDSE 20261109'") == str(2 * (inv + 24)), 'la reversión deja constancia en Movimientos y no borra la traza')
 s = archivo(DAT, CAMBIOS)
 ok('ERROR' not in s and datos() != D0, 'se puede volver a aplicar', s[s.find('ERROR'):][:150])
 sql(f"update public.personal set nombres = 'EDITADO A MANO' where id = '{personas[2][0]}'", replica=True)
 s = archivo(DREV)
 ok('cambió después de la adaptación' in s, 'guarda: si alguien editó un dato después, la reversión no se ejecuta')
+sql(f"update public.personal p set nombres = r.nombres_nuevo from respaldo.datos_sinteticos_idse_20261109 r where p.id = r.id and p.id = '{personas[2][0]}'", replica=True)
+sql(f"delete from public.personal where id = '{personas[5][0]}'", replica=True)
+s = archivo(DREV)
+ok('ya no existe' in s, 'guarda: si una persona del respaldo se borró, la reversión no se ejecuta', s[s.find('ERROR'):][:100])
 
 ok(all(b for _, b in res), f'TOTAL: {sum(1 for _, b in res if b)}/{len(res)} pruebas OK')
 sys.exit(0 if all(b for _, b in res) else 1)

@@ -77,7 +77,8 @@
   const ESTADOS = { borrador: 'Borrador', enviada: 'Enviada', devuelta: 'Devuelta', procesada: 'Procesada' };
   const fechaUTC = s => new Date(s + 'T12:00:00Z');
   const dia = s => { const d = fechaUTC(s); return `${DIAS[d.getUTCDay()]} ${d.getUTCDate()}`; };
-  const fechaLarga = s => { const d = fechaUTC(s); return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
+  // Fechas completas siempre en DD/MM/AAAA (decisión de Erik, 9-nov): sin nombres de mes ambiguos.
+  const fechaLarga = s => { const d = fechaUTC(s); return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`; };
   const sumar = (s, n) => { const d = fechaUTC(s); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const rango = (a, b) => { const r = []; for (let f = a; f <= b; f = sumar(f, 1)) r.push(f); return r; };
   const semana = s => { const d = fechaUTC(s); const w = (d.getUTCDay() + 6) % 7; return sumar(s, -w); };

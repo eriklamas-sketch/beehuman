@@ -1884,6 +1884,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
 
       </section><section class="detail-section" data-detail-section="historia"><div id="hl-raiz"></div>
       </section><section class="detail-section" data-detail-section="movimientos"><h3>Movimientos</h3>
+      <p class="hint" id="d-historial-alcance" style="margin:0 0 10px;">Bitácora administrativa de la ficha: qué datos generales se cambiaron con «Guardar cambios», cuándo y por quién. Los ingresos, bajas, salario, esquemas de pago y movimientos IMSS se consultan en <a href="#" onclick="cambiarSeccionDetalle('historia');return false;">Historia laboral</a>; los envíos al IMSS, en la bandeja IDSE.</p>
       <div id="d-historial">
         <p class="hint" id="d-historial-resumen" style="margin-bottom:8px;">Cargando…</p>
         <button type="button" class="primary" id="btn-descargar-historial" style="margin-top:0;display:none;" onclick="descargarHistorialCSV()">Descargar historial (CSV)</button>
@@ -1901,6 +1902,7 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
   </div>
 </div>
 
+<script src="fechas.js"></script><!-- campos de fecha siempre en DD/MM/AAAA -->
 <script>
 // Proyecto de Supabase por entorno. La demo comercial aislada (proyecto
 // propio) se agregará aquí como otro entorno; cambiarla será configuración,
@@ -4287,6 +4289,8 @@ async function guardarRegistroPago(){
       : 'Registro de pago guardado.', 'ok');
     cargarRegistrosPagoGlobal(); // Fase 8: la Lista y el Resumen reflejan el cambio
     await cargarRegistrosPagoDetalle(personaId);
+    // El SBC no cambia con el sueldo: solo se avisa que el 07 es una operación aparte.
+    if (!yaGuardado && window.BH_laboral && BH_laboral.trasCambioSueldo) BH_laboral.trasCambioSueldo(altaId); // el 07 se ofrece solo para la relación de ESTE esquema
     return;
   }
 
@@ -4417,7 +4421,9 @@ async function guardarEdicionRegistroPago(){
     if (actual[campo] !== rpFormInicial[campo]) cambios[campo] = validacion.payload[campo];
   });
   if (!Object.keys(cambios).length) { mostrarToastRegistrosPago('No hay cambios que guardar.', 'err'); return; }
-  await aplicarCambioRegistroPago(registroId, cambios, null, 'Cambios del registro de pago guardados.');
+  const guardado = await aplicarCambioRegistroPago(registroId, cambios, null, 'Cambios del registro de pago guardados.');
+  // El SBC no cambia con el sueldo: solo se avisa que el 07 es una operación aparte.
+  if (guardado && 'sueldo' in cambios && window.BH_laboral && BH_laboral.trasCambioSueldo) BH_laboral.trasCambioSueldo(registroId); // el 07 se ofrece solo para la relación de ESTE esquema
 }
 
 async function cerrarRegistroPago(id){

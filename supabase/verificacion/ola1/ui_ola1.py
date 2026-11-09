@@ -95,7 +95,7 @@ with sync_playwright() as p:
     pg.fill('#inc-p-ini', '2026-10-19'); pg.dispatch_event('#inc-p-ini', 'change'); pg.click('#inc-p-crear'); pg.wait_for_timeout(700)
     ok('no hay historial' in pg.inner_text('#inc-p-msg'), 'Periodo anterior al historial: la pantalla muestra el rechazo', pg.inner_text('#inc-p-msg')[:80])
     pg.fill('#inc-p-ini', '2026-10-26'); pg.dispatch_event('#inc-p-ini', 'change')
-    ok(pg.input_value('#inc-p-fin') == '2026-11-01', 'El fin se calcula con los 7 días de la periodicidad semanal')
+    ok(pg.eval_on_selector('#inc-p-fin', 'e => e.value') == '2026-11-01', 'El fin se calcula con los 7 días de la periodicidad semanal')
     pg.click('#inc-p-crear'); pg.wait_for_timeout(900)
     ok(sql("select inicio||'..'||fin from inc_periodos") == '2026-10-26..2026-11-01', 'Nómina crea el periodo 26-oct a 1-nov')
     pg.screenshot(path=f'{OUT}/2-nomina-periodos.png', full_page=True)

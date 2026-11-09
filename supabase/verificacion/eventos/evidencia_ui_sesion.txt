@@ -1,0 +1,99 @@
+# ui_sesion (3 corridas) · 09-nov-2026 · base local (Postgres 16 :55432 + PostgREST :3010), datos sintéticos; app/index.html del árbol local de integracion/app (sin commit)
+=== corrida 1
+--- Encabezado por rol (escritorio)
+OK    admin: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    admin: botón «Cerrar sesión» visible
+OK    nomina: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    nomina: botón «Cerrar sesión» visible
+OK    consulta: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    consulta: botón «Cerrar sesión» visible
+OK    coord: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    coord: botón «Cerrar sesión» visible
+OK    el bloque termina en el mismo lugar en los cuatro roles  [{'admin': 1416, 'nomina': 1416, 'consulta': 1416, 'coord': 1416}]
+--- Móvil (390 px)
+OK    coord móvil: botón «Salir» visible dentro de la pantalla
+OK    coord móvil: sin desborde horizontal  [390]
+OK    admin móvil: botón «Salir» visible dentro de la pantalla
+OK    admin móvil: sin desborde horizontal  [390]
+--- Cerrar sesión con el botón
+FALLA el botón cierra la sesión y lleva al inicio de sesión  [app=True login=False token=True url=po/beehuman-int/app/index.html]
+--- Inactividad (tiempos acortados: 10 s, aviso a los 6 s)
+OK    usuario activo: ni aviso ni cierre aunque pase el límite
+OK    el aviso cubre la pantalla con fondo oscurecido  [fixed rgba(20, 24, 33, 0.45) 9999]
+OK    sin actividad aparece el aviso antes del cierre  [0:06]
+OK    «Seguir trabajando» quita el aviso y mantiene la sesión
+OK    una tecla también cuenta como «sigo aquí»
+OK    sin respuesta, la sesión se cierra y el inicio explica por qué  [Tu sesión se cerró por inactividad. Vuelve a iniciar sesión.]
+--- «Cerrar sesión» dentro del aviso
+playwright._impl._errors.TimeoutError: Page.wait_for_selector: Timeout 10000ms exceeded.
+=== corrida 2
+--- Encabezado por rol (escritorio)
+OK    admin: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    admin: botón «Cerrar sesión» visible
+OK    nomina: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    nomina: botón «Cerrar sesión» visible
+OK    consulta: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    consulta: botón «Cerrar sesión» visible
+OK    coord: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    coord: botón «Cerrar sesión» visible
+OK    el bloque termina en el mismo lugar en los cuatro roles  [{'admin': 1416, 'nomina': 1416, 'consulta': 1416, 'coord': 1416}]
+--- Móvil (390 px)
+OK    coord móvil: botón «Salir» visible dentro de la pantalla
+OK    coord móvil: sin desborde horizontal  [390]
+OK    admin móvil: botón «Salir» visible dentro de la pantalla
+OK    admin móvil: sin desborde horizontal  [390]
+--- Cerrar sesión con el botón
+OK    el botón cierra la sesión y lleva al inicio de sesión  [app=False login=True token=False url=po/beehuman-int/app/index.html]
+--- Inactividad (tiempos acortados: 10 s, aviso a los 6 s)
+OK    usuario activo: ni aviso ni cierre aunque pase el límite
+OK    el aviso cubre la pantalla con fondo oscurecido  [fixed rgba(20, 24, 33, 0.45) 9999]
+OK    sin actividad aparece el aviso antes del cierre  [0:06]
+OK    «Seguir trabajando» quita el aviso y mantiene la sesión
+OK    una tecla también cuenta como «sigo aquí»
+OK    sin respuesta, la sesión se cierra y el inicio explica por qué  [Tu sesión se cerró por inactividad. Vuelve a iniciar sesión.]
+--- «Cerrar sesión» dentro del aviso
+OK    el botón del aviso cierra la sesión de inmediato
+--- Dos pestañas: la actividad en una mantiene la otra
+OK    la pestaña sin uso sigue abierta mientras se trabaja en la otra
+--- Regreso tras 31 min sin actividad (navegador cerrado)
+OK    entra al inicio de sesión, no a los datos
+OK    con 10 min de inactividad la sesión sigue
+OK    ningún error de JavaScript
+25/25 pruebas correctas
+=== corrida 3
+--- Encabezado por rol (escritorio)
+OK    admin: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    admin: botón «Cerrar sesión» visible
+OK    nomina: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    nomina: botón «Cerrar sesión» visible
+OK    consulta: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    consulta: botón «Cerrar sesión» visible
+OK    coord: bloque de usuario alineado a la derecha  [usuario 1047-1416, barra 302-1416]
+OK    coord: botón «Cerrar sesión» visible
+OK    el bloque termina en el mismo lugar en los cuatro roles  [{'admin': 1416, 'nomina': 1416, 'consulta': 1416, 'coord': 1416}]
+--- Móvil (390 px)
+OK    coord móvil: botón «Salir» visible dentro de la pantalla
+OK    coord móvil: sin desborde horizontal  [390]
+OK    admin móvil: botón «Salir» visible dentro de la pantalla
+OK    admin móvil: sin desborde horizontal  [390]
+--- Cerrar sesión con el botón
+FALLA el botón cierra la sesión y lleva al inicio de sesión  [app=True login=False token=True url=po/beehuman-int/app/index.html]
+--- Inactividad (tiempos acortados: 10 s, aviso a los 6 s)
+OK    usuario activo: ni aviso ni cierre aunque pase el límite
+OK    el aviso cubre la pantalla con fondo oscurecido  [fixed rgba(20, 24, 33, 0.45) 9999]
+OK    sin actividad aparece el aviso antes del cierre  [0:06]
+OK    «Seguir trabajando» quita el aviso y mantiene la sesión
+OK    una tecla también cuenta como «sigo aquí»
+OK    sin respuesta, la sesión se cierra y el inicio explica por qué  [Tu sesión se cerró por inactividad. Vuelve a iniciar sesión.]
+--- «Cerrar sesión» dentro del aviso
+OK    el botón del aviso cierra la sesión de inmediato
+--- Dos pestañas: la actividad en una mantiene la otra
+OK    la pestaña sin uso sigue abierta mientras se trabaja en la otra
+--- Regreso tras 31 min sin actividad (navegador cerrado)
+OK    entra al inicio de sesión, no a los datos
+OK    con 10 min de inactividad la sesión sigue
+OK    ningún error de JavaScript
+24/25 pruebas correctas
+
+=== Diagnóstico (dbg_salir2-5.py, 12-16 repeticiones del cierre con el botón)
+Falla en 3-6 de cada 12-16 intentos. En las fallas: la solicitud POST /auth/v1/logout sale, el simulador de red de la prueba la atiende (route.fulfill sin excepción), pero el navegador nunca emite requestfinished; sb.auth.signOut() no termina, no se borra el token ni se recarga la página. En los intentos correctos: REMOVE del token → UNLOAD → LOAD → inicio de sesión.

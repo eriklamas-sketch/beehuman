@@ -35,16 +35,16 @@ def ficha(pg, nombre, seccion='historia'):
     ir(pg, 'lista'); pg.fill('#buscar-personal', nombre); pg.wait_for_timeout(400)
     pg.click(f'#tabla-personal a:has-text("{nombre}")'); pg.wait_for_timeout(1200)
     pg.click(f'[data-detail-tab="{seccion}"]'); pg.wait_for_timeout(900)
-def msg(pg, sel='#hl-msg'): return (pg.text_content(sel) or '').strip()
+def msg(pg, sel='#hl-msg'): return (pg.text_content(sel) or '').strip()  # #rl-msg: relación laboral · #sbc-msg: Compensación
 def foto(pg, nombre): pg.screenshot(path=os.path.join(OUT, nombre + '.png'), full_page=False)
 
 with sync_playwright() as p:
     b = p.chromium.launch()
     ctx, pg = abrir(b, 'admin')
 
-    print('--- Historia laboral: relación migrada')
-    ficha(pg, 'ADELA PALACIOS GALVAN')
-    card = pg.text_content('#hl-raiz') or ''
+    print('--- Relación laboral (gestión) y Historia laboral (bitácora): relación migrada')
+    ficha(pg, 'ADELA PALACIOS GALVAN', 'laboral')
+    card = pg.text_content('#rl-raiz') or ''
     ok('RP Y1234567101' in card and 'Vigente' in card and '01/03/2025' in card and '01/06/2021' in card,
        'ADELA: relación migrada con RP, ingreso y antigüedad reconocida por separado')
     ok(pg.is_disabled('#d-empresa') and pg.is_disabled('#d-registro-patronal') and pg.is_disabled('#d-numero-interno'),
@@ -52,58 +52,91 @@ with sync_playwright() as p:
     ok(pg.eval_on_selector('#d-estatus', "s => [...s.options].find(o => o.text === 'Baja').disabled"), 'la opción «Baja» del estatus queda deshabilitada')
     foto(pg, '01-historia-migrada')
     pg.click('[data-accion="corregir"]'); pg.wait_for_timeout(300)
-    f = '#hl-raiz form'
+    f = '#rl-raiz form'
     pg.fill(f + ' [name=sbc]', '450'); pg.fill(f + ' [name=umf]', '012')
     pg.select_option(f + ' [name=tipo_trabajador]', '1'); pg.select_option(f + ' [name=tipo_salario]', '0'); pg.select_option(f + ' [name=jornada]', '0')
     pg.fill(f + ' [name=motivo]', 'Datos del expediente IMSS')
     pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
-    ok('Corrección registrada' in msg(pg), 'corregir datos de una relación migrada', msg(pg))
-    ok('Corrección de datos' in (pg.text_content('#hl-raiz') or '') and 'UMF: — → 012' in (pg.text_content('#hl-raiz') or ''),
-       'la corrección aparece en la línea de tiempo con antes → después')
+    ok('Corrección registrada' in msg(pg, '#rl-msg'), 'corregir datos de una relación migrada', msg(pg, '#rl-msg'))
+    pg.click('[data-detail-tab="historia"]'); pg.wait_for_timeout(600)
+    ev = pg.eval_on_selector('.hl-ev:has-text("Corrección de datos") .hl-tabla', 't => [...t.querySelectorAll("tbody tr")].map(r => [...r.cells].map(c => c.innerText.trim()).join("|"))') if pg.query_selector('.hl-ev:has-text("Corrección de datos")') else []
+    ok('UMF|No registrado|012' in ev, 'la corrección aparece en la bitácora con Dato | Anterior | Nuevo', ' ; '.join(ev))
 
     print('--- Esquema ambiguo')
-    ficha(pg, 'BENITO ZAVALA GALINDO')
+    ficha(pg, 'BENITO ZAVALA GALINDO', 'laboral')
     ok(pg.is_visible('.hl-pend'), 'BENITO: el esquema sin relación aparece para que Nómina lo asigne')
     foto(pg, '02-esquema-pendiente')
     sel = pg.query_selector('.hl-pend select')
     opc = sel.eval_on_selector_all('option', 'os => os.map(o => [o.value, o.text])')
     destino = next(v for v, t in opc if 'Y1234567102' in t)
     sel.select_option(destino); pg.click('[data-asignar]'); pg.wait_for_timeout(1500)
-    ok('Esquema asignado' in msg(pg) and not pg.is_visible('.hl-pend'), 'Nómina asigna el esquema a la relación correcta', msg(pg))
+    ok('Esquema asignado' in msg(pg, '#rl-msg') and not pg.is_visible('.hl-pend'), 'Nómina asigna el esquema a la relación correcta', msg(pg, '#rl-msg'))
 
     print('--- Ingreso IMSS de alguien que solo tenía efectivo')
-    ficha(pg, 'EDGAR MORALES PEÑA')
+    ficha(pg, 'EDGAR MORALES PEÑA', 'laboral')
     pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(300)
     f = '#hl-form-ingreso form'
     ok(pg.eval_on_selector(f + ' [name=rp]', 's => s.options[s.selectedIndex].text') == 'Y1234567101', 'el RP de la empresa se propone solo')
     pg.fill(f + ' [name=fecha]', '2026-10-20'); pg.fill(f + ' [name=sbc]', '400'); pg.fill(f + ' [name=umf]', '045'); pg.fill(f + ' [name=num]', '77')
     pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2000)
-    t = pg.text_content('#hl-raiz') or ''
-    ok('Ingreso registrado' in msg(pg) and 'RP Y1234567101' in t and 'IDSE pendiente' in t, 'ingreso registrado con su movimiento IDSE pendiente', msg(pg))
+    t = pg.text_content('#rl-raiz') or ''
+    ok('Ingreso registrado' in msg(pg, '#rl-msg') and 'RP Y1234567101' in t and 'pendiente en la bandeja IDSE del registro patronal Y1234567101' in msg(pg, '#rl-msg'),
+       'ingreso registrado: el aviso nombra el RP y el 08 pendiente', msg(pg, '#rl-msg'))
+    ok(pg.is_visible('#rl-msg a:has-text("Ver en la bandeja IDSE")'), 'el aviso enlaza a la bandeja de ese RP')
     ok(pg.eval_on_selector('#d-registro-patronal', 's => s.options[s.selectedIndex] ? s.options[s.selectedIndex].text : ""').startswith('Y1234567101'),
        'la ficha pasa a mostrar la relación con RP (v3.1)')
     foto(pg, '03-ingreso-registrado')
     rel = pg.get_attribute('.hl-card:has-text("Y1234567101")', 'data-relacion')
-    pg.click(f'[data-accion="salario"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
-    f = f'#hl-form-{rel} form'
+    pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(500)
+    pg.click(f'[data-sbc="{rel}"]'); pg.wait_for_timeout(300)
+    f = f'#sbc-form-{rel} form'
     pg.fill(f + ' [name=fecha]', '2026-10-25'); pg.fill(f + ' [name=sbc]', '410'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
-    ok('Modificación de salario registrada' in msg(pg), 'modificación de salario', msg(pg))
-    pg.click('[data-anular]'); pg.wait_for_timeout(300)
-    pg.fill('[id^="hl-anular-"] [name=motivo]', 'Monto equivocado'); pg.click('[id^="hl-anular-"] button[type=submit]'); pg.wait_for_timeout(1800)
-    ok('Movimiento anulado' in msg(pg) and 'Anulado' in (pg.text_content('#hl-raiz') or ''), 'anular la modificación deja el evento marcado como anulado', msg(pg))
+    ok('Modificación de salario registrada' in msg(pg, '#sbc-msg'), 'modificación de salario (desde Compensación)', msg(pg, '#sbc-msg'))
+    pg.click('[data-detail-tab="historia"]'); pg.wait_for_timeout(500)
+    ok(pg.locator('#hl-raiz [data-anular], #hl-raiz form, #hl-raiz input, #hl-raiz button[type=submit]').count() == 0
+       and pg.locator('#hl-raiz button').count() == 1 and 'Modificación de salario' in (pg.text_content('#hl-raiz') or ''),
+       'Historia laboral es solo consulta: muestra el 07 sin botones de operación (solo el orden y el filtro)')
+    pg.click('[data-detail-tab="laboral"]'); pg.wait_for_timeout(500)
+    anu = pg.locator(f'#rl-raiz [data-anular][data-rel="{rel}"]')
+    ok(anu.count() == 1 and 'Modificación de salario del 25/10/2026' in (anu.text_content() or ''), 'la anulación del último movimiento está en Relación laboral y nombra el movimiento', anu.text_content() if anu.count() else '')
+    pg.eval_on_selector(f'#rl-raiz [data-relacion="{rel}"]', 'e => e.scrollIntoView({block: "center"})'); foto(pg, '03b-anular-en-relacion-laboral')
+    anu.click(); pg.wait_for_timeout(300)
+    pg.fill(f'#hl-form-{rel} [name=motivo]', 'Monto equivocado'); pg.click(f'#hl-form-{rel} button[type=submit]'); pg.wait_for_timeout(1800)
+    ok('Movimiento anulado' in msg(pg, '#rl-msg'), 'anular desde Relación laboral', msg(pg, '#rl-msg'))
+    pg.click('[data-detail-tab="historia"]'); pg.wait_for_timeout(500)
+    ok('Anulado' in (pg.text_content('#hl-raiz') or ''), 'en Historia laboral el 07 queda visible y marcado como anulado (no se borra)')
+    pg.click('[data-detail-tab="laboral"]'); pg.wait_for_timeout(500)
     pg.click(f'[data-accion="baja"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#hl-form-{rel} form'
     pg.fill(f + ' [name=fecha]', '2026-10-21'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1500)
-    ok('causa' in msg(pg).lower(), 'baja sin causa: la base la rechaza y la pantalla lo explica', msg(pg))
+    ok('causa' in msg(pg, '#rl-msg').lower(), 'baja sin causa: la base la rechaza y la pantalla lo explica', msg(pg, '#rl-msg'))
     pg.click(f'#hl-form-{rel} [data-cancelar]')
 
     print('--- Bandeja IDSE')
     pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
     ir(pg, 'idse'); pg.wait_for_timeout(1200)
-    ok('Falta: El registro patronal no tiene número de guía IDSE' in (pg.text_content('#idse-pend-08') or ''), 'sin guía, la bandeja dice qué falta')
-    pg.fill('#idse-guia', '40001'); pg.click('#idse-guardar-rp'); pg.wait_for_timeout(1500)
     t = pg.text_content('#idse-pend-08') or ''
-    ok('EDGAR MORALES PEÑA' in t and 'Contiene Ñ' in t, 'con guía: el alta queda lista, con el aviso de la Ñ')
+    ok(pg.eval_on_selector('#idse-guia', 'e => e.value') == '00000' and 'subdelegación' in (pg.text_content('#idse-guia-nota') or '')
+       and 'Sin guía configurada: se usa 00000' in (pg.text_content('#idse-guia-nota') or ''),
+       'sin guía configurada: el campo muestra 00000 y advierte confirmarlo con la subdelegación', pg.text_content('#idse-guia-nota'))
+    ok('guía' not in t.lower() and 'EDGAR MORALES PEÑA' in t and 'Contiene Ñ' in t and pg.is_enabled('.idse-sel[data-tipo="08"]'),
+       'la guía ya no bloquea: el alta queda lista, con el aviso de la Ñ')
+    # Validadores: NSS con dígito verificador incorrecto y nombre con dígitos (datos sintéticos alterados solo aquí)
+    sql("update public.personal set nss = '33333333333' where id = '0a100000-0000-4000-8000-000000000015'")
+    ir(pg, 'lista'); ir(pg, 'idse'); pg.wait_for_timeout(1200)
+    t = pg.text_content('#idse-pend-08') or ''
+    ok('NSS inválido: el dígito verificador no corresponde' in t and 'Falta: NSS inválido' not in t and not pg.is_enabled('.idse-sel[data-tipo="08"]'),
+       'NSS con dígito verificador incorrecto: error claro y la fila no se puede seleccionar', t[t.find('NSS'):][:90])
+    foto(pg, '04a-bandeja-nss-invalido')
+    sql("update public.personal set nss = '33333333335', nombres = 'EDGAR 2' where id = '0a100000-0000-4000-8000-000000000015'")
+    ir(pg, 'lista'); ir(pg, 'idse'); pg.wait_for_timeout(1200)
+    t = pg.text_content('#idse-pend-08') or ''
+    ok('Nombre con dígitos' in t and not pg.is_enabled('.idse-sel[data-tipo="08"]'), 'nombre con dígitos: error claro y la fila no se puede seleccionar')
+    sql("update public.personal set nombres = 'EDGAR' where id = '0a100000-0000-4000-8000-000000000015'")
+    ir(pg, 'lista'); ir(pg, 'idse'); pg.wait_for_timeout(1200)
+    pg.fill('#idse-guia', '40001'); pg.click('#idse-guardar-rp'); pg.wait_for_timeout(1500)
+    ok('Guía capturada' in (pg.text_content('#idse-guia-nota') or '') and pg.is_enabled('.idse-sel[data-tipo="08"]'),
+       'el Administrador captura la guía 40001; corregidos los datos, el alta vuelve a estar lista')
     foto(pg, '04-bandeja-idse')
     pg.check('.idse-sel[data-tipo="08"]')
     with pg.expect_download() as d:
@@ -122,17 +155,21 @@ with sync_playwright() as p:
     ok('Presentado' in (pg.text_content('#idse-arch') or ''), 'archivo marcado como presentado con su lote')
     pg.click('[data-res]'); pg.wait_for_timeout(800)
     pg.fill('#idse-arch form [name=folio]', 'ACUSE-123'); pg.click('#idse-arch form button[type=submit]'); pg.wait_for_timeout(1500)
-    ok('Con resultado' in (pg.text_content('#idse-arch') or '') and 'ACUSE-123' in (pg.text_content('#idse-arch') or ''), 'resultado registrado con folio del acuse')
+    ok('Resultado recibido' in (pg.text_content('#idse-arch') or '') and 'ACUSE-123' in (pg.text_content('#idse-arch') or ''), 'resultado registrado con folio del acuse')
     foto(pg, '05-archivo-con-resultado')
     ficha(pg, 'EDGAR MORALES PEÑA')
     t = pg.text_content('#hl-raiz') or ''
-    ok('IDSE confirmado' in t and not pg.is_visible('[data-anular]'), 'en la ficha, el ingreso queda confirmado y ya no se puede anular')
+    ok('IDSE: resultado recibido · aceptado' in t, 'en la bitácora, el ingreso queda con resultado aceptado')
+    pg.click('[data-detail-tab="laboral"]'); pg.wait_for_timeout(500)
+    ok(pg.locator(f'#rl-raiz [data-anular][data-rel="{rel}"]').count() == 0, 'con resultado del IMSS, Relación laboral ya no ofrece anularlo')
+    pg.click('[data-detail-tab="historia"]'); pg.wait_for_timeout(500)
 
     print('--- Modificación de salario y su archivo IDSE (07)')
-    pg.click(f'[data-accion="salario"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
-    f = f'#hl-form-{rel} form'
+    pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(500)
+    pg.click(f'[data-sbc="{rel}"]'); pg.wait_for_timeout(300)
+    f = f'#sbc-form-{rel} form'
     pg.fill(f + ' [name=fecha]', '2026-10-28'); pg.fill(f + ' [name=sbc]', '420'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
-    ok('Modificación de salario registrada' in msg(pg), 'modificación de salario registrada para el archivo', msg(pg))
+    ok('Modificación de salario registrada' in msg(pg, '#sbc-msg'), 'modificación de salario registrada para el archivo', msg(pg, '#sbc-msg'))
     pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
     ir(pg, 'idse'); pg.wait_for_timeout(1500)
     t = pg.text_content('#idse-pend-07') or ''
@@ -148,13 +185,25 @@ with sync_playwright() as p:
        'contenido de la modificación: SBC nuevo, tipos, fecha, sin UMF, tipo 07 + guía y CURP', repr(m0[103:168]))
     pg.wait_for_timeout(800)
     ok('No hay modificaciones pendientes' in (pg.text_content('#idse-pend-07') or ''), 'la modificación sale de pendientes al generar su archivo')
-    ficha(pg, 'EDGAR MORALES PEÑA')
+    pg.click('[data-canc]'); pg.wait_for_timeout(300)
+    pg.fill('#idse-arch form [name=motivo]', 'Prueba de cancelación'); pg.click('#idse-arch form button[type=submit]'); pg.wait_for_timeout(1500)
+    ok('Archivo cancelado' in (pg.text_content('#idse-msg') or '') and 'Cancelado' in (pg.text_content('#idse-arch') or '')
+       and 'EDGAR MORALES PEÑA' in (pg.text_content('#idse-pend-07') or ''), 'cancelar el archivo: queda «Cancelado» y su 07 vuelve a pendientes')
+    pg.check('.idse-sel[data-tipo="07"]')
+    with pg.expect_download() as d:
+        pg.click('[data-generar="07"]')
+    ok(d.value.suggested_filename.startswith('IDSE_MODIFICACIONES_') and 'No hay modificaciones pendientes' in (pg.text_content('#idse-pend-07') or ''),
+       'después de cancelar, el mismo 07 se vuelve a generar en un archivo nuevo', d.value.suggested_filename)
+    pg.wait_for_timeout(800)
+    ficha(pg, 'EDGAR MORALES PEÑA', 'laboral')
 
     print('--- Baja y su archivo IDSE (02)')
     pg.click(f'[data-accion="baja"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#hl-form-{rel} form'
     pg.fill(f + ' [name=fecha]', '2026-11-03'); pg.select_option(f + ' [name=causa]', '2'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2000)
-    ok('Baja registrada' in msg(pg), 'baja registrada con su causa', msg(pg))
+    ok('Baja registrada' in msg(pg, '#rl-msg') and 'pendiente en la bandeja IDSE del registro patronal Y1234567101' in msg(pg, '#rl-msg') and 'cuando lo decidas' in msg(pg, '#rl-msg'),
+       'baja registrada: el aviso nombra el RP, dice que el 02 quedó pendiente y no obliga a generar archivo', msg(pg, '#rl-msg'))
+    foto(pg, '05b0-aviso-baja')
     pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
     ir(pg, 'idse'); pg.wait_for_timeout(1500)
     t = pg.text_content('#idse-pend-02') or ''
@@ -189,10 +238,13 @@ with sync_playwright() as p:
     ok(not pg.errores, 'sin errores de JavaScript (Administrador)', '; '.join(pg.errores)[:200])
     ctx.close()
     ctx, pg = abrir(b, 'nomina', 390, 844)
-    ficha(pg, 'ADELA PALACIOS GALVAN')
-    foto(pg, '06-historia-movil')
+    ficha(pg, 'ADELA PALACIOS GALVAN', 'laboral')
+    foto(pg, '06-relacion-movil')
     ok(pg.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'en móvil la Historia laboral no desborda la pantalla')
-    ok(pg.is_visible('[data-accion="corregir"]') and not pg.is_visible('#idse-guardar-rp'), 'Nómina opera la historia; la guía del RP solo la edita Administrador')
+    ok(pg.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'en móvil la Relación laboral no desborda la pantalla')
+    ok(pg.is_visible('[data-accion="corregir"]') and not pg.is_visible('#idse-guardar-rp'), 'Nómina opera la relación laboral; la guía del RP solo la edita Administrador')
+    pg.click('[data-detail-tab="historia"]'); pg.wait_for_timeout(500)
+    foto(pg, '06-historia-movil')
     ok(not pg.errores, 'sin errores de JavaScript (Nómina, móvil)', '; '.join(pg.errores)[:200])
     ctx.close()
     for quien in ('consulta', 'coord'):

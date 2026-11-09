@@ -107,19 +107,21 @@ with sync_playwright() as p:
     foto(pg, 'f1-historia-sin-barra')
 
     print('--- Modificación de salario: fecha de hoy (México) y datos que faltan para el IDSE')
-    ficha(pg, 'ADELA PALACIOS GALVAN', 'historia')
+    ficha(pg, 'ADELA PALACIOS GALVAN', 'compensacion')
     rel = q("select rl.id from relaciones_laborales rl join personal p on p.id=rl.personal_id where p.nombre_completo='ADELA PALACIOS GALVAN' and rl.estado='vigente'")
-    pg.click(f'[data-accion="salario"][data-rel="{rel}"]'); pg.wait_for_timeout(400)
-    f = f'#hl-form-{rel} form'
-    ok(pg.input_value(f + ' [name=fecha]') == HOY_MX, 'la fecha efectiva aparece con la fecha de hoy en México', f"{pg.input_value(f + ' [name=fecha]')} / esperado {HOY_MX}")
+    pg.click(f'[data-sbc="{rel}"]'); pg.wait_for_timeout(400)
+    f = f'#sbc-form-{rel} form'
+    ok(pg.eval_on_selector(f + ' [name=fecha]', 'e => e.value') == HOY_MX, 'la fecha efectiva aparece con la fecha de hoy en México', f"{pg.eval_on_selector(f + ' [name=fecha]', 'e => e.value')} / esperado {HOY_MX}")
     faltan = (pg.text_content(f'#hl-faltan-07-{rel}') or '')
-    ok('tipo de trabajador' in faltan and 'tipo de salario' in faltan and 'jornada' in faltan and 'Puedes registrar' in faltan, 'antes de registrar se ve qué falta para el IDSE (tipos)', faltan[:160])
+    ok('tipo de trabajador' in faltan and 'tipo de salario' in faltan and 'jornada' in faltan and 'Se puede registrar el movimiento' in faltan
+       and pg.eval_on_selector(f'#hl-faltan-07-{rel} > div', 'd => d.className') == 'sbc-av',
+       'antes de registrar se ve qué falta para el IDSE (tipos), como advertencia ámbar', faltan[:160])
     foto(pg, 'f2-modificacion-faltantes')
     pg.select_option(f + ' [name=ts]', '0'); pg.wait_for_timeout(200)
     ok('tipo de salario' not in (pg.text_content(f'#hl-faltan-07-{rel}') or ''), 'al elegir el tipo de salario en el formulario, deja de marcarse como faltante')
     pg.fill(f + ' [name=fecha]', '2026-10-30'); pg.fill(f + ' [name=sbc]', '612.40')
     pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
-    ok('Modificación de salario registrada' in msg(pg) and q(f"select fecha_efectiva from eventos_laborales where relacion_laboral_id='{rel}' and tipo='modificacion_salario' and estado='vigente' order by registrado_en desc limit 1") == '2026-10-30',
+    ok('Modificación de salario registrada' in msg(pg, '#sbc-msg') and q(f"select fecha_efectiva from eventos_laborales where relacion_laboral_id='{rel}' and tipo='modificacion_salario' and estado='vigente' order by registrado_en desc limit 1") == '2026-10-30',
        'la fecha se puede editar y la modificación queda con la fecha efectiva elegida', msg(pg))
 
     ok(not pg.errores, 'ningún error de JavaScript', '; '.join(pg.errores[:2]))

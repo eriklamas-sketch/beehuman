@@ -1,0 +1,38 @@
+--- Historia laboral: relación migrada
+FALLA ADELA: relación migrada con RP, ingreso y antigüedad reconocida por separado
+FALLA con historial, empresa, RP y número interno quedan bloqueados en la ficha
+FALLA la opción «Baja» del estatus queda deshabilitada
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-claude/336c7d63-ad0b-5a5c-bdb2-4d158afd2866/scratchpad/eventos/ui_eventos.py", line 54, in <module>
+    pg.click('[data-accion="corregir"]'); pg.wait_for_timeout(300)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/playwright/sync_api/_generated.py", line 9927, in click
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.click(
+        ^^^^^^^^^^^^^^^^^^^^^
+    ...<11 lines>...
+        )
+        ^
+    )
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/dist-packages/playwright/_impl/_page.py", line 857, in click
+    return await self._main_frame.click(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/playwright/_impl/_frame.py", line 549, in click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+  File "/usr/local/lib/python3.13/dist-packages/playwright/_impl/_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/dist-packages/playwright/_impl/_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[data-accion=\"corregir\"]")
+

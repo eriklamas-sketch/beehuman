@@ -1,0 +1,29 @@
+# pruebas_datos_sinteticos · 09-nov-2026 · base local bhev con la cadena completa; réplica sintética del tenant piloto
+    bandeja antes: PERSONA 0001 PILOTO SINTETICO:NSS inválido: el dígito verificador no corresponde; revisa los 11 dígitos/Nombre con dígitos: el IMSS no acepta números en el nombre ni en los apellidos | PERSONA 0002 PI
+OK    antes: el piloto queda bloqueado en la bandeja (NSS y nombre)
+    plan esperado: 8 NSS, 12 nombres
+--- Guardas
+OK    con conteos distintos a los del precheck no cambia nada  [ERROR:  BeeHuman: el plan da 8 NSS y 12 nombres; se esperaban 300 y 500. No se cambió nada.
+CONTEXT:  PL/pgSQL function ]
+--- Adaptación
+OK    se aplica sin errores
+     ['P500-000001', '99000000010', 'PERSONA AAAB', 'PERSONA AAAB PILOTO SINTETICO'] ['P500-000005', '00000000000', 'PERSONA AAAF', 'PERSONA AAAF PILOTO SINTETICO'] ['P500-000004', '', 'PERSONA AAAE', 'PERSONA AAAE PILOTO SINTETICO']
+OK    todos los NSS no vacíos tienen dígito verificador correcto
+OK    los NSS son únicos
+OK    los NSS vacíos siguen vacíos (3)
+OK    el NSS que ya era válido no cambia
+OK    NSS nuevo = 9900 + número del empleado + dígito verificador  [99000000077]
+OK    nombres sin dígitos: «PERSONA 0007» → «PERSONA AAAH» (también en nombre completo)
+OK    sin nombres duplicados
+OK    no cambian relaciones, eventos, movimientos ni archivos IDSE, ni ids/empleado_id/tenant de personas
+OK    el otro tenant sintético no se toca
+OK    una fila en Movimientos por campo cambiado, con valor anterior y nuevo  [32]
+OK    respaldo con los valores anteriores de las 12 personas
+OK    después: la bandeja ya no los bloquea  [PERSONA AAAB PILOTO SINTETICO: | PERSONA AAAC PILOTO SINTETICO:]
+OK    una segunda ejecución se rechaza
+--- Reversión
+OK    la reversión devuelve exactamente los valores anteriores
+OK    la reversión deja constancia en Movimientos y no borra la traza
+OK    se puede volver a aplicar
+OK    guarda: si alguien editó un dato después, la reversión no se ejecuta
+OK    TOTAL: 20/20 pruebas OK

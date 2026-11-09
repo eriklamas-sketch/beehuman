@@ -53,7 +53,7 @@ with sync_playwright() as p:
     foto(pg, '01-historia-migrada')
     pg.click('[data-accion="corregir"]'); pg.wait_for_timeout(300)
     f = '#rl-raiz form'
-    pg.fill(f + ' [name=sbc]', '450'); pg.fill(f + ' [name=umf]', '012')
+    pg.fill(f + ' [name=sdi]', '450'); pg.fill(f + ' [name=umf]', '012')
     pg.select_option(f + ' [name=tipo_trabajador]', '1'); pg.select_option(f + ' [name=tipo_salario]', '0'); pg.select_option(f + ' [name=jornada]', '0')
     pg.fill(f + ' [name=motivo]', 'Datos del expediente IMSS')
     pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
@@ -77,7 +77,7 @@ with sync_playwright() as p:
     pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(300)
     f = '#hl-form-ingreso form'
     ok(pg.eval_on_selector(f + ' [name=rp]', 's => s.options[s.selectedIndex].text') == 'Y1234567101', 'el RP de la empresa se propone solo')
-    pg.fill(f + ' [name=fecha]', '2026-10-20'); pg.fill(f + ' [name=sbc]', '400'); pg.fill(f + ' [name=umf]', '045'); pg.fill(f + ' [name=num]', '77')
+    pg.fill(f + ' [name=fecha]', '2026-10-20'); pg.fill(f + ' [name=sdi]', '400'); pg.fill(f + ' [name=umf]', '045'); pg.fill(f + ' [name=num]', '77')
     pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2000)
     t = pg.text_content('#rl-raiz') or ''
     ok('Ingreso registrado' in msg(pg, '#rl-msg') and 'RP Y1234567101' in t and 'pendiente en la bandeja IDSE del registro patronal Y1234567101' in msg(pg, '#rl-msg'),
@@ -90,7 +90,7 @@ with sync_playwright() as p:
     pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(500)
     pg.click(f'[data-sbc="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#sbc-form-{rel} form'
-    pg.fill(f + ' [name=fecha]', '2026-10-25'); pg.fill(f + ' [name=sbc]', '410'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
+    pg.fill(f + ' [name=fecha]', '2026-10-25'); pg.fill(f + ' [name=sdi]', '410'); pg.wait_for_timeout(500); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
     ok('Modificación de salario registrada' in msg(pg, '#sbc-msg'), 'modificación de salario (desde Compensación)', msg(pg, '#sbc-msg'))
     pg.click('[data-detail-tab="historia"]'); pg.wait_for_timeout(500)
     ok(pg.locator('#hl-raiz [data-anular], #hl-raiz form, #hl-raiz input, #hl-raiz button[type=submit]').count() == 0
@@ -116,6 +116,10 @@ with sync_playwright() as p:
     pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
     ir(pg, 'idse'); pg.wait_for_timeout(1200)
     t = pg.text_content('#idse-pend-08') or ''
+    cfg = pg.text_content('.idse-config') or ''
+    ok(cfg.startswith('Configuración del registro patronal') and all(pg.query_selector('.idse-config ' + x) for x in ('#idse-rp', '#idse-guia', '#idse-zona'))
+       and pg.eval_on_selector('.idse-config', 'c => c.compareDocumentPosition(document.getElementById("idse-pend-08")) & Node.DOCUMENT_POSITION_FOLLOWING'),
+       'bandeja: registro patronal, guía y zona juntos en «Configuración del registro patronal», antes de los pendientes por tipo y los archivos', cfg[:80])
     ok(pg.eval_on_selector('#idse-guia', 'e => e.value') == '00000' and 'subdelegación' in (pg.text_content('#idse-guia-nota') or '')
        and 'Sin guía configurada: se usa 00000' in (pg.text_content('#idse-guia-nota') or ''),
        'sin guía configurada: el campo muestra 00000 y advierte confirmarlo con la subdelegación', pg.text_content('#idse-guia-nota'))
@@ -168,12 +172,13 @@ with sync_playwright() as p:
     pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(500)
     pg.click(f'[data-sbc="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#sbc-form-{rel} form'
-    pg.fill(f + ' [name=fecha]', '2026-10-28'); pg.fill(f + ' [name=sbc]', '420'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
-    ok('Modificación de salario registrada' in msg(pg, '#sbc-msg'), 'modificación de salario registrada para el archivo', msg(pg, '#sbc-msg'))
+    pg.fill(f + ' [name=fecha]', '2026-10-28'); pg.fill(f + ' [name=sdi]', '3000'); pg.wait_for_timeout(600); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
+    ok('Modificación de salario registrada' in msg(pg, '#sbc-msg') and 'con SBC $2,932.75 (tope de 25 UMA; SDI $3,000.00)' in msg(pg, '#sbc-msg'),
+       'modificación con SDI $3,000 (sobre el tope) registrada; el aviso dice el SBC técnico $2,932.75', msg(pg, '#sbc-msg')[:160])
     pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
     ir(pg, 'idse'); pg.wait_for_timeout(1500)
     t = pg.text_content('#idse-pend-07') or ''
-    ok('EDGAR MORALES PEÑA' in t and '28/10/2026' in t and '420.00' in t, 'la bandeja muestra la modificación con fecha y SBC nuevo', t[:160])
+    ok('EDGAR MORALES PEÑA' in t and '28/10/2026' in t and '2,932.75' in t and 'SBC del movimiento' in t, 'la bandeja muestra la modificación con fecha y el SBC técnico del movimiento', t[:160])
     foto(pg, '05a-bandeja-modificaciones')
     pg.check('.idse-sel[data-tipo="07"]')
     with pg.expect_download() as d:
@@ -181,8 +186,8 @@ with sync_playwright() as p:
     nombre = d.value.suggested_filename; lineas = open(d.value.path(), 'rb').read().decode('ascii').split('\r\n')
     m0 = lineas[0]
     ok(nombre.startswith('IDSE_MODIFICACIONES_') and len(lineas) == 3 and all(len(l) == 168 for l in lineas[:2]), 'se descarga el .dat de modificaciones: 1 + final, 168 posiciones, CRLF', nombre)
-    ok(m0[103:109] == '042000' and m0[115:118] == '100' and m0[118:126] == '28102026' and m0[126:131] == ' ' * 5 and m0[131:138] == '0740001' and m0[149:167] == 'MOPE920303HDFRXD08',
-       'contenido de la modificación: SBC nuevo, tipos, fecha, sin UMF, tipo 07 + guía y CURP', repr(m0[103:168]))
+    ok(m0[103:109] == '293275' and m0[115:118] == '100' and m0[118:126] == '28102026' and m0[126:131] == ' ' * 5 and m0[131:138] == '0740001' and m0[149:167] == 'MOPE920303HDFRXD08',
+       'contenido del 07: SBC técnico = tope $2,932.75 (293275, del SDI $3,000), tipos, fecha, sin UMF, tipo 07 + guía y CURP', repr(m0[103:168]))
     pg.wait_for_timeout(800)
     ok('No hay modificaciones pendientes' in (pg.text_content('#idse-pend-07') or ''), 'la modificación sale de pendientes al generar su archivo')
     pg.click('[data-canc]'); pg.wait_for_timeout(300)

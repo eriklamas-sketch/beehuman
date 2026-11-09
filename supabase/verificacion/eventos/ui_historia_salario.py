@@ -47,35 +47,42 @@ with sync_playwright() as p:
     pg.click('#hl-orden'); pg.wait_for_timeout(300)
     foto(pg, 'b1-bitacora-dos-relaciones')
 
-    print('--- Relación laboral: gestión')
+    print('--- Relación laboral: gestión y organización visual')
     pg.click('[data-detail-tab="laboral"]'); pg.wait_for_timeout(500)
     ok(pg.is_visible(f'#rl-raiz [data-accion="baja"][data-rel="{RB1}"]') and pg.is_visible(f'#rl-raiz [data-accion="corregir"][data-rel="{RB2}"]') and pg.is_visible('#rl-raiz #hl-btn-ingreso'),
        'R1 ingreso, baja y corrección están en Relación laboral')
-    ok('Datos internos de la ficha' in txt(pg, '[data-detail-section="laboral"]') and 'Jornada (descripción interna)' in txt(pg, '[data-detail-section="laboral"]'),
-       'R2 los campos antiguos quedan como «Datos internos» y su jornada no se confunde con la jornada IMSS')
+    sec = txt(pg, '[data-detail-section="laboral"]')
+    ok(sec.find('Datos de la relación y seguridad social') < sec.find('Datos internos de la empresa') and sec.find('Datos de la relación y seguridad social') >= 0
+       and 'Jornada (descripción interna)' in sec and 'Fecha de ingreso (administrativa)' in sec and 'no se envían al IMSS' in sec,
+       'R2 dos grupos: «Datos de la relación y seguridad social» y después «Datos internos de la empresa» (jornada y fecha internas rotuladas)')
+    datos = txt(pg, f'#rl-raiz [data-relacion="{RB1}"] .hl-datos')
+    orden = [datos.find(k) for k in ('Estado', 'Ingreso', 'Antigüedad', 'Tipo de trabajador', 'Tipo de salario', 'Jornada IMSS', 'SDI', 'UMF')]
+    ok(all(x >= 0 for x in orden) and orden == sorted(orden) and 'SBC' not in datos,
+       'R3 la relación muestra estado, ingreso, antigüedad, tipo de trabajador, tipo de salario, jornada IMSS, SDI y UMF (sin SBC aparte)', datos[:160])
     foto(pg, 'b2-relacion-laboral')
 
-    print('--- Compensación: salario ante el IMSS (SBC)')
+    print('--- Compensación: un solo dato, el SDI')
+    dialogos = []
+    pg.on('dialog', lambda d: dialogos.append(d.message))
     ficha(pg, 'ADELA PALACIOS GALVAN', 'compensacion')
     pg.wait_for_timeout(800)
     bloque = txt(pg, '#sbc-raiz')
-    ok('SBC vigente registrado: $420.00 diario' in bloque and 'Tope de cotización hoy: $2,932.75 diario (25 UMA × $117.31)' in bloque,
-       'S1 muestra el SBC vigente y el tope de hoy (25 UMA × UMA vigente), con formato', bloque[:220])
-    ok('No es el sueldo de los esquemas de pago' in bloque, 'S2 distingue sueldo y SBC')
-    foto(pg, 'b3-compensacion-sbc')
+    ok('Salario ante el IMSS (SDI)' in bloque and 'SDI vigente registrado: $420.00 diario' in bloque and 'Tope de cotización hoy: $2,932.75 diario (25 UMA × $117.31)' in bloque,
+       'S1 muestra el SDI vigente y el tope de hoy (25 UMA × UMA vigente), con formato', bloque[:220])
+    ok('No es el sueldo diario nominal (sueldo mensual ÷ 30)' in bloque and 'ni se calcula de los esquemas de pago' in bloque, 'S2 explica qué es el SDI y que no es el sueldo diario nominal')
+    foto(pg, 'b3-compensacion-sdi')
     pg.click(f'[data-sbc="{RA}"]'); pg.wait_for_timeout(500)
     f = f'#sbc-form-{RA} form'
-    pg.fill(f + ' [name=sbc]', '3000'); pg.wait_for_timeout(700)
+    ok(pg.query_selector(f + ' [name=sbc]') is None and pg.query_selector(f + ' [name=sdi]') is not None
+       and 'SDI — salario diario integrado' in txt(pg, f), 'S0 un solo campo de importe: «SDI — salario diario integrado» (ya no hay SBC y SDI por separado)')
+    pg.fill(f + ' [name=sdi]', '3000'); pg.wait_for_timeout(700)
     av = txt(pg, f + ' .sbc-avisos')
-    ok('no puede rebasar el tope de $2,932.75' in av and pg.is_visible(f + ' [data-usar-tope]') and pg.is_disabled(f + ' button[type=submit]'),
-       'S3 arriba del tope: lo bloquea, explica y ofrece «Usar el tope»', av[:160])
-    foto(pg, 'b4-tope')
-    pg.click(f + ' [data-usar-tope]'); pg.wait_for_timeout(700)
-    ok(pg.input_value(f + ' [name=sbc]') == '2,932.75' and pg.input_value(f + ' [name=sdi]') == '3,000.00' and not pg.is_disabled(f + ' button[type=submit]'),
-       'S4 «Usar el tope»: SBC = tope y el valor capturado pasa al SDI (no se mezclan)', pg.input_value(f + ' [name=sbc]') + ' / ' + pg.input_value(f + ' [name=sdi]'))
+    ok(txt(pg, f + ' .sbc-tecnico') == '$2,932.75' and 'rebasa el tope' in av and not pg.is_disabled(f + ' button[type=submit]'),
+       'S3 SDI arriba del tope: no bloquea; el SBC técnico del 07 es el tope ($2,932.75) y se conserva el SDI', f"{txt(pg, f + ' .sbc-tecnico')} · {av[:100]}")
+    foto(pg, 'b4-sdi-tope')
     pg.fill(f + ' [name=fecha]', '2026-01-15'); pg.dispatch_event(f + ' [name=fecha]', 'change'); pg.wait_for_timeout(900)
-    ok(txt(pg, f + ' .sbc-tope') == '$2,828.50' and 'UMA vigente al 15/01/2026' in txt(pg, f + ' .sbc-tope-det') and pg.is_disabled(f + ' button[type=submit]'),
-       'S5 el tope usa la UMA de la fecha efectiva (enero 2026: $2,828.50)', txt(pg, f + ' .sbc-tope-det'))
+    ok(txt(pg, f + ' .sbc-tecnico') == '$2,828.50' and 'UMA vigente al 15/01/2026' in txt(pg, f + ' .sbc-tope-det'),
+       'S5 el tope usa la UMA de la fecha efectiva (enero 2026: SBC técnico $2,828.50)', txt(pg, f + ' .sbc-tope-det'))
     pg.fill(f + ' [name=fecha]', '2026-11-01'); pg.dispatch_event(f + ' [name=fecha]', 'change')
     visible = lambda sel: pg.eval_on_selector(sel, "e => Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').get.call(e)")
     ok(visible(f + ' [name=fecha]') == '01/11/2026' and pg.eval_on_selector(f + ' [name=fecha]', 'e => e.value') == '2026-11-01',
@@ -89,79 +96,120 @@ with sync_playwright() as p:
     pg.eval_on_selector(f + ' .campo-fecha-mx-sel', "s => { s.value = '2026-11-01'; s.dispatchEvent(new Event('change')); }"); pg.wait_for_timeout(700)
     ok(visible(f + ' [name=fecha]') == '01/11/2026' and pg.is_visible(f + ' .campo-fecha-mx-btn'), 'D4 el calendario opcional también deja la fecha en DD/MM/AAAA')
     foto(pg, 'b4c-fecha-dd-mm-aaaa')
-    pg.fill(f + ' [name=sdi]', ''); pg.fill(f + ' [name=sbc]', '300'); pg.wait_for_timeout(700)
-    ok('salario mínimo general ($315.04)' in txt(pg, f + ' .sbc-avisos') and pg.is_disabled(f + ' button[type=submit]'), 'S6 debajo del salario mínimo: bloqueado, con el mínimo de la fecha')
-    pg.fill(f + ' [name=sbc]', '320'); pg.wait_for_timeout(700)
+    pg.fill(f + ' [name=sdi]', '300'); pg.wait_for_timeout(700)
+    ok('salario mínimo general ($315.04)' in txt(pg, f + ' .sbc-avisos') and pg.is_disabled(f + ' button[type=submit]'), 'S6 SDI debajo del salario mínimo: bloqueado, con el mínimo de la fecha')
+    pg.fill(f + ' [name=sdi]', '320'); pg.wait_for_timeout(700)
     ok('salario mínimo integrado' in txt(pg, f + ' .sbc-avisos') and not pg.is_disabled(f + ' button[type=submit]'),
        'S8 entre el mínimo ($315.04) y el mínimo integrado (≈$330.57): solo aviso, no bloquea', txt(pg, f + ' .sbc-avisos')[:120])
-    pg.fill(f + ' [name=sbc]', '400'); pg.wait_for_timeout(700)
+    pg.fill(f + ' [name=sdi]', '420'); pg.wait_for_timeout(700)
+    ok('no cambia' in txt(pg, f + ' .sbc-avisos') and pg.is_disabled(f + ' button[type=submit]'), 'S6b el mismo salario vigente: no hay 07 que registrar (no se envía)')
+    pg.fill(f + ' [name=sdi]', '400'); pg.wait_for_timeout(700)
     av = txt(pg, f + ' .sbc-avisos')
-    ok('menor que el vigente ($420.00 → $400.00)' in av and 'obligatorio' in txt(pg, f + ' .sbc-motivo-lab'), 'S7 SBC menor al vigente: advierte y el motivo pasa a obligatorio', av[:150])
-    foto(pg, 'b5-sbc-menor')
+    ok('menor que el vigente (SBC $420.00 → $400.00)' in av and 'obligatorio' in txt(pg, f + ' .sbc-motivo-lab'), 'S7 salario menor al vigente: advierte y el motivo pasa a obligatorio', av[:150])
+    foto(pg, 'b5-sdi-menor')
     rpc.clear(); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1000)
     ok(not rpc and 'justificación' in txt(pg, '#sbc-msg'), 'S9 sin justificación no se envía nada', txt(pg, '#sbc-msg')[:120])
     pg.fill(f + ' [name=motivo]', 'Cambio a salario variable acordado')
     pg.fill(f + ' [name=sdi]', ''); pg.click(f + ' [name=sdi]'); pg.keyboard.type('1250000.5', delay=40); pg.wait_for_timeout(200)
     mientras = pg.input_value(f + ' [name=sdi]')
-    pg.keyboard.type('678'); pg.wait_for_timeout(100)
+    pg.keyboard.type('678'); pg.wait_for_timeout(300)
     tope_dec = pg.input_value(f + ' [name=sdi]')
-    pg.click(f + ' [name=sbc]'); pg.fill(f + ' [name=sbc]', ''); pg.keyboard.type('2345.6', delay=40); pg.wait_for_timeout(300)
     ok(txt(pg, '#sbc-msg') == '', 'S9b el error anterior desaparece en cuanto se corrige el formulario', txt(pg, '#sbc-msg')[:80])
     foto(pg, 'b4b-separador-al-escribir')
-    pg.click(f + ' [name=sdi]'); pg.keyboard.press('End')
     pg.dispatch_event(f + ' [name=sdi]', 'blur'); pg.wait_for_timeout(200)
     ok(mientras == '1,250,000.5' and tope_dec == '1,250,000.56' and pg.input_value(f + ' [name=sdi]') == '1,250,000.56',
        'S10 el separador de miles aparece MIENTRAS se escribe y se limita a 2 decimales', f'{mientras} → {tope_dec}')
     pg.fill(f + ' [name=sdi]', ''); pg.click(f + ' [name=sdi]'); pg.keyboard.type('3000', delay=30); pg.dispatch_event(f + ' [name=sdi]', 'blur'); pg.wait_for_timeout(200)
     ok(pg.input_value(f + ' [name=sdi]') == '3,000.00', 'S10a al salir del SDI se completan los 2 decimales (3000 → 3,000.00)', pg.input_value(f + ' [name=sdi]'))
-    pg.fill(f + ' [name=sdi]', ''); pg.click(f + ' [name=sbc]'); pg.fill(f + ' [name=sbc]', ''); pg.keyboard.type('1250', delay=40); pg.wait_for_timeout(200)
-    escrito = pg.input_value(f + ' [name=sbc]')
-    pg.dispatch_event(f + ' [name=sbc]', 'blur'); pg.wait_for_timeout(300)
-    ok(escrito == '1,250' and pg.input_value(f + ' [name=sbc]') == '1,250.00', 'S10b al salir del campo se completan los 2 decimales', escrito)
-    # punto 2: faltantes = advertencia ámbar, no error
+    pg.fill(f + ' [name=sdi]', ''); pg.click(f + ' [name=sdi]'); pg.keyboard.type('1250', delay=40); pg.wait_for_timeout(200)
+    escrito = pg.input_value(f + ' [name=sdi]')
+    pg.dispatch_event(f + ' [name=sdi]', 'blur'); pg.wait_for_timeout(300)
+    ok(escrito == '1,250' and pg.input_value(f + ' [name=sdi]') == '1,250.00', 'S10b al salir del campo se completan los 2 decimales', escrito)
     falt = pg.eval_on_selector(f'#hl-faltan-07-{RA} > div', 'd => d.className')
     ok(falt == 'sbc-av' and 'todavía no estará listo para generar' in txt(pg, f'#hl-faltan-07-{RA}') and not pg.query_selector(f'#hl-faltan-07-{RA} .err'),
        'S10c los datos faltantes para el archivo son advertencia ámbar (se permite registrar)', falt)
-    pg.fill(f + ' [name=sbc]', '415'); pg.dispatch_event(f + ' [name=sbc]', 'blur'); pg.wait_for_timeout(500)
-    rpc.clear(); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2200)
+    pg.fill(f + ' [name=sdi]', '415'); pg.dispatch_event(f + ' [name=sdi]', 'blur'); pg.wait_for_timeout(500)
+    rpc.clear(); dialogos.clear(); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2200)
     cuerpo = json.loads(rpc[-1][1]) if rpc else {}
-    ok(cuerpo.get('p_sbc') == 415 and isinstance(cuerpo.get('p_sbc'), (int, float)), 'S11 se envía como número (415), no como texto con formato', str(cuerpo.get('p_sbc')))
+    ok(cuerpo.get('p_sbc') == 415 and cuerpo.get('p_sdi') == 415 and isinstance(cuerpo.get('p_sbc'), (int, float)),
+       'S11 se envían SDI y SBC técnico como números (415 / 415), no como texto con formato', f"{cuerpo.get('p_sbc')} / {cuerpo.get('p_sdi')}")
     m = txt(pg, '#sbc-msg')
-    ok('Modificación de salario registrada' in m and 'pendiente en la bandeja IDSE del registro patronal Y1234567101' in m and pg.is_visible('#sbc-msg a:has-text("Ver en la bandeja IDSE")'),
-       'S12 el aviso nombra el RP, dice que el 07 quedó pendiente y enlaza a su bandeja', m[:200])
+    ok('Modificación de salario registrada' in m and 'pendiente en la bandeja IDSE del registro patronal Y1234567101' in m and 'con SBC $415.00' in m and pg.is_visible('#sbc-msg a:has-text("Ver en la bandeja IDSE")'),
+       'S12 el aviso nombra el RP y el SBC del movimiento, dice que el 07 quedó pendiente y enlaza a su bandeja', m[:200])
     ok('Archivo todavía no listo: falta' in m, 'S12b distingue «movimiento registrado» de «archivo listo para generar»', m[m.find('Archivo'):][:120])
     ok(q(f"select motivo from eventos_laborales where relacion_laboral_id = '{RA}' and tipo = 'modificacion_salario'") == 'Cambio a salario variable acordado',
        'S13 la justificación queda en el evento')
     foto(pg, 'b6-aviso-07')
+
+    print('--- Navegación después de guardar (aviso de cambios sin guardar)')
     pg.click('#sbc-msg a:has-text("Ver en la bandeja IDSE")'); pg.wait_for_timeout(2000)
+    ok(not dialogos, 'G1 «Ver en la bandeja IDSE» después de guardar: sin aviso de cambios sin guardar', ' | '.join(dialogos)[:100])
     ok(pg.is_visible('#panel-idse') and pg.input_value('#idse-rp') == RP1 and 'ADELA PALACIOS GALVAN' in txt(pg, '#idse-pend-07'),
        'S14 el enlace abre la bandeja IDSE en ese RP, con el 07 pendiente')
     foto(pg, 'b7-bandeja-desde-aviso')
-    # Validadores: el aviso anticipado del 07 usa la misma regla de NSS que la bandeja
+
+    print('--- Faltantes: completar desde la bandeja y volver')
+    fila = txt(pg, '#idse-pend-07')
+    ok('Falta: Tipo de trabajador' in fila and pg.is_visible('#idse-pend-07 [data-completar="rel"]'),
+       'F1 la bandeja dice qué falta y ofrece «Completar datos de la relación laboral»', fila[fila.find('Falta'):][:120])
+    pg.click('#idse-pend-07 [data-completar="rel"]'); pg.wait_for_timeout(2500)
+    fc = f'#hl-form-{RA} form'
+    marcados = pg.eval_on_selector_all(fc + ' .hl-falta', 'es => es.map(e => e.name)') if pg.query_selector(fc) else []
+    ok(pg.is_visible('[data-detail-section="laboral"]') and set(marcados) >= {'tipo_trabajador', 'jornada'} and 'Falta para IDSE' in txt(pg, fc),
+       'F2 abre la ficha en Relación laboral, en «Corregir datos» de esa relación, con los campos faltantes marcados', ','.join(marcados))
+    foto(pg, 'b11-completar-faltantes')
+    pg.select_option(fc + ' [name=tipo_trabajador]', '1'); pg.select_option(fc + ' [name=jornada]', '0')
+    if 'tipo_salario' in marcados: pg.select_option(fc + ' [name=tipo_salario]', '0')
+    pg.fill(fc + ' [name=motivo]', 'Datos para IDSE'); dialogos.clear()
+    pg.click(fc + ' button[type=submit]'); pg.wait_for_timeout(2200)
+    ok('Corrección registrada' in txt(pg, '#rl-msg') and pg.is_visible('#rl-msg a:has-text("Volver a la bandeja IDSE")'), 'F3 al guardar, el aviso ofrece volver a la bandeja IDSE', txt(pg, '#rl-msg')[:120])
+    pg.click('#rl-msg a:has-text("Volver a la bandeja IDSE")'); pg.wait_for_timeout(2000)
+    fila = txt(pg, '#idse-pend-07')
+    ok(not dialogos and pg.is_visible('#panel-idse') and 'ADELA PALACIOS GALVAN' in fila and 'Tipo de trabajador' not in fila and 'Jornada' not in fila,
+       'F4 regresa a la bandeja sin aviso de cambios y el movimiento ya no tiene esos faltantes', fila[:160])
+    # Validadores: el aviso anticipado del 07 y la bandeja usan la misma regla de NSS
     nss_adela = q("select nss from public.personal where nombre_completo = 'ADELA PALACIOS GALVAN'")
     q("update public.personal set nss = '11111111111' where nombre_completo = 'ADELA PALACIOS GALVAN'")
     pg.reload(); pg.wait_for_selector('#app-content', state='visible', timeout=20000); pg.wait_for_timeout(1500)  # la lista de personal se lee al cargar
-    ficha(pg, 'ADELA PALACIOS GALVAN', 'compensacion'); pg.wait_for_timeout(600)
+    ir(pg, 'idse'); pg.wait_for_timeout(1200)
+    ok(pg.is_visible('#idse-pend-07 [data-completar="persona"]'), 'F5 con un NSS inválido, la bandeja ofrece «Completar datos de la persona»')
+    pg.click('#idse-pend-07 [data-completar="persona"]'); pg.wait_for_timeout(2000)
+    ok(pg.is_visible('[data-detail-section="personal"]') and pg.eval_on_selector('#d-nss', 'e => e.classList.contains("hl-falta")')
+       and pg.is_visible('#idse-retorno a:has-text("Volver a la bandeja IDSE")'), 'F6 abre Datos personales con el NSS marcado y el enlace para volver a la bandeja')
+    foto(pg, 'b12-completar-persona')
+    pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(400)
     pg.click(f'[data-sbc="{RA}"]'); pg.wait_for_timeout(400)
     ok('NSS válido (el dígito verificador no corresponde)' in txt(pg, f'#hl-faltan-07-{RA}') and 'guía' not in txt(pg, f'#hl-faltan-07-{RA}'),
        'V5 el aviso del 07 detecta el NSS con dígito verificador incorrecto y ya no pide la guía', txt(pg, f'#hl-faltan-07-{RA}')[:160])
+    dialogos.clear(); pg.click('.detail-head-actions > button'); pg.wait_for_timeout(500)
+    ok(not dialogos, 'G2 cerrar la ficha con un formulario abierto pero sin escribir nada: sin advertencia', ' | '.join(dialogos)[:80])
     q(f"update public.personal set nss = '{nss_adela}' where nombre_completo = 'ADELA PALACIOS GALVAN'")
     ficha(pg, 'ADELA PALACIOS GALVAN', 'compensacion'); pg.wait_for_timeout(600)
     ok(txt(pg, '#sbc-msg') == '', 'P1 al volver a abrir la ficha el aviso verde ya no aparece')
     pg.click(f'[data-sbc="{RA}"]'); pg.wait_for_timeout(300)
-    pg.fill(f + ' [name=fecha]', '2026-11-02'); pg.fill(f + ' [name=sbc]', '430'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2200)
-    ok('Modificación de salario registrada' in txt(pg, '#sbc-msg'), 'P2 (control) el aviso aparece tras registrar')
+    pg.fill(f + ' [name=fecha]', '2026-11-02'); pg.fill(f + ' [name=sdi]', '3000'); pg.wait_for_timeout(600); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2200)
+    ok('Modificación de salario registrada' in txt(pg, '#sbc-msg') and 'con SBC $2,932.75 (tope de 25 UMA; SDI $3,000.00)' in txt(pg, '#sbc-msg'), 'P2 (control) el aviso aparece tras registrar', txt(pg, '#sbc-msg')[:160])
+    ok(q(f"select sbc||'/'||sdi from relaciones_laborales where id = '{RA}'") == '2932.75/3000.00'
+       and q(f"select m.sbc from idse_movimientos m join eventos_laborales e on e.id = m.evento_id where e.relacion_laboral_id = '{RA}' and e.fecha_efectiva = '2026-11-02'") == '2932.75',
+       'S15 SDI $3,000 sobre el tope: la relación guarda SDI 3,000 y el 07 lleva el SBC técnico $2,932.75', q(f"select sbc||'/'||sdi from relaciones_laborales where id = '{RA}'"))
+    dialogos.clear(); pg.click('.detail-head-actions > button'); pg.wait_for_timeout(500)
+    ok(not dialogos and not pg.is_visible('#modal-overlay'), 'G3 cerrar la ficha después de guardar: sin advertencia', ' | '.join(dialogos)[:80])
+    ficha(pg, 'ADELA PALACIOS GALVAN', 'compensacion'); pg.wait_for_timeout(600)
+    pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(300)
     pg.click('[data-detail-tab="laboral"]'); pg.wait_for_timeout(300); pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(300)
     ok(txt(pg, '#sbc-msg') == '', 'P3 al cambiar de sección y regresar el aviso ya no persiste')
+    pg.click(f'[data-sbc="{RA}"]'); pg.wait_for_timeout(300); pg.click(f + ' [name=sdi]'); pg.keyboard.type('500', delay=20)
+    dialogos.clear(); pg.click('.detail-head-actions > button'); pg.wait_for_timeout(500)
+    ok(dialogos and 'cambios sin guardar' in dialogos[0], 'G4 con un SDI escrito y sin guardar, cerrar la ficha SÍ advierte (protección conservada)', (dialogos or [''])[0][:60])
     ficha(pg, 'BENITO ZAVALA GALINDO', 'compensacion'); pg.wait_for_timeout(600)
     ok(txt(pg, '#sbc-msg') == '' and txt(pg, '#rl-msg') == '', 'P4 el aviso de una persona no aparece en la ficha de otra')
 
-    print('--- Sueldo y SBC no se mezclan')
+    print('--- Sueldo y SDI no se mezclan')
     ficha(pg, 'BENITO ZAVALA GALINDO', 'compensacion'); pg.wait_for_timeout(800)
     sbc_antes = q(f"select coalesce(sbc::text,'null') from relaciones_laborales where id = '{RB2}'")
-    ok('SBC vigente registrado: No registrado' in txt(pg, '#sbc-raiz'), 'N1 sin SBC vigente se dice explícitamente (no se inventa)')
+    ok('SDI vigente registrado: No registrado' in txt(pg, '#sbc-raiz'), 'N1 sin SDI vigente se dice explícitamente (no se inventa)')
     pg.click(f'[data-sbc="{RB2}"]'); pg.wait_for_timeout(500)
-    ok('Dato migrado sin SBC' in txt(pg, f'#sbc-form-{RB2} .sbc-resumen'), 'N2 el formulario explica el tratamiento del dato faltante')
+    ok('Dato migrado sin SDI' in txt(pg, f'#sbc-form-{RB2} .sbc-resumen'), 'N2 el formulario explica el tratamiento del dato faltante')
     pg.click(f'#sbc-form-{RB2} [data-cancelar]')
     ESQ_LIG = q(f"select id from personal_registros_pago where relacion_laboral_id = '{RB2}' and activo")
     ESQ_SIN = q("select r.id from personal_registros_pago r join personal p on p.id = r.personal_id where p.nombre_completo = 'BENITO ZAVALA GALINDO' and r.activo and r.relacion_laboral_id is null")

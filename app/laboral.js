@@ -103,7 +103,15 @@
 .hl-tabla tbody th{font-weight:600;color:var(--v21-texto,#16264A);width:32%}
 .hl-nr{color:#8A94A8;font-style:italic}
 .hl-link{font-weight:600}
-.rl-internos{margin:18px 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--v21-texto-2,#5B6680)}
+.rl-grupo{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--v21-texto-2,#5B6680)}
+.rl-internos-cab{margin:22px 0 4px;padding-top:14px;border-top:1px solid var(--v21-borde,#E5E9F1)}
+.hl-falta{outline:2px solid #E0A800!important;outline-offset:1px;background:#FFFBEF!important}
+.hl-falta-lab{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;background:#FFF3D6;color:#8A6400;font-size:10.5px;font-weight:700}
+.idse-config{border:1px solid var(--v21-borde,#E5E9F1);border-radius:12px;padding:12px 14px;margin:0 0 6px;background:var(--v21-fondo,#F6F8FB)}
+.idse-config h4{margin:0 0 8px;font-size:13.5px;color:var(--v21-navy,#16264A)}
+.idse-sec{margin:20px 0 6px;font-size:14.5px;color:var(--v21-navy,#16264A)}
+.idse-completar{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}.idse-completar .hl-btn2{padding:4px 10px;font-size:12px}
+.rl-internos{margin:0 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--v21-texto-2,#5B6680)}
 .sbc-card{margin-top:14px;background:var(--surface-2,#F6F8FB)}
 .sbc-rel{border-top:1px solid var(--v21-borde,#E5E9F1);padding:10px 0}
 .sbc-fila{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center}
@@ -146,6 +154,8 @@
     const raiz = document.getElementById('hl-raiz');
     if (!raiz || !p) return;
     estado = { personaId: p.id, persona: p, relaciones: [], eventos: [], pendientes: [], esquemas: [], formAbierto: null };
+    const ret = document.getElementById('idse-retorno'); if (ret) ret.remove();
+    document.querySelectorAll('[data-detail-section="personal"] .hl-falta').forEach((el) => el.classList.remove('hl-falta'));
     bloquearFicha(false);
     raiz.innerHTML = '<p class="hint">Cargando historia laboral…</p>';
     asegurarContenedores();
@@ -170,6 +180,7 @@
     bloquearFicha(estado.relaciones.length > 0);
     pintar();
     msgPendiente = null; // un aviso solo se muestra en la ficha que lo generó, una vez
+    aplicarPendienteAbrir();
   }
 
   // Con historial, estos datos solo cambian desde aquí (la base lo exige).
@@ -205,8 +216,12 @@
     if (secL && !document.getElementById('rl-raiz')) {
       const d = document.createElement('div'); d.id = 'rl-raiz';
       const h3 = secL.querySelector('h3'); h3.insertAdjacentElement('afterend', d);
-      const t = document.createElement('h4'); t.className = 'rl-internos'; t.textContent = 'Datos internos de la ficha';
+      const t = document.createElement('div'); t.className = 'rl-internos-cab';
+      t.innerHTML = '<h4 class="rl-internos">Datos internos de la empresa</h4><p class="hint" style="margin:0 0 8px">Uso interno de la empresa: no se envían al IMSS. Se guardan con «Guardar cambios».</p>';
       d.insertAdjacentElement('afterend', t);
+      const fi = document.getElementById('d-fechainicio');
+      const labFi = fi && fi.closest('div') ? fi.closest('div').querySelector('label') : null;
+      if (labFi) labFi.textContent = 'Fecha de ingreso (administrativa)';
       const lj = document.getElementById('d-jornada');
       const lab = lj && lj.closest('div') ? lj.closest('div').querySelector('label') : null;
       if (lab) lab.textContent = 'Jornada (descripción interna)';
@@ -249,7 +264,7 @@
     let h = `<div class="hl-wrap"><div class="hl-cab"><h3>Historia laboral</h3>
       <div class="hl-filtros"><select id="hl-filtro" aria-label="Filtrar acontecimientos">${Object.entries(FILTROS).map(([k, t]) => `<option value="${k}" ${k === vista.filtro ? 'selected' : ''}>${t}</option>`).join('')}</select>
       <button type="button" class="hl-btn2" id="hl-orden">${vista.recientes ? 'Más recientes primero ⇅' : 'Más antiguos primero ⇅'}</button></div></div>
-      <p class="hint" style="margin:0 0 10px">Solo consulta. Ingresos, reingresos, bajas, correcciones y la anulación del último movimiento se registran en <a href="#" onclick="cambiarSeccionDetalle('laboral');return false;">Relación laboral</a>; los esquemas de pago y la modificación de salario (SBC), en <a href="#" onclick="cambiarSeccionDetalle('compensacion');return false;">Compensación</a>.${varias ? ' Esta persona tiene más de una relación laboral: cada acontecimiento indica su empresa y registro patronal.' : ''}</p>
+      <p class="hint" style="margin:0 0 10px">Solo consulta. Ingresos, reingresos, bajas, correcciones y la anulación del último movimiento se registran en <a href="#" onclick="cambiarSeccionDetalle('laboral');return false;">Relación laboral</a>; los esquemas de pago y la modificación de salario (SDI), en <a href="#" onclick="cambiarSeccionDetalle('compensacion');return false;">Compensación</a>.${varias ? ' Esta persona tiene más de una relación laboral: cada acontecimiento indica su empresa y registro patronal.' : ''}</p>
       <div class="hl-msg" id="hl-msg"></div>`;
     if (!estado.eventos.length) h += '<p class="hint">Todavía no hay acontecimientos registrados.</p>';
     else if (!evs.length) h += '<p class="hint">No hay acontecimientos de este tipo.</p>';
@@ -296,7 +311,7 @@
     if (!raiz) return;
     const rels = [...estado.relaciones].sort((a, b) => (a.estado === 'vigente' ? 0 : 1) - (b.estado === 'vigente' ? 0 : 1)
       || String(b.fecha_ingreso || '').localeCompare(String(a.fecha_ingreso || '')));
-    let h = `<div class="hl-wrap"><div class="hl-cab"><h4 style="margin:0">Relaciones laborales</h4>
+    let h = `<div class="hl-wrap"><div class="hl-cab"><h4 class="rl-grupo" style="margin:0">Datos de la relación y seguridad social</h4>
       ${puedeOperar() ? '<button type="button" class="primary" style="margin:0" id="hl-btn-ingreso">Registrar ingreso o reingreso</button>' : ''}</div>
       <div class="hl-msg" id="rl-msg"></div><div id="hl-form-ingreso"></div>`;
     if (estado.pendientes.length && puedeOperar()) {
@@ -318,11 +333,12 @@
       h += `<div class="hl-card ${r.estado}" data-relacion="${r.id}"><h4>${esc(nombreEmpresa(r.empresa_id))} · ${esc(rpTxt ? 'RP ' + rpTxt : 'Sin registro patronal (sin IDSE)')}
         <span class="hl-chip ${r.estado}">${r.estado === 'vigente' ? 'Vigente' : 'Baja'}</span>
         ${(r.pendientes_migracion || []).map((p) => `<span class="hl-chip aviso">${esc(PENDIENTE[p] || p)}</span>`).join('')}</h4>
-        <div class="hl-datos"><span>Ingreso <b>${fechaMx(r.fecha_ingreso)}</b></span>
+        <div class="hl-datos"><span>Estado <b>${r.estado === 'vigente' ? 'Vigente' : 'Baja'}</b></span><span>Ingreso <b>${fechaMx(r.fecha_ingreso)}</b></span>
           <span>Antigüedad reconocida <b>${fechaMx(r.fecha_reconocimiento_antiguedad)}</b></span>
           ${r.estado === 'baja' ? `<span>Baja <b>${fechaMx(r.fecha_baja)}</b>${r.causa_baja ? ' · ' + esc(valorLegible('causa_baja', r.causa_baja)) : ''}</span>` : ''}
-          ${rpTxt ? `<span>SBC <b>${r.sbc == null ? 'No registrado' : dinero(r.sbc)}</b></span><span>Tipo <b>${esc(valorLegible('tipo_trabajador', r.tipo_trabajador))}</b></span>
-          <span>Salario <b>${esc(valorLegible('tipo_salario', r.tipo_salario))}</b></span><span>Jornada IMSS <b>${esc(valorLegible('jornada', r.jornada))}</b></span>
+          ${rpTxt ? `<span>Tipo de trabajador <b>${esc(valorLegible('tipo_trabajador', r.tipo_trabajador))}</b></span>
+          <span>Tipo de salario <b>${esc(valorLegible('tipo_salario', r.tipo_salario))}</b></span><span>Jornada IMSS <b>${esc(valorLegible('jornada', r.jornada))}</b></span>
+          <span>SDI <b>${sdiDe(r) == null ? 'No registrado' : dinero(sdiDe(r))}</b>${r.sbc != null && sdiDe(r) != null && Number(r.sbc) !== sdiDe(r) ? ` <small>(cotiza con el tope ${esc(dinero(r.sbc))})</small>` : ''}</span>
           <span>UMF <b>${esc(r.umf || '—')}</b></span>` : ''}<span>Número interno <b>${esc(r.numero_interno || '—')}</b></span></div>`;
       if (puedeOperar()) {
         // Anulación: solo el último movimiento IMSS de esta relación que todavía no
@@ -369,9 +385,8 @@
     if (!raiz) return;
     if (!puedeOperar()) { raiz.innerHTML = ''; return; }
     const vig = estado.relaciones.filter((r) => r.estado === 'vigente');
-    let h = `<div class="card sbc-card"><div class="hl-cab"><h4 style="margin:0">Salario ante el IMSS (SBC)</h4></div>
-      <p class="hint" style="margin:0 0 8px"><b>SBC</b> = salario base de cotización diario ante el IMSS. No es el sueldo de los esquemas de pago:
-      cambiar el sueldo no cambia el SBC. Si el SBC cambia, se registra aquí y genera la modificación de salario (07) pendiente en la bandeja IDSE.</p>
+    let h = `<div class="card sbc-card"><div class="hl-cab"><h4 style="margin:0">Salario ante el IMSS (SDI)</h4></div>
+      <p class="hint" style="margin:0 0 8px">${esc(SDI_AYUDA)} Cambiar el sueldo de un esquema no cambia el SDI: si el SDI cambia, se registra aquí y genera la modificación de salario (07) pendiente en la bandeja IDSE.</p>
       <div class="hl-msg" id="sbc-msg"></div>`;
     if (!vig.length) h += '<p class="hint">Sin relación laboral vigente.</p>';
     if (estado.pendientes.length) {
@@ -387,7 +402,8 @@
         h += '<div class="hint">Sin registro patronal: no presenta movimientos ante el IMSS.</div></div></div>';
         return;
       }
-      h += `<div>SBC vigente registrado: <b>${r.sbc == null ? 'No registrado' : dinero(r.sbc) + ' diario'}</b>${r.sbc != null && desde ? ` <span class="hl-meta">(desde ${fechaMx(desde)})</span>` : ''}</div>
+      const sdiV = sdiDe(r);
+      h += `<div>SDI vigente registrado: <b>${sdiV == null ? 'No registrado' : dinero(sdiV) + ' diario'}</b>${sdiV != null && desde ? ` <span class="hl-meta">(desde ${fechaMx(desde)})</span>` : ''}${r.sbc != null && sdiV != null && Number(r.sbc) !== sdiV ? ` <span class="hl-meta">· cotiza con el tope: ${esc(dinero(r.sbc))}</span>` : ''}</div>
         <div>Tope de cotización hoy: <b class="sbc-tope-hoy" data-rel="${r.id}">…</b></div>
         <button type="button" class="hl-btn2" data-sbc="${r.id}">Registrar modificación de salario (07)</button></div>
         <div class="hl-meta">Esquemas de pago de esta relación: ${(() => { const es = estado.esquemas.filter((e) => e.relacion_laboral_id === r.id);
@@ -413,11 +429,21 @@
   }
   async function topeEn(fecha, relId) {
     const r = estado.relaciones.find((x) => x.id === relId) || {};
-    const rp = rps.find((x) => x.id === r.registro_patronal_id) || {};
+    return topeEnRp(fecha, r.registro_patronal_id);
+  }
+  async function topeEnRp(fecha, rpId) {
+    const rp = rps.find((x) => x.id === rpId) || {};
     const zlfn = rp.zona_salario_minimo === 'zlfn';
     const [uma, sm] = await Promise.all([parametro('UMA_DIARIA', fecha), parametro(zlfn ? 'SALARIO_MINIMO_ZLFN' : 'SALARIO_MINIMO_GENERAL', fecha)]);
     return { uma, sm, zlfn, tope: uma == null ? null : Math.round(uma * 25 * 100) / 100 };
   }
+  // Un solo dato capturado: el SDI (salario diario integrado). El SBC que exige el
+  // formato IMSS se deriva de él: igual al SDI, o el tope de 25 UMA si lo rebasa.
+  // (El piso —salario mínimo— no se ajusta: si el SDI es menor, se rechaza.)
+  const sbcDeSdi = (sdi, tope) => (sdi == null || isNaN(sdi) ? null : (tope != null && sdi > tope ? tope : sdi));
+  const sdiDe = (r) => (r.sdi != null ? Number(r.sdi) : (r.sbc != null ? Number(r.sbc) : null));
+  const SDI_AYUDA = 'SDI = salario diario integrado: el importe diario con las prestaciones integradas que se usa como base de cotización en los movimientos ante el IMSS. '
+    + 'No es el sueldo diario nominal (sueldo mensual ÷ 30) ni se calcula de los esquemas de pago. Si rebasa el tope de 25 UMA, el archivo IDSE lleva el tope como SBC.';
   // Importes: se escriben con separador de miles y se guardan como número.
   const leerImporte = (t) => { const v = String(t || '').replace(/[$,\s]/g, ''); return v === '' ? null : (/^\d+(\.\d{1,2})?$/.test(v) ? Number(v) : NaN); };
   const formatoImporte = (n) => Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -475,6 +501,8 @@
     c.innerHTML = `<form class="hl-form" novalidate>${html}</form>`;
     const f = c.querySelector('form');
     f.querySelector('[data-cancelar]').onclick = () => { c.innerHTML = ''; };
+    // Cambios pendientes reales: solo si la persona escribió o eligió algo en el formulario.
+    ['input', 'change'].forEach((t) => f.addEventListener(t, (ev) => { if (ev.isTrusted) f.dataset.sucio = '1'; }));
     f.onsubmit = async (ev) => {
       ev.preventDefault();
       const b = f.querySelector('button[type=submit]'); b.disabled = true;
@@ -490,13 +518,13 @@
     const emps = (typeof empresas !== 'undefined' ? empresas : []).filter((e) => e.activo !== false);
     montar('hl-form-ingreso', `<b>Registrar ingreso o reingreso</b>
       <p class="hint" style="margin:4px 0 8px">La fecha de ingreso es la que va al IMSS. La antigüedad reconocida es aparte y no la modifica.</p>
+      <p class="hint" style="margin:0 0 8px">${esc(SDI_AYUDA)}</p>
       <div class="hl-grid">
         <div><label>Empresa</label><select name="empresa" required><option value="">Elige…</option>${emps.map((e) => `<option value="${e.id}" ${e.id === p.empresa_id ? 'selected' : ''}>${esc(e.nombre)}</option>`).join('')}</select></div>
         <div><label>Registro patronal</label><select name="rp"></select></div>
         <div><label>Fecha de ingreso</label><input name="fecha" type="date" required></div>
         <div><label>Antigüedad reconocida (opcional)</label><input name="antig" type="date"></div>
-        <div><label>SBC diario</label><input name="sbc" inputmode="decimal" placeholder="Ej. 450.00"></div>
-        <div><label>SDI (si es distinto)</label><input name="sdi" inputmode="decimal"></div>
+        <div><label>SDI — salario diario integrado</label><input name="sdi" inputmode="decimal" placeholder="Ej. 450.00" autocomplete="off"></div>
         <div><label>Tipo de trabajador</label><select name="tt">${opciones(TIPO_TRAB, '1')}</select></div>
         <div><label>Tipo de salario</label><select name="ts">${opciones(TIPO_SAL, '0')}</select></div>
         <div><label>Jornada</label><select name="jo">${opciones(JORNADA, '0')}</select></div>
@@ -505,10 +533,13 @@
         <div><label>Motivo / nota (opcional)</label><input name="motivo"></div>
       </div>${botones('Registrar ingreso')}`, async (f) => {
       if (!val(f, 'empresa') || !val(f, 'fecha')) { mensaje('Indica empresa y fecha de ingreso.', false, null, 'rl-msg'); return; }
+      const sdi = leerImporte(val(f, 'sdi'));
+      if (sdi != null && (isNaN(sdi) || sdi <= 0)) { mensaje('El SDI debe ser un importe mayor a cero, con hasta 2 decimales.', false, null, 'rl-msg'); return; }
+      const sbc = sdi == null || !val(f, 'rp') ? sdi : sbcDeSdi(sdi, (await topeEnRp(val(f, 'fecha'), val(f, 'rp'))).tope);
       await ejecutar('laboral_registrar_ingreso', {
         p_personal_id: estado.personaId, p_empresa_id: val(f, 'empresa'), p_registro_patronal_id: val(f, 'rp') || null,
         p_fecha_ingreso: val(f, 'fecha'), p_fecha_reconocimiento_antiguedad: val(f, 'antig') || null,
-        p_sbc: num(f, 'sbc'), p_sdi: num(f, 'sdi'), p_tipo_trabajador: val(f, 'tt') || null, p_tipo_salario: val(f, 'ts') || null,
+        p_sbc: sbc, p_sdi: sdi, p_tipo_trabajador: val(f, 'tt') || null, p_tipo_salario: val(f, 'ts') || null,
         p_jornada: val(f, 'jo') || null, p_umf: val(f, 'umf') || null, p_numero_interno: val(f, 'num') || null, p_motivo: val(f, 'motivo') || null,
       }, val(f, 'rp')
         ? { html: `<b>Ingreso registrado.</b> El alta (08) quedó <b>pendiente</b> en la bandeja IDSE del registro patronal <b>${esc(textoRP(val(f, 'rp')))}</b>.${enlaceBandeja(val(f, 'rp'))}` }
@@ -522,6 +553,9 @@
       if (lista.length && !selR.value) selR.value = lista[0].id;
     };
     selE.onchange = llenarRP; llenarRP();
+    const sdiIng = f.querySelector('[name=sdi]');
+    sdiIng.addEventListener('input', () => formatearAlEscribir(sdiIng));
+    sdiIng.addEventListener('blur', () => { const v = leerImporte(sdiIng.value); if (v != null && !isNaN(v)) sdiIng.value = formatoImporte(v); });
   }
 
   function formBaja(relId) {
@@ -539,40 +573,41 @@
     });
   }
 
-  // Modificación de salario (07) desde Compensación. Captura SBC (y SDI aparte);
-  // el sueldo de los esquemas de pago no interviene.
+  // Modificación de salario (07) desde Compensación. Se captura UN dato: el SDI.
+  // El SBC técnico del formato IMSS se deriva (SDI, o el tope de 25 UMA a la fecha
+  // efectiva si lo rebasa). El sueldo de los esquemas de pago no interviene.
   const FACTOR_MINIMO = 1.0493; // integración mínima de ley (15 días de aguinaldo, 12 de vacaciones, 25 % de prima)
   function formSalario(relId, avisoSueldo) {
     const r = estado.relaciones.find((x) => x.id === relId) || {};
     const rpId = r.registro_patronal_id;
-    const vigente = r.sbc == null ? null : Number(r.sbc);
+    const sbcVig = r.sbc == null ? null : Number(r.sbc);
+    const sdiVig = sdiDe(r);
     const otras = estado.relaciones.filter((x) => x.estado === 'vigente' && x.registro_patronal_id && x.id !== relId).length;
     montar('sbc-form-' + relId, `<b>Modificación de salario (07) · ${esc(nombreEmpresa(r.empresa_id))} · RP ${esc(textoRP(rpId) || '')}</b>
       ${otras ? `<p class="hl-aviso-sueldo">Esta persona tiene ${otras + 1} relaciones vigentes con registro patronal. El movimiento se registrará <b>solo</b> para ${esc(nombreEmpresa(r.empresa_id))} · RP ${esc(textoRP(rpId))} (ingreso ${fechaMx(r.fecha_ingreso)}).</p>` : ''}
       ${avisoSueldo ? `<p class="hl-aviso-sueldo">${esc(avisoSueldo)}</p>` : ''}
+      <p class="hint" style="margin:4px 0 8px">${esc(SDI_AYUDA)}</p>
       <div class="sbc-resumen">
-        <div><span>SBC vigente registrado</span><b>${vigente == null ? 'No registrado' : dinero(vigente)}</b>${vigente == null ? '<small>Dato migrado sin SBC. El movimiento quedará como «No registrado → nuevo SBC»; no se inventa un valor anterior.</small>' : ''}</div>
-        <div><span>Nuevo SBC diario</span><b class="sbc-nuevo">—</b></div>
-        <div><span>Tope a la fecha efectiva</span><b class="sbc-tope">…</b><small class="sbc-tope-det"></small></div>
+        <div><span>SDI vigente registrado</span><b>${sdiVig == null ? 'No registrado' : dinero(sdiVig)}</b>${sdiVig == null ? '<small>Dato migrado sin SDI. El movimiento quedará como «No registrado → nuevo»; no se inventa un valor anterior.</small>' : (sbcVig != null && sbcVig !== sdiVig ? `<small>Cotiza al IMSS con ${esc(dinero(sbcVig))} (tope)</small>` : '')}</div>
+        <div><span>Nuevo SDI diario</span><b class="sbc-nuevo">—</b></div>
+        <div><span>SBC para el archivo IDSE</span><b class="sbc-tecnico">—</b><small class="sbc-tope-det"></small></div>
       </div>
       <div class="sbc-avisos"></div>
       <div class="hl-grid"><div><label>Fecha efectiva del cambio (no la fecha de captura)</label><input name="fecha" type="date" required value="${hoyMexico()}"></div>
-        <div><label>Nuevo SBC diario</label><input name="sbc" inputmode="decimal" required placeholder="Ej. 1,250.00" autocomplete="off"></div>
-        <div><label>SDI — salario diario integrado (opcional)</label><input name="sdi" inputmode="decimal" placeholder="Igual al SBC si lo dejas vacío" autocomplete="off"></div>
+        <div><label>SDI — salario diario integrado</label><input name="sdi" inputmode="decimal" required placeholder="Ej. 1,250.00" autocomplete="off"></div>
         <div><label>Tipo de salario</label><select name="ts">${opciones(TIPO_SAL, r.tipo_salario)}</select></div>
         <div><label class="sbc-motivo-lab">Motivo (opcional)</label><input name="motivo" maxlength="300"></div></div>
       <div id="hl-faltan-07-${relId}"></div>${botones('Registrar modificación')}`, async (f) => {
-      const sbc = leerImporte(val(f, 'sbc')), sdi = leerImporte(val(f, 'sdi'));
-      if (sbc == null || isNaN(sbc) || sbc <= 0) { mensaje('Captura el nuevo SBC diario: un importe con hasta 2 decimales.', false, null, 'sbc-msg'); return; }
-      if (sdi != null && isNaN(sdi)) { mensaje('El SDI debe ser un importe con hasta 2 decimales.', false, null, 'sbc-msg'); return; }
+      const sdi = leerImporte(val(f, 'sdi'));
+      if (sdi == null || isNaN(sdi) || sdi <= 0) { mensaje('Captura el nuevo SDI diario: un importe con hasta 2 decimales.', false, null, 'sbc-msg'); return; }
       let est = await revisar();
       while (est.obsoleta) est = await revisar();
       if (est.bloquea) { mensaje(est.bloquea, false, null, 'sbc-msg'); return; }
       const faltan = faltantesIdse07(r, val(f, 'ts'));
-      const html = `<b>Modificación de salario registrada.</b> El movimiento 07 quedó <b>pendiente</b> en la bandeja IDSE del registro patronal <b>${esc(textoRP(rpId))}</b>. `
+      const html = `<b>Modificación de salario registrada.</b> El movimiento 07 quedó <b>pendiente</b> en la bandeja IDSE del registro patronal <b>${esc(textoRP(rpId))}</b> con SBC ${esc(dinero(est.sbc))}${est.sbc !== sdi ? ' (tope de 25 UMA; SDI ' + esc(dinero(sdi)) + ')' : ''}. `
         + (faltan.length ? `<span class="sbc-pend-arch">Archivo todavía no listo: falta ${faltan.map(esc).join(', ')}.</span> ` : 'Su archivo está listo para generarse desde la bandeja cuando lo decidas.')
         + enlaceBandeja(rpId);
-      const res = await ejecutar('laboral_modificar_salario', { p_relacion_id: relId, p_fecha_efectiva: val(f, 'fecha') || null, p_sbc: sbc,
+      const res = await ejecutar('laboral_modificar_salario', { p_relacion_id: relId, p_fecha_efectiva: val(f, 'fecha') || null, p_sbc: est.sbc,
         p_sdi: sdi, p_tipo_salario: val(f, 'ts') || null, p_motivo: val(f, 'motivo') || null }, { html }, 'compensacion', 'sbc-msg');
       if (res.error && res.error.hint === 'sbc_tope') revisar();
     });
@@ -580,7 +615,7 @@
     if (!form) return;
     const caja = form.querySelector('.sbc-avisos');
     const enviar = form.querySelector('button[type=submit]');
-    // Avisos en vivo. «bloquea» = la base lo rechazaría (tope, mínimo, motivo).
+    // Avisos en vivo. «bloquea» = la base lo rechazaría (mínimo, motivo, sin cambio).
     let turno = 0; // solo la revisión más reciente pinta (las anteriores pueden terminar después)
     async function revisar() {
       const mio = ++turno;
@@ -588,49 +623,45 @@
       const previo = document.getElementById('sbc-msg');
       if (previo && previo.classList.contains('err')) { previo.textContent = ''; previo.className = 'hl-msg'; }
       const fecha = val(form, 'fecha');
-      const sbc = leerImporte(val(form, 'sbc'));
+      const sdi = leerImporte(val(form, 'sdi'));
       const t = fecha ? await topeEn(fecha, relId) : {};
       if (mio !== turno) return { bloquea: null, obsoleta: true };
-      form.querySelector('.sbc-tope').textContent = t.tope == null ? '—' : dinero(t.tope);
-      form.querySelector('.sbc-tope-det').textContent = t.tope == null ? 'Sin UMA registrada para esa fecha.' : `25 UMA × ${dinero(t.uma)} (UMA vigente al ${fechaMx(fecha)})`;
-      form.querySelector('.sbc-nuevo').textContent = sbc == null || isNaN(sbc) ? '—' : dinero(sbc);
+      const sbc = sbcDeSdi(sdi, t.tope);
+      const topado = sbc != null && sdi != null && sbc !== sdi;
+      form.querySelector('.sbc-nuevo').textContent = sdi == null || isNaN(sdi) ? '—' : dinero(sdi);
+      form.querySelector('.sbc-tecnico').textContent = sbc == null ? '—' : dinero(sbc);
+      form.querySelector('.sbc-tope-det').textContent = t.tope == null ? 'Sin UMA registrada para esa fecha.'
+        : (topado ? `El SDI rebasa el tope: se usa el tope de 25 UMA × ${dinero(t.uma)} (UMA vigente al ${fechaMx(fecha)}).`
+          : `Igual al SDI. Tope a esa fecha: ${dinero(t.tope)} (25 UMA × ${dinero(t.uma)}).`);
       const avisos = []; let bloquea = null;
       const motivoLab = form.querySelector('.sbc-motivo-lab');
       motivoLab.textContent = 'Motivo (opcional)';
-      if (sbc != null && !isNaN(sbc)) {
-        if (t.tope != null && sbc > t.tope) {
-          bloquea = `El SBC no puede rebasar el tope de ${dinero(t.tope)} a esa fecha (25 UMA).`;
-          avisos.push(`<div class="sbc-av err">${esc(bloquea)} Si el salario diario integrado real es mayor, se registra como SDI y el SBC queda en el tope. <button type="button" class="hl-btn2" data-usar-tope>Usar el tope (${esc(dinero(t.tope))})</button></div>`);
-        } else if (t.sm != null && sbc < t.sm) {
-          bloquea = `El SBC no puede ser menor al salario mínimo ${t.zlfn ? 'de la zona libre de la frontera norte' : 'general'} (${dinero(t.sm)}) a esa fecha. Con jornada o semana reducida también se ajusta al mínimo.`;
+      if (sbc != null) {
+        if (topado) avisos.push(`<div class="sbc-av">El SDI (${esc(dinero(sdi))}) rebasa el tope de cotización: el movimiento 07 llevará el tope (${esc(dinero(sbc))}) como SBC y se conserva el SDI capturado.</div>`);
+        if (t.sm != null && sbc < t.sm) {
+          bloquea = `El SDI no puede ser menor al salario mínimo ${t.zlfn ? 'de la zona libre de la frontera norte' : 'general'} (${dinero(t.sm)}) a esa fecha. Con jornada o semana reducida también se ajusta al mínimo.`;
           avisos.push(`<div class="sbc-av err">${esc(bloquea)}</div>`);
         } else if (t.sm != null && sbc < Math.round(t.sm * FACTOR_MINIMO * 100) / 100) {
           avisos.push(`<div class="sbc-av">Aviso: está por debajo del salario mínimo integrado con las prestaciones mínimas de ley (aprox. ${esc(dinero(Math.round(t.sm * FACTOR_MINIMO * 100) / 100))}). Revisa el factor de integración; no impide registrar.</div>`);
         }
-        if (vigente != null && sbc < vigente) {
-          motivoLab.textContent = 'Motivo (obligatorio: el SBC baja)';
+        if (!bloquea && sbcVig != null && sbc === sbcVig && (val(form, 'ts') || r.tipo_salario) === r.tipo_salario) {
+          bloquea = `El SBC para el IMSS no cambia (${dinero(sbc)}): no hay modificación de salario (07) que registrar.`;
+          avisos.push(`<div class="sbc-av err">${esc(bloquea)}</div>`);
+        }
+        if (sbcVig != null && sbc < sbcVig) {
+          motivoLab.textContent = 'Motivo (obligatorio: el salario baja)';
           const mot = val(form, 'motivo');
-          avisos.push(`<div class="sbc-av">El nuevo SBC es <b>menor</b> que el vigente (${esc(dinero(vigente))} → ${esc(dinero(sbc))}). Una reducción requiere sustento (p. ej. salario variable o convenio): escribe la justificación en el motivo.</div>`);
-          if (mot.length < 5 && !bloquea) bloquea = 'Escribe la justificación de la disminución del SBC en el motivo (al menos 5 caracteres).';
+          avisos.push(`<div class="sbc-av">El nuevo salario es <b>menor</b> que el vigente (SBC ${esc(dinero(sbcVig))} → ${esc(dinero(sbc))}). Una reducción requiere sustento (p. ej. salario variable o convenio): escribe la justificación en el motivo.</div>`);
+          if (mot.length < 5 && !bloquea) bloquea = 'Escribe la justificación de la disminución del salario en el motivo (al menos 5 caracteres).';
         }
       }
       caja.innerHTML = avisos.join('');
-      const usar = caja.querySelector('[data-usar-tope]');
-      if (usar) usar.onclick = () => {
-        const sdiEl = form.querySelector('[name=sdi]');
-        if (!val(form, 'sdi')) sdiEl.value = formatoImporte(sbc);
-        form.querySelector('[name=sbc]').value = formatoImporte(t.tope);
-        revisar();
-      };
-      enviar.disabled = !!(bloquea && bloquea.startsWith('El SBC')); // tope o mínimo: la base lo rechazaría
-      return { bloquea };
+      enviar.disabled = !!(bloquea && bloquea.startsWith('El S')); // mínimo o sin cambio: la base lo rechazaría
+      return { bloquea, sbc };
     }
-    ['sbc', 'sdi'].forEach((n) => {
-      const el = form.querySelector(`[name=${n}]`);
-      el.addEventListener('input', () => formatearAlEscribir(el));
-      el.addEventListener('blur', () => { const v = leerImporte(el.value); if (v != null && !isNaN(v)) el.value = formatoImporte(v); });
-    });
-    form.querySelector('[name=sbc]').addEventListener('input', revisar);
+    const elSdi = form.querySelector('[name=sdi]');
+    elSdi.addEventListener('input', () => { formatearAlEscribir(elSdi); revisar(); });
+    elSdi.addEventListener('blur', () => { const v = leerImporte(elSdi.value); if (v != null && !isNaN(v)) elSdi.value = formatoImporte(v); });
     form.querySelector('[name=fecha]').addEventListener('change', revisar);
     form.querySelector('[name=motivo]').addEventListener('input', revisar);
     const pintarFaltantes = () => {
@@ -642,7 +673,7 @@
           + 'Los datos de la relación se completan en Relación laboral → «Corregir datos»; los de la persona, en su ficha.</div>'
         : '<div class="sbc-av ok">Con estos datos, el archivo IDSE quedará listo para generar en la bandeja.</div>';
     };
-    form.querySelector('[name=ts]').addEventListener('change', pintarFaltantes);
+    form.querySelector('[name=ts]').addEventListener('change', () => { pintarFaltantes(); revisar(); });
     pintarFaltantes();
     revisar();
   }
@@ -661,7 +692,7 @@
     if (estado.personaId !== pid) return;
     if (!esq.error) { estado.esquemas = esq.data || []; estado.pendientes = estado.esquemas.filter((e) => !e.relacion_laboral_id); pintarSbc(); }
     const r = estado.relaciones.find((x) => x.id === relId);
-    const txt = 'Cambiaste un sueldo en los esquemas de pago. El SBC ante el IMSS no se actualiza solo: si también cambia, registra la modificación de salario (07).';
+    const txt = 'Cambiaste un sueldo en los esquemas de pago. El SDI ante el IMSS no se actualiza solo: si también cambia, registra la modificación de salario (07).';
     if (!r) {
       mensaje(null, true, `${esc(txt)} <b>Este esquema no tiene relación laboral asignada</b>: asígnalo en <a href="#" onclick="cambiarSeccionDetalle('laboral');return false;">Relación laboral</a> para saber a qué registro patronal corresponde.`, 'sbc-msg');
       return;
@@ -669,12 +700,15 @@
     if (r.estado !== 'vigente' || !r.registro_patronal_id) return;
     mensaje(null, true, `${esc(txt)} <button type="button" class="hl-btn2" id="sbc-desde-sueldo">Registrar modificación (07) · ${esc(nombreEmpresa(r.empresa_id))} · RP ${esc(textoRP(r.registro_patronal_id))}</button>`, 'sbc-msg');
     const b = document.getElementById('sbc-desde-sueldo');
-    if (b) b.onclick = () => formSalario(r.id, `Origen: cambio del esquema de pago ${esquemaTxt}, que pertenece a la relación ${nombreEmpresa(r.empresa_id)} · RP ${textoRP(r.registro_patronal_id)} (ingreso ${fechaMx(r.fecha_ingreso)}). El SBC no se calcula del sueldo: captúralo tú.`);
+    if (b) b.onclick = () => formSalario(r.id, `Origen: cambio del esquema de pago ${esquemaTxt}, que pertenece a la relación ${nombreEmpresa(r.empresa_id)} · RP ${textoRP(r.registro_patronal_id)} (ingreso ${fechaMx(r.fecha_ingreso)}). El SDI no se calcula del sueldo: captúralo tú.`);
   }
 
   // Desde un aviso: cierra la ficha y abre la bandeja IDSE en ese registro patronal.
   async function irABandeja(rpId) {
     if (typeof cerrarDetalle === 'function') cerrarDetalle();
+    // Si había cambios pendientes de verdad y la persona decidió quedarse, no se navega.
+    const ov = document.getElementById('modal-overlay');
+    if (ov && ov.style.display !== 'none' && detalleActual) return;
     if (typeof cambiarPestana === 'function') cambiarPestana('idse');
     idse.rp = rpId;
     await abrirIdse();
@@ -712,33 +746,93 @@
     return f;
   }
 
-  function formCorregir(relId) {
+  // Faltantes de la bandeja IDSE → campo de «Corregir datos» de la relación.
+  const FALTA_CAMPO = { 'Tipo de trabajador': 'tipo_trabajador', 'Tipo de salario': 'tipo_salario', 'Jornada': 'jornada', 'UMF': 'umf',
+    'Número interno (clave del trabajador)': 'numero_interno', 'SBC': 'sdi' };
+  // Faltantes de la bandeja IDSE → campo de la ficha de la persona.
+  const FALTA_PERSONA = [[/^NSS/, 'd-nss'], [/^CURP/, 'd-curp'], [/^Primer apellido/, 'd-apellido1'], [/^Nombre\(s\)/, 'd-nombres'],
+    [/^Nombre con dígitos/, ['d-nombres', 'd-apellido1', 'd-apellido2']]];
+  function formCorregir(relId, opc) {
+    opc = opc || {};
     const r = estado.relaciones.find((x) => x.id === relId) || {};
     const migrado = estado.eventos.some((e) => e.relacion_id === relId && ['ingreso', 'reingreso'].includes(e.tipo) && e.estado === 'vigente' && e.origen === 'migracion')
       && !estado.eventos.some((e) => e.relacion_id === relId && e.tipo === 'modificacion_salario' && e.estado === 'vigente');
+    const faltan = (opc.faltan || []).filter((x) => FALTA_CAMPO[x]);
+    const marcar = new Set(faltan.map((x) => FALTA_CAMPO[x]));
+    const etiqueta = (campo, texto) => `${texto}${marcar.has(campo) ? '<span class="hl-falta-lab">Falta para IDSE</span>' : ''}`;
+    const sdiVig = sdiDe(r);
     montar('hl-form-' + relId, `<b>Corregir datos</b>
-      <p class="hint" style="margin:4px 0 8px">Solo se guardan los campos que cambies. ${migrado ? 'Por ser un dato migrado también puedes corregir la fecha de ingreso y el SBC.' : 'La fecha de ingreso y el SBC de un movimiento real no se corrigen aquí: usa anular o modificación de salario.'}</p>
+      ${faltan.length ? `<p class="hl-aviso-sueldo">Para el archivo IDSE falta: <b>${faltan.map(esc).join(', ')}</b>. Los campos están marcados.${opc.rpId ? ' Al guardar podrás volver a la bandeja IDSE.' : ''}</p>` : ''}
+      <p class="hint" style="margin:4px 0 8px">Solo se guardan los campos que cambies. ${migrado ? 'Por ser un dato migrado también puedes corregir la fecha de ingreso y el SDI.' : 'La fecha de ingreso y el SDI de un movimiento real no se corrigen aquí: usa anular o modificación de salario.'}</p>
       <div class="hl-grid">
         ${migrado ? `<div><label>Fecha de ingreso</label><input name="fecha_ingreso" type="date" value="${r.fecha_ingreso || ''}"></div>
-        <div><label>SBC diario</label><input name="sbc" inputmode="decimal" value="${r.sbc == null ? '' : r.sbc}"></div>` : ''}
+        <div><label>${etiqueta('sdi', 'SDI — salario diario integrado')}</label><input name="sdi" inputmode="decimal" autocomplete="off" value="${sdiVig == null ? '' : formatoImporte(sdiVig)}"></div>` : ''}
         <div><label>Antigüedad reconocida</label><input name="fecha_reconocimiento_antiguedad" type="date" value="${r.fecha_reconocimiento_antiguedad || ''}"></div>
-        <div><label>Número interno</label><input name="numero_interno" maxlength="10" value="${esc(r.numero_interno || '')}"></div>
-        <div><label>Tipo de trabajador</label><select name="tipo_trabajador">${opciones(TIPO_TRAB, r.tipo_trabajador)}</select></div>
-        <div><label>Tipo de salario</label><select name="tipo_salario">${opciones(TIPO_SAL, r.tipo_salario)}</select></div>
-        <div><label>Jornada</label><select name="jornada">${opciones(JORNADA, r.jornada)}</select></div>
-        <div><label>UMF</label><input name="umf" maxlength="3" inputmode="numeric" value="${esc(r.umf || '')}"></div>
+        <div><label>${etiqueta('numero_interno', 'Número interno')}</label><input name="numero_interno" maxlength="10" value="${esc(r.numero_interno || '')}"></div>
+        <div><label>${etiqueta('tipo_trabajador', 'Tipo de trabajador')}</label><select name="tipo_trabajador">${opciones(TIPO_TRAB, r.tipo_trabajador)}</select></div>
+        <div><label>${etiqueta('tipo_salario', 'Tipo de salario')}</label><select name="tipo_salario">${opciones(TIPO_SAL, r.tipo_salario)}</select></div>
+        <div><label>${etiqueta('jornada', 'Jornada IMSS')}</label><select name="jornada">${opciones(JORNADA, r.jornada)}</select></div>
+        <div><label>${etiqueta('umf', 'UMF')}</label><input name="umf" maxlength="3" inputmode="numeric" value="${esc(r.umf || '')}"></div>
         <div><label>Motivo de la corrección</label><input name="motivo" required></div>
       </div>${botones('Guardar corrección')}`, async (f) => {
       const cambios = {};
-      ['fecha_ingreso', 'sbc', 'fecha_reconocimiento_antiguedad', 'numero_interno', 'tipo_trabajador', 'tipo_salario', 'jornada', 'umf'].forEach((k) => {
+      ['fecha_ingreso', 'fecha_reconocimiento_antiguedad', 'numero_interno', 'tipo_trabajador', 'tipo_salario', 'jornada', 'umf'].forEach((k) => {
         const el = f.querySelector(`[name="${k}"]`); if (!el) return;
-        let v = el.value.trim(); const actual = r[k] == null ? '' : String(r[k]);
-        if (k === 'sbc') { if (v === '' || Number(v) === Number(actual)) return; cambios[k] = Number(v.replace(/,/g, '')); return; }
+        const v = el.value.trim(); const actual = r[k] == null ? '' : String(r[k]);
         if (v !== actual) cambios[k] = v === '' ? null : v;
       });
+      const elSdi = f.querySelector('[name="sdi"]');
+      if (elSdi && elSdi.value.trim() !== '') {
+        const sdi = leerImporte(elSdi.value);
+        if (sdi == null || isNaN(sdi) || sdi <= 0) { mensaje('El SDI debe ser un importe mayor a cero, con hasta 2 decimales.', false, null, 'rl-msg'); return; }
+        if (sdi !== sdiVig) {
+          const fIng = cambios.fecha_ingreso || r.fecha_ingreso || hoyMexico();
+          cambios.sdi = sdi;
+          cambios.sbc = sbcDeSdi(sdi, (await topeEnRp(fIng, r.registro_patronal_id)).tope);
+        }
+      }
       if (!Object.keys(cambios).length) { mensaje('No cambiaste ningún dato.', false, null, 'rl-msg'); return; }
-      await ejecutar('laboral_corregir_datos', { p_relacion_id: relId, p_cambios: cambios, p_motivo: val(f, 'motivo') }, 'Corrección registrada.', 'laboral', 'rl-msg');
+      const ok = opc.rpId
+        ? { html: `<b>Corrección registrada.</b>${enlaceBandeja(opc.rpId, 'Volver a la bandeja IDSE de ' + (textoRP(opc.rpId) || 'este registro patronal'))}` }
+        : 'Corrección registrada.';
+      await ejecutar('laboral_corregir_datos', { p_relacion_id: relId, p_cambios: cambios, p_motivo: val(f, 'motivo') }, ok, 'laboral', 'rl-msg');
     });
+    const form = document.querySelector('#hl-form-' + relId + ' form');
+    if (!form) return;
+    const elSdi = form.querySelector('[name=sdi]');
+    if (elSdi) {
+      elSdi.addEventListener('input', () => formatearAlEscribir(elSdi));
+      elSdi.addEventListener('blur', () => { const v = leerImporte(elSdi.value); if (v != null && !isNaN(v)) elSdi.value = formatoImporte(v); });
+    }
+    marcar.forEach((campo) => { const el = form.querySelector(`[name="${campo}"]`); if (el) el.classList.add('hl-falta'); });
+    const primero = form.querySelector('.hl-falta') || form.querySelector('input,select');
+    if (primero) { primero.focus(); primero.scrollIntoView({ block: 'center' }); }
+  }
+
+  // Desde la bandeja IDSE: abre la ficha en el lugar exacto del dato que falta.
+  let pendienteAbrir = null;
+  async function completarDesdeIdse(personaId, relId, faltan, rpId) {
+    const deRelacion = faltan.some((x) => FALTA_CAMPO[x]);
+    pendienteAbrir = { personaId, relId, faltan, rpId, deRelacion };
+    if (typeof abrirDetalle === 'function') await abrirDetalle(personaId, deRelacion ? 'laboral' : 'personal');
+  }
+  function aplicarPendienteAbrir() {
+    const pa = pendienteAbrir;
+    if (!pa || pa.personaId !== estado.personaId) return;
+    pendienteAbrir = null;
+    if (pa.deRelacion && estado.relaciones.some((x) => x.id === pa.relId)) { formCorregir(pa.relId, { faltan: pa.faltan, rpId: pa.rpId }); return; }
+    // Datos de la persona: se marcan los campos y se ofrece volver a la bandeja.
+    const ids = [];
+    pa.faltan.forEach((x) => FALTA_PERSONA.forEach(([re, id]) => { if (re.test(x)) ids.push(...[].concat(id)); }));
+    ids.forEach((id) => { const el = document.getElementById(id); if (el) { el.classList.add('hl-falta'); el.addEventListener('input', () => el.classList.remove('hl-falta'), { once: true }); } });
+    const sec = document.querySelector('[data-detail-section="personal"]');
+    if (sec) {
+      let n = document.getElementById('idse-retorno');
+      if (!n) { n = document.createElement('div'); n.id = 'idse-retorno'; n.className = 'hl-aviso-sueldo'; sec.insertBefore(n, sec.children[1] || null); }
+      n.innerHTML = `Para el archivo IDSE falta: <b>${pa.faltan.filter((x) => !FALTA_CAMPO[x]).map(esc).join(', ')}</b>. Los campos están marcados; corrígelos y usa «Guardar cambios».${enlaceBandeja(pa.rpId, 'Volver a la bandeja IDSE de ' + (textoRP(pa.rpId) || 'este registro patronal'))}`;
+    }
+    const primero = ids.map((id) => document.getElementById(id)).find(Boolean);
+    if (primero) { primero.scrollIntoView({ block: 'center' }); primero.focus(); }
   }
 
   function formAnular(evId, relId) {
@@ -771,7 +865,7 @@
       p_fecha_ingreso: fecha, p_numero_interno: enviado.numero_interno_trabajador || null,
     });
     if (error) return 'La persona se guardó, pero su ingreso no: ' + msgError(error) + ' Regístralo en su Historia laboral.';
-    return 'Ingreso registrado en su Historia laboral.' + (enviado.registro_patronal_id ? ' Completa SBC, UMF y tipos en la ficha antes de generar el IDSE.' : '');
+    return 'Ingreso registrado en su Historia laboral.' + (enviado.registro_patronal_id ? ' Completa SDI, UMF y tipos en la ficha antes de generar el IDSE.' : '');
   }
 
   // =====================================================================
@@ -787,16 +881,18 @@
     if (!idse.rp || !activos.some((r) => r.id === idse.rp)) idse.rp = activos.length ? activos[0].id : null;
     raiz.innerHTML = `<div class="card"><div class="hl-cab"><h3>Movimientos IDSE</h3></div>
       <p class="hint" style="margin:0 0 10px">Un archivo por registro patronal. BeeHuman genera el archivo; tú lo subes al IDSE y registras aquí el lote y el resultado.</p>
-      <div class="hl-grid" style="max-width:820px"><div><label>Registro patronal</label><select id="idse-rp">${activos.map((r) =>
+      <div class="idse-config"><h4>Configuración del registro patronal</h4>
+      <div class="hl-grid" style="max-width:860px"><div><label>Registro patronal</label><select id="idse-rp">${activos.map((r) =>
         `<option value="${r.id}" ${r.id === idse.rp ? 'selected' : ''}>${esc(r.registro_patronal)} · ${esc(nombreEmpresa(r.empresa_id))}</option>`).join('')}</select></div>
-        <div><label>Guía IDSE</label><input id="idse-guia" maxlength="5" inputmode="numeric" ${esAdmin() ? '' : 'disabled'}><div class="hl-meta" id="idse-guia-nota"></div></div>
+        <div><label>Guía IDSE</label><input id="idse-guia" maxlength="5" inputmode="numeric" ${esAdmin() ? '' : 'disabled'}></div>
         <div><label>Zona de salario mínimo</label><select id="idse-zona" ${esAdmin() ? '' : 'disabled'}><option value="general">General</option><option value="zlfn">Zona libre de la frontera norte</option></select></div>
         ${esAdmin() ? '<div><button type="button" class="hl-btn2" id="idse-guardar-rp">Guardar datos del RP</button></div>' : ''}</div>
+      <div class="hl-meta" id="idse-guia-nota" style="margin-top:6px"></div></div>
       <div class="hl-msg" id="idse-msg"></div>
-      <h4 style="margin:18px 0 6px">Altas y reingresos pendientes</h4><div id="idse-pend-08"></div>
-      <h4 style="margin:18px 0 6px">Bajas pendientes</h4><div id="idse-pend-02"></div>
-      <h4 style="margin:18px 0 6px">Modificaciones de salario pendientes</h4><div id="idse-pend-07"></div>
-      <h4 style="margin:18px 0 6px">Archivos generados</h4><div id="idse-arch"></div></div>`;
+      <h4 class="idse-sec">Altas y reingresos pendientes (08)</h4><div id="idse-pend-08"></div>
+      <h4 class="idse-sec">Bajas pendientes (02)</h4><div id="idse-pend-02"></div>
+      <h4 class="idse-sec">Modificaciones de salario pendientes (07)</h4><div id="idse-pend-07"></div>
+      <h4 class="idse-sec">Archivos generados</h4><div id="idse-arch"></div></div>`;
     document.getElementById('idse-rp').onchange = (e) => { idse.rp = e.target.value; abrirIdse(); };
     const g = document.getElementById('idse-guardar-rp');
     if (g) g.onclick = guardarRP;
@@ -834,17 +930,29 @@
     if (!filas.length) { pend.innerHTML = `<p class="hint">No hay ${TITULO_TIPO[tipo]} pendientes en este registro patronal.</p>`; return; }
     const sbcDe = (id) => { const m = movs.find((x) => x.id === id); return m && m.sbc != null ? Number(m.sbc).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) : '—'; };
     const causaDe = (id) => { const m = movs.find((x) => x.id === id); if (!m || !m.causa_baja) return '—'; const c = causas.find((x) => x.codigo === m.causa_baja); return m.causa_baja + (c ? ' · ' + c.descripcion : ''); };
-    let h = `<div style="overflow-x:auto"><table class="idse-tabla"><thead><tr><th><input type="checkbox" class="idse-todos" data-tipo="${tipo}" aria-label="Seleccionar todos"></th><th>Persona</th><th>${tipo === '02' ? 'Fecha de baja' : 'Fecha'}</th>${tipo === '02' ? '<th>Causa</th>' : ''}${tipo === '07' ? '<th>SBC nuevo</th>' : ''}<th>Revisión</th></tr></thead><tbody>`;
+    let h = `<div style="overflow-x:auto"><table class="idse-tabla"><thead><tr><th><input type="checkbox" class="idse-todos" data-tipo="${tipo}" aria-label="Seleccionar todos"></th><th>Persona</th><th>${tipo === '02' ? 'Fecha de baja' : 'Fecha'}</th>${tipo === '02' ? '<th>Causa</th>' : ''}${tipo === '07' ? '<th>SBC del movimiento</th>' : ''}<th>Revisión</th></tr></thead><tbody>`;
     filas.forEach((f) => {
       const okF = !(f.errores || []).length;
       h += `<tr><td><input type="checkbox" class="idse-sel" data-tipo="${tipo}" value="${f.movimiento_id}" ${okF ? '' : 'disabled'}></td><td>${esc(f.nombre)}</td><td>${fechaMx(f.fecha_movimiento)}</td>${tipo === '02' ? `<td>${esc(causaDe(f.movimiento_id))}</td>` : ''}${tipo === '07' ? `<td>${esc(sbcDe(f.movimiento_id))}</td>` : ''}
-        <td>${(f.errores || []).map((x) => `<div class="idse-err">${x.includes(':') ? esc(x) : 'Falta: ' + esc(x)}</div>`).join('')}${(f.avisos || []).map((x) => `<div class="idse-aviso">${esc(x)}</div>`).join('')}${okF && !(f.avisos || []).length ? '<span class="hl-chip vigente">Lista</span>' : ''}</td></tr>`;
+        <td>${(f.errores || []).map((x) => `<div class="idse-err">${x.includes(':') ? esc(x) : 'Falta: ' + esc(x)}</div>`).join('')}${(f.avisos || []).map((x) => `<div class="idse-aviso">${esc(x)}</div>`).join('')}${okF && !(f.avisos || []).length ? '<span class="hl-chip vigente">Lista</span>' : ''}
+          ${(() => { const m = movs.find((x) => x.id === f.movimiento_id) || {}; const e = f.errores || []; let b = '';
+            if (e.some((x) => FALTA_CAMPO[x]) && m.relacion_laboral_id) b += `<button type="button" class="hl-btn2" data-completar="rel" data-mov="${f.movimiento_id}">Completar datos de la relación laboral</button>`;
+            if (e.some((x) => FALTA_PERSONA.some(([re]) => re.test(x)))) b += `<button type="button" class="hl-btn2" data-completar="persona" data-mov="${f.movimiento_id}">Completar datos de la persona</button>`;
+            return b ? `<div class="idse-completar">${b}</div>` : ''; })()}</td></tr>`;
     });
     h += `</tbody></table></div><div class="hl-acc"><button type="button" class="primary" style="margin:0" data-generar="${tipo}">Generar archivo de ${TITULO_TIPO[tipo]} con los seleccionados</button></div>`;
     pend.innerHTML = h;
     const t = pend.querySelector('.idse-todos');
     if (t) t.onchange = () => pend.querySelectorAll('.idse-sel:not(:disabled)').forEach((c) => { c.checked = t.checked; });
     pend.querySelector('[data-generar]').onclick = () => generar(tipo);
+    pend.querySelectorAll('[data-completar]').forEach((b) => {
+      b.onclick = () => {
+        const fila = filas.find((x) => x.movimiento_id === b.dataset.mov) || {};
+        const m = movs.find((x) => x.id === b.dataset.mov) || {};
+        const errores = (fila.errores || []).filter((x) => (b.dataset.completar === 'rel' ? FALTA_CAMPO[x] : FALTA_PERSONA.some(([re]) => re.test(x))));
+        completarDesdeIdse(fila.personal_id, m.relacion_laboral_id, errores, idse.rp);
+      };
+    });
   }
 
   async function refrescarIdse() {
@@ -855,7 +963,7 @@
       sb.rpc('idse_validar', { p_registro_patronal_id: idse.rp, p_tipo: '07' }),
       sb.from('idse_archivos').select('id,nombre_archivo,num_registros,estado,lote_idse,fecha_presentacion,acuse_folio,generado_en,hash_sha256,tipo_movimiento')
         .eq('registro_patronal_id', idse.rp).order('generado_en', { ascending: false }),
-      sb.from('idse_movimientos').select('id,tipo_movimiento,causa_baja,sbc').eq('registro_patronal_id', idse.rp).in('tipo_movimiento', ['02', '07']).in('estado', ['pendiente', 'rechazado']),
+      sb.from('idse_movimientos').select('id,tipo_movimiento,causa_baja,sbc,relacion_laboral_id').eq('registro_patronal_id', idse.rp).in('estado', ['pendiente', 'rechazado']),
     ]);
     const movs = otros.data || [];
     idse.filas = [...(v08.data || []), ...(v02.data || []), ...(v07.data || [])];
@@ -930,7 +1038,10 @@
   // La ficha general no debe enviar los datos que administra Historia laboral
   // cuando esta persona ya tiene historial (la base los rechaza).
   function fichaBloqueada(personaId) { return !!personaId && fichaBloqueadaPara === personaId; }
-  window.BH_laboral = { alAbrirDetalle, trasAlta, abrirIdse, fichaBloqueada, irABandeja, trasCambioSueldo };
+  // Cambios pendientes reales en los formularios de Relación laboral y Compensación
+  // (se guardan con sus propios botones; la ficha general no los compara).
+  function formularioConDatos() { return !!document.querySelector('#rl-raiz form.hl-form[data-sucio], #sbc-raiz form.hl-form[data-sucio]'); }
+  window.BH_laboral = { alAbrirDetalle, trasAlta, abrirIdse, fichaBloqueada, irABandeja, trasCambioSueldo, formularioConDatos };
   prepararAlta();
   const bIdse = document.querySelector('nav.tabs button[data-tab="idse"]');
   if (bIdse) bIdse.addEventListener('click', () => { abrirIdse(); });

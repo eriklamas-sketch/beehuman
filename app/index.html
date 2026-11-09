@@ -3837,7 +3837,10 @@ document.getElementById('d-estatus').addEventListener('change', e => {
 
 function camposDetalle(){
   return [...document.querySelectorAll('#modal-overlay .detail-modal input, #modal-overlay .detail-modal select, #modal-overlay .detail-modal textarea')]
-    .filter(el => !el.closest('#rp-form') && !el.closest('#hl-raiz')); // Historia laboral guarda con sus propios botones
+    // Fuera de la comparación general: el formulario de registro de pago y los de Historia
+    // laboral, Relación laboral y Compensación (SDI/07), que se dibujan después de abrir la
+    // ficha y se guardan con sus propios botones. Sus cambios pendientes se revisan aparte.
+    .filter(el => !el.closest('#rp-form') && !el.closest('#hl-raiz') && !el.closest('#rl-raiz') && !el.closest('#sbc-raiz'));
 }
 function camposRegistroPago(){ return [...document.querySelectorAll('#rp-form input, #rp-form select, #rp-form textarea')]; }
 function estadoCampos(lista){
@@ -3857,6 +3860,7 @@ function estadoCampos(lista){
 })();
 function detalleTieneCambios(){
   if (detalleEstadoBase !== null && estadoCampos(camposDetalle()) !== detalleEstadoBase) return true;
+  if (window.BH_laboral && BH_laboral.formularioConDatos && BH_laboral.formularioConDatos()) return true; // ingreso, baja, corrección o 07 a medio capturar
   const clave = rpAltaId || rpEdicionId;
   return !!(clave && rpEstadoClave === clave && rpEstadoBase !== null && estadoCampos(camposRegistroPago()) !== rpEstadoBase);
 }

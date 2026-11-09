@@ -14,6 +14,12 @@ REV31 = os.path.join(S, 'reversion', '20261104000100_reversion_relacion_principa
 MIGB = os.path.join(S, 'pendiente', '20261105000000_idse_bajas.sql')
 REVB = os.path.join(S, 'reversion', '20261105000000_reversion_idse_bajas.sql')
 MIGM = os.path.join(S, 'pendiente', '20261105000100_idse_modificaciones.sql')
+MIGH = os.path.join(S, 'pendiente', '20261107000000_laboral_historial_tipo_email.sql')
+REVH = os.path.join(S, 'reversion', '20261107000000_reversion_laboral_historial_tipo_email.sql')
+MIG07 = os.path.join(S, 'pendiente', '20261108000200_modificacion_salario_reglas.sql')
+REV07 = os.path.join(S, 'reversion', '20261108000200_reversion_modificacion_salario_reglas.sql')
+SIN_CORRECCION = bool(os.environ.get('BH_SIN_CORRECCION'))   # demostración: corre sin la corrección del 7-nov
+DEF_HIST = "select md5(pg_get_functiondef('public.laboral_historial(uuid)'::regprocedure))"
 REVM = os.path.join(S, 'reversion', '20261105000100_reversion_idse_modificaciones.sql')
 DEF_IDSE = "select md5(pg_get_functiondef('public.idse_validar(uuid,text)'::regprocedure) || pg_get_functiondef('public.idse_generar_archivo(uuid,text,uuid[])'::regprocedure))"
 DEF_PRINCIPAL = "select md5(pg_get_functiondef('public.laboral_relacion_principal(uuid)'::regprocedure))"
@@ -123,6 +129,14 @@ ok('ERROR' not in salidab, 'bajas IDSE (02) se aplica sin errores', salidab[sali
 def_idse_bajas = val(DEF_IDSE)
 salidam = archivo(MIGM)
 ok('ERROR' not in salidam, 'modificaciones IDSE (07) se aplica sin errores', salidam[salidam.find('ERROR'):][:150])
+def_hist_v3 = val(DEF_HIST)
+if SIN_CORRECCION:
+    print('    (modo demostración: NO se aplica la corrección de laboral_historial)')
+else:
+    salidah = archivo(MIGH)
+    ok('ERROR' not in salidah, 'corrección de tipo en laboral_historial se aplica sin errores', salidah[salidah.find('ERROR'):][:150])
+    salida07 = archivo(MIG07)
+    ok('ERROR' not in salida07, 'reglas de la modificación de salario (8-nov) se aplican sin errores', salida07[salida07.find('ERROR'):][:150])
 ok('ERROR' not in salida, 'la migración se aplica sin errores')
 ok(val("select md5(string_agg(to_jsonb(p)::text, '' order by id)) from public.personal p") == antes_personal,
    'la migración no modifica ninguna fila de personal')
@@ -420,6 +434,32 @@ ok(val(f"select nombre_archivo like 'IDSE_MODIFICACIONES_Y1234567101_%.dat' from
 ok(val(f"select string_agg(distinct estado||':'||(archivo_id='{am}'), ',') from public.idse_movimientos where id in ('{mm['M1']}','{mm['M2']}')") == 'en_archivo:true', 'las modificaciones quedan en_archivo y ligadas a su archivo')
 falla_con(f"select public.laboral_anular_evento((select evento_id from public.idse_movimientos where id='{mm['M1']}'),'x')", 'admin', 'en_archivo', 'una modificación que ya está en un archivo no se anula')
 
+print('--- Tipos devueltos frente a tipos declarados (compatibilidad con Supabase)')
+ok(val("select format_type(atttypid, atttypmod) from pg_attribute where attrelid = 'auth.users'::regclass and attname = 'email'") == 'character varying(255)',
+   'la simulación local usa el tipo de Supabase para auth.users.email: character varying(255)')
+inventario = val("""select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  join pg_language l on l.oid = p.prolang where n.nspname = 'public' and p.proretset and l.lanname = 'plpgsql'
+  and pg_get_function_result(p.oid) ilike 'TABLE(%'""")
+ok(inventario == 'idse_validar,laboral_historial', 'todas las funciones PL/pgSQL que devuelven tabla están cubiertas (las de SQL puro se validan al crearse)', inventario)
+def sin_error_tipo(q, rol):
+    out, err = sql(q, rol)
+    return ('ERROR' not in err), (err.split('\n')[0][:170] if err else (out.splitlines()[-1] if out else ''))
+casos = [('P1', 'con RP'), ('P2', 'dos relaciones'), ('P3', 'en baja'), ('P5', 'solo efectivo'), ('P4', 'sin relación')]
+for rol in ['admin', 'nomina', 'consulta', 'coord']:
+    fallas = []
+    for k, d in casos:
+        bien, det = sin_error_tipo(f"select count(*) from public.laboral_historial('{P[k]}')", rol)
+        if not bien: fallas.append(f'{k} ({d}): {det}')
+    ok(not fallas, f'laboral_historial responde sin error de tipos — {rol}, 5 casos', '; '.join(fallas)[:230])
+bien, det = sin_error_tipo(f"select string_agg(distinct pg_typeof(registrado_por)::text, ',') from public.laboral_historial('{P['P1']}')", 'admin')
+ok(bien and det == 'text', 'columna 19 (registrado_por) se devuelve como text', det)
+for t in ('08', '02', '07'):
+    bien, det = sin_error_tipo(f"select count(*) from public.idse_validar('{RP1}','{t}')", 'admin')
+    ok(bien, f'idse_validar {t} responde sin error de tipos', det)
+if SIN_CORRECCION:
+    print(f"\nMODO DEMOSTRACIÓN (sin corrección): {sum(1 for _, c in res if c)}/{len(res)} correctas hasta este punto; se detiene aquí.")
+    sys.exit(0)
+
 print('--- Historial por rol y aislamiento')
 h = val(f"select count(*)||'|'||bool_or(valores_nuevos ? 'sbc') from public.laboral_historial('{P['P1']}')", 'admin')
 ok(h.endswith('|true'), 'Administrador ve el historial con importes', h)
@@ -440,6 +480,19 @@ ok(val("select public.parametro_vigente('UMA_DIARIA','2026-01-15')||'|'||public.
 falla_con("insert into public.parametros_generales (clave, valor, vigente_desde, fuente) values ('UMA_DIARIA', 1, '2026-06-01', 'x')", None, 'conflicting key', 'no se traslapan vigencias de un parámetro')
 
 print('--- Reversión')
+if not SIN_CORRECCION:
+    salida = archivo(REV07)
+    ok('ERROR' not in salida, 'la reversión de las reglas de la modificación de salario se aplica primero', salida[salida.find('ERROR'):][:150])
+def_hist_corr = val(DEF_HIST)
+salida = archivo(REVH)
+ok('ERROR' not in salida and val(DEF_HIST) == def_hist_v3 and def_hist_corr != def_hist_v3,
+   'la reversión de la corrección restaura exactamente laboral_historial de la v3', salida[salida.find('ERROR'):][:150])
+falla_con(f"select count(*) from public.laboral_historial('{P['P1']}')", 'admin', 'does not match function result type',
+          'tras revertir vuelve el error 42804 (la prueba sí lo detecta con la simulación fiel)')
+salida = archivo(MIGH)
+ok('ERROR' not in salida and val(DEF_HIST) == def_hist_corr, 'la corrección se vuelve a aplicar idéntica (reaplicable)')
+salida = archivo(REVH)
+ok('ERROR' not in salida and val(DEF_HIST) == def_hist_v3, 'y se revierte de nuevo antes de las demás reversiones')
 salida = archivo(REVM)
 ok('ERROR' not in salida and val(DEF_IDSE) == def_idse_bajas and val("select to_regprocedure('public.idse_linea_modificacion(uuid,text)') is null") == 't',
    'la reversión de modificaciones restaura exactamente la versión de bajas y quita idse_linea_modificacion', salida[salida.find('ERROR'):][:150])

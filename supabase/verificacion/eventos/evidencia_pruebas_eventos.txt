@@ -1,3 +1,4 @@
+# pruebas_eventos · 09-nov-2026 · base local (Postgres 16 :55432, TimeZone=UTC; PostgREST :3010), datos sintéticos; árbol local de integracion/app (sin commit)
 --- Migración
 NOTICE:  extension "btree_gist" already exists, skipping
 NOTICE:  schema "respaldo" already exists, skipping
@@ -9,6 +10,9 @@ NOTICE:  NSS repetidos en un mismo RP entre relaciones vigentes: 0
 OK    v3.1 (relación principal con RP) se aplica sin errores
 OK    bajas IDSE (02) se aplica sin errores
 OK    modificaciones IDSE (07) se aplica sin errores
+OK    corrección de tipo en laboral_historial se aplica sin errores
+OK    reglas de la modificación de salario (8-nov) se aplican sin errores  [
+]
 OK    la migración se aplica sin errores
 OK    la migración no modifica ninguna fila de personal
 OK    registros de pago: solo cambia el enlace (sin sellar autoría)
@@ -46,8 +50,8 @@ OK    Consulta no lee las tablas directo (ve el historial por la función)
 OK    Coordinador no lee archivos IDSE
 --- Ingreso, reglas y sincronización de la ficha
 OK    RP de otra empresa: rechazado  [ERROR:  BeeHuman: el registro patronal no pertenece a la empresa.]
-OK    SBC arriba de 25 UMA: rechazado  [ERROR:  BeeHuman: el SBC 10000 rebasa el tope de 25 UMA (2932.75) vigente al 2026-10-01.]
-OK    SBC abajo del salario mínimo: rechazado  [ERROR:  BeeHuman: el SBC 200 es menor al salario mínimo general (315.0400) vigente al 2026-10-01.]
+OK    SBC arriba de 25 UMA: rechazado  [ERROR:  BeeHuman: el SBC $10,000.00 rebasa el tope de 25 UMA ($2,932.75) vigente al 01/10/2026. Usa el tope como SBC y, si aplica, registra el salario]
+OK    SBC abajo del salario mínimo: rechazado  [ERROR:  BeeHuman: el SBC $200.00 es menor al salario mínimo general ($315.04) vigente al 01/10/2026. Aun con jornada o semana reducida, el SBC se ajus]
 OK    mismo NSS vigente en el RP con otra ficha: rechazado  [ERROR:  BeeHuman: el NSS 12345678901 ya tiene una relación vigente en este registro patronal con otra ficha (posible persona duplicada).]
 OK    Nómina registra un ingreso
 OK    el ingreso conserva su fecha aunque se reconozca antigüedad anterior
@@ -96,15 +100,15 @@ OK    H3: una modificación anterior a la última vigente: rechazada  [ERROR:  B
 OK    H3: misma fecha que la última: rechazada  [ERROR:  BeeHuman: la modificación debe ser posterior a la última modificación de salario vigente (2026-09-20).]
 OK    H2: la ficha refleja solo la relación principal (sin SDI, alta, número ni antigüedad de la anterior)
 OK    H2: sin relaciones vigentes la ficha muestra la última baja
-OK    H5: en un RP de la frontera norte el piso es el salario mínimo de la ZLFN  [ERROR:  BeeHuman: el SBC 400 es menor al salario mínimo de la zona libre de la frontera norte (440.8700) vigente al 2026-10-01.]
+OK    H5: en un RP de la frontera norte el piso es el salario mínimo de la ZLFN  [ERROR:  BeeHuman: el SBC $400.00 es menor al salario mínimo de la zona libre de la frontera norte ($440.87) vigente al 01/10/2026. Aun con jornada o s]
 OK    H5: con SBC sobre el mínimo de la ZLFN se acepta
 --- V3: hallazgos de la segunda revisión
 OK    V3-1: migración: esquema sin RP con dos relaciones en la empresa queda sin enlazar
 OK    V3-1: un ingreso nuevo sin RP no se queda con un esquema ambiguo
 OK    V3-3: ingreso corregido después de la baja: rechazado  [ERROR:  BeeHuman: la fecha de ingreso (2025-09-30) no puede ser posterior a la baja de la relación (2025-08-31).]
 OK    V3-3: ingreso corregido vacío: rechazado  [ERROR:  BeeHuman: la fecha de ingreso corregida no puede quedar vacía.]
-OK    V3-3: SBC corregido arriba del tope: rechazado  [ERROR:  BeeHuman: el SBC 10000 rebasa el tope de 25 UMA (2828.50) vigente al 2025-05-01.]
-OK    V3-3: SBC corregido abajo del mínimo de su fecha: rechazado  [ERROR:  BeeHuman: el SBC 100 es menor al salario mínimo general (278.8000) vigente al 2025-05-01.]
+OK    V3-3: SBC corregido arriba del tope: rechazado  [ERROR:  BeeHuman: el SBC $10,000.00 rebasa el tope de 25 UMA ($2,828.50) vigente al 01/05/2025. Usa el tope como SBC y, si aplica, registra el salario]
+OK    V3-3: SBC corregido abajo del mínimo de su fecha: rechazado  [ERROR:  BeeHuman: el SBC $100.00 es menor al salario mínimo general ($278.80) vigente al 01/05/2025. Aun con jornada o semana reducida, el SBC se ajus]
 OK    V3-3: SBC corregido dentro de límites: aceptado
 --- V3.1: relación principal
 OK    V3.1: quien solo tenía relación de efectivo y recibe alta IMSS: la ficha muestra la relación con RP
@@ -114,7 +118,7 @@ OK    V3.1: si la empresa de la ficha ya no tiene relación vigente, la ficha pa
 OK    sin guía IDSE la validación lo señala  [2|true]
 OK    con errores no se genera nada  [ERROR:  BeeHuman: faltan datos para el archivo IDSE — PERSONA P4: El registro patronal no tiene número de guía IDSE | PERSONA P7: El registro patronal]
 OK    la Ñ se avisa antes de generar
-OK    H6: un movimiento de otro RP en la selección: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: fe8b7e8c-4bf9-419c-baa8-7243cdb932e8]
+OK    H6: un movimiento de otro RP en la selección: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: 89e98790-aa22-4a16-96ea-425c1167b383]
 OK    H6: selección con repetidos: rechazada  [ERROR:  BeeHuman: la selección tiene movimientos repetidos.]
 OK    H6: selección vacía: rechazada  [ERROR:  BeeHuman: no seleccionaste movimientos.]
 OK    H6: ninguna selección inválida dejó archivo
@@ -139,7 +143,7 @@ OK    el contenido de un archivo generado no cambia  [ERROR:  BeeHuman: el conte
 OK    la baja no exige CURP, SBC, tipos ni UMF (B2 no tiene CURP y está lista)  [af100000-0000-4000-8000-000000000002= # af100000-0000-4000-8000-000000000003=Número interno (clave del trabajador) # af100000-0000-4000-8000-000000000001=]
 OK    la baja sí exige la clave del trabajador
 OK    la Ñ también se avisa en bajas
-OK    un alta en la selección de bajas: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: 175bcd85-eca8-4bf8-a746-fc8ed3bf3a46]
+OK    un alta en la selección de bajas: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: 81e5c142-a546-4cc4-b7f5-d2c2fd8425bf]
 OK    una baja sin clave no se genera  [ERROR:  BeeHuman: faltan datos para el archivo IDSE — SIN CLAVE PRUEBA: Número interno (clave del trabajador)]
 OK    Consulta no genera bajas  [ERROR:  BeeHuman: tu rol no permite esta operación.]
 OK    Coordinador no genera bajas  [ERROR:  BeeHuman: tu rol no permite esta operación.]
@@ -156,7 +160,7 @@ OK    la bandeja de altas no mezcla bajas
 --- IDSE modificaciones de salario (07)
 OK    la modificación con CURP, SBC, tipos y clave queda lista (no pide UMF)  [{'af200000-0000-4000-8000-000000000001': '', 'af200000-0000-4000-8000-000000000002': '', 'af200000-0000-4000-8000-000000000003': 'CURP válida'}]
 OK    la modificación sí exige CURP  [CURP válida]
-OK    una baja en la selección de modificaciones: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: d762f08e-ef1a-46ce-9ca1-9b5e0e5dc920]
+OK    una baja en la selección de modificaciones: no se genera nada  [ERROR:  BeeHuman: estos movimientos no están disponibles para este registro patronal y tipo: ea88a3ec-b766-4992-9366-f966cd1ecbc2]
 OK    Consulta no genera modificaciones  [ERROR:  BeeHuman: tu rol no permite esta operación.]
 OK    un tipo de movimiento inexistente se rechaza  [ERROR:  BeeHuman: tipo de movimiento IDSE no válido (09).]
 OK    archivo de modificaciones: 2 + final, 168 posiciones y CRLF  [[168, 168, 168]]
@@ -167,6 +171,17 @@ OK    renglón final de modificaciones: total y guía
 OK    nombre del archivo: IDSE_MODIFICACIONES_<RP>_<fecha>.dat
 OK    las modificaciones quedan en_archivo y ligadas a su archivo
 OK    una modificación que ya está en un archivo no se anula  [ERROR:  BeeHuman: el movimiento IDSE está en_archivo; cancela el archivo o, si ya se presentó, corrígelo ante el IMSS.]
+--- Tipos devueltos frente a tipos declarados (compatibilidad con Supabase)
+OK    la simulación local usa el tipo de Supabase para auth.users.email: character varying(255)
+OK    todas las funciones PL/pgSQL que devuelven tabla están cubiertas (las de SQL puro se validan al crearse)  [idse_validar,laboral_historial]
+OK    laboral_historial responde sin error de tipos — admin, 5 casos
+OK    laboral_historial responde sin error de tipos — nomina, 5 casos
+OK    laboral_historial responde sin error de tipos — consulta, 5 casos
+OK    laboral_historial responde sin error de tipos — coord, 5 casos
+OK    columna 19 (registrado_por) se devuelve como text  [text]
+OK    idse_validar 08 responde sin error de tipos  [6]
+OK    idse_validar 02 responde sin error de tipos  [1]
+OK    idse_validar 07 responde sin error de tipos  [1]
 --- Historial por rol y aislamiento
 OK    Administrador ve el historial con importes  [2|true]
 OK    Consulta ve el historial sin importes  [2|false]
@@ -182,6 +197,11 @@ OK    solo el Administrador registra la prima  [ERROR:  BeeHuman: tu rol no perm
 OK    la UMA cambia el 1 de febrero
 OK    no se traslapan vigencias de un parámetro  [ERROR:  conflicting key value violates exclusion constraint "parametros_generales_clave_daterange_excl"]
 --- Reversión
+OK    la reversión de las reglas de la modificación de salario se aplica primero
+OK    la reversión de la corrección restaura exactamente laboral_historial de la v3
+OK    tras revertir vuelve el error 42804 (la prueba sí lo detecta con la simulación fiel)  [ERROR:  structure of query does not match function result type]
+OK    la corrección se vuelve a aplicar idéntica (reaplicable)
+OK    y se revierte de nuevo antes de las demás reversiones
 OK    la reversión de modificaciones restaura exactamente la versión de bajas y quita idse_linea_modificacion
 OK    tras revertir, las modificaciones vuelven a estar bloqueadas  [ERROR:  BeeHuman: el archivo de modificaciones se habilita cuando confirmemos el formato con un archivo real.]
 OK    el archivo de modificaciones ya generado se conserva tras revertir
@@ -202,4 +222,4 @@ OK    V3-2: la guía IDSE capturada en un RP también bloquea la reversión  [ER
 OK    tras confirmar, el esquema público queda como antes (se conservan el respaldo y btree_gist)
 OK    el respaldo de la ficha se conserva tras revertir
 
-179/179 pruebas correctas
+196/196 pruebas correctas

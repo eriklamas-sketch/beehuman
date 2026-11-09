@@ -1,0 +1,48 @@
+# pruebas_idse_validadores · 09-nov-2026 · base local (Postgres 16 :55432, TimeZone=UTC; PostgREST :3010), datos sintéticos; árbol local de integracion/app (sin commit)
+--- Dependencia
+OK    sin la migración de fechas no se aplica  [ERROR:  BeeHuman: falta la migración 20261109000000_fechas_hora_mexico; aplícala primero.
+CONTEXT:  PL/pgSQL function in]
+OK    antes de la migración: sin guía no se genera (comportamiento anterior)  [ERROR:  BeeHuman: faltan datos para el archivo IDSE — PAOLA GARCIA LOPEZ: El registro patronal no tiene número]
+--- Migración
+OK    aplica sin errores (después de la de fechas)  [
+]
+OK    una segunda aplicación se rechaza
+--- NSS: 11 dígitos y dígito verificador
+OK    11111111115: válido
+OK    11111111111: dígito verificador incorrecto
+OK    00000000007: el NSS sintético de PERSONA PILOTO 0007
+OK    00000000000: todo ceros es aritméticamente válido (lo rechaza el IMSS, no la fórmula)
+OK    1111111111: 10 dígitos
+OK    1111111111A: con letra
+OK    22222222220: válido
+OK    33333333335: válido
+OK    NSS vacío: no válido
+OK    es_nss_valido (expediente) no cambia: solo revisa 11 dígitos
+--- Bandeja: errores claros
+     {'PAOLA GARCIA LOPEZ': '', 'PEDRO MORALES LOPEZ': 'NSS inválido: el dígito verificador no corresponde; revisa los 11 dígitos', 'PERSONA 0007 PILOTO LOPEZ': 'Nombre con dígitos: el IMSS no acepta números en el nombre ni en los apellidos'}
+OK    persona con NSS válido: sin errores
+OK    NSS con dígito verificador incorrecto: error claro
+OK    nombre con dígitos: error claro
+OK    la guía ya no aparece como error
+--- La generación se impide con esos errores
+OK    con NSS inválido no se genera el archivo  [ERROR:  BeeHuman: faltan datos para el archivo IDSE — PEDRO MORALES LOPEZ: NSS inválido: el dígito verificador no corres]
+OK    con nombre con dígitos no se genera el archivo  [ERROR:  BeeHuman: faltan datos para el archivo IDSE — PERSONA 0007 PILOTO LOPEZ: Nombre con dígitos: el IMSS no acepta n]
+OK    una selección que incluye un movimiento con error no genera nada (ni los buenos)
+--- Guía 00000 por omisión
+OK    sin guía configurada: el archivo lleva 00000 en el movimiento y en el renglón final  [00000 · 00000|00000 · ]
+OK    con guía capturada por el Administrador se usa esa guía  [40001|40001|40001]
+OK    Nómina no puede cambiar la guía  [{"sub": "cb200000-0000-4000-8000-000000000002"}]
+--- Reversión
+OK    la de fechas no se puede revertir antes que esta (orden protegido)  [ERROR:  BeeHuman: idse_validar(uuid,text) cambió después de la migración; revierte primero la migración posterior.
+CONTE]
+OK    la reversión deja el esquema idéntico al de antes
+OK    los archivos ya generados se conservan
+OK    se puede volver a aplicar y queda igual  [
+]
+OK    TOTAL: 28/28 pruebas OK
+
+== compara_dat_cadena_completa.py (todas las migraciones pendientes, RP SIN guía → 00000 por omisión)
+Alta 08 (aceptada por el IMSS, 3-nov): IDÉNTICOS byte a byte
+Bajas 02 (4-nov): IDÉNTICOS byte a byte
+Modificaciones 07 (4-nov): IDÉNTICOS byte a byte
+(las referencias tienen datos reales y se quedan fuera del repositorio; no se transcriben los nombres de archivo generados)

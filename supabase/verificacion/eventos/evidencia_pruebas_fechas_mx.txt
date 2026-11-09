@@ -1,0 +1,55 @@
+# pruebas_fechas_mx (4 corridas: 38/39 en una corrida encadenada, sin detalle guardado; 39/39 en las 3 siguientes) · 09-nov-2026 · base local (Postgres 16 :55432, TimeZone=UTC; PostgREST :3010), datos sintéticos; árbol local de integracion/app (sin commit)
+--- Migración
+OK    aplica sin errores  [
+]
+OK    guarda: ninguna función usa current_date
+OK    las 5 funciones del inventario usan public.hoy_mx()  [idse_validar,inc_asignacion_desde_expediente,laboral_corregir_datos,laboral_evento_por_ficha,laboral_evento_por_registro_pago]
+OK    los 3 valores por omisión usan hoy_mx()  [personal.fecha_asignacion=hoy_mx() ; personal_registros_pago.fecha_inicio=hoy_mx() ; inc_parametros.inicio_historial=hoy_mx()]
+OK    respaldo con las 8 definiciones originales (5 funciones + 3 valores)
+OK    una segunda aplicación se rechaza
+--- Límites del día (hora de México, servidor en UTC)
+OK    fecha_mx 2026-11-08 05:59:59+00 → 2026-11-07 (23:59:59 del 07 en México)  [2026-11-07]
+OK    fecha_mx 2026-11-08 06:00:00+00 → 2026-11-08 (00:00 del 08 en México)  [2026-11-08]
+OK    fecha_mx 2026-11-08 01:20:00+00 → 2026-11-07 (19:20 del 07 (el caso de la incidencia))  [2026-11-07]
+OK    fecha_mx 2026-11-07 23:59:00+00 → 2026-11-07 (17:59 del 07)  [2026-11-07]
+OK    fecha_mx 2026-12-31 23:30:00+00 → 2026-12-31 (17:30 del 31 de diciembre)  [2026-12-31]
+OK    fecha_mx 2027-01-01 05:59:00+00 → 2026-12-31 (fin de año: 23:59 del 31 en México)  [2026-12-31]
+OK    fecha_mx 2026-03-01 05:30:00+00 → 2026-02-28 (cambio de mes)  [2026-02-28]
+OK    hoy_mx() = fecha de México de este momento
+OK    no depende de la zona de la sesión (Tokio da el mismo resultado)
+--- Las funciones toman la fecha de México
+OK    cambio de sueldo: el acontecimiento automático lleva hoy_mx(), no current_date  [2026-11-05]
+OK    corrección de datos: la fecha del acontecimiento es hoy_mx()  [00-0000-4000-8000-000000000001"}
+eb900d8a-51e0-493f-a553-327813498a5b
+2026-11-05]
+OK    alta de persona: fecha_asignacion por omisión = hoy_mx()  [2026-11-05]
+--- Auditoría: se documenta, no se modifica
+OK    la bitácora queda intacta (misma huella antes y después)
+    auditoría: eventos_laborales:noche2:2026-11-08→2026-11-07 | eventos_laborales:noche1:2026-11-08→2026-11-07 | personal:persona:2026-11-07→2026-11-06 | personal:persona:2026-11-07→2026-11-06 | personal:persona:2026-11-08→2026-11-07 | personal:persona:2026-11-08→2026-11-07
+OK    se registran solo los 2 acontecimientos nocturnos (no el de la tarde ni la fecha escrita por el usuario)
+OK    su fecha correcta es la del día anterior
+OK    se registran las 4 fechas de asignación adelantadas (no la de control)  [4]
+OK    la auditoría no es accesible desde la aplicación (ni authenticated ni anon)
+--- Corrección de fecha_asignacion (script de datos)
+OK    con un conteo distinto al esperado (4 ≠ 6) no cambia nada  [ERROR:  BeeHuman: se encontraron 4 fechas de asignación adelantadas y se esperaban 6; no se cambió nada.
+CONTEXT:  PL/pg]
+OK    con el conteo correcto corrige las 4  [
+]
+OK    cada fecha queda en el día de México del alta  [FMX-C=2026-11-07,FMX-T1=2026-11-07,FMX-T2=2026-11-06,FMX-T3=2026-11-07,FMX-T4=2026-11-06]
+OK    la persona de control (17:00) no cambia
+OK    cada cambio queda en Movimientos con valor anterior y nuevo, como «sistema»
+OK    una segunda ejecución se rechaza
+OK    la bitácora sigue intacta
+OK    reversión del script: las fechas vuelven a su valor anterior  [
+]
+OK    la reversión deja constancia en Movimientos y no borra la traza
+--- Reversión de la migración
+OK    la reversión se aplica sin errores
+OK    el esquema vuelve a ser idéntico al de antes de la migración
+OK    los valores por omisión vuelven a current_date  [personal.fecha_asignacion=CURRENT_DATE ; personal_registros_pago.fecha_inicio=CURRENT_DATE ; inc_parametros.inicio_historial=CURRENT_DATE]
+OK    la bitácora no cambia
+OK    la auditoría se conserva renombrada (traza)
+OK    se puede volver a aplicar y queda igual  [
+]
+OK    guarda: si una función cambió después, la reversión no se ejecuta
+OK    TOTAL: 39/39 pruebas OK

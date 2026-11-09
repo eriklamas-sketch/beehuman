@@ -43,7 +43,7 @@ create schema if not exists auth;
 grant usage on schema auth to anon, authenticated, service_role;
 create table if not exists auth.users (
   id uuid primary key,
-  email text
+  email character varying(255)   -- mismo tipo que en Supabase (no text): evita que la base local oculte errores de tipo
 );
 -- Misma definición que usa Supabase: lee el claim «sub» de la sesión.
 create or replace function auth.uid() returns uuid

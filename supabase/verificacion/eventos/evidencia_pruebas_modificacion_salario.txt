@@ -1,0 +1,31 @@
+# pruebas_modificacion_salario (con fechas y validadores aplicadas después) · 09-nov-2026 · base local (Postgres 16 :55432, TimeZone=UTC; PostgREST :3010), datos sintéticos; árbol local de integracion/app (sin commit)
+--- Migración
+OK    aplica sin errores  [
+]
+OK    no modifica eventos ni movimientos IDSE existentes
+OK    una segunda aplicación se rechaza
+--- D3: disminución del SBC
+OK    baja de SBC sin motivo: rechazada, con importes formateados  [ERROR:  BeeHuman: el nuevo SBC ($1,100.00) es menor que el vigente ($1,250.00). Escribe la justificación en el motivo (al menos 5 caracteres).]
+OK    motivo de menos de 5 caracteres: rechazado  [ERROR:  BeeHuman: el nuevo SBC ($1,100.00) es menor que el vigente ($1,250.00). Escribe la justificación en el motivo (al menos 5 caracteres).]
+    detalle: Convenio de reducción de jornada firmado|1250.00→1100
+OK    con justificación se registra; el motivo queda en el evento
+OK    el 07 queda pendiente en la bandeja (no se genera archivo)
+OK    un aumento no exige motivo
+--- Sin SBC vigente (dato migrado)
+OK    se registra sin inventar el anterior y sin pedir motivo  [(no registrado)→500]
+--- D2: tope de 25 UMA a la fecha efectiva
+OK    enero 2026: UMA 113.14 → tope $2,828.50; $2,900 rechazado  [ERROR:  BeeHuman: el SBC $2,900.00 rebasa el tope de 25 UMA ($2,828.50) vigente al 15/01/2026. Usa el tope como SBC y, si aplica, registra el salario diario integrado real como SDI.]
+OK    febrero 2026: UMA 117.31 → tope $2,932.75; $2,900 aceptado
+OK    un centavo arriba del tope: rechazado  [ERROR:  BeeHuman: el SBC $2,932.76 rebasa el tope de 25 UMA ($2,932.75) vigente al 01/03/2026. Usa el tope como SBC y, si aplica, registra el salario diario integrado real como SDI.]
+OK    «Usar el tope»: SBC = tope y el SDI real se conserva aparte (no se mezclan)  [2932.75/3500.00]
+OK    el rechazo del tope lleva la pista «sbc_tope» para la pantalla  [PL/pgSQL function public.laboral_modificar_salario(uuid,date,numeric,numeric,tex]
+--- D4: salario mínimo
+OK    debajo del mínimo general 2026 ($315.04): rechazado aun con motivo  [ERROR:  BeeHuman: el SBC $300.00 es menor al salario mínimo general ($315.04) vigente al 01/03/2026. Aun con jornada o semana reducida, el SBC se ajusta al mínimo.]
+OK    RP de la frontera norte: el piso es el mínimo de la ZLFN  [ERROR:  BeeHuman: el SBC $420.00 es menor al salario mínimo de la zona libre de la frontera norte ($440.87) vigente al 01/03/2026. Aun con jornada o semana reducida, el SBC se ajusta al míni]
+OK    el mensaje explica que la jornada reducida también se ajusta al mínimo
+--- Reversión
+OK    la reversión se aplica sin errores
+OK    el esquema vuelve a ser idéntico al de antes de la migración
+OK    los movimientos registrados después se conservan íntegros
+OK    se puede volver a aplicar y queda igual
+OK    TOTAL: 21/21 pruebas OK

@@ -1,0 +1,5 @@
+# Estado de beehuman-pruebas frente al inventario · 09-nov-2026 13:5x (solo lectura)
+Funciones de public: 82 en pruebas y 82 en la base local con las mismas migraciones; huella sin comentarios ni espacios IDÉNTICA en las 82.
+Consulta usada (en ambos lados):
+select p.oid::regprocedure::text || '|' || md5(regexp_replace(regexp_replace(pg_get_functiondef(p.oid), '--[^\n]*', '', 'g'), '\s+', '', 'g'))
+from pg_proc p where p.pronamespace = 'public'::regnamespace and p.prokind = 'f' order by 1;

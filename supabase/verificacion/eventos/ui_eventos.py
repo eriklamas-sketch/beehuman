@@ -39,6 +39,14 @@ def ficha(pg, nombre, seccion='historia'):
 def msg(pg, sel='#hl-msg'): return (pg.text_content(sel) or '').strip()  # #rl-msg: relación laboral · #sbc-msg: Compensación
 def foto(pg, nombre): pg.screenshot(path=os.path.join(OUT, nombre + '.png'), full_page=False)
 
+def enviar(pg, f):
+    """Envía el formulario. Con una confirmación obligatoria sin marcar el botón está inactivo (10-nov):
+    entonces se fuerza el envío para comprobar que la lógica de envío también lo impide."""
+    if pg.is_disabled(f + ' button[type=submit]'):
+        pg.eval_on_selector(f, 'fm => { fm.querySelector("button[type=submit]").disabled = false; fm.requestSubmit(); }')
+    else:
+        pg.click(f + ' button[type=submit]')
+
 with sync_playwright() as p:
     b = p.chromium.launch()
     ctx, pg = abrir(b, 'admin')
@@ -57,7 +65,7 @@ with sync_playwright() as p:
     pg.fill(f + ' [name=sdi]', '450'); pg.fill(f + ' [name=umf]', '012')
     pg.select_option(f + ' [name=tipo_trabajador]', '1'); pg.select_option(f + ' [name=tipo_salario]', '0'); pg.select_option(f + ' [name=jornada]', '0')
     pg.fill(f + ' [name=motivo]', 'Datos del expediente IMSS')
-    pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
+    enviar(pg, f); pg.wait_for_timeout(1800)
     ok('Corrección registrada' in msg(pg, '#rl-msg'), 'corregir datos de una relación migrada', msg(pg, '#rl-msg'))
     pg.click('[data-detail-tab="historia"]'); pg.wait_for_timeout(600)
     ev = pg.eval_on_selector('.hl-ev:has-text("Corrección de datos") .hl-tabla', 't => [...t.querySelectorAll("tbody tr")].map(r => [...r.cells].map(c => c.innerText.trim()).join("|"))') if pg.query_selector('.hl-ev:has-text("Corrección de datos")') else []
@@ -83,11 +91,11 @@ with sync_playwright() as p:
     ok('crea una relación laboral adicional' in av and 'sin registro patronal' in av and pg.is_visible(f + ' [name=confirma_adicional]'),
        'ya tiene relación vigente sin RP en la empresa: el ingreso avisa que crea una relación adicional y pide confirmarlo', av[:160])
     n_rel = pg.locator('#rl-raiz .hl-card').count()
-    pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(600)
+    enviar(pg, f); pg.wait_for_timeout(600)
     ok('Confirma que se creará una relación laboral adicional' in msg(pg, '#rl-msg') and pg.locator('#rl-raiz .hl-card').count() == n_rel,
        'sin confirmar no se registra el ingreso')
     pg.check(f + ' [name=confirma_adicional]')
-    pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2000)
+    enviar(pg, f); pg.wait_for_timeout(2000)
     t = pg.text_content('#rl-raiz') or ''
     ok('Ingreso registrado' in msg(pg, '#rl-msg') and 'RP Y1234567101' in t and 'pendiente en la bandeja IDSE del registro patronal Y1234567101' in msg(pg, '#rl-msg'),
        'ingreso registrado: el aviso nombra el RP y el 08 pendiente', msg(pg, '#rl-msg'))
@@ -99,7 +107,7 @@ with sync_playwright() as p:
     pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(500)
     pg.click(f'[data-sbc="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#sbc-form-{rel} form'
-    pg.fill(f + ' [name=fecha]', '2026-10-25'); pg.fill(f + ' [name=sdi]', '410'); pg.wait_for_timeout(500); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
+    pg.fill(f + ' [name=fecha]', '2026-10-25'); pg.fill(f + ' [name=sdi]', '410'); pg.wait_for_timeout(500); enviar(pg, f); pg.wait_for_timeout(1800)
     ok('Modificación de salario registrada' in msg(pg, '#sbc-msg'), 'modificación de salario (desde Compensación)', msg(pg, '#sbc-msg'))
     pg.click('[data-detail-tab="historia"]'); pg.wait_for_timeout(500)
     ok(pg.locator('#hl-raiz [data-anular], #hl-raiz form, #hl-raiz input, #hl-raiz button[type=submit]').count() == 0
@@ -117,7 +125,7 @@ with sync_playwright() as p:
     pg.click('[data-detail-tab="laboral"]'); pg.wait_for_timeout(500)
     pg.click(f'[data-accion="baja"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#hl-form-{rel} form'
-    pg.fill(f + ' [name=fecha]', '2026-10-21'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1500)
+    pg.fill(f + ' [name=fecha]', '2026-10-21'); pg.check(f + ' [name=confirma]'); enviar(pg, f); pg.wait_for_timeout(1500)
     ok('causa' in msg(pg, '#rl-msg').lower(), 'baja sin causa: la base la rechaza y la pantalla lo explica', msg(pg, '#rl-msg'))
     pg.click(f'#hl-form-{rel} [data-cancelar]')
 
@@ -181,7 +189,7 @@ with sync_playwright() as p:
     pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(500)
     pg.click(f'[data-sbc="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#sbc-form-{rel} form'
-    pg.fill(f + ' [name=fecha]', '2026-10-28'); pg.fill(f + ' [name=sdi]', '3000'); pg.wait_for_timeout(600); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
+    pg.fill(f + ' [name=fecha]', '2026-10-28'); pg.fill(f + ' [name=sdi]', '3000'); pg.wait_for_timeout(600); enviar(pg, f); pg.wait_for_timeout(1800)
     ok('Modificación de salario registrada' in msg(pg, '#sbc-msg') and 'con SBC $2,932.75 (tope de 25 UMA; SDI $3,000.00)' in msg(pg, '#sbc-msg'),
        'modificación con SDI $3,000 (sobre el tope) registrada; el aviso dice el SBC técnico $2,932.75', msg(pg, '#sbc-msg')[:160])
     pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
@@ -218,7 +226,7 @@ with sync_playwright() as p:
     pg.click('#hl-form-bajacab [data-cancelar]'); pg.wait_for_timeout(200)
     pg.click(f'[data-accion="baja"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#hl-form-{rel} form'
-    pg.fill(f + ' [name=fecha]', '2026-11-03'); pg.select_option(f + ' [name=causa]', '2'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2000)
+    pg.fill(f + ' [name=fecha]', '2026-11-03'); pg.select_option(f + ' [name=causa]', '2'); pg.check(f + ' [name=confirma]'); enviar(pg, f); pg.wait_for_timeout(2000)
     ok('Baja registrada' in msg(pg, '#rl-msg') and 'pendiente en la bandeja IDSE del registro patronal Y1234567101' in msg(pg, '#rl-msg') and 'cuando lo decidas' in msg(pg, '#rl-msg'),
        'baja registrada: el aviso nombra el RP, dice que el 02 quedó pendiente y no obliga a generar archivo', msg(pg, '#rl-msg'))
     foto(pg, '05b0-aviso-baja')

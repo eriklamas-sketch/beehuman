@@ -1,4 +1,4 @@
-# ui_ficha_guardado.py · base LOCAL bhui (datos sintéticos) · 10-nov-2026 · estado: ajustes de pantalla del 10-nov
+# ui_ficha_guardado.py · base LOCAL bhui (datos sintéticos) · 10-nov-2026 · estado: reingreso + identidades
 --- Ficha con historial y registro patronal (ADELA)
 OK    sin modificaciones: «No hay cambios por guardar» y no se envía nada  [No hay cambios por guardar.]
 OK    con una modificación: se guarda y no envía ningún dato de Historia laboral  [Cambios guardados. | claves=[]]

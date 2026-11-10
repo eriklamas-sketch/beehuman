@@ -120,7 +120,7 @@ with sync_playwright() as p:
     pg.select_option(f + ' [name=ts]', '0'); pg.wait_for_timeout(200)
     ok('tipo de salario' not in (pg.text_content(f'#hl-faltan-07-{rel}') or ''), 'al elegir el tipo de salario en el formulario, deja de marcarse como faltante')
     pg.fill(f + ' [name=fecha]', '2026-10-30'); pg.fill(f + ' [name=sdi]', '612.40'); pg.wait_for_timeout(500)
-    pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1800)
+    enviar(pg, f); pg.wait_for_timeout(1800)
     ok('Modificación de salario registrada' in msg(pg, '#sbc-msg') and q(f"select fecha_efectiva from eventos_laborales where relacion_laboral_id='{rel}' and tipo='modificacion_salario' and estado='vigente' order by registrado_en desc limit 1") == '2026-10-30',
        'la fecha se puede editar y la modificación queda con la fecha efectiva elegida', msg(pg))
 

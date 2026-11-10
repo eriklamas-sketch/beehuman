@@ -1,9 +1,9 @@
-# ui_historia_salario.py · base LOCAL bhui (datos sintéticos) · 10-nov-2026 · estado: ajustes de pantalla del 10-nov
+# ui_historia_salario.py · base LOCAL bhui (datos sintéticos) · 10-nov-2026 · estado: reingreso + identidades
 --- Historia laboral: bitácora de solo lectura
 OK    B1 la bitácora es solo consulta: sin «Modificar salario», «Dar de baja», «Corregir datos», «Registrar ingreso», «Anular» ni formularios (solo filtro y orden)
 OK    B2 con dos relaciones laborales, cada acontecimiento dice su empresa y RP  [CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 | CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102]
 OK    B3 la bitácora avisa que la persona tiene más de una relación
-OK    B4 cada acontecimiento dice quién lo registró y cuándo  [Registrado por Migración inicial el 10/11/2026 16:19]
+OK    B4 cada acontecimiento dice quién lo registró y cuándo  [Registrado por Migración inicial el 10/11/2026 16:29]
 OK    B5 los cambios se muestran como Dato | Anterior | Nuevo
 OK    B6 los acontecimientos sin fecha efectiva quedan al final con cualquier orden  [['15/08/2024', 'Sin fecha'] / ['15/08/2024', 'Sin fecha']]
 --- Relación laboral: gestión y organización visual
@@ -40,7 +40,7 @@ OK    S14 el enlace abre la bandeja IDSE en ese RP, con el 07 pendiente
 --- Faltantes: completar desde la bandeja y volver
 OK    F1 la bandeja dice qué falta y ofrece «Completar datos de la relación laboral»  [Falta: Tipo de trabajadorFalta: Tipo de salarioFalta: JornadaFecha con más de 5 días: revisa el plazo de presentación
 OK    F2 abre la ficha en Relación laboral, en «Corregir datos» de esa relación, con los campos faltantes marcados  [tipo_trabajador,tipo_salario,jornada]
-OK    F3 al guardar, el aviso ofrece volver a la bandeja IDSE  [Corrección registrada. Volver a la bandeja IDSE de Y1234567101]
+OK    F3 al guardar, el aviso ofrece volver a la bandeja IDSE  [Corrección registrada. Relación CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101. Volver a la bandeja IDSE de Y1234567101]
 OK    F4 regresa a la bandeja sin aviso de cambios y el movimiento ya no tiene esos faltantes  [PersonaFechaSBC del movimientoRevisiónADELA PALACIOS GALVAN01/11/2026$415.00
 OK    F5 con un NSS inválido, la bandeja ofrece «Completar datos de la persona»
 OK    F6 abre Datos personales con el NSS marcado y el enlace para volver a la bandeja
@@ -75,23 +75,23 @@ OK    D5 «Dar de baja» y «Corregir datos» siguen visibles en cada tarjeta (s
 OK    E1 sin botón independiente en el encabezado: la opción «Baja» del estatus es el acceso a la baja definitiva  [[False, False]]
 OK    E2 la tarjeta conserva la baja de UNA relación, rotulada «Dar de baja esta relación» (no es la baja definitiva)
 OK    E3 elegir «Baja» abre el formulario de baja definitiva en Relación laboral; el estatus no cambia como simple etiqueta
-OK    E4 lista las 2 relaciones vigentes de la empresa, con el RP donde irá cada 02, y pide confirmación expresa  [[['86e60d45-2cb8-4ff5-b870-9edcba02a449', 'CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 15/08/2024Genera la baja (02) pendiente en la bandeja IDSE de Y1234567101.'], ['fe4dbb12-da2f-4c4d-b65]
+OK    E4 lista las 2 relaciones vigentes de la empresa, con el RP donde irá cada 02, y pide confirmación expresa  [[['2517c576-fae6-483c-8d52-67fcb6c836da', 'CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 15/08/2024Genera la baja (02) pendiente en la bandeja IDSE de Y1234567101.Se desactiva: IMSS · $15,050]
 OK    E5 sin la confirmación no se registra nada  [Confirma que se terminan las 2 relaciones listadas.]
 OK    E6 si una relación no cumple las reglas (sin fecha de ingreso), no se da de baja ninguna: no queda una baja a medias  [No se registró ninguna baja. Lo impide:CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102 · ingreso —: falta su fecha de ingreso.Corregir la fecha de ingreso de esta ]
-OK    E7 (preparación) la persona queda también vigente en SERVICIOS CUMBRE DEMO, sin RP  [Ingreso registrado. Sin registro patronal: no genera movimiento IDSE.]
+OK    E7 (preparación) la persona queda también vigente en SERVICIOS CUMBRE DEMO, sin RP  [Ingreso registrado en SERVICIOS CUMBRE DEMO · sin registro patronal con fecha 01/10/2026. Sin regist]
 OK    E8 con relaciones vigentes en dos empresas, pide elegir la empresa antes de mostrar qué se termina
 OK    E9 sin empresa elegida no se registra nada
 OK    E10 al elegir CONSTRUCTORA lista sus 2 relaciones y avisa que la de SERVICIOS CUMBRE no cambia  [Se terminan estas 2 relaciones
 OK    E10b el proceso se llama «Dar de baja en esta empresa» (no termina relaciones de otras empresas)
 OK    Q1 baja parcial (falla simulada en la 2.ª): la 1.ª queda registrada con su 02, la 2.ª sigue vigente sin 02 — limitación conocida, no atómica
 OK    Q2 el mensaje dice qué quedó dado de baja, qué no y por qué, y cómo terminar; el estatus sigue Activo  [La baja en la empresa quedó incompleta. Dadas de baja: CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 15/08/2024. No se pudo dar de baja CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102 · ingreso 15/01/2025: falla simulada en la prueba Elige otra vez «Baja]
-OK    Q3 al repetir, solo queda la relación pendiente de la empresa
+OK    Q3 al repetir, solo queda la relación pendiente de la empresa (con una sola relación también se confirma, 10-nov)
 OK    E11 la baja definitiva termina las 2 relaciones de CONSTRUCTORA y NO la de SERVICIOS CUMBRE
 OK    E12 un evento de baja y un 02 pendiente por relación, cada uno en su RP (Y1234567101 y Y1234567102); ninguno para la otra empresa
 OK    E13 estatus coherente: sigue Activo (vigente en otra empresa), la ficha pasa a SERVICIOS CUMBRE y «Baja» sigue disponible
 OK    E14 al terminar se muestra el aviso IDSE con el estado real de cada 02 (los dos pendientes de generar)  [Baja registrada en BeeHuman: falta el IMSS
 OK    E15 el resultado dice qué se terminó, dónde quedó cada 02 y que la persona sigue activa en la otra empresa  [Baja registrada en CONSTRUCTORA ALTIPLANO DEMO. Se terminó 1 relación laboral:· CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102 · ingreso 15/01/2025: movimiento de baja (02) pendiente en la bandeja IDSE de Y1234567102. Ver ]
-OK    E16 queda una sola empresa: la baja definitiva propone su única relación (sin RP: sin 02) sin pedir empresa ni confirmación múltiple
+OK    E16 queda una sola empresa: la baja definitiva propone su única relación (sin RP: sin 02) sin pedir empresa; confirma esa relación
 OK    E17 sin relaciones vigentes el estatus pasa a Baja (resultado del proceso) y queda bloqueado: volver a Activo requiere reingreso; sin 02 ficticio
 --- Aviso al cerrar: baja en BeeHuman sin resultado del IMSS
 OK    A1 al cerrar, avisa por cada relación con 02 sin resultado (sin diálogo de cambios sin guardar)  [La baja todavía no está confirmada ante el IMSS
@@ -105,12 +105,12 @@ OK    A8 resultado registrado como rechazado: lo dice y marca la etapa  [[['CONS
 OK    A9 con resultado aceptado por el IMSS en ambos 02 ya no hay aviso: la ficha cierra directo
 --- Caso reportado: relación sin fecha de ingreso al dar de baja en la empresa (EDER)
 OK    F0 datos: EDER tiene una relación migrada vigente sin RP y sin fecha de ingreso
-OK    I1 ingreso SIN RP en la misma empresa: avisa que ya existe una relación igual y sugiere «Corregir datos»  [Esta persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO sin registro patronal (sin fecha de ingreso): no se puede registrar otra igual. Si sol]
-OK    I2 y no lo intenta registrar
-OK    I3 ingreso CON RP: aclara que no completa la relación sin RP, crea una adicional (con su 08) y pide confirmarlo  [Esta persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO sin registro patronal (sin fecha de ingreso). Registrar este ingreso no la completa: crea una relación laboral adicional en el registro patronal Y]
+OK    I1 ingreso SIN RP en la misma empresa: avisa que ya existe una relación igual y sugiere «Corregir datos»  [No se puede registrar el ingreso. La persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal (sin fecha de ingreso): solo p]
+OK    I2 y no lo intenta registrar (aun forzando el envío)
+OK    I3 ingreso CON RP: aclara que no completa la relación sin RP, crea una adicional (con su 08) y pide confirmarlo  [Esta persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal (sin fecha de ingreso). Registrar este ingreso no la completa: crea una relación laboral adicional en RP Y1234567101, con ]
 OK    I4 sin la confirmación no crea nada
 OK    I5 confirmado: queda el caso reportado (una relación con RP y fecha; otra sin RP y sin fecha)
-OK    F1 el formulario ya marca la relación sin fecha de ingreso y ofrece corregirla  [CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal · ingreso —Sin registro patronal: no genera movimiento IDSE.Falta su fecha de ingreso: sin ella no se puede ]
+OK    F1 el formulario ya marca la relación sin fecha de ingreso y ofrece corregirla  [CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal · ingreso —Sin registro patronal: no genera movimiento IDSE.No tiene esquemas de pago activos asociados: no ]
 OK    F2 la baja no se registra: dice qué relación y qué dato lo impiden, con «Corregir la fecha de ingreso de esta relación»  [No se registró ninguna baja. Lo impide:CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal · ingreso —: falta su fecha de ingreso.Corregir la fecha de ingreso de esta relación]
 OK    F3 antes de corregir: ninguna baja, ningún evento de baja, ningún 02
 OK    F4 el acceso abre «Corregir datos» de ESA relación con la fecha de ingreso marcada

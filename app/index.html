@@ -3520,6 +3520,21 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     contacto_emergencia_direccion: document.getElementById('f-emerg-direccion').value.trim()
   };
 
+  // Reingreso: si la CURP, el RFC o el NSS ya existen, no se crea otra persona;
+  // se ofrece abrir su expediente para registrar el regreso.
+  const existente = window.BH_laboral && BH_laboral.expedienteExistente ? await BH_laboral.expedienteExistente(nuevo) : null;
+  if (existente) {
+    // Coincidencia única: se ofrece abrir ESE expediente. Conflicto (identificadores de
+    // personas distintas) o error al verificar: se bloquea sin abrir ni elegir ninguno.
+    btn.disabled = false;
+    const aviso = BH_laboral.avisoExpedienteExistente(existente);
+    toast.innerHTML = aviso.html;
+    toast.className = 'toast err'; toast.style.display = 'block';
+    const b = document.getElementById('btn-alta-abrir-existente');
+    if (b && aviso.personaId) b.onclick = () => BH_laboral.abrirExpedienteParaReingreso(aviso.personaId);
+    return;
+  }
+
   // V2.0 M1: número interno repetido en el mismo registro patronal = no se guarda.
   const revNumAlta = await revisarNumeroInterno('f');
   if (revNumAlta && revNumAlta.bloquea) {
@@ -3953,6 +3968,8 @@ function renderRegistrosPagoDetalle(){
         <div><dt>Días del periodo</dt><dd>${escapeHtml(dias)}${dias === '—' ? '' : `<span class="rp-sub">${origenDias}</span>`}</dd></div>
         <div><dt>Empresa</dt><dd>${escapeHtml(empresaTxt)}</dd></div>
         <div><dt>Registro patronal</dt><dd>${escapeHtml(rpTxt)}</dd></div>
+        ${(() => { const rl = window.BH_laboral && BH_laboral.relacionDeEsquema ? BH_laboral.relacionDeEsquema(r.id) : null;
+          return rl ? `<div class="rp-t-relacion" style="grid-column:1/-1"><dt>Relación laboral</dt><dd${rl.sin ? ' style="color:#8A6400"' : ''}>${escapeHtml(rl.texto)}</dd></div>` : ''; })()}
         <div><dt>Inicio</dt><dd>${escapeHtml(fechaRegistroPago(r.fecha_inicio))}</dd></div>
         <div><dt>Fin</dt><dd>${escapeHtml(fechaRegistroPago(r.fecha_fin))}</dd></div>
       </dl>
@@ -4314,7 +4331,7 @@ async function guardarRegistroPago(){
     cargarRegistrosPagoGlobal(); // Fase 8: la Lista y el Resumen reflejan el cambio
     await cargarRegistrosPagoDetalle(personaId);
     // El SBC no cambia con el sueldo: solo se avisa que el 07 es una operación aparte.
-    if (!yaGuardado && window.BH_laboral && BH_laboral.trasCambioSueldo) BH_laboral.trasCambioSueldo(altaId); // el 07 se ofrece solo para la relación de ESTE esquema
+    if (!yaGuardado && window.BH_laboral && BH_laboral.trasCambioSueldo) BH_laboral.trasCambioSueldo(altaId, { alta: true }); // el 07 se ofrece solo para la relación de ESTE esquema
     return;
   }
 

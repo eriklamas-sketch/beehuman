@@ -107,7 +107,7 @@ with sync_playwright() as p:
     av = txt(pg, f + ' .sbc-avisos')
     ok('menor que el vigente (SBC $420.00 → $400.00)' in av and 'obligatorio' in txt(pg, f + ' .sbc-motivo-lab'), 'S7 salario menor al vigente: advierte y el motivo pasa a obligatorio', av[:150])
     foto(pg, 'b5-sdi-menor')
-    rpc.clear(); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(1000)
+    rpc.clear(); enviar(pg, f); pg.wait_for_timeout(1000)
     ok(not rpc and 'justificación' in txt(pg, '#sbc-msg'), 'S9 sin justificación no se envía nada', txt(pg, '#sbc-msg')[:120])
     pg.fill(f + ' [name=motivo]', 'Cambio a salario variable acordado')
     pg.fill(f + ' [name=sdi]', ''); pg.click(f + ' [name=sdi]'); pg.keyboard.type('1250000.5', delay=40); pg.wait_for_timeout(200)
@@ -129,7 +129,7 @@ with sync_playwright() as p:
     ok(falt == 'sbc-av' and 'todavía no estará listo para generar' in txt(pg, f'#hl-faltan-07-{RA}') and not pg.query_selector(f'#hl-faltan-07-{RA} .err'),
        'S10c los datos faltantes para el archivo son advertencia ámbar (se permite registrar)', falt)
     pg.fill(f + ' [name=sdi]', '415'); pg.dispatch_event(f + ' [name=sdi]', 'blur'); pg.wait_for_timeout(500)
-    rpc.clear(); dialogos.clear(); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2200)
+    rpc.clear(); dialogos.clear(); enviar(pg, f); pg.wait_for_timeout(2200)
     cuerpo = json.loads(rpc[-1][1]) if rpc else {}
     ok(cuerpo.get('p_sbc') == 415 and cuerpo.get('p_sdi') == 415 and isinstance(cuerpo.get('p_sbc'), (int, float)),
        'S11 se envían SDI y SBC técnico como números (415 / 415), no como texto con formato', f"{cuerpo.get('p_sbc')} / {cuerpo.get('p_sdi')}")
@@ -187,7 +187,7 @@ with sync_playwright() as p:
     ficha(pg, 'ADELA PALACIOS GALVAN', 'compensacion'); pg.wait_for_timeout(600)
     ok(txt(pg, '#sbc-msg') == '', 'P1 al volver a abrir la ficha el aviso verde ya no aparece')
     pg.click(f'[data-sbc="{RA}"]'); pg.wait_for_timeout(300)
-    pg.fill(f + ' [name=fecha]', '2026-11-02'); pg.fill(f + ' [name=sdi]', '3000'); pg.wait_for_timeout(600); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2200)
+    pg.fill(f + ' [name=fecha]', '2026-11-02'); pg.fill(f + ' [name=sdi]', '3000'); pg.wait_for_timeout(600); enviar(pg, f); pg.wait_for_timeout(2200)
     ok('Modificación de salario registrada' in txt(pg, '#sbc-msg') and 'con SBC $2,932.75 (tope de 25 UMA; SDI $3,000.00)' in txt(pg, '#sbc-msg'), 'P2 (control) el aviso aparece tras registrar', txt(pg, '#sbc-msg')[:160])
     ok(q(f"select sbc||'/'||sdi from relaciones_laborales where id = '{RA}'") == '2932.75/3000.00'
        and q(f"select m.sbc from idse_movimientos m join eventos_laborales e on e.id = m.evento_id where e.relacion_laboral_id = '{RA}' and e.fecha_efectiva = '2026-11-02'") == '2932.75',
@@ -289,9 +289,9 @@ with sync_playwright() as p:
     ok({x[0] for x in lis} == {RB1, RB2} and all('Genera la baja (02)' in x[1] for x in lis) and any('Y1234567101' in x[1] for x in lis) and any('Y1234567102' in x[1] for x in lis)
        and pg.is_visible(f + ' [name=confirma]'), 'E4 lista las 2 relaciones vigentes de la empresa, con el RP donde irá cada 02, y pide confirmación expresa', str(lis)[:200])
     pg.fill(f + ' [name=fecha]', '2026-11-06'); pg.select_option(f + ' [name=causa]', '2')
-    pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(600)
+    enviar(pg, f); pg.wait_for_timeout(600)
     ok('Confirma que se terminan las 2 relaciones' in txt(pg, '#rl-msg') and estado_rel(RB1) == estado_rel(RB2) == 'vigente', 'E5 sin la confirmación no se registra nada', txt(pg, '#rl-msg'))
-    pg.check(f + ' [name=confirma]'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(800)
+    pg.check(f + ' [name=confirma]'); enviar(pg, f); pg.wait_for_timeout(800)
     ok('No se registró ninguna baja' in txt(pg, '#rl-msg') and 'falta su fecha de ingreso' in txt(pg, '#rl-msg')
        and estado_rel(RB1) == estado_rel(RB2) == 'vigente' and n02(RB1) == n02(RB2) == '0',
        'E6 si una relación no cumple las reglas (sin fecha de ingreso), no se da de baja ninguna: no queda una baja a medias', txt(pg, '#rl-msg')[:160])
@@ -301,7 +301,7 @@ with sync_playwright() as p:
     pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(300)
     fi = '#hl-form-ingreso form'
     pg.select_option(fi + ' [name=empresa]', E2); pg.wait_for_timeout(200); pg.fill(fi + ' [name=fecha]', '2026-10-01')
-    pg.click(fi + ' button[type=submit]'); pg.wait_for_timeout(2000)
+    enviar(pg, fi); pg.wait_for_timeout(2000)
     RC = q(f"select id from relaciones_laborales where personal_id = '{PER_B}' and empresa_id = '{E2}' and estado = 'vigente'")
     ok('Ingreso registrado' in txt(pg, '#rl-msg') and RC != '', 'E7 (preparación) la persona queda también vigente en SERVICIOS CUMBRE DEMO, sin RP', txt(pg, '#rl-msg')[:100])
     pg.select_option('#d-estatus', 'Baja'); pg.wait_for_timeout(500)
@@ -309,7 +309,7 @@ with sync_playwright() as p:
        and 'Elige la empresa' in txt(pg, '#hl-form-bajacab .bd-resumen'),
        'E8 con relaciones vigentes en dos empresas, pide elegir la empresa antes de mostrar qué se termina')
     pg.fill(f + ' [name=fecha]', '2026-11-06'); pg.select_option(f + ' [name=causa]', '2')
-    pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(500)
+    enviar(pg, f); pg.wait_for_timeout(500)
     ok('Elige la empresa' in txt(pg, '#rl-msg') and estado_rel(RC) == 'vigente', 'E9 sin empresa elegida no se registra nada')
     pg.select_option(f + ' [name=empresa]', E1); pg.wait_for_timeout(200)
     resu = txt(pg, '#hl-form-bajacab .bd-resumen')
@@ -329,7 +329,7 @@ with sync_playwright() as p:
         else:
             route.fallback()
     pg.route('**/rpc/laboral_registrar_baja', segunda_falla)
-    pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(3000)
+    enviar(pg, f); pg.wait_for_timeout(3000)
     pg.unroute('**/rpc/laboral_registrar_baja')
     msj = txt(pg, '#rl-msg')
     ok(len(llamadas) == 2 and estado_rel(RB1) == 'baja' and estado_rel(RB2) == 'vigente' and n02(RB1) == '1' and n02(RB2) == '0' and estado_rel(RC) == 'vigente',
@@ -341,10 +341,10 @@ with sync_playwright() as p:
     foto(pg, 'c3b-baja-parcial')
     pg.select_option('#d-estatus', 'Baja'); pg.wait_for_timeout(500)
     pg.select_option(f + ' [name=empresa]', E1); pg.wait_for_timeout(200)
-    ok(pg.eval_on_selector_all(f + ' [data-bd-rel]', 'ls => ls.map(l => l.dataset.bdRel)') == [RB2] and not pg.is_visible(f + ' [name=confirma]'),
-       'Q3 al repetir, solo queda la relación pendiente de la empresa')
-    pg.fill(f + ' [name=fecha]', '2026-11-06'); pg.select_option(f + ' [name=causa]', '2')
-    pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(3000)
+    ok(pg.eval_on_selector_all(f + ' [data-bd-rel]', 'ls => ls.map(l => l.dataset.bdRel)') == [RB2] and pg.is_visible(f + ' [name=confirma]'),
+       'Q3 al repetir, solo queda la relación pendiente de la empresa (con una sola relación también se confirma, 10-nov)')
+    pg.fill(f + ' [name=fecha]', '2026-11-06'); pg.select_option(f + ' [name=causa]', '2'); pg.check(f + ' [name=confirma]')
+    enviar(pg, f); pg.wait_for_timeout(3000)
     RP2 = q("select id from empresas_registros_patronales where registro_patronal = 'Y1234567102'")
     ok(estado_rel(RB1) == estado_rel(RB2) == 'baja' and estado_rel(RC) == 'vigente',
        'E11 la baja definitiva termina las 2 relaciones de CONSTRUCTORA y NO la de SERVICIOS CUMBRE')
@@ -366,9 +366,9 @@ with sync_playwright() as p:
        'E15 el resultado dice qué se terminó, dónde quedó cada 02 y que la persona sigue activa en la otra empresa', msj[:220])
     pg.select_option('#d-estatus', 'Baja'); pg.wait_for_timeout(500)
     ok(not pg.query_selector(f + ' [name=empresa]') and pg.eval_on_selector_all(f + ' [data-bd-rel]', 'ls => ls.map(l => l.dataset.bdRel)') == [RC]
-       and 'no genera movimiento IDSE' in txt(pg, '#hl-form-bajacab .bd-resumen') and not pg.is_visible(f + ' [name=confirma]'),
-       'E16 queda una sola empresa: la baja definitiva propone su única relación (sin RP: sin 02) sin pedir empresa ni confirmación múltiple')
-    pg.fill(f + ' [name=fecha]', '2026-11-07'); pg.select_option(f + ' [name=causa]', '2'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2500)
+       and 'no genera movimiento IDSE' in txt(pg, '#hl-form-bajacab .bd-resumen') and 'Confirmo que se termina la relación listada' in txt(pg, f + ' .bd-confirma'),
+       'E16 queda una sola empresa: la baja definitiva propone su única relación (sin RP: sin 02) sin pedir empresa; confirma esa relación')
+    pg.fill(f + ' [name=fecha]', '2026-11-07'); pg.select_option(f + ' [name=causa]', '2'); pg.check(f + ' [name=confirma]'); enviar(pg, f); pg.wait_for_timeout(2500)
     ok(estado_rel(RC) == 'baja' and n02(RC) == '0' and q(f"select estatus from personal where id = '{PER_B}'") == 'Baja'
        and pg.eval_on_selector('#d-estatus', 's => [s.value, s.disabled]') == ['Baja', True] and txt(pg, '#d-estatus-pill') == 'Baja',
        'E17 sin relaciones vigentes el estatus pasa a Baja (resultado del proceso) y queda bloqueado: volver a Activo requiere reingreso; sin 02 ficticio')
@@ -437,19 +437,20 @@ with sync_playwright() as p:
     pg.select_option(fi + ' [name=empresa]', E1); pg.wait_for_timeout(200)
     pg.select_option(fi + ' [name=rp]', ''); pg.wait_for_timeout(200)
     av = txt(pg, '#hl-form-ingreso .ing-aviso')
-    ok('no se puede registrar otra igual' in av and '«Corregir datos»' in av and not pg.query_selector(fi + ' [name=confirma_adicional]'),
+    ok('No se puede registrar el ingreso' in av and 'solo le falta su fecha de ingreso' in av and '«Corregir datos»' in av and pg.query_selector('#hl-form-ingreso .ing-aviso [data-ir-corregir]')
+       and not pg.query_selector(fi + ' [name=confirma_adicional]') and pg.is_disabled(fi + ' button[type=submit]'),
        'I1 ingreso SIN RP en la misma empresa: avisa que ya existe una relación igual y sugiere «Corregir datos»', av[:160])
-    pg.fill(fi + ' [name=fecha]', '2026-10-01'); pg.click(fi + ' button[type=submit]'); pg.wait_for_timeout(600)
-    ok('no se puede registrar otra igual' in txt(pg, '#rl-msg') and rels_e() == '1', 'I2 y no lo intenta registrar')
+    pg.fill(fi + ' [name=fecha]', '2026-10-01'); enviar(pg, fi); pg.wait_for_timeout(600)
+    ok('No se puede registrar el ingreso' in txt(pg, '#rl-msg') and rels_e() == '1', 'I2 y no lo intenta registrar (aun forzando el envío)')
     pg.select_option(fi + ' [name=rp]', RP1); pg.wait_for_timeout(200)
     av = txt(pg, '#hl-form-ingreso .ing-aviso')
     ok('crea una relación laboral adicional' in av and 'Y1234567101' in av and 'sin fecha de ingreso' in av and 'siguen vigentes' in av and pg.is_visible(fi + ' [name=confirma_adicional]'),
        'I3 ingreso CON RP: aclara que no completa la relación sin RP, crea una adicional (con su 08) y pide confirmarlo', av[:220])
     foto(pg, 'd1-ingreso-relacion-adicional')
     pg.fill(fi + ' [name=sdi]', '450'); pg.fill(fi + ' [name=umf]', '001')
-    pg.click(fi + ' button[type=submit]'); pg.wait_for_timeout(600)
+    enviar(pg, fi); pg.wait_for_timeout(600)
     ok('Confirma que se creará una relación laboral adicional' in txt(pg, '#rl-msg') and rels_e() == '1', 'I4 sin la confirmación no crea nada')
-    pg.check(fi + ' [name=confirma_adicional]'); pg.click(fi + ' button[type=submit]'); pg.wait_for_timeout(2000)
+    pg.check(fi + ' [name=confirma_adicional]'); enviar(pg, fi); pg.wait_for_timeout(2000)
     RE_B = q(f"select id from relaciones_laborales where personal_id = '{PER_E}' and registro_patronal_id = '{RP1}' and estado = 'vigente'")
     ok('Ingreso registrado' in txt(pg, '#rl-msg') and rels_e() == '2' and RE_B != '', 'I5 confirmado: queda el caso reportado (una relación con RP y fecha; otra sin RP y sin fecha)')
 
@@ -458,7 +459,7 @@ with sync_playwright() as p:
     ok('Falta su fecha de ingreso' in li_a and pg.is_visible(f'#hl-form-bajacab [data-bd-rel="{RE_A}"] [data-corregir-fecha="{RE_A}"]'),
        'F1 el formulario ya marca la relación sin fecha de ingreso y ofrece corregirla', li_a[:160])
     pg.fill(f + ' [name=fecha]', '2026-11-06'); pg.select_option(f + ' [name=causa]', '2'); pg.fill(f + ' [name=motivo]', 'renuncia voluntaria')
-    pg.check(f + ' [name=confirma]'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(800)
+    pg.check(f + ' [name=confirma]'); enviar(pg, f); pg.wait_for_timeout(800)
     msj = txt(pg, '#rl-msg')
     ok('No se registró ninguna baja' in msj and 'sin registro patronal' in msj and 'falta su fecha de ingreso' in msj and pg.is_visible(f'#rl-msg [data-corregir-fecha="{RE_A}"]'),
        'F2 la baja no se registra: dice qué relación y qué dato lo impiden, con «Corregir la fecha de ingreso de esta relación»', msj[:200])
@@ -488,7 +489,7 @@ with sync_playwright() as p:
     ok('Corrección registrada' in msj and 'las 2 relaciones: todas cumplen' in msj and not pg.query_selector(f'#hl-form-bajacab [data-corregir-fecha]'),
        'F8 y vuelve a revisar todas las relaciones: ya cumplen', msj[:200])
     foto(pg, 'd4-regreso-a-la-baja')
-    pg.check(f + ' [name=confirma]'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(3000)
+    pg.check(f + ' [name=confirma]'); enviar(pg, f); pg.wait_for_timeout(3000)
     ok(q(f"select string_agg(estado, ',' order by registro_patronal_id nulls first) from relaciones_laborales where personal_id = '{PER_E}'") == 'baja,baja'
        and q(f"select count(*) from eventos_laborales where personal_id = '{PER_E}' and tipo = 'baja' and estado = 'vigente'") == '2',
        'F9 la baja termina las 2 relaciones, con un evento de baja cada una')

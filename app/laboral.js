@@ -134,8 +134,15 @@
 .rl-internos-card .rl-internos-cab{margin:0 0 6px;padding:0;border:0}
 .bd-lista{margin:6px 0 10px;padding:0;list-style:none}.bd-lista li{padding:5px 0;border-bottom:1px solid var(--v21-borde-2,#EEF1F6)}
 .bd-lista small{display:block;color:var(--v21-texto-2,#5B6680)}
-.bd-confirma{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;font-weight:600}
-.bd-confirma input{width:16px!important;height:16px!important;min-width:0!important;flex:none;margin:2px 0 0!important;padding:0!important}
+.bd-lista .bd-falta{color:#B42318;font-weight:600}
+.bd-lista .bd-corregir,.bd-error .bd-corregir{margin:6px 0 0;padding:6px 10px;font-size:12.5px}
+.bd-error li{margin:6px 0}
+.ing-aviso{margin:10px 0 0}
+.bd-confirma{display:flex;gap:12px;align-items:center;margin:12px 0 4px;padding:12px 14px;min-height:48px;box-sizing:border-box;
+  background:#FFF6D6;border:2px solid #E8B400;border-radius:10px;font-weight:700;font-size:14px;color:var(--v21-navy,#16264A);cursor:pointer}
+.bd-confirma:hover{background:#FFEFB8}
+.bd-confirma:focus-within{outline:3px solid rgba(232,180,0,.45);outline-offset:2px}
+.bd-confirma input{width:22px!important;height:22px!important;min-width:0!important;flex:none;margin:0!important;padding:0!important;accent-color:#16264A;cursor:pointer}
 .bd-resumen{margin-top:10px}
 #hl-aviso-imss{position:fixed;inset:0;z-index:80;background:rgba(14,26,51,.45);display:flex;align-items:center;justify-content:center;padding:16px}
 #hl-aviso-imss .av-caja{background:#fff;border-radius:14px;max-width:560px;width:100%;padding:20px 22px;box-shadow:0 18px 40px rgba(14,26,51,.25);max-height:90vh;overflow:auto}
@@ -176,7 +183,10 @@
   let estado = { personaId: null, persona: null, relaciones: [], eventos: [], pendientes: [], formAbierto: null };
   let fichaBloqueadaPara = null; // id de la persona cuya ficha tiene bloqueados los datos de Historia laboral
   let msgPendiente = null; // mensaje a mostrar después de volver a pintar
-  let avisoTrasBaja = null; // persona cuya ficha debe mostrar el aviso IDSE al terminar de cargar
+  let avisoTrasBaja = null;
+  // Baja en una empresa interrumpida para corregir una relación: se guarda lo capturado
+  // y se vuelve al formulario al guardar (o cancelar) la corrección.
+  let bajaEnCurso = null; // persona cuya ficha debe mostrar el aviso IDSE al terminar de cargar
 
   async function alAbrirDetalle(p) {
     const raiz = document.getElementById('hl-raiz');
@@ -209,6 +219,8 @@
     pintar();
     msgPendiente = null; // un aviso solo se muestra en la ficha que lo generó, una vez
     aplicarPendienteAbrir();
+    if (bajaEnCurso && bajaEnCurso.personaId !== id) bajaEnCurso = null;
+    if (bajaEnCurso && bajaEnCurso.volver) { const b = bajaEnCurso; bajaEnCurso = null; formBajaDefinitiva(b); }
     if (avisoTrasBaja === id) {
       avisoTrasBaja = null;
       avisoCierre(() => (typeof cerrarDetalleYa === 'function' ? cerrarDetalleYa() : cerrarDetalle({ sinAvisoImss: true })), true);
@@ -580,6 +592,9 @@
         <div><label>Motivo / nota (opcional)</label><input name="motivo"></div>
       </div>${botones('Registrar ingreso')}`, async (f) => {
       if (!val(f, 'empresa') || !val(f, 'fecha')) { mensaje('Indica empresa y fecha de ingreso.', false, null, 'rl-msg'); return; }
+      const adic = relacionSinRpEn(val(f, 'empresa'));
+      if (adic && !val(f, 'rp')) { mensaje('Esta persona ya tiene una relación vigente en esa empresa sin registro patronal: no se puede registrar otra igual. Si solo falta su fecha de ingreso, usa «Corregir datos» en esa relación.', false, null, 'rl-msg'); return; }
+      if (adic && val(f, 'rp') && !f.querySelector('[name=confirma_adicional]').checked) { mensaje('Confirma que se creará una relación laboral adicional.', false, null, 'rl-msg'); return; }
       const sdi = leerImporte(val(f, 'sdi'));
       if (sdi != null && (isNaN(sdi) || sdi <= 0)) { mensaje('El SDI debe ser un importe mayor a cero, con hasta 2 decimales.', false, null, 'rl-msg'); return; }
       const sbc = sdi == null || !val(f, 'rp') ? sdi : sbcDeSdi(sdi, (await topeEnRp(val(f, 'fecha'), val(f, 'rp'))).tope);
@@ -598,13 +613,32 @@
       const lista = rps.filter((r) => r.empresa_id === selE.value && r.activo !== false);
       selR.innerHTML = '<option value="">Sin registro patronal (sin IDSE)</option>' + lista.map((r) => `<option value="${r.id}" ${r.id === (detalleActual || {}).registro_patronal_id ? 'selected' : ''}>${esc(r.registro_patronal)}</option>`).join('');
       if (lista.length && !selR.value) selR.value = lista[0].id;
+      avisoAdicional();
     };
-    selE.onchange = llenarRP; llenarRP();
+    // Ya hay una relación vigente sin registro patronal en esa empresa: el ingreso NO la
+    // completa, crea otra relación. Se avisa y se pide confirmarlo.
+    const caja = document.createElement('div'); caja.className = 'ing-aviso'; f.querySelector('.hl-grid').insertAdjacentElement('afterend', caja);
+    const avisoAdicional = () => {
+      const m = document.getElementById('rl-msg'); if (m && m.classList.contains('err')) { m.innerHTML = ''; m.className = 'hl-msg'; }
+      const otra = relacionSinRpEn(selE.value);
+      if (!otra) { caja.innerHTML = ''; return; }
+      const nEsq = (estado.esquemas || []).filter((e) => e.relacion_laboral_id === otra.id).length;
+      const datos = `${esc(nombreEmpresa(otra.empresa_id))} sin registro patronal (${otra.fecha_ingreso ? 'ingreso ' + fechaMx(otra.fecha_ingreso) : 'sin fecha de ingreso'}${nEsq ? `, con ${nEsq} esquema${nEsq > 1 ? 's' : ''} de pago` : ''})`;
+      caja.innerHTML = selR.value
+        ? `<p class="hl-aviso-sueldo" style="margin:0">Esta persona ya tiene una relación vigente en ${datos}. <b>Registrar este ingreso no la completa: crea una relación laboral adicional</b> en el registro patronal ${esc(textoRP(selR.value))}, con su alta (08). La relación sin registro patronal y sus esquemas de pago siguen vigentes. Si solo querías capturar la fecha de ingreso, cancela y usa «Corregir datos» en esa relación.</p>
+          <label class="bd-confirma"><input type="checkbox" name="confirma_adicional"> <span>Entiendo que se creará una relación laboral adicional.</span></label>`
+        : `<p class="hl-aviso-sueldo" style="margin:0">Esta persona ya tiene una relación vigente en ${datos}: no se puede registrar otra igual. Si solo falta su fecha de ingreso, cancela y usa «Corregir datos» en esa relación.</p>`;
+    };
+    selE.onchange = llenarRP; selR.addEventListener('change', avisoAdicional); llenarRP();
     const sdiIng = f.querySelector('[name=sdi]');
     sdiIng.addEventListener('input', () => formatearAlEscribir(sdiIng));
     sdiIng.addEventListener('blur', () => { const v = leerImporte(sdiIng.value); if (v != null && !isNaN(v)) sdiIng.value = formatoImporte(v); });
   }
 
+  const relacionSinRpEn = (empId) => empId ? estado.relaciones.find((r) => r.estado === 'vigente' && r.empresa_id === empId && !r.registro_patronal_id) : null;
+  // ¿La relación admite capturar fecha de ingreso en «Corregir datos»? (misma regla que la base)
+  const esMigrada = (relId) => estado.eventos.some((e) => e.relacion_id === relId && ['ingreso', 'reingreso'].includes(e.tipo) && e.estado === 'vigente' && e.origen === 'migracion')
+    && !estado.eventos.some((e) => e.relacion_id === relId && e.tipo === 'modificacion_salario' && e.estado === 'vigente');
   const textoRelacion = (r) => `${nombreEmpresa(r.empresa_id)} · ${textoRP(r.registro_patronal_id) ? 'RP ' + textoRP(r.registro_patronal_id) : 'sin registro patronal'} · ingreso ${fechaMx(r.fecha_ingreso)}`;
   const notaBaja = (rpId) => rpId
     ? `Se desactivan sus esquemas de pago. Queda la baja (02) pendiente en la bandeja IDSE del registro patronal ${esc(textoRP(rpId))}; el archivo se genera desde la bandeja cuando lo decidas.`
@@ -649,7 +683,16 @@
       .map((e) => String(e.fecha_efectiva).slice(0, 10));
     return [r.fecha_ingreso, ...evs].filter(Boolean).sort().pop() || null;
   }
-  function formBajaDefinitiva() {
+  // Revisión con las reglas de la base (laboral_registrar_baja) antes de registrar nada.
+  function revisarBaja(rels, fecha) {
+    return rels.map((r) => {
+      if (!r.fecha_ingreso) return { r, txt: esMigrada(r.id) ? 'falta su fecha de ingreso.' : 'falta su fecha de ingreso y no se puede capturar con «Corregir datos» porque ya tiene movimientos registrados; revisa su Historia laboral.', corregir: esMigrada(r.id) };
+      const min = minimoBaja(r);
+      return fecha && min && fecha < min ? { r, txt: `la baja no puede ser anterior al ${fechaMx(min)} (ingreso o última modificación de salario).` } : null;
+    }).filter(Boolean);
+  }
+  const btnCorregirFecha = (relId) => `<button type="button" class="hl-btn2 bd-corregir" data-corregir-fecha="${relId}">Corregir la fecha de ingreso de esta relación</button>`;
+  function formBajaDefinitiva(borrador) {
     const vig = estado.relaciones.filter((r) => r.estado === 'vigente');
     const emps = [...new Set(vig.map((r) => r.empresa_id || ''))];
     const varias = emps.length > 1;
@@ -668,12 +711,8 @@
       if (!fecha || !causa) { mensaje('La fecha efectiva y el motivo de la baja son obligatorios.', false, null, 'rl-msg'); return; }
       if (rels.length > 1 && !f.querySelector('[name=confirma]').checked) { mensaje(`Confirma que se terminan las ${rels.length} relaciones listadas.`, false, null, 'rl-msg'); return; }
       // Revisión previa con las reglas de la base: si una relación no pasa, no se registra ninguna.
-      const malas = rels.map((r) => {
-        if (!r.fecha_ingreso) return `${textoRelacion(r)}: falta su fecha de ingreso (captúrala con «Corregir datos»).`;
-        const min = minimoBaja(r);
-        return min && fecha < min ? `${textoRelacion(r)}: la baja no puede ser anterior al ${fechaMx(min)} (ingreso o última modificación de salario).` : null;
-      }).filter(Boolean);
-      if (malas.length) { mensaje(null, false, `<b>No se registró ninguna baja.</b><br>${malas.map(esc).join('<br>')}`, 'rl-msg'); return; }
+      const malas = revisarBaja(rels, fecha);
+      if (malas.length) { mostrarProblemas(malas, '<b>No se registró ninguna baja.</b> Lo impide:'); return; }
       const hechas = [];
       for (const r of rels) {
         const { error } = await sb.rpc('laboral_registrar_baja', { p_relacion_id: r.id, p_fecha_baja: fecha, p_causa: causa, p_motivo: val(f, 'motivo') || null });
@@ -693,19 +732,46 @@
     });
     const c = document.getElementById('hl-form-bajacab'); if (!c) return;
     const resumen = c.querySelector('.bd-resumen'), conf = c.querySelector('.bd-confirma'), sel = c.querySelector('[name=empresa]');
+    const fb = c.querySelector('form');
+    // Problemas por relación, con acceso directo a corregir la que lo permite.
+    const irACorregir = (relId) => {
+      bajaEnCurso = { personaId: estado.personaId, empresa: varias ? sel.value : emps[0], fecha: val(fb, 'fecha'), causa: val(fb, 'causa'), motivo: val(fb, 'motivo'), relId };
+      formCorregir(relId, { volverBaja: true });
+    };
+    const ligar = (raiz) => raiz.querySelectorAll('[data-corregir-fecha]').forEach((b) => { b.onclick = () => irACorregir(b.dataset.corregirFecha); });
+    function mostrarProblemas(malas, titulo) {
+      mensaje(null, false, `<div class="bd-error">${titulo}<ul style="margin:6px 0 0;padding-left:18px">${malas.map((m) => `<li><b>${esc(textoRelacion(m.r))}</b>: ${esc(m.txt)}${m.corregir ? '<br>' + btnCorregirFecha(m.r.id) : ''}</li>`).join('')}</ul></div>`, 'rl-msg');
+      ligar(document.getElementById('rl-msg'));
+    }
     const pintarResumen = () => {
       const emp = varias ? (sel.value || null) : emps[0];
       if (emp === null) { resumen.innerHTML = '<p class="hint" style="margin:0 0 8px">Elige la empresa para ver qué relaciones se terminan.</p>'; conf.style.display = 'none'; return; }
       const rels = vig.filter((r) => (r.empresa_id || '') === emp), otras = vig.filter((r) => (r.empresa_id || '') !== emp);
       resumen.innerHTML = `<label style="font-size:12px;font-weight:600;color:var(--v21-texto-2,#5B6680)">${rels.length === 1 ? 'Se termina esta relación' : `Se terminan estas ${rels.length} relaciones`}</label>
-        <ul class="bd-lista">${rels.map((r) => `<li data-bd-rel="${r.id}">${esc(textoRelacion(r))}<small>${r.registro_patronal_id ? `Genera la baja (02) pendiente en la bandeja IDSE de ${esc(textoRP(r.registro_patronal_id))}.` : 'Sin registro patronal: no genera movimiento IDSE.'}</small></li>`).join('')}</ul>
+        <ul class="bd-lista">${rels.map((r) => `<li data-bd-rel="${r.id}">${esc(textoRelacion(r))}<small>${r.registro_patronal_id ? `Genera la baja (02) pendiente en la bandeja IDSE de ${esc(textoRP(r.registro_patronal_id))}.` : 'Sin registro patronal: no genera movimiento IDSE.'}</small>${
+          r.fecha_ingreso ? '' : `<small class="bd-falta">Falta su fecha de ingreso: sin ella no se puede dar de baja.</small>${esMigrada(r.id) ? btnCorregirFecha(r.id) : ''}`}</li>`).join('')}</ul>
         ${otras.length ? `<p class="hint" style="margin:0 0 8px">No cambian: ${otras.map((r) => esc(textoRelacion(r))).join('; ')}.</p>` : ''}`;
       conf.style.display = rels.length > 1 ? 'flex' : 'none';
       c.querySelector('.bd-confirma-txt').textContent = `Confirmo que se terminan las ${rels.length} relaciones listadas.`;
+      ligar(resumen);
       const m = document.getElementById('rl-msg'); if (m && m.classList.contains('err')) { m.innerHTML = ''; m.className = 'hl-msg'; }
     };
     if (sel) sel.addEventListener('change', pintarResumen);
+    if (borrador) {
+      // Regreso de la corrección: se restaura lo capturado y se vuelven a revisar TODAS las relaciones.
+      if (sel && emps.includes(borrador.empresa)) sel.value = borrador.empresa;
+      ['fecha', 'causa', 'motivo'].forEach((k) => { const el = fb.querySelector(`[name="${k}"]`); if (el && borrador[k]) el.value = borrador[k]; });
+      if (borrador.fecha || borrador.causa || borrador.motivo) fb.dataset.sucio = '1';
+    }
     pintarResumen();
+    if (borrador) {
+      const emp = varias ? sel.value : emps[0];
+      const rels = emp == null || emp === '' && varias ? [] : vig.filter((r) => (r.empresa_id || '') === emp);
+      const malas = revisarBaja(rels, borrador.fecha);
+      const pre = borrador.corregida ? `<b>Corrección registrada.</b> ` : '';
+      if (malas.length) mostrarProblemas(malas, `${pre}Volviste a «Dar de baja en esta empresa». Todavía lo impide:`);
+      else if (rels.length) mensaje(null, true, `${pre}Volviste a «Dar de baja en esta empresa» con lo que ya habías capturado. Revisé de nuevo ${rels.length === 1 ? 'la relación: cumple' : `las ${rels.length} relaciones: todas cumplen`} las reglas para la baja.${rels.length > 1 ? ' Confirma y registra.' : ''}`, 'rl-msg');
+    }
     c.scrollIntoView({ block: 'nearest' });
   }
   // Vuelve a abrir la ficha con el resultado y, si hubo 02, el aviso IDSE con su estado real.
@@ -946,13 +1012,15 @@
       && !estado.eventos.some((e) => e.relacion_id === relId && e.tipo === 'modificacion_salario' && e.estado === 'vigente');
     const faltan = (opc.faltan || []).filter((x) => FALTA_CAMPO[x]);
     const marcar = new Set(faltan.map((x) => FALTA_CAMPO[x]));
-    const etiqueta = (campo, texto) => `${texto}${marcar.has(campo) ? '<span class="hl-falta-lab">Falta para IDSE</span>' : ''}`;
+    if (opc.volverBaja) marcar.add('fecha_ingreso');
+    const etiqueta = (campo, texto) => `${texto}${marcar.has(campo) ? `<span class="hl-falta-lab">${campo === 'fecha_ingreso' && opc.volverBaja ? 'Falta para la baja' : 'Falta para IDSE'}</span>` : ''}`;
     const sdiVig = sdiDe(r);
     montar('hl-form-' + relId, `<b>Corregir datos</b>
+      ${opc.volverBaja ? `<p class="hl-aviso-sueldo">Para dar de baja esta relación falta su <b>fecha de ingreso</b>: captúrala y guarda. Después vuelves a «Dar de baja en esta empresa» con la fecha, el motivo y el comentario que ya capturaste.</p>` : ''}
       ${faltan.length ? `<p class="hl-aviso-sueldo">Para el archivo IDSE falta: <b>${faltan.map(esc).join(', ')}</b>. Los campos están marcados.${opc.rpId ? ' Al guardar podrás volver a la bandeja IDSE.' : ''}</p>` : ''}
       <p class="hint" style="margin:4px 0 8px">Solo se guardan los campos que cambies. ${migrado ? 'Por ser un dato migrado también puedes corregir la fecha de ingreso y el SDI.' : 'La fecha de ingreso y el SDI de un movimiento real no se corrigen aquí: usa anular o modificación de salario.'}</p>
       <div class="hl-grid">
-        ${migrado ? `<div><label>Fecha de ingreso</label><input name="fecha_ingreso" type="date" value="${r.fecha_ingreso || ''}"></div>
+        ${migrado ? `<div><label>${etiqueta('fecha_ingreso', 'Fecha de ingreso')}</label><input name="fecha_ingreso" type="date" value="${r.fecha_ingreso || ''}"></div>
         <div><label>${etiqueta('sdi', 'SDI — salario diario integrado')}</label><input name="sdi" inputmode="decimal" autocomplete="off" value="${sdiVig == null ? '' : formatoImporte(sdiVig)}"></div>` : ''}
         <div><label>Antigüedad reconocida</label><input name="fecha_reconocimiento_antiguedad" type="date" value="${r.fecha_reconocimiento_antiguedad || ''}"></div>
         <div><label>${etiqueta('numero_interno', 'Número interno')}</label><input name="numero_interno" maxlength="10" value="${esc(r.numero_interno || '')}"></div>
@@ -982,10 +1050,17 @@
       const ok = opc.rpId
         ? { html: `<b>Corrección registrada.</b>${enlaceBandeja(opc.rpId, 'Volver a la bandeja IDSE de ' + (textoRP(opc.rpId) || 'este registro patronal'))}` }
         : 'Corrección registrada.';
-      await ejecutar('laboral_corregir_datos', { p_relacion_id: relId, p_cambios: cambios, p_motivo: val(f, 'motivo') }, ok, 'laboral', 'rl-msg');
+      if (opc.volverBaja && bajaEnCurso) { bajaEnCurso.volver = true; bajaEnCurso.corregida = relId; }
+      const res = await ejecutar('laboral_corregir_datos', { p_relacion_id: relId, p_cambios: cambios, p_motivo: val(f, 'motivo') }, ok, 'laboral', 'rl-msg');
+      if (res && res.error && bajaEnCurso) { bajaEnCurso.volver = false; bajaEnCurso.corregida = null; }
     });
     const form = document.querySelector('#hl-form-' + relId + ' form');
     if (!form) return;
+    if (opc.volverBaja) {
+      form.querySelector('[data-cancelar]').textContent = 'Volver a la baja sin corregir';
+      form.querySelector('[data-cancelar]').onclick = () => { const b = bajaEnCurso; bajaEnCurso = null; if (b) formBajaDefinitiva(b); };
+      const mot = form.querySelector('[name=motivo]'); if (mot && !mot.value) mot.value = 'Fecha de ingreso faltante para registrar la baja';
+    }
     const elSdi = form.querySelector('[name=sdi]');
     if (elSdi) {
       elSdi.addEventListener('input', () => formatearAlEscribir(elSdi));

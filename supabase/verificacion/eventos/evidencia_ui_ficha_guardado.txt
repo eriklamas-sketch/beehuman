@@ -1,4 +1,4 @@
-# ui_ficha_guardado (cadena completa) · 09-nov-2026 · base local (Postgres 16 :55432, TimeZone=UTC; PostgREST :3010), datos sintéticos; árbol local de integracion/app (sin commit)
+# ui_ficha_guardado.py · base LOCAL bhui (datos sintéticos) · 10-nov-2026 · estado: ajustes de pantalla del 10-nov
 --- Ficha con historial y registro patronal (ADELA)
 OK    sin modificaciones: «No hay cambios por guardar» y no se envía nada  [No hay cambios por guardar.]
 OK    con una modificación: se guarda y no envía ningún dato de Historia laboral  [Cambios guardados. | claves=[]]
@@ -25,10 +25,9 @@ OK    el registro de pago confirma su propio guardado  [Cambios del registro de 
 OK    el aviso del registro de pago no pasa a la siguiente ficha
 OK    «Guardar cambios» de la ficha no se ve en Historia laboral
 --- Modificación de salario: fecha de hoy (México) y datos que faltan para el IDSE
-OK    la fecha efectiva aparece con la fecha de hoy en México  [2026-11-09 / esperado 2026-11-09]
+OK    la fecha efectiva aparece con la fecha de hoy en México  [2026-11-10 / esperado 2026-11-10]
 OK    antes de registrar se ve qué falta para el IDSE (tipos), como advertencia ámbar  [Se puede registrar el movimiento, pero su archivo todavía no estará listo para generar. Para el archivo IDSE falta: tipo de trabajador, tipo de salario, jornada]
 OK    al elegir el tipo de salario en el formulario, deja de marcarse como faltante
 OK    la fecha se puede editar y la modificación queda con la fecha efectiva elegida
 OK    ningún error de JavaScript
-
 25/25 pruebas correctas

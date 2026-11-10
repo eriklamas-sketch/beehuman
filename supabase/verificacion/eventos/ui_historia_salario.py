@@ -426,6 +426,82 @@ with sync_playwright() as p:
     ok(not pg.query_selector('#hl-aviso-imss') and not pg.is_visible('#modal-overlay') and not dialogos,
        'A9 con resultado aceptado por el IMSS en ambos 02 ya no hay aviso: la ficha cierra directo')
 
+    print('--- Caso reportado: relación sin fecha de ingreso al dar de baja en la empresa (EDER)')
+    NE = 'EDER LOPEZ RUIZ'
+    PER_E = q(f"select id from personal where nombre_completo = '{NE}'")
+    RE_A = q(f"select id from relaciones_laborales where personal_id = '{PER_E}' and estado = 'vigente' and registro_patronal_id is null and fecha_ingreso is null")
+    rels_e = lambda: q(f"select count(*) from relaciones_laborales where personal_id = '{PER_E}'")
+    ok(RE_A != '' and rels_e() == '1', 'F0 datos: EDER tiene una relación migrada vigente sin RP y sin fecha de ingreso')
+    ficha(pg, NE, 'laboral')
+    pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(300); fi = '#hl-form-ingreso form'
+    pg.select_option(fi + ' [name=empresa]', E1); pg.wait_for_timeout(200)
+    pg.select_option(fi + ' [name=rp]', ''); pg.wait_for_timeout(200)
+    av = txt(pg, '#hl-form-ingreso .ing-aviso')
+    ok('no se puede registrar otra igual' in av and '«Corregir datos»' in av and not pg.query_selector(fi + ' [name=confirma_adicional]'),
+       'I1 ingreso SIN RP en la misma empresa: avisa que ya existe una relación igual y sugiere «Corregir datos»', av[:160])
+    pg.fill(fi + ' [name=fecha]', '2026-10-01'); pg.click(fi + ' button[type=submit]'); pg.wait_for_timeout(600)
+    ok('no se puede registrar otra igual' in txt(pg, '#rl-msg') and rels_e() == '1', 'I2 y no lo intenta registrar')
+    pg.select_option(fi + ' [name=rp]', RP1); pg.wait_for_timeout(200)
+    av = txt(pg, '#hl-form-ingreso .ing-aviso')
+    ok('crea una relación laboral adicional' in av and 'Y1234567101' in av and 'sin fecha de ingreso' in av and 'siguen vigentes' in av and pg.is_visible(fi + ' [name=confirma_adicional]'),
+       'I3 ingreso CON RP: aclara que no completa la relación sin RP, crea una adicional (con su 08) y pide confirmarlo', av[:220])
+    foto(pg, 'd1-ingreso-relacion-adicional')
+    pg.fill(fi + ' [name=sdi]', '450'); pg.fill(fi + ' [name=umf]', '001')
+    pg.click(fi + ' button[type=submit]'); pg.wait_for_timeout(600)
+    ok('Confirma que se creará una relación laboral adicional' in txt(pg, '#rl-msg') and rels_e() == '1', 'I4 sin la confirmación no crea nada')
+    pg.check(fi + ' [name=confirma_adicional]'); pg.click(fi + ' button[type=submit]'); pg.wait_for_timeout(2000)
+    RE_B = q(f"select id from relaciones_laborales where personal_id = '{PER_E}' and registro_patronal_id = '{RP1}' and estado = 'vigente'")
+    ok('Ingreso registrado' in txt(pg, '#rl-msg') and rels_e() == '2' and RE_B != '', 'I5 confirmado: queda el caso reportado (una relación con RP y fecha; otra sin RP y sin fecha)')
+
+    pg.select_option('#d-estatus', 'Baja'); pg.wait_for_timeout(500); f = '#hl-form-bajacab form'
+    li_a = txt(pg, f'#hl-form-bajacab [data-bd-rel="{RE_A}"]')
+    ok('Falta su fecha de ingreso' in li_a and pg.is_visible(f'#hl-form-bajacab [data-bd-rel="{RE_A}"] [data-corregir-fecha="{RE_A}"]'),
+       'F1 el formulario ya marca la relación sin fecha de ingreso y ofrece corregirla', li_a[:160])
+    pg.fill(f + ' [name=fecha]', '2026-11-06'); pg.select_option(f + ' [name=causa]', '2'); pg.fill(f + ' [name=motivo]', 'renuncia voluntaria')
+    pg.check(f + ' [name=confirma]'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(800)
+    msj = txt(pg, '#rl-msg')
+    ok('No se registró ninguna baja' in msj and 'sin registro patronal' in msj and 'falta su fecha de ingreso' in msj and pg.is_visible(f'#rl-msg [data-corregir-fecha="{RE_A}"]'),
+       'F2 la baja no se registra: dice qué relación y qué dato lo impiden, con «Corregir la fecha de ingreso de esta relación»', msj[:200])
+    ok(q(f"select count(*) from relaciones_laborales where personal_id = '{PER_E}' and estado = 'vigente'") == '2'
+       and q(f"select count(*) from eventos_laborales where personal_id = '{PER_E}' and tipo = 'baja'") == '0'
+       and q(f"select count(*) from idse_movimientos m join relaciones_laborales r on r.id = m.relacion_laboral_id where r.personal_id = '{PER_E}' and m.tipo_movimiento = '02'") == '0',
+       'F3 antes de corregir: ninguna baja, ningún evento de baja, ningún 02')
+    foto(pg, 'd2-baja-falta-fecha')
+    pg.click(f'#rl-msg [data-corregir-fecha="{RE_A}"]'); pg.wait_for_timeout(400)
+    fc = f'#hl-form-{RE_A} form'
+    ok(pg.is_visible(fc + ' [name=fecha_ingreso]') and 'hl-falta' in (pg.get_attribute(fc + ' [name=fecha_ingreso]', 'class') or '')
+       and 'Falta para la baja' in txt(pg, fc) and 'con la fecha, el motivo y el comentario que ya capturaste' in txt(pg, fc),
+       'F4 el acceso abre «Corregir datos» de ESA relación con la fecha de ingreso marcada')
+    pg.click(fc + ' [data-cancelar]'); pg.wait_for_timeout(400)
+    ok(pg.eval_on_selector(f, "f => [f.fecha.value, f.causa.value, f.motivo.value]") == ['2026-11-06', '2', 'renuncia voluntaria'],
+       'F5 «Volver a la baja sin corregir» regresa al formulario con fecha, motivo y comentario conservados')
+    pg.click(f'#hl-form-bajacab [data-corregir-fecha="{RE_A}"]'); pg.wait_for_timeout(400)
+    foto(pg, 'd3-corregir-fecha')
+    pg.fill(fc + ' [name=fecha_ingreso]', '2025-03-01'); pg.click(fc + ' button[type=submit]'); pg.wait_for_timeout(2500)
+    ok(q(f"select fecha_ingreso from relaciones_laborales where id = '{RE_A}'") == '2025-03-01' and rels_e() == '2'
+       and q(f"select count(*) from eventos_laborales where relacion_laboral_id = '{RE_A}' and tipo = 'correccion_datos'") == '1'
+       and q(f"select count(*) from eventos_laborales where personal_id = '{PER_E}' and tipo in ('ingreso','reingreso') and estado = 'vigente'") == '2',
+       'F6 la corrección actualiza la relación ORIGINAL (mismo id): sin relaciones ni ingresos nuevos')
+    ok(pg.is_visible(f) and pg.eval_on_selector(f, "f => [f.fecha.value, f.causa.value, f.motivo.value]") == ['2026-11-06', '2', 'renuncia voluntaria'],
+       'F7 al guardar vuelve a «Dar de baja en esta empresa» con lo capturado')
+    msj = txt(pg, '#rl-msg')
+    ok('Corrección registrada' in msj and 'las 2 relaciones: todas cumplen' in msj and not pg.query_selector(f'#hl-form-bajacab [data-corregir-fecha]'),
+       'F8 y vuelve a revisar todas las relaciones: ya cumplen', msj[:200])
+    foto(pg, 'd4-regreso-a-la-baja')
+    pg.check(f + ' [name=confirma]'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(3000)
+    ok(q(f"select string_agg(estado, ',' order by registro_patronal_id nulls first) from relaciones_laborales where personal_id = '{PER_E}'") == 'baja,baja'
+       and q(f"select count(*) from eventos_laborales where personal_id = '{PER_E}' and tipo = 'baja' and estado = 'vigente'") == '2',
+       'F9 la baja termina las 2 relaciones, con un evento de baja cada una')
+    ok(q(f"select count(*) from idse_movimientos where relacion_laboral_id = '{RE_B}' and tipo_movimiento = '02' and registro_patronal_id = '{RP1}' and estado = 'pendiente'") == '1'
+       and q(f"select count(*) from idse_movimientos where relacion_laboral_id = '{RE_A}'") == '0' and rels_e() == '2'
+       and q(f"select estatus from personal where id = '{PER_E}'") == 'Baja',
+       'F10 un 02 solo para la relación con RP (Y1234567101); la otra sin movimiento IDSE; sin relaciones duplicadas; estatus Baja')
+    av = txt(pg, '#hl-aviso-imss')
+    ok(pg.is_visible('#hl-aviso-imss') and 'RP Y1234567101' in av and av.count('pendiente de generar') >= 1 and 'sin registro patronal' not in av,
+       'F11 el aviso IDSE muestra solo el 02 de la relación con RP', av[:160])
+    foto(pg, 'd5-aviso-final')
+    pg.click('#hl-aviso-imss [data-av="cerrar"]'); pg.wait_for_timeout(400)
+
     print('--- Cerrar un esquema en Compensación no da de baja')
     PER_A = q("select id from personal where nombre_completo = 'ADELA PALACIOS GALVAN'")
     ficha(pg, 'ADELA PALACIOS GALVAN', 'compensacion')

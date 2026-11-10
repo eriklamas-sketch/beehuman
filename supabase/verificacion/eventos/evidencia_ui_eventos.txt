@@ -1,56 +1,60 @@
-# ui_eventos (cadena completa: + fechas_hora_mexico + idse_validadores_guia) · 09-nov-2026 · base local (Postgres 16 :55432, TimeZone=UTC; PostgREST :3010), datos sintéticos; árbol local de integracion/app (sin commit)
+# ui_eventos.py · base LOCAL bhui (datos sintéticos) · 10-nov-2026 · estado: ajustes de pantalla del 10-nov
 --- Relación laboral (gestión) y Historia laboral (bitácora): relación migrada
 OK    ADELA: relación migrada con RP, ingreso y antigüedad reconocida por separado
 OK    con historial, empresa, RP y número interno quedan bloqueados en la ficha
-OK    la opción «Baja» del estatus queda deshabilitada
+OK    con historial y relación vigente, «Baja» del estatus abre «Dar de baja en esta empresa» (no es una etiqueta)
 OK    corregir datos de una relación migrada  [Corrección registrada.]
-OK    la corrección aparece en la bitácora con Dato | Anterior | Nuevo  [SBC|$420.00|$450.00 ; UMF|No registrado|012 ; Jornada|No registrado|Semana completa ; Tipo de salario|No registrado|Fijo ; Tipo de trabajador|No registrado|Permanente]
+OK    la corrección aparece en la bitácora con Dato | Anterior | Nuevo  [SBC|$420.00|$450.00 ; SDI|$420.00|$450.00 ; UMF|No registrado|012 ; Jornada|No registrado|Semana completa ; Tipo de salario|No registrado|Fijo ; Tipo de trabajador|No registrado|Permanente]
 --- Esquema ambiguo
 OK    BENITO: el esquema sin relación aparece para que Nómina lo asigne
 OK    Nómina asigna el esquema a la relación correcta  [Esquema asignado a la relación CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102.]
 --- Ingreso IMSS de alguien que solo tenía efectivo
 OK    el RP de la empresa se propone solo
+OK    ya tiene relación vigente sin RP en la empresa: el ingreso avisa que crea una relación adicional y pide confirmarlo  [Esta persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO sin registro patronal (sin fecha de ingreso, con 1 esquema de pago). Registrar este in]
+OK    sin confirmar no se registra el ingreso
 OK    ingreso registrado: el aviso nombra el RP y el 08 pendiente  [Ingreso registrado. El alta (08) quedó pendiente en la bandeja IDSE del registro patronal Y1234567101. Ver en la bandeja IDSE de Y1234567101]
 OK    el aviso enlaza a la bandeja de ese RP
 OK    la ficha pasa a mostrar la relación con RP (v3.1)
-OK    modificación de salario (desde Compensación)  [Modificación de salario registrada. El movimiento 07 quedó pendiente en la bandeja IDSE del registro patronal Y1234567101. Su archivo está listo para generarse desde la bandeja cuando lo decidas. Ver en la bandeja IDSE de Y1234567101]
+OK    modificación de salario (desde Compensación)  [Modificación de salario registrada. El movimiento 07 quedó pendiente en la bandeja IDSE del registro patronal Y1234567101 con SBC $410.00. Su archivo está listo para generarse desde la bandeja cuando lo decidas. Ver en la bandeja IDSE de Y1234567101]
 OK    Historia laboral es solo consulta: muestra el 07 sin botones de operación (solo el orden y el filtro)
 OK    la anulación del último movimiento está en Relación laboral y nombra el movimiento  [Anular último movimiento: Modificación de salario del 25/10/2026]
 OK    anular desde Relación laboral  [Movimiento anulado. En Historia laboral queda marcado como anulado.]
 OK    en Historia laboral el 07 queda visible y marcado como anulado (no se borra)
 OK    baja sin causa: la base la rechaza y la pantalla lo explica  [indica una causa de baja válida.]
 --- Bandeja IDSE
+OK    bandeja: registro patronal, guía y zona juntos en «Configuración del registro patronal», antes de los pendientes por tipo y los archivos  [Configuración del registro patronal
 OK    sin guía configurada: el campo muestra 00000 y advierte confirmarlo con la subdelegación  [Sin guía configurada: se usa 00000 (valor inicial). Confírmala con la subdelegación del IMSS de este registro patronal.]
 OK    la guía ya no bloquea: el alta queda lista, con el aviso de la Ñ
 OK    NSS con dígito verificador incorrecto: error claro y la fila no se puede seleccionar  [NSS inválido: el dígito verificador no corresponde; revisa los 11 dígitosContiene Ñ: se es]
 OK    nombre con dígitos: error claro y la fila no se puede seleccionar
 OK    el Administrador captura la guía 40001; corregidos los datos, el alta vuelve a estar lista
-OK    se descarga el .dat: 1 movimiento + renglón final, 168 posiciones, CRLF  [IDSE_ALTAS_Y1234567101_20261109_1327.dat]
+OK    se descarga el .dat: 1 movimiento + renglón final, 168 posiciones, CRLF  [IDSE_ALTAS_Y1234567101_20261110_1624.dat]
 OK    contenido: apellidos (Ñ → #), SBC y clave del trabajador en su posición
 OK    archivo marcado como presentado con su lote
 OK    resultado registrado con folio del acuse
 OK    en la bitácora, el ingreso queda con resultado aceptado
 OK    con resultado del IMSS, Relación laboral ya no ofrece anularlo
 --- Modificación de salario y su archivo IDSE (07)
-OK    modificación de salario registrada para el archivo  [Modificación de salario registrada. El movimiento 07 quedó pendiente en la bandeja IDSE del registro patronal Y1234567101. Su archivo está listo para generarse desde la bandeja cuando lo decidas. Ver en la bandeja IDSE de Y1234567101]
-OK    la bandeja muestra la modificación con fecha y SBC nuevo  [PersonaFechaSBC nuevoRevisiónEDGAR MORALES PEÑA28/10/2026$420.00
-        Contiene Ñ: se escribe como # (regla provisional)Fecha con más de 5 días: revisa el pla]
-OK    se descarga el .dat de modificaciones: 1 + final, 168 posiciones, CRLF  [IDSE_MODIFICACIONES_Y1234567101_20261109_1327.dat]
-OK    contenido de la modificación: SBC nuevo, tipos, fecha, sin UMF, tipo 07 + guía y CURP  ['042000      10028102026     0740001        77 MOPE920303HDFRXD089']
+OK    modificación con SDI $3,000 (sobre el tope) registrada; el aviso dice el SBC técnico $2,932.75  [Modificación de salario registrada. El movimiento 07 quedó pendiente en la bandeja IDSE del registro patronal Y1234567101 con SBC $2,932.75 (tope de 25 UMA; SDI]
+OK    la bandeja muestra la modificación con fecha y el SBC técnico del movimiento  [PersonaFechaSBC del movimientoRevisiónEDGAR MORALES PEÑA28/10/2026$2,932.75
+OK    se descarga el .dat de modificaciones: 1 + final, 168 posiciones, CRLF  [IDSE_MODIFICACIONES_Y1234567101_20261110_1624.dat]
+OK    contenido del 07: SBC técnico = tope $2,932.75 (293275, del SDI $3,000), tipos, fecha, sin UMF, tipo 07 + guía y CURP  ['293275      10028102026     0740001        77 MOPE920303HDFRXD089']
 OK    la modificación sale de pendientes al generar su archivo
 OK    cancelar el archivo: queda «Cancelado» y su 07 vuelve a pendientes
-OK    después de cancelar, el mismo 07 se vuelve a generar en un archivo nuevo  [IDSE_MODIFICACIONES_Y1234567101_20261109_1327.dat]
+OK    después de cancelar, el mismo 07 se vuelve a generar en un archivo nuevo  [IDSE_MODIFICACIONES_Y1234567101_20261110_1624.dat]
 --- Baja y su archivo IDSE (02)
+OK    «Baja» en el estatus abre «Dar de baja en esta empresa» con las relaciones de la empresa y el estatus no cambia solo  [['171054ac-3ce4-4323-967e-6ca3fc76c130', '5688e8bd-a330-4fe5-8e20-04de8441c9d0']]
 OK    baja registrada: el aviso nombra el RP, dice que el 02 quedó pendiente y no obliga a generar archivo  [Baja registrada. El movimiento de baja (02) quedó pendiente en la bandeja IDSE del registro patronal Y1234567101. El archivo se genera desde la bandeja cuando lo decidas. Ver en la bandeja IDSE de Y1234567101]
+OK    tras la baja, la relación ya no ofrece «Dar de baja esta relación» (y no hay botón aparte en el encabezado)
+OK    al cerrar la ficha, aviso de la baja sin presentar ante el IMSS  [La baja todavía no está confirmada ante el IMSS
 OK    la bandeja muestra la baja con fecha y causa  [PersonaFecha de bajaCausaRevisiónEDGAR MORALES PEÑA03/11/20262 · Separación voluntaria
-        Contiene Ñ: se escribe como # (regla provisional)Fecha con más de]
 OK    la baja no aparece entre las altas
-OK    se descarga el .dat de bajas: 1 baja + renglón final, 168 posiciones, CRLF  [IDSE_BAJAS_Y1234567101_20261109_1328.dat]
+OK    se descarga el .dat de bajas: 1 baja + renglón final, 168 posiciones, CRLF  [IDSE_BAJAS_Y1234567101_20261110_1624.dat]
 OK    contenido de la baja: ceros, fecha, tipo 02 + guía, clave, causa en 149 y sin CURP  ['00000000000000003112026     0240001        772                  9']
 OK    el archivo de bajas aparece en «Archivos generados» y la baja sale de pendientes
 --- Alta de personal conectada al historial
 OK    el alta tiene el campo de fecha de ingreso
-OK    el alta registra el ingreso en la Historia laboral  [Persona registrada: PRUEBA ALTA HISTORIA (BEH-001001). Su compensación se captura en el expediente. Ingreso registrado en su Historia laboral. Completa SBC, UMF]
+OK    el alta registra el ingreso en la Historia laboral  [Persona registrada: PRUEBA ALTA HISTORIA (BEH-001001). Su compensación se captura en el expediente. Ingreso registrado en su Historia laboral. Completa SDI, UMF]
 --- Móvil y errores
 OK    sin errores de JavaScript (Administrador)
 OK    en móvil la Historia laboral no desborda la pantalla
@@ -61,5 +65,4 @@ OK    consulta: no ve la pestaña IDSE
 OK    sin errores de JavaScript (consulta)
 OK    coord: no ve la pestaña IDSE
 OK    sin errores de JavaScript (coord)
-
-52/52 pruebas de pantalla correctas
+58/58 pruebas de pantalla correctas

@@ -79,6 +79,14 @@ with sync_playwright() as p:
     f = '#hl-form-ingreso form'
     ok(pg.eval_on_selector(f + ' [name=rp]', 's => s.options[s.selectedIndex].text') == 'Y1234567101', 'el RP de la empresa se propone solo')
     pg.fill(f + ' [name=fecha]', '2026-10-20'); pg.fill(f + ' [name=sdi]', '400'); pg.fill(f + ' [name=umf]', '045'); pg.fill(f + ' [name=num]', '77')
+    av = msg(pg, '#hl-form-ingreso .ing-aviso')
+    ok('crea una relación laboral adicional' in av and 'sin registro patronal' in av and pg.is_visible(f + ' [name=confirma_adicional]'),
+       'ya tiene relación vigente sin RP en la empresa: el ingreso avisa que crea una relación adicional y pide confirmarlo', av[:160])
+    n_rel = pg.locator('#rl-raiz .hl-card').count()
+    pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(600)
+    ok('Confirma que se creará una relación laboral adicional' in msg(pg, '#rl-msg') and pg.locator('#rl-raiz .hl-card').count() == n_rel,
+       'sin confirmar no se registra el ingreso')
+    pg.check(f + ' [name=confirma_adicional]')
     pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2000)
     t = pg.text_content('#rl-raiz') or ''
     ok('Ingreso registrado' in msg(pg, '#rl-msg') and 'RP Y1234567101' in t and 'pendiente en la bandeja IDSE del registro patronal Y1234567101' in msg(pg, '#rl-msg'),

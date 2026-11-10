@@ -123,6 +123,33 @@
 .sbc-av.err{background:#FDECEA;color:#B42318}.sbc-av.ok{background:#EAF6EE;color:#1E6B3A}
 .sbc-pend-arch{display:inline-block;margin:2px 0;padding:1px 8px;border-radius:999px;background:#FFF3D6;color:#8A6400;font-weight:600}.sbc-av .hl-btn2{margin-left:8px}
 .hl-aviso-sueldo{margin:6px 0;padding:8px 10px;border-radius:9px;background:#EAF0FB;color:#24427A;font-size:13px}
+.rl-campos{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;margin:10px 0 12px}
+.rl-col{display:flex;flex-direction:column}
+.rl-campo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:7px 0;border-bottom:1px solid var(--v21-borde-2,#EEF1F6)}
+.rl-campo:last-child{border-bottom:0}
+.rl-lab{font-size:12px;color:var(--v21-texto-2,#5B6680)}
+.rl-val{font-weight:600;color:var(--v21-texto,#16264A);text-align:right}.rl-val small{display:block;font-weight:500;color:#8A6400}
+.rl-val.vacio{font-weight:400;color:#8A94A8}
+.rl-internos-card{border:1px solid var(--v21-borde,#E5E9F1);border-radius:12px;padding:14px 16px 6px;margin:18px 0 0;background:var(--v21-superficie,#fff)}
+.rl-internos-card .rl-internos-cab{margin:0 0 6px;padding:0;border:0}
+.bd-lista{margin:6px 0 10px;padding:0;list-style:none}.bd-lista li{padding:5px 0;border-bottom:1px solid var(--v21-borde-2,#EEF1F6)}
+.bd-lista small{display:block;color:var(--v21-texto-2,#5B6680)}
+.bd-confirma{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;font-weight:600}
+.bd-confirma input{width:16px!important;height:16px!important;min-width:0!important;flex:none;margin:2px 0 0!important;padding:0!important}
+.bd-resumen{margin-top:10px}
+#hl-aviso-imss{position:fixed;inset:0;z-index:80;background:rgba(14,26,51,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+#hl-aviso-imss .av-caja{background:#fff;border-radius:14px;max-width:560px;width:100%;padding:20px 22px;box-shadow:0 18px 40px rgba(14,26,51,.25);max-height:90vh;overflow:auto}
+#hl-aviso-imss h3{margin:0 0 8px;font-size:16px;text-transform:none;letter-spacing:0;color:var(--v21-navy,#16264A)}
+#hl-aviso-imss .av-rel{border:1px solid var(--v21-borde,#E5E9F1);border-radius:10px;padding:10px 12px;margin:10px 0}
+#hl-aviso-imss .av-pasos{list-style:none;margin:8px 0 0;padding:0;font-size:13px}
+#hl-aviso-imss .av-pasos li{padding:3px 0 3px 22px;position:relative;color:#8A94A8}
+#hl-aviso-imss .av-pasos li::before{content:"○";position:absolute;left:2px}
+#hl-aviso-imss .av-pasos li.hecho{color:#1F6B33}#hl-aviso-imss .av-pasos li.hecho::before{content:"✓"}
+#hl-aviso-imss .av-pasos li.actual{color:#8A6400;font-weight:600}#hl-aviso-imss .av-pasos li.actual::before{content:"●"}
+#hl-aviso-imss .av-pasos li.error{color:#B42318;font-weight:600}#hl-aviso-imss .av-pasos li.error::before{content:"✕"}
+#hl-aviso-imss .av-acc{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
+#hl-aviso-imss .av-acc button{margin:0}
+@media (max-width:640px){.rl-campos{grid-template-columns:1fr}.rl-col+.rl-col .rl-campo:first-child{border-top:1px solid var(--v21-borde-2,#EEF1F6)}}
 @media (max-width:640px){.hl-card{padding:12px}.hl-grid{grid-template-columns:1fr}.hl-ev-cab{gap:6px}}
 `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -149,6 +176,7 @@
   let estado = { personaId: null, persona: null, relaciones: [], eventos: [], pendientes: [], formAbierto: null };
   let fichaBloqueadaPara = null; // id de la persona cuya ficha tiene bloqueados los datos de Historia laboral
   let msgPendiente = null; // mensaje a mostrar después de volver a pintar
+  let avisoTrasBaja = null; // persona cuya ficha debe mostrar el aviso IDSE al terminar de cargar
 
   async function alAbrirDetalle(p) {
     const raiz = document.getElementById('hl-raiz');
@@ -181,6 +209,10 @@
     pintar();
     msgPendiente = null; // un aviso solo se muestra en la ficha que lo generó, una vez
     aplicarPendienteAbrir();
+    if (avisoTrasBaja === id) {
+      avisoTrasBaja = null;
+      avisoCierre(() => (typeof cerrarDetalleYa === 'function' ? cerrarDetalleYa() : cerrarDetalle({ sinAvisoImss: true })), true);
+    }
   }
 
   // Con historial, estos datos solo cambian desde aquí (la base lo exige).
@@ -194,8 +226,9 @@
     if (est) {
       const enBaja = est.value === 'Baja';
       est.disabled = si && enBaja;
-      [...est.options].forEach((o) => { if (o.value === 'Baja' || o.text === 'Baja') o.disabled = si && !enBaja; });
-      est.title = si ? 'Las bajas se registran en Relación laboral' : '';
+      const vig = estado.relaciones.some((r) => r.estado === 'vigente');
+      [...est.options].forEach((o) => { if (o.value === 'Baja' || o.text === 'Baja') o.disabled = si && !enBaja && !(vig && puedeOperar()); });
+      est.title = !si ? '' : enBaja ? 'Sin relaciones vigentes. Para reactivar, registra un reingreso en Relación laboral.' : 'Baja: dar de baja en una empresa';
     }
     let aviso = document.getElementById('hl-aviso-ficha');
     const ancla = document.getElementById('d-empresa');
@@ -218,7 +251,9 @@
       const h3 = secL.querySelector('h3'); h3.insertAdjacentElement('afterend', d);
       const t = document.createElement('div'); t.className = 'rl-internos-cab';
       t.innerHTML = '<h4 class="rl-internos">Datos internos de la empresa</h4><p class="hint" style="margin:0 0 8px">Uso interno de la empresa: no se envían al IMSS. Se guardan con «Guardar cambios».</p>';
-      d.insertAdjacentElement('afterend', t);
+      const card = document.createElement('div'); card.className = 'rl-internos-card'; card.id = 'rl-internos';
+      d.insertAdjacentElement('afterend', card); card.appendChild(t);
+      [...secL.querySelectorAll(':scope > .grid3')].forEach((g) => card.appendChild(g));
       const fi = document.getElementById('d-fechainicio');
       const labFi = fi && fi.closest('div') ? fi.closest('div').querySelector('label') : null;
       if (labFi) labFi.textContent = 'Fecha de ingreso (administrativa)';
@@ -240,7 +275,7 @@
     pintarBitacora();
     pintarRelaciones();
     pintarSbc();
-    if (msgPendiente && msgPendiente.personaId === estado.personaId) mensaje(msgPendiente.texto, true, msgPendiente.html, msgPendiente.destino);
+    if (msgPendiente && msgPendiente.personaId === estado.personaId) mensaje(msgPendiente.texto, !msgPendiente.error, msgPendiente.html, msgPendiente.destino);
     msgPendiente = null;
   }
 
@@ -306,6 +341,24 @@
   }
 
   // ---------- 03 Relación laboral: gestión ----------
+  // Tarjeta en dos columnas: etiqueta a la izquierda, valor a la derecha.
+  const campoRl = (lab, val, vacio) => `<div class="rl-campo"><span class="rl-lab">${lab}</span><span class="rl-val${vacio ? ' vacio' : ''}">${val}</span></div>`;
+  function camposRelacion(r, rpTxt) {
+    const v = (x) => (x == null || x === '' || x === '—');
+    const fi = fechaMx(r.fecha_ingreso), fa = fechaMx(r.fecha_reconocimiento_antiguedad);
+    const izq = [campoRl('Estado', r.estado === 'vigente' ? 'Vigente' : 'Baja'), campoRl('Ingreso', fi, v(fi)), campoRl('Antigüedad reconocida', fa, v(fa))];
+    if (r.estado === 'baja') izq.push(campoRl('Baja', `${fechaMx(r.fecha_baja)}${r.causa_baja ? '<small>' + esc(valorLegible('causa_baja', r.causa_baja)) + '</small>' : ''}`));
+    const der = [];
+    if (rpTxt) {
+      const tt = valorLegible('tipo_trabajador', r.tipo_trabajador), ts = valorLegible('tipo_salario', r.tipo_salario), jo = valorLegible('jornada', r.jornada);
+      izq.push(campoRl('Tipo de trabajador', esc(tt || '—'), v(tt)));
+      der.push(campoRl('Tipo de salario', esc(ts || '—'), v(ts)), campoRl('Jornada IMSS', esc(jo || '—'), v(jo)),
+        campoRl('SDI', `${sdiDe(r) == null ? 'No registrado' : dinero(sdiDe(r))}${r.sbc != null && sdiDe(r) != null && Number(r.sbc) !== sdiDe(r) ? `<small>cotiza con el tope ${esc(dinero(r.sbc))}</small>` : ''}`, sdiDe(r) == null),
+        campoRl('UMF', esc(r.umf || '—'), !r.umf));
+    }
+    der.push(campoRl('Número interno', esc(r.numero_interno || '—'), !r.numero_interno));
+    return `<div class="rl-campos"><div class="rl-col">${izq.join('')}</div><div class="rl-col">${der.join('')}</div></div>`;
+  }
   function pintarRelaciones() {
     const raiz = document.getElementById('rl-raiz');
     if (!raiz) return;
@@ -313,7 +366,7 @@
       || String(b.fecha_ingreso || '').localeCompare(String(a.fecha_ingreso || '')));
     let h = `<div class="hl-wrap"><div class="hl-cab"><h4 class="rl-grupo" style="margin:0">Datos de la relación y seguridad social</h4>
       ${puedeOperar() ? '<button type="button" class="primary" style="margin:0" id="hl-btn-ingreso">Registrar ingreso o reingreso</button>' : ''}</div>
-      <div class="hl-msg" id="rl-msg"></div><div id="hl-form-ingreso"></div>`;
+      <div class="hl-msg" id="rl-msg"></div><div id="hl-form-ingreso"></div><div id="hl-form-bajacab"></div>`;
     if (estado.pendientes.length && puedeOperar()) {
       const vig = rels.filter((r) => r.estado === 'vigente');
       h += `<div class="hl-pend"><b>Esquemas de pago sin relación laboral</b>
@@ -333,19 +386,13 @@
       h += `<div class="hl-card ${r.estado}" data-relacion="${r.id}"><h4>${esc(nombreEmpresa(r.empresa_id))} · ${esc(rpTxt ? 'RP ' + rpTxt : 'Sin registro patronal (sin IDSE)')}
         <span class="hl-chip ${r.estado}">${r.estado === 'vigente' ? 'Vigente' : 'Baja'}</span>
         ${(r.pendientes_migracion || []).map((p) => `<span class="hl-chip aviso">${esc(PENDIENTE[p] || p)}</span>`).join('')}</h4>
-        <div class="hl-datos"><span>Estado <b>${r.estado === 'vigente' ? 'Vigente' : 'Baja'}</b></span><span>Ingreso <b>${fechaMx(r.fecha_ingreso)}</b></span>
-          <span>Antigüedad reconocida <b>${fechaMx(r.fecha_reconocimiento_antiguedad)}</b></span>
-          ${r.estado === 'baja' ? `<span>Baja <b>${fechaMx(r.fecha_baja)}</b>${r.causa_baja ? ' · ' + esc(valorLegible('causa_baja', r.causa_baja)) : ''}</span>` : ''}
-          ${rpTxt ? `<span>Tipo de trabajador <b>${esc(valorLegible('tipo_trabajador', r.tipo_trabajador))}</b></span>
-          <span>Tipo de salario <b>${esc(valorLegible('tipo_salario', r.tipo_salario))}</b></span><span>Jornada IMSS <b>${esc(valorLegible('jornada', r.jornada))}</b></span>
-          <span>SDI <b>${sdiDe(r) == null ? 'No registrado' : dinero(sdiDe(r))}</b>${r.sbc != null && sdiDe(r) != null && Number(r.sbc) !== sdiDe(r) ? ` <small>(cotiza con el tope ${esc(dinero(r.sbc))})</small>` : ''}</span>
-          <span>UMF <b>${esc(r.umf || '—')}</b></span>` : ''}<span>Número interno <b>${esc(r.numero_interno || '—')}</b></span></div>`;
+        ${camposRelacion(r, rpTxt)}`;
       if (puedeOperar()) {
         // Anulación: solo el último movimiento IMSS de esta relación que todavía no
         // se presentó (la regla vive en la base: laboral_anular_evento).
         const anu = estado.eventos.find((e) => e.evento_id === ultimoAnulable(r.id));
         h += '<div class="hl-acc">';
-        if (r.estado === 'vigente') h += `<button type="button" class="hl-btn2" data-accion="baja" data-rel="${r.id}">Dar de baja</button>`;
+        if (r.estado === 'vigente') h += `<button type="button" class="hl-btn2" data-accion="baja" data-rel="${r.id}">Dar de baja esta relación</button>`;
         h += `<button type="button" class="hl-btn2" data-accion="corregir" data-rel="${r.id}">Corregir datos</button>`;
         if (anu) h += `<button type="button" class="hl-btn2 peligro" data-anular="${anu.evento_id}" data-rel="${r.id}">Anular último movimiento: ${esc(TIPOS[anu.tipo] || anu.tipo)} del ${fechaMx(anu.fecha_efectiva)}</button>`;
         h += `</div><div id="hl-form-${r.id}"></div>`;
@@ -558,19 +605,159 @@
     sdiIng.addEventListener('blur', () => { const v = leerImporte(sdiIng.value); if (v != null && !isNaN(v)) sdiIng.value = formatoImporte(v); });
   }
 
+  const textoRelacion = (r) => `${nombreEmpresa(r.empresa_id)} · ${textoRP(r.registro_patronal_id) ? 'RP ' + textoRP(r.registro_patronal_id) : 'sin registro patronal'} · ingreso ${fechaMx(r.fecha_ingreso)}`;
+  const notaBaja = (rpId) => rpId
+    ? `Se desactivan sus esquemas de pago. Queda la baja (02) pendiente en la bandeja IDSE del registro patronal ${esc(textoRP(rpId))}; el archivo se genera desde la bandeja cuando lo decidas.`
+    : 'Se desactivan sus esquemas de pago. Sin registro patronal: no genera movimiento IDSE.';
+  const camposBaja = () => `<div><label>Fecha efectiva de la baja</label><input name="fecha" type="date" required></div>
+        <div><label>Motivo de la baja (causa IMSS)</label><select name="causa" required><option value="">Elige…</option>${causas.map((c) => `<option value="${esc(c.codigo)}">${esc(c.codigo)} · ${esc(c.descripcion)}</option>`).join('')}</select></div>
+        <div><label>Comentario (opcional)</label><input name="motivo"></div>`;
+
+  // Baja de UNA relación (botón de la tarjeta): p. ej. cambio de registro patronal
+  // dentro de la misma empresa. La baja en una empresa se hace desde el estatus.
   function formBaja(relId) {
     const rpId = (estado.relaciones.find((r) => r.id === relId) || {}).registro_patronal_id;
     montar('hl-form-' + relId, `<b>Dar de baja esta relación</b>
-      <p class="hint" style="margin:4px 0 8px">Se desactivan sus esquemas de pago. ${rpId ? `Queda la baja (02) pendiente en la bandeja IDSE del registro patronal ${esc(textoRP(rpId))}; el archivo se genera desde la bandeja cuando lo decidas.` : 'Sin registro patronal: no genera movimiento IDSE.'}</p>
-      <div class="hl-grid"><div><label>Fecha de baja</label><input name="fecha" type="date" required></div>
-        <div><label>Causa (IMSS)</label><select name="causa" required><option value="">Elige…</option>${causas.map((c) => `<option value="${esc(c.codigo)}">${esc(c.codigo)} · ${esc(c.descripcion)}</option>`).join('')}</select></div>
-        <div><label>Comentario (opcional)</label><input name="motivo"></div></div>${botones('Registrar baja')}`, async (f) => {
+      <p class="hint" style="margin:4px 0 8px">Solo termina esta relación; las demás de la persona no cambian. ${notaBaja(rpId)}</p>
+      <div class="hl-grid">${camposBaja()}</div>${botones('Registrar baja')}`, async (f) => {
       const html = rpId
         ? `<b>Baja registrada.</b> El movimiento de baja (02) quedó <b>pendiente</b> en la bandeja IDSE del registro patronal <b>${esc(textoRP(rpId))}</b>. El archivo se genera desde la bandeja cuando lo decidas.${enlaceBandeja(rpId)}`
         : '<b>Baja registrada.</b> Esta relación no tiene registro patronal: no genera movimiento IDSE.';
       await ejecutar('laboral_registrar_baja', { p_relacion_id: relId, p_fecha_baja: val(f, 'fecha') || null, p_causa: val(f, 'causa') || null, p_motivo: val(f, 'motivo') || null },
         { html }, 'laboral', 'rl-msg');
     });
+  }
+
+  // ---------- Dar de baja en una empresa (desde el estatus de la ficha) ----------
+  // LIMITACIÓN CONOCIDA: con varias relaciones se registra una baja por relación,
+  // en llamadas separadas (no atómico). La revisión previa aplica las reglas de la
+  // base para evitar fallas; si aun así una falla, las anteriores quedan registradas
+  // y el mensaje dice cuáles faltan. Hacerlo atómico requiere una función en la base.
+  // Termina TODAS las relaciones vigentes de la persona en una empresa (si tiene
+  // vigentes en varias empresas, se elige cuál; las otras no se tocan). Una baja
+  // por relación con la misma función de la base; 02 solo donde hay registro patronal.
+  function bajaDesdeEstatus() {
+    if (fichaBloqueadaPara !== estado.personaId) return false; // sin historia laboral: comportamiento anterior
+    if (!puedeOperar() || !estado.relaciones.some((r) => r.estado === 'vigente')) return true;
+    if (typeof cambiarSeccionDetalle === 'function') cambiarSeccionDetalle('laboral');
+    formBajaDefinitiva();
+    return true;
+  }
+  // Fecha mínima de baja de una relación (misma regla que laboral_registrar_baja).
+  function minimoBaja(r) {
+    const evs = estado.eventos.filter((e) => e.relacion_id === r.id && e.estado === 'vigente' && ['ingreso', 'reingreso', 'modificacion_salario'].includes(e.tipo) && e.fecha_efectiva)
+      .map((e) => String(e.fecha_efectiva).slice(0, 10));
+    return [r.fecha_ingreso, ...evs].filter(Boolean).sort().pop() || null;
+  }
+  function formBajaDefinitiva() {
+    const vig = estado.relaciones.filter((r) => r.estado === 'vigente');
+    const emps = [...new Set(vig.map((r) => r.empresa_id || ''))];
+    const varias = emps.length > 1;
+    montar('hl-form-bajacab', `<b>Dar de baja en esta empresa</b>
+      <p class="hint" style="margin:4px 0 8px">La persona deja de laborar en la empresa: se terminan sus relaciones laborales vigentes en esa empresa y se desactivan sus esquemas de pago. Las relaciones en otras empresas no cambian. La baja ante el IMSS se confirma solo con el resultado aceptado del movimiento 02.</p>
+      ${varias ? `<div class="hl-grid"><div style="grid-column:1/-1"><label>Empresa en la que se da de baja</label><select name="empresa" required><option value="">Elige…</option>${emps.map((e) => `<option value="${esc(e)}">${esc(e ? nombreEmpresa(e) : 'Sin empresa')}</option>`).join('')}</select>
+        <p class="hint" style="margin:4px 0 0">Esta persona tiene relaciones vigentes en ${emps.length} empresas.</p></div></div>` : ''}
+      <div class="bd-resumen"></div>
+      <div class="hl-grid">${camposBaja()}</div>
+      <label class="bd-confirma" style="display:none"><input type="checkbox" name="confirma"> <span class="bd-confirma-txt"></span></label>
+      ${botones('Registrar baja en esta empresa')}`, async (f) => {
+      const emp = varias ? val(f, 'empresa') : emps[0];
+      if (varias && !emp) { mensaje('Elige la empresa en la que se da de baja.', false, null, 'rl-msg'); return; }
+      const rels = vig.filter((r) => (r.empresa_id || '') === emp);
+      const fecha = val(f, 'fecha'), causa = val(f, 'causa');
+      if (!fecha || !causa) { mensaje('La fecha efectiva y el motivo de la baja son obligatorios.', false, null, 'rl-msg'); return; }
+      if (rels.length > 1 && !f.querySelector('[name=confirma]').checked) { mensaje(`Confirma que se terminan las ${rels.length} relaciones listadas.`, false, null, 'rl-msg'); return; }
+      // Revisión previa con las reglas de la base: si una relación no pasa, no se registra ninguna.
+      const malas = rels.map((r) => {
+        if (!r.fecha_ingreso) return `${textoRelacion(r)}: falta su fecha de ingreso (captúrala con «Corregir datos»).`;
+        const min = minimoBaja(r);
+        return min && fecha < min ? `${textoRelacion(r)}: la baja no puede ser anterior al ${fechaMx(min)} (ingreso o última modificación de salario).` : null;
+      }).filter(Boolean);
+      if (malas.length) { mensaje(null, false, `<b>No se registró ninguna baja.</b><br>${malas.map(esc).join('<br>')}`, 'rl-msg'); return; }
+      const hechas = [];
+      for (const r of rels) {
+        const { error } = await sb.rpc('laboral_registrar_baja', { p_relacion_id: r.id, p_fecha_baja: fecha, p_causa: causa, p_motivo: val(f, 'motivo') || null });
+        if (error) {
+          const html = `<b>La baja en la empresa quedó incompleta.</b> ${hechas.length ? 'Dadas de baja: ' + hechas.map((x) => esc(textoRelacion(x))).join('; ') + '. ' : 'No se registró ninguna. '}No se pudo dar de baja ${esc(textoRelacion(r))}: ${esc(msgError(error))}${hechas.length ? ' Elige otra vez «Baja» en el estatus para terminar las relaciones que faltan.' : ''}`;
+          if (!hechas.length) { mensaje(null, false, html, 'rl-msg'); return; }
+          await reabrir({ html, error: true });
+          return;
+        }
+        hechas.push(r);
+      }
+      const siguen = vig.filter((r) => (r.empresa_id || '') !== emp);
+      const html = `<b>Baja registrada en ${esc(emp ? nombreEmpresa(emp) : 'la empresa')}.</b> ${hechas.length === 1 ? 'Se terminó 1 relación laboral' : `Se terminaron ${hechas.length} relaciones laborales`}:<br>`
+        + hechas.map((r) => `· ${esc(textoRelacion(r))}: ${r.registro_patronal_id ? `movimiento de baja (02) <b>pendiente</b> en la bandeja IDSE de ${esc(textoRP(r.registro_patronal_id))}.${enlaceBandeja(r.registro_patronal_id)}` : 'sin registro patronal, no genera movimiento IDSE.'}`).join('<br>')
+        + (siguen.length ? `<br>La persona <b>sigue activa</b> en ${[...new Set(siguen.map((r) => esc(nombreEmpresa(r.empresa_id))))].join(', ')}: su estatus no cambia a Baja.` : '');
+      await reabrir({ html, avisoImss: hechas.some((r) => r.registro_patronal_id) });
+    });
+    const c = document.getElementById('hl-form-bajacab'); if (!c) return;
+    const resumen = c.querySelector('.bd-resumen'), conf = c.querySelector('.bd-confirma'), sel = c.querySelector('[name=empresa]');
+    const pintarResumen = () => {
+      const emp = varias ? (sel.value || null) : emps[0];
+      if (emp === null) { resumen.innerHTML = '<p class="hint" style="margin:0 0 8px">Elige la empresa para ver qué relaciones se terminan.</p>'; conf.style.display = 'none'; return; }
+      const rels = vig.filter((r) => (r.empresa_id || '') === emp), otras = vig.filter((r) => (r.empresa_id || '') !== emp);
+      resumen.innerHTML = `<label style="font-size:12px;font-weight:600;color:var(--v21-texto-2,#5B6680)">${rels.length === 1 ? 'Se termina esta relación' : `Se terminan estas ${rels.length} relaciones`}</label>
+        <ul class="bd-lista">${rels.map((r) => `<li data-bd-rel="${r.id}">${esc(textoRelacion(r))}<small>${r.registro_patronal_id ? `Genera la baja (02) pendiente en la bandeja IDSE de ${esc(textoRP(r.registro_patronal_id))}.` : 'Sin registro patronal: no genera movimiento IDSE.'}</small></li>`).join('')}</ul>
+        ${otras.length ? `<p class="hint" style="margin:0 0 8px">No cambian: ${otras.map((r) => esc(textoRelacion(r))).join('; ')}.</p>` : ''}`;
+      conf.style.display = rels.length > 1 ? 'flex' : 'none';
+      c.querySelector('.bd-confirma-txt').textContent = `Confirmo que se terminan las ${rels.length} relaciones listadas.`;
+      const m = document.getElementById('rl-msg'); if (m && m.classList.contains('err')) { m.innerHTML = ''; m.className = 'hl-msg'; }
+    };
+    if (sel) sel.addEventListener('change', pintarResumen);
+    pintarResumen();
+    c.scrollIntoView({ block: 'nearest' });
+  }
+  // Vuelve a abrir la ficha con el resultado y, si hubo 02, el aviso IDSE con su estado real.
+  async function reabrir(res) {
+    const id = estado.personaId;
+    msgPendiente = { html: res.html, destino: 'rl-msg', personaId: id, error: !!res.error };
+    if (typeof cargarPersonal === 'function') await cargarPersonal();
+    avisoTrasBaja = res.avisoImss ? id : null; // se muestra cuando la ficha termine de cargar
+    if (typeof abrirDetalle === 'function') await abrirDetalle(id, 'laboral');
+  }
+
+  // Aviso al cerrar la ficha: relaciones dadas de baja en BeeHuman cuyo 02 todavía
+  // no tiene resultado aceptado del IMSS. Informa; no impide nada.
+  const PASO_02 = { pendiente: 1, en_archivo: 2, presentado: 3, rechazado: 3 };
+  const SITUACION_02 = {
+    pendiente: 'Movimiento 02 pendiente de generar en la bandeja IDSE.',
+    en_archivo: 'Archivo de baja (02) generado, pendiente de presentar ante el IMSS.',
+    presentado: 'Archivo presentado ante el IMSS, sin resultado registrado.',
+    rechazado: 'Resultado registrado: el IMSS rechazó la baja. Corrígela y vuelve a generar el 02.' };
+  function bajasSinConfirmarImss() {
+    if (!estado.personaId) return [];
+    return estado.relaciones.filter((r) => r.estado === 'baja' && r.registro_patronal_id).map((r) => {
+      const ev = estado.eventos.filter((e) => e.relacion_id === r.id && e.tipo === 'baja' && e.estado === 'vigente')
+        .sort((a, b) => String(b.registrado_en).localeCompare(String(a.registrado_en)))[0];
+      return ev && PASO_02[ev.idse_estado] ? { r, idse: ev.idse_estado } : null;
+    }).filter(Boolean);
+  }
+  function avisoCierre(cerrar, trasBaja) {
+    const lista = bajasSinConfirmarImss();
+    if (!lista.length) return false;
+    const pasos = (st) => {
+      const n = PASO_02[st];
+      const li = (i, hecho, falta) => `<li class="${i < n ? 'hecho' : i === n ? 'actual' : ''}">${i < n ? hecho : falta}</li>`;
+      return `<ol class="av-pasos"><li class="hecho">Baja registrada en BeeHuman</li>${li(1, 'Archivo de baja (02) generado', 'Archivo de baja (02) pendiente de generar')}${
+        li(2, 'Archivo presentado ante el IMSS', 'Archivo pendiente de presentar ante el IMSS')}${
+        st === 'rechazado' ? '<li class="error">Resultado registrado: rechazado por el IMSS</li>' : li(3, 'Resultado registrado', 'Resultado del IMSS sin registrar')}</ol>`;
+    };
+    const d = document.createElement('div'); d.id = 'hl-aviso-imss'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+    d.innerHTML = `<div class="av-caja"><h3>${trasBaja ? 'Baja registrada en BeeHuman: falta el IMSS' : 'La baja todavía no está confirmada ante el IMSS'}</h3>
+      <p style="margin:0">La relación laboral se dio de baja en BeeHuman, pero el trabajador continúa registrado ante el IMSS. Se recomienda generar el archivo de baja (02) en IDSE y presentarlo ante el IMSS.</p>
+      ${lista.map(({ r, idse: st }) => `<div class="av-rel"><b>${esc(nombreEmpresa(r.empresa_id))} · RP ${esc(textoRP(r.registro_patronal_id))}</b>
+        <div class="hint" style="margin:2px 0 0">Baja en BeeHuman el ${fechaMx(r.fecha_baja)}. ${SITUACION_02[st]}</div>${pasos(st)}</div>`).join('')}
+      <div class="av-acc"><button type="button" class="hl-btn2" data-av="seguir">Seguir en la ficha</button>
+        <button type="button" class="hl-btn2" data-av="bandeja">Ir a la bandeja IDSE</button>
+        <button type="button" class="primary" data-av="cerrar">Cerrar la ficha</button></div></div>`;
+    document.body.appendChild(d);
+    const rp = lista[0].r.registro_patronal_id;
+    d.querySelector('[data-av="seguir"]').onclick = () => d.remove();
+    d.querySelector('[data-av="cerrar"]').onclick = () => { d.remove(); cerrar(); };
+    d.querySelector('[data-av="bandeja"]').onclick = () => { d.remove(); irABandeja(rp); };
+    d.querySelector('[data-av="cerrar"]').focus();
+    return true;
   }
 
   // Modificación de salario (07) desde Compensación. Se captura UN dato: el SDI.
@@ -705,7 +892,7 @@
 
   // Desde un aviso: cierra la ficha y abre la bandeja IDSE en ese registro patronal.
   async function irABandeja(rpId) {
-    if (typeof cerrarDetalle === 'function') cerrarDetalle();
+    if (typeof cerrarDetalle === 'function') cerrarDetalle({ sinAvisoImss: true });
     // Si había cambios pendientes de verdad y la persona decidió quedarse, no se navega.
     const ov = document.getElementById('modal-overlay');
     if (ov && ov.style.display !== 'none' && detalleActual) return;
@@ -1041,7 +1228,7 @@
   // Cambios pendientes reales en los formularios de Relación laboral y Compensación
   // (se guardan con sus propios botones; la ficha general no los compara).
   function formularioConDatos() { return !!document.querySelector('#rl-raiz form.hl-form[data-sucio], #sbc-raiz form.hl-form[data-sucio]'); }
-  window.BH_laboral = { alAbrirDetalle, trasAlta, abrirIdse, fichaBloqueada, irABandeja, trasCambioSueldo, formularioConDatos };
+  window.BH_laboral = { alAbrirDetalle, trasAlta, abrirIdse, fichaBloqueada, irABandeja, trasCambioSueldo, formularioConDatos, avisoCierre, bajaDesdeEstatus };
   prepararAlta();
   const bIdse = document.querySelector('nav.tabs button[data-tab="idse"]');
   if (bIdse) bIdse.addEventListener('click', () => { abrirIdse(); });

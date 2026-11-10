@@ -32,6 +32,7 @@ def abrir(b, quien, ancho=1440, alto=950):
 def ir(pg, tab): pg.click(f'nav.tabs button[data-tab="{tab}"]'); pg.wait_for_timeout(900)
 def ficha(pg, nombre, seccion='historia'):
     if pg.is_visible('#modal-overlay'): pg.click('.detail-head-actions > button'); pg.wait_for_timeout(300)
+    if pg.query_selector('#hl-aviso-imss'): pg.click('#hl-aviso-imss [data-av="cerrar"]'); pg.wait_for_timeout(300)
     ir(pg, 'lista'); pg.fill('#buscar-personal', nombre); pg.wait_for_timeout(400)
     pg.click(f'#tabla-personal a:has-text("{nombre}")'); pg.wait_for_timeout(1200)
     pg.click(f'[data-detail-tab="{seccion}"]'); pg.wait_for_timeout(900)
@@ -49,7 +50,7 @@ with sync_playwright() as p:
        'ADELA: relación migrada con RP, ingreso y antigüedad reconocida por separado')
     ok(pg.is_disabled('#d-empresa') and pg.is_disabled('#d-registro-patronal') and pg.is_disabled('#d-numero-interno'),
        'con historial, empresa, RP y número interno quedan bloqueados en la ficha')
-    ok(pg.eval_on_selector('#d-estatus', "s => [...s.options].find(o => o.text === 'Baja').disabled"), 'la opción «Baja» del estatus queda deshabilitada')
+    ok(not pg.eval_on_selector('#d-estatus', "s => [...s.options].find(o => o.text === 'Baja').disabled"), 'con historial y relación vigente, «Baja» del estatus abre «Dar de baja en esta empresa» (no es una etiqueta)')
     foto(pg, '01-historia-migrada')
     pg.click('[data-accion="corregir"]'); pg.wait_for_timeout(300)
     f = '#rl-raiz form'
@@ -203,13 +204,22 @@ with sync_playwright() as p:
     ficha(pg, 'EDGAR MORALES PEÑA', 'laboral')
 
     print('--- Baja y su archivo IDSE (02)')
+    pg.select_option('#d-estatus', 'Baja'); pg.wait_for_timeout(400)
+    vals = pg.eval_on_selector_all('#hl-form-bajacab [data-bd-rel]', 'ls => ls.map(l => l.dataset.bdRel)')
+    ok(rel in vals and pg.eval_on_selector('#d-estatus', 's => s.value') == 'Activo', '«Baja» en el estatus abre «Dar de baja en esta empresa» con las relaciones de la empresa y el estatus no cambia solo', str(vals))
+    pg.click('#hl-form-bajacab [data-cancelar]'); pg.wait_for_timeout(200)
     pg.click(f'[data-accion="baja"][data-rel="{rel}"]'); pg.wait_for_timeout(300)
     f = f'#hl-form-{rel} form'
     pg.fill(f + ' [name=fecha]', '2026-11-03'); pg.select_option(f + ' [name=causa]', '2'); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2000)
     ok('Baja registrada' in msg(pg, '#rl-msg') and 'pendiente en la bandeja IDSE del registro patronal Y1234567101' in msg(pg, '#rl-msg') and 'cuando lo decidas' in msg(pg, '#rl-msg'),
        'baja registrada: el aviso nombra el RP, dice que el 02 quedó pendiente y no obliga a generar archivo', msg(pg, '#rl-msg'))
     foto(pg, '05b0-aviso-baja')
+    ok(pg.locator(f'#rl-raiz [data-relacion="{rel}"] [data-accion="baja"]').count() == 0 and not pg.query_selector('#hl-baja-cab'),
+       'tras la baja, la relación ya no ofrece «Dar de baja esta relación» (y no hay botón aparte en el encabezado)')
     pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
+    av = (pg.text_content('#hl-aviso-imss') or '') if pg.query_selector('#hl-aviso-imss') else ''
+    ok('continúa registrado ante el IMSS' in av and 'Movimiento 02 pendiente de generar' in av, 'al cerrar la ficha, aviso de la baja sin presentar ante el IMSS', av[:120])
+    if av: pg.click('#hl-aviso-imss [data-av="cerrar"]'); pg.wait_for_timeout(400)
     ir(pg, 'idse'); pg.wait_for_timeout(1500)
     t = pg.text_content('#idse-pend-02') or ''
     ok('EDGAR MORALES PEÑA' in t and '2 · Separación voluntaria' in t and '03/11/2026' in t, 'la bandeja muestra la baja con fecha y causa', t[:160])

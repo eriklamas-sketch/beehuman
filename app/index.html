@@ -3852,6 +3852,13 @@ function actualizarPildoraEstatus(estatus){
   pildora.className = 'pill detail-estatus-pill estatus-' + String(estatus).toLowerCase();
 }
 document.getElementById('d-estatus').addEventListener('change', e => {
+  // Persona en Baja con historia laboral: el menú ofrece el atajo al registro de ingreso / reingreso.
+  if (e.target.value === '__ingreso') {
+    e.target.value = e.target.dataset.previo || 'Baja';
+    actualizarPildoraEstatus(e.target.value);
+    if (window.BH_laboral && BH_laboral.ingresoDesdeEstatus) BH_laboral.ingresoDesdeEstatus();
+    return;
+  }
   // Con historia laboral, «Baja» no es una etiqueta: abre «Dar de baja en esta empresa» y el
   // estatus cambia solo como resultado de ese proceso.
   if (e.target.value === 'Baja' && window.BH_laboral && BH_laboral.bajaDesdeEstatus && BH_laboral.bajaDesdeEstatus()) {
@@ -4103,10 +4110,21 @@ function actualizarSugerenciaDiasRegistroPago(){
     : 'Vacío = los días de la periodicidad.';
 }
 
+// ¿Se puede agregar un esquema de pago? Con historia laboral depende de que exista una
+// relación laboral VIGENTE (no del estatus general); sin historia, del estatus.
+function bloqueoAltaRegistroPago(){
+  const p = detalleActual;
+  const rels = window.BH_laboral && BH_laboral.relacionesDe ? BH_laboral.relacionesDe(p.id) : null;
+  if (rels) return rels.some(r => r.estado === 'vigente') ? null
+    : 'Esta persona no tiene una relación laboral vigente. Registra su ingreso o reingreso en Relación laboral; ahí mismo defines sus formas de pago.';
+  return p.estatus === 'Baja' ? 'No se pueden agregar registros de pago a una persona con estatus Baja.' : null;
+}
+
 function abrirFormRegistroPago(){
   if (!detalleActual || detalleRegistrosPagoEstado !== 'ok' || rpAltaId || rpEdicionId) return;
-  if (detalleActual.estatus === 'Baja') {
-    mostrarToastRegistrosPago('No se pueden agregar registros de pago a una persona con estatus Baja.', 'err');
+  const bloqueoAlta = bloqueoAltaRegistroPago();
+  if (bloqueoAlta) {
+    mostrarToastRegistrosPago(bloqueoAlta, 'err');
     return;
   }
   if (clasificacionesError) {
@@ -4218,7 +4236,7 @@ function requisitosFaltantesRegistroPago(clasificacion, p){
 // `original` = registro en edición (P4c) o null en un alta.
 function validarFormRegistroPago(original = null){
   const p = detalleActual;
-  if (!original && p.estatus === 'Baja') return { error: 'No se pueden agregar registros de pago a una persona con estatus Baja.' };
+  if (!original) { const b = bloqueoAltaRegistroPago(); if (b) return { error: b }; }
 
   const clasificacion = clasificacionesActivasRegistroPago(original).find(c => c.id === document.getElementById('rp-clasificacion').value);
   if (!clasificacion) return { error: 'Selecciona una clasificación.' };

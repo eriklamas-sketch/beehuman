@@ -158,6 +158,18 @@
 .ri-bloqueo{margin:8px 0;padding:10px 12px;border-radius:9px;background:#FDECEA;color:#8F2A1E;font-size:13px}
 .ri-bloqueo .hl-btn2{margin:8px 8px 0 0}
 .fd-aviso{margin:8px 0 0;padding:8px 10px;border-radius:9px;background:#FFF3D6;color:#6B4E00;font-size:13px}
+.ing-tipo-txt{margin:8px 0 4px;padding:8px 12px;border-radius:9px;background:#EEF4FF;color:var(--v21-navy,#16264A);font-size:13px}
+.ing-tipo-txt.reingreso{background:#EAF6EE;color:#1F5130}
+.esq-fila{display:grid;grid-template-columns:1.4fr 1fr .8fr 1fr auto;gap:10px;align-items:end;padding:10px 0;border-bottom:1px dashed var(--v21-borde,#E5E9F1)}
+.esq-fila .esq-quitar .hl-btn2{margin:0}
+.esq-fila .esq-nota{grid-column:1/-1;font-size:12px;color:var(--v21-texto-2,#5B6680);margin-top:-4px}
+.esq-fila .esq-nota:empty{display:none}
+.esq-fila .esq-nota.err{color:#B42318;font-weight:600}
+.ing-err:empty{display:none}
+.ing-err.activo{margin:12px 0 0;padding:10px 14px;border-radius:9px;background:#FDECEA;color:#8F2A1E;font-size:13px;border:1px solid #F5C2BC}
+.ing-err ul{margin:6px 0 0;padding-left:18px}
+details.ri-ref summary{cursor:pointer;font-size:13px;color:var(--v21-navy,#16264A)}
+@media (max-width:640px){.esq-fila{grid-template-columns:1fr 1fr}.esq-fila>div:first-child{grid-column:1/-1}}
 #hl-aviso-imss{position:fixed;inset:0;z-index:80;background:rgba(14,26,51,.45);display:flex;align-items:center;justify-content:center;padding:16px}
 #hl-aviso-imss .av-caja{background:#fff;border-radius:14px;max-width:560px;width:100%;padding:20px 22px;box-shadow:0 18px 40px rgba(14,26,51,.25);max-height:90vh;overflow:auto}
 #hl-aviso-imss h3{margin:0 0 8px;font-size:16px;text-transform:none;letter-spacing:0;color:var(--v21-navy,#16264A)}
@@ -244,16 +256,13 @@
     if (ingresoEnCurso && ingresoEnCurso.personaId !== id) ingresoEnCurso = null;
     if (ingresoEnCurso && !document.querySelector('#hl-form-ingreso form')) {
       const b = ingresoEnCurso;
-      if (b.modo === 'reingreso') formReingreso(b.empresa, b); else formIngreso(b);
-      mensaje(null, true, b.modo === 'reingreso'
-        ? 'Volviste al <b>reingreso</b> con lo que ya habías capturado. Revisa otra vez los datos personales y confirma.'
-        : 'Volviste al <b>nuevo ingreso</b> con lo que ya habías capturado.', 'rl-msg');
+      formIngreso(b);
+      mensaje(null, true, 'Seguimos con el registro de ingreso / reingreso: se conservó todo lo que habías capturado.', 'rl-msg');
     }
     if (abrirReingresoAl && abrirReingresoAl.personaId === id) {
       const a = abrirReingresoAl; abrirReingresoAl = null;
       if (typeof cambiarSeccionDetalle === 'function') cambiarSeccionDetalle('laboral');
-      if (estado.relaciones.some((r) => r.estado === 'baja')) formReingreso(a.empresa || null);
-      else formIngreso();
+      formIngreso(null, a.empresa || null);
       if (a.nota) mensaje(null, true, a.nota, 'rl-msg');
     }
     if (bajaEnCurso && bajaEnCurso.personaId !== id) bajaEnCurso = null;
@@ -274,10 +283,19 @@
     const est = document.getElementById('d-estatus');
     if (est) {
       const enBaja = est.value === 'Baja';
-      est.disabled = si && enBaja;
+      // En Baja con historial, el estatus no se cambia a mano: el menú ofrece el atajo
+      // a «Registrar ingreso / reingreso» (la persona vuelve a Activo al registrarlo).
+      const atajo = si && enBaja && puedeOperar();
+      let opIng = est.querySelector('option[value="__ingreso"]');
+      if (atajo && !opIng) { opIng = new Option('Registrar ingreso / reingreso…', '__ingreso'); est.appendChild(opIng); }
+      if (!atajo && opIng) opIng.remove();
+      est.disabled = si && enBaja && !atajo;
       const vig = estado.relaciones.some((r) => r.estado === 'vigente');
-      [...est.options].forEach((o) => { if (o.value === 'Baja' || o.text === 'Baja') o.disabled = si && !enBaja && !(vig && puedeOperar()); });
-      est.title = !si ? '' : enBaja ? 'Sin relaciones vigentes. Para reactivar, registra un reingreso en Relación laboral.' : 'Baja: dar de baja en una empresa';
+      [...est.options].forEach((o) => {
+        if (o.value === 'Baja' || o.text === 'Baja') o.disabled = si && !enBaja && !(vig && puedeOperar());
+        else if (o.value !== '__ingreso') o.disabled = atajo;
+      });
+      est.title = !si ? '' : enBaja ? 'Sin relaciones vigentes. Para reactivarla, registra su ingreso o reingreso.' : 'Baja: dar de baja en una empresa';
     }
     let aviso = document.getElementById('hl-aviso-ficha');
     const ancla = document.getElementById('d-empresa');
@@ -414,7 +432,7 @@
     const rels = [...estado.relaciones].sort((a, b) => (a.estado === 'vigente' ? 0 : 1) - (b.estado === 'vigente' ? 0 : 1)
       || String(b.fecha_ingreso || '').localeCompare(String(a.fecha_ingreso || '')));
     let h = `<div class="hl-wrap"><div class="hl-cab"><h4 class="rl-grupo" style="margin:0">Datos de la relación y seguridad social</h4>
-      ${puedeOperar() ? `<div class="hl-acc" style="margin:0">${rels.some((r) => r.estado === 'baja') ? '<button type="button" class="primary" style="margin:0" id="hl-btn-reingreso">Registrar reingreso</button>' : ''}<button type="button" class="${rels.some((r) => r.estado === 'baja') ? 'hl-btn2' : 'primary'}" style="margin:0" id="hl-btn-ingreso">Registrar nuevo ingreso</button></div>` : ''}</div>
+      ${puedeOperar() ? '<div class="hl-acc" style="margin:0"><button type="button" class="primary" style="margin:0" id="hl-btn-ingreso">Registrar ingreso / reingreso</button></div>' : ''}</div>
       <div class="hl-msg" id="rl-msg"></div><div id="hl-form-ingreso"></div><div id="hl-form-bajacab"></div>`;
     if (estado.pendientes.length && puedeOperar()) {
       const vig = rels.filter((r) => r.estado === 'vigente');
@@ -429,7 +447,7 @@
       });
       h += '</div>';
     }
-    if (!rels.length) h += `<p class="hint">Esta persona todavía no tiene relaciones laborales registradas.${puedeOperar() ? ' Usa «Registrar nuevo ingreso».' : ''}</p>`;
+    if (!rels.length) h += `<p class="hint">Esta persona todavía no tiene relaciones laborales registradas.${puedeOperar() ? ' Usa «Registrar ingreso / reingreso».' : ''}</p>`;
     rels.forEach((r) => {
       const rpTxt = textoRP(r.registro_patronal_id);
       h += `<div class="hl-card ${r.estado}" data-relacion="${r.id}"><h4>${esc(nombreEmpresa(r.empresa_id))} · ${esc(rpTxt ? 'RP ' + rpTxt : 'Sin registro patronal (sin IDSE)')}
@@ -451,8 +469,6 @@
     raiz.innerHTML = h + '</div>';
     const bi = document.getElementById('hl-btn-ingreso');
     if (bi) bi.onclick = () => { ingresoEnCurso = null; formIngreso(); };
-    const br = document.getElementById('hl-btn-reingreso');
-    if (br) br.onclick = () => { ingresoEnCurso = null; formReingreso(null); };
     raiz.querySelectorAll('[data-accion]').forEach((b) => { b.onclick = () => ({ baja: formBaja, corregir: formCorregir })[b.dataset.accion](b.dataset.rel); });
     raiz.querySelectorAll('[data-anular]').forEach((b) => { b.onclick = () => formAnular(b.dataset.anular, b.dataset.rel); });
     raiz.querySelectorAll('[data-asignar]').forEach((b) => {
@@ -568,7 +584,7 @@
     const m = document.getElementById(destino || 'hl-msg'); if (!m) return;
     if (html) { m.innerHTML = html; ligarAcciones(m); } else m.textContent = texto;
     m.className = 'hl-msg ' + (ok ? 'ok' : 'err');
-    if (ok && destino) m.scrollIntoView({ block: 'nearest' });
+    if (destino) m.scrollIntoView({ block: 'nearest' }); // éxito o error: el mensaje siempre queda a la vista
   }
 
   // Ejecuta una función de la base y vuelve a abrir la ficha en la sección indicada.
@@ -617,7 +633,8 @@
   function actualizarEnvio(f) {
     if (!f) return;
     const b = f.querySelector('button[type=submit]'); if (!b) return;
-    const falta = confirmacionesPendientes(f).length > 0 || f.dataset.bloqueado === '1';
+    // Formularios «siempre activos»: el botón nunca se apaga; al enviar se dice qué falta.
+    const falta = !f.dataset.siempreActivo && (confirmacionesPendientes(f).length > 0 || f.dataset.bloqueado === '1');
     b.disabled = falta;
     b.title = falta ? (f.dataset.bloqueado === '1' ? 'Resuelve lo indicado antes de continuar.' : 'Marca la confirmación obligatoria para continuar.') : '';
   }
@@ -667,9 +684,13 @@
     return { texto: `${nombreEmpresa(r.empresa_id)} · ${rpCorto(r.registro_patronal_id)} · ingreso ${fechaMx(r.fecha_ingreso)}${r.estado === 'baja' ? ` · baja ${fechaMx(r.fecha_baja)}` : ''}` };
   }
 
-  // Revisión de la empresa y el registro patronal elegidos (mismas reglas que la base y algunas de pantalla).
-  // Devuelve { bloqueo: html } (no se puede registrar) o { adicional: html } (se puede, confirmando).
-  function analizarIngreso(empId, rpId, modo) {
+  // Revisión de la empresa y el registro patronal elegidos (mismas reglas que la base).
+  // BeeHuman decide el tipo; RH no elige entre «ingreso» y «reingreso»:
+  //   bloqueado: ya hay una relación vigente en esa empresa y ese RP (la base también lo impide).
+  //   adicional: ya hay una relación vigente en esa empresa con otro RP (se registra confirmándolo).
+  //   reingreso: la persona trabajó antes en esa empresa y esa relación terminó.
+  //   nuevo: nunca tuvo relación con esa empresa.
+  function analizarIngreso(empId, rpId) {
     if (!empId) return {};
     const vig = relsEn(empId, 'vigente');
     const igual = vig.find((r) => (r.registro_patronal_id || null) === (rpId || null));
@@ -677,25 +698,16 @@
     const accCorregir = (r) => `<button type="button" class="hl-btn2" data-ir-corregir="${r.id}">Corregir datos de esa relación</button>`;
     if (igual) {
       const migr = !igual.fecha_ingreso && esMigrada(igual.id);
-      return { bloqueo: `<b>No se puede registrar ${modo === 'reingreso' ? 'el reingreso' : 'el ingreso'}.</b> La persona ya tiene una relación <b>vigente</b> en ${esc(nombreEmpresa(empId))} · ${esc(rpCorto(rpId))} (${igual.fecha_ingreso ? 'ingreso ' + fechaMx(igual.fecha_ingreso) : 'sin fecha de ingreso'}): solo puede haber una relación vigente por empresa y registro patronal.${
-        migr ? ' Es una relación migrada a la que <b>solo le falta su fecha de ingreso</b>: no es un reingreso. Captúrala con «Corregir datos».' : ' Si la persona dejó de laborar, primero registra su baja.'}<br>${migr ? accCorregir(igual) : ''}` };
+      return { tipo: 'bloqueado', bloqueo: `<b>No se puede registrar.</b> La persona ya tiene una relación <b>vigente</b> en ${esc(nombreEmpresa(empId))} · ${esc(rpCorto(rpId))} (${igual.fecha_ingreso ? 'ingreso ' + fechaMx(igual.fecha_ingreso) : 'sin fecha de ingreso'}): solo puede haber una relación vigente por empresa y registro patronal.${
+        migr ? ' Es una relación migrada a la que <b>solo le falta su fecha de ingreso</b>: captúrala con «Corregir datos».' : ' Si la persona dejó de laborar, primero registra su baja; si entra con otro registro patronal, elígelo arriba.'}<br>${migr ? accCorregir(igual) : ''}` };
     }
-    if (modo === 'reingreso' && vig.length) {
-      return { bloqueo: `<b>No es un reingreso.</b> La persona sigue con una relación <b>vigente</b> en ${esc(nombreEmpresa(empId))}: ${vig.map((r) => esc(textoRelacion(r))).join('; ')}. El reingreso es para quien ya terminó su relación con la empresa.${
-        sinFecha ? ' Esa relación es migrada y solo le falta su fecha de ingreso: captúrala con «Corregir datos».' : ' Para agregar otro registro patronal en la misma empresa usa «Registrar nuevo ingreso».'}<br>${sinFecha ? accCorregir(sinFecha) : ''}` };
-    }
-    const prev = ultimaBajaEn(empId);
-    if (modo === 'nuevo' && !vig.length && prev) {
-      return { bloqueo: `<b>Es un reingreso.</b> La persona ya trabajó en ${esc(nombreEmpresa(empId))} (${esc(rpCorto(prev.registro_patronal_id))}, ingreso ${fechaMx(prev.fecha_ingreso)}, baja ${fechaMx(prev.fecha_baja)}). Regístralo como reingreso: se abre un periodo nuevo y la relación anterior se muestra como referencia, sin cambiarla.<br><button type="button" class="hl-btn2" data-ir-reingreso="${esc(empId)}">Registrar reingreso en esta empresa</button>` };
-    }
-    if (modo === 'nuevo' && vig.length) {
-      const otra = vig[0];
-      const nEsq = esquemasDe(otra.id).filter((e) => e.activo).length;
+    if (vig.length) {
       const datos = vig.map((r) => `${esc(nombreEmpresa(r.empresa_id))} · ${esc(rpCorto(r.registro_patronal_id))} (${r.fecha_ingreso ? 'ingreso ' + fechaMx(r.fecha_ingreso) : 'sin fecha de ingreso'}${esquemasDe(r.id).filter((e) => e.activo).length ? `, con ${esquemasDe(r.id).filter((e) => e.activo).length} esquema(s) de pago` : ''})`).join('; ');
-      return { adicional: `<p class="hl-aviso-sueldo" style="margin:0">Esta persona ya tiene una relación vigente en ${datos}. <b>Registrar este ingreso no la completa: crea una relación laboral adicional</b> en ${esc(rpCorto(rpId))}${rpId ? ', con su alta (08)' : ''}. La relación existente y sus esquemas de pago siguen vigentes.${sinFecha ? ' Si solo querías capturar la fecha de ingreso, cancela y usa «Corregir datos» en esa relación.' : ''}${nEsq ? '' : ''}</p>
+      return { tipo: 'adicional', adicional: `<p class="hl-aviso-sueldo" style="margin:0">Esta persona ya tiene una relación vigente en ${datos}. <b>Registrar este ingreso no la completa: crea una relación laboral adicional</b> en ${esc(rpCorto(rpId))}${rpId ? ', con su alta (08)' : ''}. La relación existente y sus esquemas de pago siguen vigentes.${sinFecha ? ' Si solo querías capturar la fecha de ingreso, cancela y usa «Corregir datos» en esa relación.' : ''}</p>
           <label class="bd-confirma"><input type="checkbox" name="confirma_adicional" data-requerida> <span>Entiendo que se creará una relación laboral adicional.</span></label>` };
     }
-    return {};
+    const prev = ultimaBajaEn(empId);
+    return { tipo: prev ? 'reingreso' : 'nuevo', prev };
   }
   // Otra relación de la persona con la misma fecha de ingreso: se dice dónde está.
   function fechaYaRegistrada(fecha, excluirId) {
@@ -707,139 +719,84 @@
   function ligarAcciones(raiz) {
     if (!raiz) return;
     raiz.querySelectorAll('[data-ir-corregir]').forEach((b) => { b.onclick = () => { ingresoEnCurso = null; formCorregir(b.dataset.irCorregir); }; });
-    raiz.querySelectorAll('[data-ir-reingreso]').forEach((b) => { b.onclick = () => { ingresoEnCurso = null; formReingreso(b.dataset.irReingreso); }; });
+    raiz.querySelectorAll('[data-ir-reingreso]').forEach((b) => { b.onclick = () => { ingresoEnCurso = null; formIngreso(null, b.dataset.irReingreso); }; });
     raiz.querySelectorAll('[data-definir-esquema]').forEach((b) => { b.onclick = () => definirEsquema(b.dataset.definirEsquema, b.dataset.fecha); });
   }
 
+  // Condiciones del periodo. Los datos IMSS (SDI, tipos, jornada, UMF) solo se piden
+  // cuando la relación lleva registro patronal: sin RP no hay alta ante el IMSS.
   const camposCondiciones = (pre) => `
         <div><label>Fecha de ingreso</label><input name="fecha" type="date" required></div>
         <div><label>Antigüedad reconocida (opcional)</label><input name="antig" type="date"></div>
-        <div><label>SDI — salario diario integrado</label><input name="sdi" inputmode="decimal" placeholder="Ej. 450.00" autocomplete="off"></div>
-        <div><label>Tipo de trabajador</label><select name="tt">${opciones(TIPO_TRAB, pre.tt)}</select></div>
-        <div><label>Tipo de salario</label><select name="ts">${opciones(TIPO_SAL, pre.ts)}</select></div>
-        <div><label>Jornada IMSS</label><select name="jo">${opciones(JORNADA, pre.jo)}</select></div>
-        <div><label>UMF</label><input name="umf" maxlength="3" inputmode="numeric" placeholder="3 dígitos"></div>
-        <div><label>Número interno (clave IDSE)</label><input name="num" maxlength="10" value="${esc(pre.num || '')}"></div>
+        <div><label>Número interno (opcional)</label><input name="num" maxlength="10" value="${esc(pre.num || '')}"></div>
+        <div class="ing-imss-campo"><label>SDI — salario diario integrado</label><input name="sdi" inputmode="decimal" placeholder="Ej. 450.00" autocomplete="off"></div>
+        <div class="ing-imss-campo"><label>Tipo de trabajador</label><select name="tt">${opciones(TIPO_TRAB, pre.tt)}</select></div>
+        <div class="ing-imss-campo"><label>Tipo de salario</label><select name="ts">${opciones(TIPO_SAL, pre.ts)}</select></div>
+        <div class="ing-imss-campo"><label>Jornada IMSS</label><select name="jo">${opciones(JORNADA, pre.jo)}</select></div>
+        <div class="ing-imss-campo"><label>UMF (opcional)</label><input name="umf" maxlength="3" inputmode="numeric" placeholder="3 dígitos"></div>
         <div><label>Motivo / nota (opcional)</label><input name="motivo"></div>`;
 
-  // Lo común a los dos formularios: empresa → RP, avisos, borrador y envío.
-  function prepararFormIngreso(modo, borrador) {
-    const f = document.querySelector('#hl-form-ingreso form'); if (!f) return null;
-    const selE = f.querySelector('[name=empresa]'), selR = f.querySelector('[name=rp]');
-    const caja = f.querySelector('.ing-aviso'), ref = f.querySelector('.ri-ref-caja'), avFecha = f.querySelector('.ing-fecha');
-    const llenarRP = (rpSel) => {
-      const lista = rps.filter((r) => r.empresa_id === selE.value && r.activo !== false);
-      const prev = modo === 'reingreso' ? ultimaBajaEn(selE.value) : null;
-      const pref = rpSel !== undefined ? rpSel : prev ? (prev.registro_patronal_id || '') : (detalleActual || {}).registro_patronal_id;
-      selR.innerHTML = '<option value="">Sin registro patronal (sin IDSE)</option>' + lista.map((r) => `<option value="${r.id}">${esc(r.registro_patronal)}</option>`).join('');
-      if (pref != null && [...selR.options].some((o) => o.value === pref)) selR.value = pref;
-      else if (lista.length) selR.value = lista[0].id;
-      revisar();
-    };
-    const revisar = () => {
-      const m = document.getElementById('rl-msg'); if (m && m.classList.contains('err')) { m.innerHTML = ''; m.className = 'hl-msg'; }
-      const an = analizarIngreso(selE.value, selR.value || null, modo);
-      caja.innerHTML = an.bloqueo ? `<div class="ri-bloqueo">${an.bloqueo}</div>` : (an.adicional || '');
-      f.dataset.bloqueado = an.bloqueo ? '1' : '';
-      ligarAcciones(caja);
-      if (ref) ref.innerHTML = modo === 'reingreso' ? referenciaAnterior(selE.value) : antecedentesGrupo(selE.value);
-      if (avFecha) {
-        const fe = val(f, 'fecha'), otras = fechaYaRegistrada(fe, null).filter((r) => r.empresa_id === selE.value);
-        avFecha.innerHTML = otras.length ? `<div class="fd-aviso">La fecha ${fechaMx(fe)} ya está registrada como ingreso de: ${otras.map((r) => '<b>' + esc(textoDonde(r)) + '</b>').join('; ')}. Este registro crea un periodo distinto; revisa que no sea la misma relación.</div>` : '';
-      }
-      actualizarEnvio(f);
-    };
-    selE.onchange = () => llenarRP(); selR.addEventListener('change', revisar);
-    f.querySelector('[name=fecha]').addEventListener('change', revisar);
-    const sdiIng = f.querySelector('[name=sdi]');
-    sdiIng.addEventListener('input', () => formatearAlEscribir(sdiIng));
-    sdiIng.addEventListener('blur', () => { const v = leerImporte(sdiIng.value); if (v != null && !isNaN(v)) sdiIng.value = formatoImporte(v); });
-    // Borrador: si la ficha se vuelve a pintar (p. ej. al guardar datos personales), se restaura.
-    const guardarBorrador = () => {
-      const valores = {}; f.querySelectorAll('input[name],select[name]').forEach((el) => { if (el.type !== 'checkbox') valores[el.name] = el.value; });
-      ingresoEnCurso = { personaId: estado.personaId, modo, empresa: selE.value, valores };
-    };
-    f.addEventListener('input', guardarBorrador); f.addEventListener('change', guardarBorrador);
-    f.querySelector('[data-cancelar]').addEventListener('click', () => { ingresoEnCurso = null; });
-    if (borrador && borrador.valores) {
-      if (borrador.valores.empresa) selE.value = borrador.valores.empresa;
-      llenarRP(borrador.valores.rp);
-      Object.entries(borrador.valores).forEach(([k, v]) => { if (k === 'empresa' || k === 'rp') return; const el = f.querySelector(`[name="${k}"]`); if (el) el.value = v; });
-      f.dataset.sucio = '1';
-      revisar();
-    } else llenarRP();
-    ligarEnvio(f);
-    return f;
+  // ---------- Formas de pago del nuevo periodo (esquemas) ----------
+  // Una clasificación que exige NSS es de nómina IMSS: necesita registro patronal y
+  // el esquema lleva el RP de la relación. Las demás (efectivo, transferencia,
+  // honorarios…) se ligan a la relación sin RP y no piden datos de afiliación.
+  const clasifs = () => (typeof clasificaciones !== 'undefined' ? clasificaciones : []).filter((c) => c.activo !== false)
+    .slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+  const periods = () => (typeof periodicidades !== 'undefined' ? periodicidades : []).slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+  const esImss = (c) => !!(c && c.requiere_nss);
+  function filaEsquemaHtml(v) {
+    v = v || {};
+    const op = (lista, sel) => '<option value="">Elige…</option>' + lista.map((x) => `<option value="${esc(x.id)}" ${x.id === sel ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('');
+    return `<div class="esq-fila">
+      <div><label>Forma de pago</label><select data-esq="cl">${op(clasifs(), v.cl)}</select></div>
+      <div><label>Periodicidad</label><select data-esq="per">${op(periods(), v.per)}</select></div>
+      <div><label>Sueldo</label><select data-esq="mod"><option value="">Elige…</option><option value="bruto" ${v.mod === 'bruto' ? 'selected' : ''}>Bruto</option><option value="neto" ${v.mod === 'neto' ? 'selected' : ''}>Neto</option></select></div>
+      <div><label>Importe por periodo</label><input data-esq="sueldo" inputmode="decimal" placeholder="Ej. 9,000.00" autocomplete="off" value="${esc(v.sueldo || '')}"></div>
+      <div class="esq-quitar"><button type="button" class="hl-btn2" data-esq-quitar title="Quitar esta forma de pago">Quitar</button></div>
+      <div class="esq-nota"></div></div>`;
   }
-
-  // Envío común: revisión previa, laboral_registrar_ingreso y paso 2 (esquema de pago).
-  async function enviarIngreso(f, modo) {
-    const emp = val(f, 'empresa'), rp = val(f, 'rp') || null, fecha = val(f, 'fecha');
-    if (!emp || !fecha) { mensaje(`Indica empresa y fecha de ${modo === 'reingreso' ? 'reingreso' : 'ingreso'}.`, false, null, 'rl-msg'); return; }
-    const an = analizarIngreso(emp, rp, modo);
-    if (an.bloqueo) { mensaje(null, false, an.bloqueo, 'rl-msg'); return; }
-    if (an.adicional && !(f.querySelector('[name=confirma_adicional]') || {}).checked) { mensaje('Confirma que se creará una relación laboral adicional.', false, null, 'rl-msg'); return; }
-    const sdi = leerImporte(val(f, 'sdi'));
-    if (sdi != null && (isNaN(sdi) || sdi <= 0)) { mensaje('El SDI debe ser un importe mayor a cero, con hasta 2 decimales.', false, null, 'rl-msg'); return; }
-    if (modo === 'reingreso') {
-      if (!(f.querySelector('[name=confirma_expediente]') || {}).checked) { mensaje('Confirma que revisaste los datos personales, de contacto y FONACOT del expediente.', false, null, 'rl-msg'); return; }
-      const prev = ultimaBajaEn(emp);
-      if (prev && prev.fecha_baja && fecha <= String(prev.fecha_baja).slice(0, 10)) {
-        mensaje(`La fecha de reingreso debe ser posterior a la baja anterior en ${nombreEmpresa(emp)} (${fechaMx(prev.fecha_baja)}).`, false, null, 'rl-msg'); return;
-      }
-      // Condiciones del nuevo periodo: no se dan por válidas las anteriores.
-      const faltan = [];
-      if (rp && sdi == null) faltan.push('SDI');
-      if (rp && !val(f, 'tt')) faltan.push('tipo de trabajador');
-      if (rp && !val(f, 'ts')) faltan.push('tipo de salario');
-      if (rp && !val(f, 'jo')) faltan.push('jornada IMSS');
-      if (faltan.length) { mensaje(`Captura las condiciones del nuevo periodo: ${faltan.join(', ')}.`, false, null, 'rl-msg'); return; }
-    }
-    const sbc = sdi == null || !rp ? sdi : sbcDeSdi(sdi, (await topeEnRp(fecha, rp)).tope);
-    const { data: relId, error } = await sb.rpc('laboral_registrar_ingreso', {
-      p_personal_id: estado.personaId, p_empresa_id: emp, p_registro_patronal_id: rp,
-      p_fecha_ingreso: fecha, p_fecha_reconocimiento_antiguedad: val(f, 'antig') || null,
-      p_sbc: sbc, p_sdi: sdi, p_tipo_trabajador: val(f, 'tt') || null, p_tipo_salario: val(f, 'ts') || null,
-      p_jornada: val(f, 'jo') || null, p_umf: val(f, 'umf') || null, p_numero_interno: val(f, 'num') || null, p_motivo: val(f, 'motivo') || null,
+  const leerFilas = (f) => [...f.querySelectorAll('.esq-fila')].map((d) => {
+    const g = (k) => { const el = d.querySelector(`[data-esq="${k}"]`); return el ? (el.value || '').trim() : ''; };
+    return { el: d, cl: g('cl'), per: g('per'), mod: g('mod'), sueldo: g('sueldo') };
+  });
+  const filaVacia = (x) => !x.cl && !x.per && !x.mod && !x.sueldo;
+  function notasFilas(f) {
+    const conRp = !!val(f, 'rp');
+    leerFilas(f).forEach((x) => {
+      const c = clasifs().find((k) => k.id === x.cl), n = x.el.querySelector('.esq-nota');
+      if (!n) return;
+      n.textContent = !c ? '' : esImss(c)
+        ? (conRp ? `Nómina IMSS: se liga al registro patronal ${textoRP(val(f, 'rp')) || ''} de esta relación.` : 'Nómina IMSS: necesita un registro patronal (sección 2).')
+        : 'Sin datos de afiliación al IMSS: se liga a esta relación sin registro patronal.';
+      n.classList.toggle('err', !!c && esImss(c) && !conRp);
     });
-    if (error) { mensaje(msgError(error), false, null, 'rl-msg'); return; }
-    ingresoEnCurso = null;
-    const donde = `${esc(nombreEmpresa(emp))} · ${esc(rpCorto(rp))}`;
-    const html = `<b>${modo === 'reingreso' ? 'Reingreso registrado' : 'Ingreso registrado'}</b> en ${donde} con fecha ${fechaMx(fecha)}. `
-      + (rp ? `El alta (08) quedó <b>pendiente</b> en la bandeja IDSE del registro patronal <b>${esc(textoRP(rp))}</b>.${enlaceBandeja(rp)}` : 'Sin registro patronal: no genera movimiento IDSE.')
-      + (modo === 'reingreso' ? '<br>La relación anterior y su historia no cambiaron; sus esquemas de pago siguen cerrados.' : '')
-      + `<br><b>Paso 2:</b> define el esquema de pago del nuevo periodo (periodicidad, modalidad y sueldo). <button type="button" class="hl-btn2" data-definir-esquema="${esc(relId)}" data-fecha="${esc(fecha)}">Definir el esquema de pago</button>`;
-    await reabrir({ html });
   }
 
-  function formIngreso(borrador) {
+  // Datos del expediente: se muestran y se editan en sus secciones; nada se vuelve a capturar.
+  function expedienteHtml() {
     const p = detalleActual || {};
-    const emps = empresasActivas();
-    montar('hl-form-ingreso', `<b>Registrar nuevo ingreso</b>
-      <p class="hint" style="margin:4px 0 8px">Para una empresa con la que esta persona nunca ha tenido relación laboral. Si ya trabajó en ella, usa «Registrar reingreso». La fecha de ingreso es la que va al IMSS; la antigüedad reconocida es aparte y no la modifica.</p>
-      <p class="hint" style="margin:0 0 8px">${esc(SDI_AYUDA)}</p>
-      <div class="ri-ref-caja"></div>
-      <div class="hl-grid">
-        <div><label>Empresa</label><select name="empresa" required><option value="">Elige…</option>${emps.map((e) => `<option value="${e.id}" ${e.id === p.empresa_id ? 'selected' : ''}>${esc(e.nombre)}</option>`).join('')}</select></div>
-        <div><label>Registro patronal</label><select name="rp"></select></div>
-        ${camposCondiciones({ tt: '1', ts: '0', jo: '0', num: estado.relaciones.length ? '' : p.numero_interno_trabajador })}
-      </div><div class="ing-aviso"></div><div class="ing-fecha"></div>${botones('Registrar ingreso')}`, (f) => enviarIngreso(f, 'nuevo'));
-    prepararFormIngreso('nuevo', borrador);
+    const d = (x) => esc(x == null || x === '' ? '—' : x);
+    return `<div class="ri-ref"><h5>Expediente ${d(p.empleado_id)} · ${d(p.nombre_completo)}</h5>
+      <div class="rl-campos"><div class="rl-col">${campoRl('CURP', d(p.curp))}${campoRl('RFC', d(p.rfc))}${campoRl('NSS', d(p.nss))}${campoRl('Código postal fiscal', d(p.cp_fiscal))}</div>
+      <div class="rl-col">${campoRl('Contacto de emergencia', d([p.contacto_emergencia_nombre, p.contacto_emergencia_parentesco].filter(Boolean).join(' · ')))}${campoRl('Teléfono de emergencia', d(p.contacto_emergencia_telefono))}${campoRl('No. FONACOT', d(p.no_fonacot))}</div></div>
+      <p class="ri-nota">Es el mismo expediente: no se crea otra persona. Si algún dato cambió, actualízalo; lo que captures aquí se conserva.
+      <button type="button" class="hl-btn2" data-ir-seccion="personal" style="margin-left:6px">Actualizar datos personales</button>
+      <button type="button" class="hl-btn2" data-ir-seccion="contacto">Actualizar contacto</button>
+      <button type="button" class="hl-btn2" data-ir-seccion="prestaciones">Actualizar FONACOT</button></p></div>`;
   }
 
-  // Antecedentes de la persona en OTRAS empresas del grupo (referencia en un nuevo ingreso).
+  // Antecedentes de la persona en OTRAS empresas del grupo (referencia en un ingreso nuevo).
   function antecedentesGrupo(empId) {
     const otras = estado.relaciones.filter((r) => r.estado === 'baja' && r.empresa_id !== empId);
     if (!otras.length) return '';
     return `<div class="ri-ref"><h5>Antecedentes de esta persona en el grupo (referencia)</h5>
       <ul class="bd-lista" style="margin:0">${otras.map((r) => `<li>${esc(nombreEmpresa(r.empresa_id))} · ${esc(rpCorto(r.registro_patronal_id))} · ingreso ${fechaMx(r.fecha_ingreso)} · baja ${fechaMx(r.fecha_baja)}</li>`).join('')}</ul>
-      <p class="ri-nota">Es el mismo expediente: no se crea otra persona. La relación con cada empresa se registra por separado; las relaciones anteriores no cambian.</p></div>`;
+      <p class="ri-nota">La relación con cada empresa se registra por separado; las relaciones anteriores no cambian.</p></div>`;
   }
 
   // Relación anterior en la empresa elegida (referencia en un reingreso): visible, no se copia.
   function referenciaAnterior(empId) {
     const r = ultimaBajaEn(empId);
-    if (!empId) return '<p class="hint">Elige la empresa a la que regresa para ver su relación anterior.</p>';
     if (!r) return '';
     const v = (x) => esc(x == null || x === '' ? '—' : x);
     const esq = esquemasDe(r.id);
@@ -849,60 +806,209 @@
       campoRl('SDI', r.sdi != null ? dinero(r.sdi) : '—')];
     const der = [campoRl('Tipo de trabajador', v(valorLegible('tipo_trabajador', r.tipo_trabajador))), campoRl('Tipo de salario', v(valorLegible('tipo_salario', r.tipo_salario))),
       campoRl('Jornada IMSS', v(valorLegible('jornada', r.jornada))), campoRl('UMF', v(r.umf)), campoRl('Número interno', v(r.numero_interno))];
-    return `<div class="ri-ref" data-ref-relacion="${r.id}"><h5>Relación anterior en ${esc(nombreEmpresa(empId))} (referencia)</h5>
+    return `<details class="ri-ref" data-ref-relacion="${r.id}"><summary><b>Relación anterior en ${esc(nombreEmpresa(empId))}</b> · ingreso ${fechaMx(r.fecha_ingreso)} · baja ${fechaMx(r.fecha_baja)} (ver detalle)</summary>
       <div class="rl-campos"><div class="rl-col">${izq.join('')}</div><div class="rl-col">${der.join('')}</div></div>
       <div class="rl-esqs">Esquemas de pago de ese periodo: ${esq.length ? esq.map((e) => `${esc(esquemaTexto(e))} (${e.activo ? 'activo' : 'cerrado' + (e.fecha_fin ? ' el ' + fechaMx(e.fecha_fin) : '')})`).join('; ') : '<i>ninguno</i>'}.</div>
-      <p class="ri-nota">Estos datos <b>no se copian ni se reactivan</b>: el reingreso abre un periodo nuevo y la relación anterior, sus movimientos y sus esquemas quedan como están.
-      <button type="button" class="hl-btn2" data-copiar-anterior="${r.id}" style="margin-left:6px">Usar tipo de trabajador, salario, jornada, UMF y número interno anteriores como punto de partida</button></p></div>`;
+      <p class="ri-nota">No se copian ni se reactivan: la relación anterior, sus movimientos y sus esquemas quedan como están.</p></details>
+      <button type="button" class="hl-btn2" data-copiar-anterior="${r.id}" style="margin:0 0 6px">Usar las condiciones anteriores como punto de partida</button>`;
   }
 
-  // Datos del expediente que se revisan en el reingreso (se editan en sus secciones de la ficha).
-  function expedienteHtml() {
+  // Tipo detectado, en una línea, para que RH sepa qué se va a registrar.
+  function textoTipo(an, empId) {
+    const emp = esc(nombreEmpresa(empId));
+    if (an.tipo === 'reingreso') return `<b>Reingreso a ${emp}.</b> Trabajó ahí del ${fechaMx(an.prev.fecha_ingreso)} al ${fechaMx(an.prev.fecha_baja)} (${esc(rpCorto(an.prev.registro_patronal_id))}). Se abre un periodo nuevo; la relación anterior queda como está.`;
+    if (an.tipo === 'nuevo') return `<b>Ingreso nuevo a ${emp}.</b> La persona no ha tenido relación con esta empresa.`;
+    if (an.tipo === 'adicional') return `<b>Relación adicional en ${emp}.</b>`;
+    return '';
+  }
+
+  // =====================================================================
+  // Registrar ingreso / reingreso: un solo formulario. RH elige la empresa
+  // y BeeHuman determina si es ingreso nuevo, reingreso o relación adicional.
+  // =====================================================================
+  function formIngreso(borrador, empPre) {
     const p = detalleActual || {};
-    const d = (x) => esc(x == null || x === '' ? '—' : x);
-    return `<div class="ri-ref"><h5>Expediente ${d(p.empleado_id)} · ${d(p.nombre_completo)}</h5>
-      <div class="rl-campos"><div class="rl-col">${campoRl('CURP', d(p.curp))}${campoRl('RFC', d(p.rfc))}${campoRl('NSS', d(p.nss))}${campoRl('Código postal fiscal', d(p.cp_fiscal))}</div>
-      <div class="rl-col">${campoRl('Contacto de emergencia', d([p.contacto_emergencia_nombre, p.contacto_emergencia_parentesco].filter(Boolean).join(' · ')))}${campoRl('Teléfono de emergencia', d(p.contacto_emergencia_telefono))}${campoRl('No. FONACOT', d(p.no_fonacot))}</div></div>
-      <p class="ri-nota">Es el mismo expediente: se conserva su ID, CURP, RFC y NSS y no se crea otra persona. Si algo cambió, actualízalo y guarda en su sección; lo que ya capturaste aquí se conserva.
-      <button type="button" class="hl-btn2" data-ir-seccion="personal" style="margin-left:6px">Actualizar datos personales</button>
-      <button type="button" class="hl-btn2" data-ir-seccion="contacto">Actualizar contacto</button>
-      <button type="button" class="hl-btn2" data-ir-seccion="prestaciones">Actualizar FONACOT</button></p></div>
-      <label class="bd-confirma"><input type="checkbox" name="confirma_expediente" data-requerida> <span>Revisé los datos personales, de contacto y FONACOT: están vigentes para este periodo.</span></label>`;
-  }
-
-  function formReingreso(empPre, borrador) {
-    const conBaja = [...new Set(estado.relaciones.filter((r) => r.estado === 'baja').map((r) => r.empresa_id))];
-    if (!conBaja.length) { formIngreso(); return; }
-    const emps = empresasActivas().filter((e) => conBaja.includes(e.id));
-    const ultima = estado.relaciones.filter((r) => r.estado === 'baja').sort((a, b) => String(b.fecha_baja || '').localeCompare(String(a.fecha_baja || '')))[0];
-    const pre = empPre && conBaja.includes(empPre) ? empPre : (borrador && borrador.empresa) || (ultima || {}).empresa_id;
-    montar('hl-form-ingreso', `<b>Registrar reingreso</b>
-      <p class="hint" style="margin:4px 0 8px">Para una persona que ya trabajó en la empresa y cuya relación terminó. Se abre un <b>periodo laboral nuevo</b>: la relación anterior, sus movimientos y sus esquemas de pago no cambian ni se reactivan. Si regresa a otra empresa del grupo, usa «Registrar nuevo ingreso» (es el mismo expediente).</p>
-      <div class="ri-sec">1 · Expediente de la persona</div>${expedienteHtml()}
-      <div class="ri-sec">2 · Empresa y registro patronal del reingreso</div>
+    const emps = empresasActivas();
+    const pre = empPre || (borrador && borrador.empresa) || (emps.some((e) => e.id === p.empresa_id) ? p.empresa_id : '');
+    const primera = !estado.relaciones.length;
+    montar('hl-form-ingreso', `<b>Registrar ingreso / reingreso</b>
+      <p class="hint" style="margin:4px 0 8px">Elige la empresa: BeeHuman indica si es un ingreso nuevo o un reingreso. Las relaciones anteriores y sus esquemas de pago no cambian ni se reactivan.</p>
+      <div class="ri-sec">1 · Persona</div>${expedienteHtml()}
+      <div class="ri-sec">2 · Empresa y registro patronal</div>
       <div class="hl-grid">
-        <div><label>Empresa a la que regresa</label><select name="empresa" required><option value="">Elige…</option>${emps.map((e) => `<option value="${e.id}" ${e.id === pre ? 'selected' : ''}>${esc(e.nombre)}</option>`).join('')}</select></div>
+        <div><label>Empresa</label><select name="empresa" required><option value="">Elige…</option>${emps.map((e) => `<option value="${e.id}" ${e.id === pre ? 'selected' : ''}>${esc(e.nombre)}</option>`).join('')}</select></div>
         <div><label>Registro patronal</label><select name="rp"></select></div>
-      </div><div class="ing-aviso"></div>
-      <div class="ri-sec">3 · Relación anterior (referencia)</div><div class="ri-ref-caja"></div>
-      <div class="ri-sec">4 · Condiciones del nuevo periodo</div>
-      <p class="hint" style="margin:0 0 8px">Captúralas y confírmalas: no se toman de la relación anterior. ${esc(SDI_AYUDA)}</p>
-      <div class="hl-grid">${camposCondiciones({})}</div><div class="ing-fecha"></div>
-      <div class="ri-sec">5 · Esquema de pago, prestaciones y créditos</div>
-      <p class="hint" style="margin:0 0 8px">Los esquemas de pago del periodo anterior siguen cerrados. Al registrar el reingreso defines el nuevo esquema (periodicidad, modalidad y sueldo) en Compensación. FONACOT se revisa en el expediente (paso 1).</p>
-      ${botones('Registrar reingreso')}`, (f) => enviarIngreso(f, 'reingreso'));
-    const f = prepararFormIngreso('reingreso', borrador);
-    if (!f) return;
-    f.querySelectorAll('[data-ir-seccion]').forEach((b) => { b.onclick = () => { if (typeof cambiarSeccionDetalle === 'function') cambiarSeccionDetalle(b.dataset.irSeccion); }; });
+      </div><div class="ing-tipo"></div><div class="ing-aviso"></div><div class="ri-ref-caja"></div>
+      <div class="ri-sec">3 · Condiciones laborales</div>
+      <p class="hint ing-imss-ayuda" style="margin:0 0 8px">Con registro patronal se piden los datos del alta ante el IMSS. ${esc(SDI_AYUDA)}</p>
+      <div class="hl-grid">${camposCondiciones({ tt: '1', ts: '0', jo: '0', num: primera ? p.numero_interno_trabajador : '' })}</div><div class="ing-fecha"></div>
+      <div class="ri-sec">4 · Formas de pago</div>
+      <p class="hint" style="margin:0 0 8px">Una o varias (IMSS, efectivo, transferencia, honorarios…). Se ligan a este nuevo periodo e inician en la fecha de ingreso. Puedes dejarlas para después en Compensación.</p>
+      <div class="esq-filas"></div>
+      <button type="button" class="hl-btn2" data-esq-agregar style="margin:0">Agregar otra forma de pago</button>
+      <div class="ri-sec">5 · Prestaciones y créditos</div>
+      <p class="hint" style="margin:0 0 8px">FONACOT se revisa en el expediente (sección 1). INFONAVIT y otros descuentos se registrarán en el módulo de créditos y deducciones (pendiente).</p>
+      <div class="ing-err" role="alert" aria-live="assertive"></div>
+      ${botones('Registrar ingreso')}`, (f) => enviarIngreso(f));
+    const f = document.querySelector('#hl-form-ingreso form'); if (!f) return;
+    f.dataset.siempreActivo = '1'; // nunca un botón que «no hace nada»: al enviar se dice qué falta
+    const selE = f.querySelector('[name=empresa]'), selR = f.querySelector('[name=rp]');
+    const caja = f.querySelector('.ing-aviso'), ref = f.querySelector('.ri-ref-caja'), avFecha = f.querySelector('.ing-fecha'), tipo = f.querySelector('.ing-tipo');
+    const filas = f.querySelector('.esq-filas');
+    const agregarFila = (v) => { filas.insertAdjacentHTML('beforeend', filaEsquemaHtml(v)); notasFilas(f); };
+    const llenarRP = (rpSel) => {
+      const lista = rps.filter((r) => r.empresa_id === selE.value && r.activo !== false);
+      const prev = ultimaBajaEn(selE.value);
+      const pref = rpSel !== undefined ? rpSel : prev ? (prev.registro_patronal_id || '') : (p.empresa_id === selE.value ? p.registro_patronal_id : undefined);
+      selR.innerHTML = '<option value="">Sin registro patronal (sin IDSE)</option>' + lista.map((r) => `<option value="${r.id}">${esc(r.registro_patronal)}</option>`).join('');
+      if (pref != null && [...selR.options].some((o) => o.value === pref)) selR.value = pref;
+      else if (lista.length) selR.value = lista[0].id;
+      revisar();
+    };
+    const revisar = () => {
+      const m = document.getElementById('rl-msg'); if (m && m.classList.contains('err')) { m.innerHTML = ''; m.className = 'hl-msg'; }
+      const an = analizarIngreso(selE.value, selR.value || null);
+      const confirmado = (f.querySelector('[name=confirma_adicional]') || {}).checked;
+      tipo.innerHTML = selE.value ? `<p class="ing-tipo-txt ${an.tipo || ''}">${textoTipo(an, selE.value)}</p>` : '<p class="hint" style="margin:6px 0">Elige la empresa en la que trabajará.</p>';
+      caja.innerHTML = an.bloqueo ? `<div class="ri-bloqueo">${an.bloqueo}</div>` : (an.adicional || '');
+      if (confirmado && caja.querySelector('[name=confirma_adicional]')) caja.querySelector('[name=confirma_adicional]').checked = true;
+      ligarAcciones(caja);
+      if (ref) ref.innerHTML = an.tipo === 'reingreso' ? referenciaAnterior(selE.value) : (an.tipo === 'nuevo' ? antecedentesGrupo(selE.value) : '');
+      const conRp = !!selR.value;
+      f.querySelectorAll('.ing-imss-campo').forEach((d) => { d.style.display = conRp ? '' : 'none'; });
+      f.querySelector('.ing-imss-ayuda').style.display = conRp ? '' : 'none';
+      const bt = f.querySelector('button[type=submit]'); if (bt) bt.textContent = an.tipo === 'reingreso' ? 'Registrar reingreso' : 'Registrar ingreso';
+      if (avFecha) {
+        const fe = val(f, 'fecha'), otras = fechaYaRegistrada(fe, null).filter((r) => r.empresa_id === selE.value);
+        avFecha.innerHTML = otras.length ? `<div class="fd-aviso">La fecha ${fechaMx(fe)} ya está registrada como ingreso de: ${otras.map((r) => '<b>' + esc(textoDonde(r)) + '</b>').join('; ')}. Este registro crea un periodo distinto; revisa que no sea la misma relación.</div>` : '';
+      }
+      notasFilas(f);
+    };
+    selE.onchange = () => llenarRP(); selR.addEventListener('change', revisar);
+    f.querySelector('[name=fecha]').addEventListener('change', revisar);
+    const sdiIng = f.querySelector('[name=sdi]');
+    sdiIng.addEventListener('input', () => formatearAlEscribir(sdiIng));
+    sdiIng.addEventListener('blur', () => { const v = leerImporte(sdiIng.value); if (v != null && !isNaN(v)) sdiIng.value = formatoImporte(v); });
+    f.addEventListener('input', (ev) => { if (ev.target.matches('[data-esq="sueldo"]')) formatearAlEscribir(ev.target); });
+    f.addEventListener('change', (ev) => { if (ev.target.matches('[data-esq]')) notasFilas(f); });
     f.addEventListener('click', (ev) => {
+      if (ev.target.closest('[data-esq-agregar]')) { agregarFila(); f.dataset.sucio = '1'; guardarBorrador(); return; }
+      const q = ev.target.closest('[data-esq-quitar]');
+      if (q) { q.closest('.esq-fila').remove(); if (!filas.children.length) agregarFila(); f.dataset.sucio = '1'; guardarBorrador(); return; }
+      const s = ev.target.closest('[data-ir-seccion]');
+      if (s && typeof cambiarSeccionDetalle === 'function') { cambiarSeccionDetalle(s.dataset.irSeccion); return; }
       const b = ev.target.closest('[data-copiar-anterior]'); if (!b) return;
       const r = estado.relaciones.find((x) => x.id === b.dataset.copiarAnterior); if (!r) return;
       [['tt', r.tipo_trabajador], ['ts', r.tipo_salario], ['jo', r.jornada], ['umf', r.umf], ['num', r.numero_interno]].forEach(([k, v]) => {
         const el = f.querySelector(`[name="${k}"]`); if (el && v != null) { el.value = v; el.classList.add('hl-falta'); el.title = 'Copiado de la relación anterior: revísalo'; }
       });
-      f.dataset.sucio = '1'; f.dispatchEvent(new Event('change'));
-      mensaje('Se copiaron como punto de partida (marcados en amarillo). Revísalos: el reingreso solo se registra con lo que confirmes al enviar.', true, null, 'rl-msg');
+      f.dataset.sucio = '1'; guardarBorrador();
+      mensaje('Se copiaron como punto de partida (marcados en amarillo): tipo de trabajador, salario, jornada, UMF y número interno. Revísalos; el SDI y las formas de pago se capturan de nuevo.', true, null, 'rl-msg');
     });
+    // Borrador: si la ficha se vuelve a pintar (p. ej. al guardar datos personales), se restaura todo.
+    const guardarBorrador = () => {
+      const valores = {}, marcas = {};
+      f.querySelectorAll('input[name],select[name]').forEach((el) => { if (el.type === 'checkbox') marcas[el.name] = el.checked; else valores[el.name] = el.value; });
+      ingresoEnCurso = { personaId: estado.personaId, empresa: selE.value, valores, marcas,
+        esquemas: leerFilas(f).map(({ cl, per, mod, sueldo }) => ({ cl, per, mod, sueldo })) };
+    };
+    f.addEventListener('input', guardarBorrador); f.addEventListener('change', guardarBorrador);
+    f.querySelector('[data-cancelar]').addEventListener('click', () => { ingresoEnCurso = null; });
+    (borrador && borrador.esquemas && borrador.esquemas.length ? borrador.esquemas : [null]).forEach((v) => agregarFila(v));
+    if (borrador && borrador.valores) {
+      if (borrador.valores.empresa) selE.value = borrador.valores.empresa;
+      llenarRP(borrador.valores.rp);
+      Object.entries(borrador.valores).forEach(([k, v]) => { if (k === 'empresa' || k === 'rp') return; const el = f.querySelector(`[name="${k}"]`); if (el) el.value = v; });
+      revisar();
+      Object.entries(borrador.marcas || {}).forEach(([k, v]) => { const el = f.querySelector(`[name="${k}"]`); if (el) el.checked = v; });
+      f.dataset.sucio = '1';
+      revisar();
+    } else llenarRP();
+    ligarEnvio(f);
+  }
+
+  // Revisión completa antes de enviar: junta TODO lo que falta, con su sección.
+  function revisarIngreso(f) {
+    const faltan = [], marcar = [];
+    const emp = val(f, 'empresa'), rp = val(f, 'rp') || null, fecha = val(f, 'fecha');
+    const campo = (n) => f.querySelector(`[name="${n}"]`);
+    const an = analizarIngreso(emp, rp);
+    if (!emp) { faltan.push('Elige la <b>empresa</b> (sección 2).'); marcar.push(campo('empresa')); }
+    if (an.bloqueo) faltan.push('Ya existe una relación vigente en esa empresa y registro patronal (sección 2): revisa el aviso en rojo.');
+    if (an.adicional && !(campo('confirma_adicional') || {}).checked) { faltan.push('Confirma que se creará una <b>relación laboral adicional</b> (sección 2).'); marcar.push(campo('confirma_adicional')); }
+    if (!fecha) { faltan.push('Captura la <b>fecha de ingreso</b> (sección 3).'); marcar.push(campo('fecha')); }
+    else if (an.tipo === 'reingreso' && an.prev && an.prev.fecha_baja && fecha <= String(an.prev.fecha_baja).slice(0, 10)) {
+      faltan.push(`La <b>fecha de ingreso</b> debe ser posterior a la baja anterior en ${esc(nombreEmpresa(emp))} (${fechaMx(an.prev.fecha_baja)}) (sección 3).`); marcar.push(campo('fecha'));
+    }
+    const sdi = leerImporte(val(f, 'sdi'));
+    if (rp) {
+      if (sdi == null) { faltan.push('Captura el <b>SDI</b>: la relación lleva registro patronal y genera el alta ante el IMSS (sección 3).'); marcar.push(campo('sdi')); }
+      else if (isNaN(sdi) || sdi <= 0) { faltan.push('El <b>SDI</b> debe ser un importe mayor a cero, con hasta 2 decimales (sección 3).'); marcar.push(campo('sdi')); }
+      [['tt', 'tipo de trabajador'], ['ts', 'tipo de salario'], ['jo', 'jornada IMSS']].forEach(([k, t]) => { if (!val(f, k)) { faltan.push(`Elige el <b>${t}</b> (sección 3).`); marcar.push(campo(k)); } });
+      if (val(f, 'umf') && !/^\d{3}$/.test(val(f, 'umf'))) { faltan.push('La <b>UMF</b> lleva 3 dígitos (sección 3).'); marcar.push(campo('umf')); }
+    }
+    const esquemas = [];
+    leerFilas(f).forEach((x, i) => {
+      if (filaVacia(x)) return;
+      const n = `forma de pago ${i + 1}`, c = clasifs().find((k) => k.id === x.cl);
+      const sel = (k) => x.el.querySelector(`[data-esq="${k}"]`);
+      if (!c) { faltan.push(`Elige el tipo de la <b>${n}</b> (sección 4).`); marcar.push(sel('cl')); }
+      if (!x.per) { faltan.push(`Elige la periodicidad de la <b>${n}</b> (sección 4).`); marcar.push(sel('per')); }
+      if (!x.mod) { faltan.push(`Indica si el sueldo de la <b>${n}</b> es bruto o neto (sección 4).`); marcar.push(sel('mod')); }
+      const s = leerImporte(x.sueldo);
+      if (s == null || isNaN(s) || s <= 0) { faltan.push(`Captura el importe de la <b>${n}</b>: un número mayor a cero, con hasta 2 decimales (sección 4).`); marcar.push(sel('sueldo')); }
+      if (c && esImss(c) && !rp) { faltan.push(`La <b>${n}</b> (${esc(c.nombre)}) es de nómina IMSS: elige un registro patronal (sección 2) o cambia la forma de pago.`); marcar.push(sel('cl'), campo('rp')); }
+      if (c && typeof requisitosFaltantesRegistroPago === 'function') {
+        const req = requisitosFaltantesRegistroPago(c, detalleActual || {});
+        if (req.length) faltan.push(`Para la <b>${n}</b> (${esc(c.nombre)}) el expediente debe tener ${esc(req.join(', '))} completos y válidos: actualízalos en «Datos personales» (sección 1).`);
+      }
+      if (c) esquemas.push({ c, per: x.per, mod: x.mod, sueldo: s });
+    });
+    return { faltan, marcar: marcar.filter(Boolean), an, emp, rp, fecha, sdi, esquemas };
+  }
+  function mostrarFaltantes(f, rev) {
+    f.querySelectorAll('.hl-falta').forEach((el) => { if (!el.title) el.classList.remove('hl-falta'); });
+    rev.marcar.forEach((el) => el.classList.add('hl-falta'));
+    const caja = f.querySelector('.ing-err');
+    caja.innerHTML = `<b>Falta${rev.faltan.length > 1 ? 'n' : ''} ${rev.faltan.length} dato${rev.faltan.length > 1 ? 's' : ''} para registrar:</b><ul>${rev.faltan.map((t) => `<li>${t}</li>`).join('')}</ul>`;
+    caja.className = 'ing-err activo';
+    caja.scrollIntoView({ block: 'nearest' });
+  }
+
+  // Envío: relación laboral (con su 08 si lleva RP) y después sus formas de pago.
+  // LIMITACIÓN CONOCIDA (fase A): son dos pasos, no atómicos. Si una forma de pago
+  // falla, la relación ya quedó registrada y el mensaje dice cuál falta.
+  async function enviarIngreso(f) {
+    const rev = revisarIngreso(f);
+    if (rev.faltan.length) { mostrarFaltantes(f, rev); return; }
+    const caja = f.querySelector('.ing-err'); caja.innerHTML = ''; caja.className = 'ing-err';
+    const { emp, rp, fecha, sdi, an } = rev;
+    const sbc = sdi == null || !rp ? null : sbcDeSdi(sdi, (await topeEnRp(fecha, rp)).tope);
+    const { data: relId, error } = await sb.rpc('laboral_registrar_ingreso', {
+      p_personal_id: estado.personaId, p_empresa_id: emp, p_registro_patronal_id: rp,
+      p_fecha_ingreso: fecha, p_fecha_reconocimiento_antiguedad: val(f, 'antig') || null,
+      p_sbc: rp ? sbc : null, p_sdi: rp ? sdi : null, p_tipo_trabajador: rp ? (val(f, 'tt') || null) : null, p_tipo_salario: rp ? (val(f, 'ts') || null) : null,
+      p_jornada: rp ? (val(f, 'jo') || null) : null, p_umf: rp ? (val(f, 'umf') || null) : null, p_numero_interno: val(f, 'num') || null, p_motivo: val(f, 'motivo') || null,
+    });
+    if (error) { mostrarFaltantes(f, { faltan: [esc(msgError(error))], marcar: [] }); return; }
+    const guardados = [], fallidos = [];
+    for (const e of rev.esquemas) {
+      const fila = { personal_id: estado.personaId, clasificacion_id: e.c.id, periodicidad_id: e.per, sueldo: e.sueldo, modalidad_sueldo: e.mod,
+        empresa_id: emp, registro_patronal_id: esImss(e.c) ? rp : null, fecha_inicio: fecha, relacion_laboral_id: relId };
+      const id = typeof nuevoUuidRegistroPago === 'function' ? nuevoUuidRegistroPago() : null; if (id) fila.id = id;
+      let r; try { r = await sb.from('personal_registros_pago').insert(fila); } catch (x) { r = { error: x }; }
+      const txt = `${esc(e.c.nombre)} · ${dinero(e.sueldo)} ${esc(e.mod)} · ${esc(nombreEn(periods(), e.per) || '')}`;
+      if (r.error) fallidos.push(`${txt} (${esc(msgError(r.error))})`); else guardados.push(txt);
+    }
+    ingresoEnCurso = null;
+    const donde = `${esc(nombreEmpresa(emp))} · ${esc(rpCorto(rp))}`;
+    const html = `<b>${an.tipo === 'reingreso' ? 'Reingreso registrado' : 'Ingreso registrado'}</b> en ${donde} con fecha ${fechaMx(fecha)}. `
+      + (rp ? `El alta (08) quedó <b>pendiente</b> en la bandeja IDSE del registro patronal <b>${esc(textoRP(rp))}</b>.${enlaceBandeja(rp)}` : 'Sin registro patronal: no genera movimiento IDSE.')
+      + (an.tipo === 'reingreso' ? '<br>La relación anterior y su historia no cambiaron; sus esquemas de pago siguen cerrados.' : '')
+      + (guardados.length ? `<br><b>Formas de pago registradas:</b> ${guardados.join('; ')}.` : '')
+      + (fallidos.length ? `<br><b>No se guardó:</b> ${fallidos.join('; ')}. La relación sí quedó registrada. <button type="button" class="hl-btn2" data-definir-esquema="${esc(relId)}" data-fecha="${esc(fecha)}">Agregar la forma de pago en Compensación</button>`
+        : !guardados.length ? `<br>Sin forma de pago registrada. <button type="button" class="hl-btn2" data-definir-esquema="${esc(relId)}" data-fecha="${esc(fecha)}">Definir la forma de pago</button>` : '');
+    await reabrir({ html, error: fallidos.length > 0 });
   }
 
   // Paso 2: Compensación con el alta de esquema ya ligada a la nueva relación (empresa, RP y fecha).
@@ -1689,8 +1795,18 @@
   // Cambios pendientes reales en los formularios de Relación laboral y Compensación
   // (se guardan con sus propios botones; la ficha general no los compara).
   function formularioConDatos() { return !!document.querySelector('#rl-raiz form.hl-form[data-sucio], #sbc-raiz form.hl-form[data-sucio]'); }
+  // Atajo desde el menú Estatus (persona en Baja): abre el registro en Relación laboral.
+  function ingresoDesdeEstatus() {
+    if (!puedeOperar()) return false;
+    if (typeof cambiarSeccionDetalle === 'function') cambiarSeccionDetalle('laboral');
+    ingresoEnCurso = null; formIngreso();
+    const f = document.querySelector('#hl-form-ingreso'); if (f) f.scrollIntoView({ block: 'start' });
+    return true;
+  }
+  // Para Compensación: relaciones de la persona abierta (null si aún no cargan o no tiene historial).
+  function relacionesDe(pid) { return estado.personaId === pid && estado.relaciones.length ? estado.relaciones.slice() : null; }
   window.BH_laboral = { alAbrirDetalle, trasAlta, abrirIdse, fichaBloqueada, irABandeja, trasCambioSueldo, formularioConDatos, avisoCierre, bajaDesdeEstatus,
-    relacionDeEsquema, expedienteExistente, avisoExpedienteExistente, abrirExpedienteParaReingreso };
+    relacionDeEsquema, expedienteExistente, avisoExpedienteExistente, abrirExpedienteParaReingreso, ingresoDesdeEstatus, relacionesDe };
   prepararAlta();
   const bIdse = document.querySelector('nav.tabs button[data-tab="idse"]');
   if (bIdse) bIdse.addEventListener('click', () => { abrirIdse(); });

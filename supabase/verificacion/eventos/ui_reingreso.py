@@ -311,7 +311,7 @@ with sync_playwright() as p:
     if pg.is_visible('#modal-overlay'): pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
     ir(pg, 'alta')
     pg.fill('#f-nombres', 'VALERIA'); pg.fill('#f-apellido1', 'NUEVA'); pg.fill('#f-apellido2', 'PRUEBA')
-    pg.fill('#f-curp', 'NUPV950505MDFVRL09'); pg.fill('#f-rfc', 'NUPV950505AB3'); pg.fill('#f-nss', '88888888880')
+    pg.fill('#f-curp', 'NUPV950505MDFVRL09'); pg.fill('#f-rfc', 'NUPV950505AB3'); pg.fill('#f-nss', '88888888885')
     pg.click('#btn-alta'); pg.wait_for_timeout(2500)
     PV = q("select id from personal where curp = 'NUPV950505MDFVRL09'")
     ok(PV and q(f"select count(*) from relaciones_laborales where personal_id = '{PV}'") == '0', 'R4a alta sin coincidencias: persona nueva sin relaciones')
@@ -326,6 +326,31 @@ with sync_playwright() as p:
     ok('Ingreso registrado' in txt(pg, '#rl-msg') and q(f"select tipo_movimiento || '|' || estado || '|' || fecha_movimiento from idse_movimientos where relacion_laboral_id = '{RV}'") == '08|pendiente|2026-11-05'
        and q(f"select string_agg(c.nombre || ':' || coalesce(x.registro_patronal_id::text,'sinRP'), ',' order by c.nombre) from personal_registros_pago x join clasificaciones_personal c on c.id = x.clasificacion_id where x.relacion_laboral_id = '{RV}'") == f'IMSS:{RP2},TRANSFERENCIA:sinRP',
        'R4c ingreso nuevo con RP2: 08 pendiente y las dos formas de pago (IMSS con RP, transferencia sin RP)')
+    # Número interno y UMF son opcionales para el IDSE (11-nov): VALERIA no los tiene; RAMIRO sí (R01, 016).
+    ok(q(f"select coalesce(umf, '∅') || '|' || coalesce(numero_interno, '∅') from relaciones_laborales where id = '{RV}'") == '∅|∅', 'R4d VALERIA se registró sin número interno ni UMF')
+    if pg.is_visible('#modal-overlay'): pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
+    if pg.query_selector('#hl-aviso-imss'): pg.click('#hl-aviso-imss [data-av="cerrar"]'); pg.wait_for_timeout(300)
+    def descargar_08(rp, mov):
+        ir(pg, 'idse'); pg.wait_for_timeout(600); pg.select_option('#idse-rp', rp); pg.wait_for_timeout(1200)
+        caja = f'.idse-sel[data-tipo="08"][value="{mov}"]'
+        fila_t = pg.eval_on_selector(caja, 'c => c.closest("tr").textContent') if pg.query_selector(caja) else ''
+        lista = bool(pg.query_selector(caja)) and pg.is_enabled(caja)
+        if not lista: return fila_t, False, None
+        pg.check(caja)
+        with pg.expect_download() as d: pg.click('[data-generar="08"]')
+        pg.wait_for_timeout(800)
+        return fila_t, True, open(d.value.path(), 'rb').read().decode('ascii').split('\r\n')
+    MV = q(f"select id from idse_movimientos where relacion_laboral_id = '{RV}' and tipo_movimiento = '08'")
+    fila_t, lista, lin = descargar_08(RP2, MV)
+    ok(lista and 'Falta' not in fila_t and 'Número interno' not in fila_t and 'UMF' not in fila_t,
+       'R4e en la bandeja IDSE el alta de VALERIA queda lista: número interno y UMF no aparecen como faltantes', fila_t[:120])
+    ok(lin and len(lin) == 3 and lin[2] == '' and all(len(x) == 168 for x in lin[:2]) and lin[0][126:129] == '   ' and lin[0][138:148] == ' ' * 10
+       and lin[0][129:133] == '  08' and lin[0][167] == '9' and q(f"select coalesce(umf, '∅') || '|' || coalesce(numero_interno, '∅') from relaciones_laborales where id = '{RV}'") == '∅|∅',
+       'R4f su .dat: 168 posiciones, UMF (127-129) y clave (139-148) en blanco, sin valores inventados', repr(lin[0][118:168]) if lin else '')
+    MR = q(f"select id from idse_movimientos where relacion_laboral_id = '{REL_NUEVA}' and tipo_movimiento = '08'")
+    fila_t, lista, lin = descargar_08(RP1, MR)
+    ok(lista and lin and all(len(x) == 168 for x in lin[:-1]) and lin[0][126:129] == '016' and lin[0][138:148] == '       R01',
+       'R4g con los datos capturados (RAMIRO: UMF 016, clave R01) el .dat los lleva en sus posiciones', repr(lin[0][118:150]) if lin else fila_t[:100])
 
     # ------------------------------------------------------------------
     print('--- R5. Bloqueos y relación adicional: TOMAS (vigente en ALTIPLANO RP1)')

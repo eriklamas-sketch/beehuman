@@ -1,0 +1,46 @@
+--- Antes de la migración (comportamiento anterior)
+OK    el alta sin número interno ni UMF aparece con esos dos faltantes  [Número interno (clave del trabajador) / UMF]
+OK    la baja sin número interno aparece como faltante
+OK    y su línea no se puede armar (los valores vacíos anulan el renglón)
+--- Migración
+OK    aplica sin errores  [
+]
+OK    una segunda aplicación se rechaza
+OK    no modifica datos: UMF y número interno siguen como estaban (vacíos o capturados)
+--- Bandeja: ya no son faltantes
+    08: {'BRUNO LARA LOPEZ': '', 'MARIO LUNA LOPEZ': '', 'MONICA PAZ LOPEZ': '', 'BEATRIZ SOTO LOPEZ': '', 'ALBA DIAZ LOPEZ': '', 'FELIPE ROJO LOPEZ': 'SBC / Tipo de trabajador / Tipo de salario / Jornada', 'CARLOS RUIZ LOPEZ': ''}
+    02: {'BRUNO LARA LOPEZ': '', 'BEATRIZ SOTO LOPEZ': ''}
+    07: {'MARIO LUNA LOPEZ': '', 'MONICA PAZ LOPEZ': ''}
+OK    alta sin número interno ni UMF: sin errores
+OK    alta con número interno y UMF: sin errores
+OK    baja sin número interno: sin errores (y con número interno igual)
+OK    modificación sin número interno: sin errores (y con número interno igual)
+OK    ningún movimiento muestra número interno ni UMF como faltante
+OK    los requisitos reales siguen: sin SDI ni tipos el alta tiene errores  [SBC / Tipo de trabajador / Tipo de salario / Jornada]
+--- Con datos capturados: renglón idéntico al validado
+OK    08 con número interno y UMF: renglón igual byte a byte al de antes de la migración  ['012  0800000      CON1']
+OK    02 con número interno: renglón igual byte a byte al de antes de la migración  ['     0200000       B77']
+OK    07 con número interno: renglón igual byte a byte al de antes de la migración  ['     0700000        M9']
+OK    alta: UMF en 127-129 y clave alineada a la derecha en 139-148  ['012  0800000      CON1']
+--- Sin datos: posiciones en blanco, misma estructura
+OK    08: 168 posiciones; 127-131 y clave 139-148 en blanco; termina en 9  ['02112026     0800000           D']
+OK    02: 168 posiciones; 127-131 y clave 139-148 en blanco; termina en 9  ['05112026     0200000          2 ']
+OK    07: 168 posiciones; 127-131 y clave 139-148 en blanco; termina en 9  ['05112026     0700000           P']
+OK    alta sin datos: tipo 08, guía, separador y CURP en sus posiciones de siempre  ['     0800000           DIAA900101MDFZLL059']
+OK    baja sin número interno: la causa sigue en la posición 149
+--- Generación del archivo
+OK    se genera el archivo de altas con un alta sin número interno ni UMF y otra con ellos
+OK    dos movimientos + renglón final, 168 posiciones cada uno, CRLF  [[168, 168, 168, 0]]
+OK    renglón final con 000002 movimientos
+OK    el archivo lleva exactamente las líneas revisadas
+OK    se genera el archivo 02 con y sin número interno
+OK    se genera el archivo 07 con y sin número interno
+OK    no se inventaron valores: UMF y número interno vacíos siguen vacíos después de generar
+OK    los dos movimientos quedan en archivo
+--- Reversión
+OK    la migración de validadores no se puede revertir antes que esta (orden protegido)  [ERROR:  BeeHuman: public.idse_validar(uuid,text) cambió después de la migración; revierte primero la migración posterior]
+OK    la reversión deja el esquema idéntico al de antes
+OK    los archivos ya generados se conservan
+OK    se puede volver a aplicar y queda igual  [
+]
+OK    TOTAL: 33/33 pruebas OK

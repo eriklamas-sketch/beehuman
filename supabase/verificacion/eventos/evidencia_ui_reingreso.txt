@@ -57,6 +57,12 @@ OK    R3c IMSS → transferencia: la transferencia queda en la relación nueva; 
 OK    R4a alta sin coincidencias: persona nueva sin relaciones
 OK    R4b sin historia: ingreso nuevo
 OK    R4c ingreso nuevo con RP2: 08 pendiente y las dos formas de pago (IMSS con RP, transferencia sin RP)
+OK    R4d VALERIA se registró sin número interno ni UMF
+OK    R4e en la bandeja IDSE el alta de VALERIA queda lista: número interno y UMF no aparecen como faltantes  [VALERIA NUEVA PRUEBA05/11/2026
+        Fecha con más de 5 días: revisa el plazo de presentación
+          ]
+OK    R4f su .dat: 168 posiciones, UMF (127-129) y clave (139-148) en blanco, sin valores inventados  ['05112026     0800000           NUPV950505MDFVRL099']
+OK    R4g con los datos capturados (RAMIRO: UMF 016, clave R01) el .dat los lleva en sus posiciones  ['02112026016  0800000       R01 R']
 --- R5. Bloqueos y relación adicional: TOMAS (vigente en ALTIPLANO RP1)
 OK    R5a misma empresa y RP con relación vigente: el aviso lo explica (el botón no queda «muerto»)  [No se puede registrar. La persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 (ingreso 15/01/2024): solo puede haber una relac]
 OK    R5b al intentarlo, junto al botón dice por qué no procede y no se envía nada  [Ya existe una relación vigente en esa empresa y registro patronal (sección 2): revisa el aviso en rojo.]
@@ -94,4 +100,4 @@ OK    sin errores de JavaScript (Nómina)
 OK    M1 en móvil el formulario (con dos formas de pago) no desborda la pantalla
 OK    sin errores de JavaScript (móvil)
 
-78/78 pruebas OK
+82/82 pruebas OK

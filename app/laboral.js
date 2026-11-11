@@ -1468,7 +1468,7 @@ details.ri-ref summary{cursor:pointer;font-size:13px;color:var(--v21-navy,#16264
     if (!String(p.primer_apellido || '').trim()) f.push('primer apellido');
     if (!String(p.nombres || '').trim()) f.push('nombre(s) separado del apellido');
     if (!curpOk) f.push('CURP válida');
-    if (!r.numero_interno) f.push('número interno (clave del trabajador)');
+    // Número interno (clave del trabajador) y UMF son opcionales para el IDSE.
     if (!r.tipo_trabajador) f.push('tipo de trabajador');
     if (!(tipoSalarioElegido || r.tipo_salario)) f.push('tipo de salario');
     if (!r.jornada) f.push('jornada');
@@ -1619,7 +1619,7 @@ details.ri-ref summary{cursor:pointer;font-size:13px;color:var(--v21-navy,#16264
       p_fecha_ingreso: fecha, p_numero_interno: enviado.numero_interno_trabajador || null,
     });
     if (error) return 'La persona se guardó, pero su ingreso no: ' + msgError(error) + ' Regístralo en su Historia laboral.';
-    return 'Ingreso registrado en su Historia laboral.' + (enviado.registro_patronal_id ? ' Completa SDI, UMF y tipos en la ficha antes de generar el IDSE.' : '');
+    return 'Ingreso registrado en su Historia laboral.' + (enviado.registro_patronal_id ? ' Completa SDI y tipos en la ficha antes de generar el IDSE.' : '');
   }
 
   // =====================================================================

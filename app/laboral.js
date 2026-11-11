@@ -184,6 +184,40 @@ details.ri-ref summary{cursor:pointer;font-size:13px;color:var(--v21-navy,#16264
 #hl-aviso-imss .av-acc button{margin:0}
 @media (max-width:640px){.rl-campos{grid-template-columns:1fr}.rl-col+.rl-col .rl-campo:first-child{border-top:1px solid var(--v21-borde-2,#EEF1F6)}}
 @media (max-width:640px){.hl-card{padding:12px}.hl-grid{grid-template-columns:1fr}.hl-ev-cab{gap:6px}}
+/* Registrar ingreso / reingreso: proceso por etapas (solo presentación) */
+.hl-form.ri-form{border:0;background:transparent;padding:0;margin:10px 0}
+.ri-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:18px 20px;margin:0 0 16px;border-radius:var(--v21-radio,14px);border:1px solid var(--v21-tarjeta-borde,#E6E9EF);background:linear-gradient(180deg,#FFFFFF 0%,#F6F8FC 100%);box-shadow:var(--v21-sombra,0 4px 14px rgba(22,38,74,.05))}
+.ri-titulo{text-transform:none;margin:0;font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em;color:var(--v21-navy,#16264A)}
+.ri-lead{margin:6px 0 0;max-width:62ch;font-size:13px;line-height:1.5;color:var(--v21-texto-2,#5B6680)}
+.ri-global{flex:none;align-self:center;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap;background:#EEF1F6;color:var(--v21-texto-2,#5B6680)}
+.ri-global[data-estado=ok]{background:var(--v21-verde-suave,#E6F4EC);color:#1F5130}
+.ri-global[data-estado=atencion]{background:#FFF3D6;color:#7A5800}
+.ri-pasos{list-style:none;margin:0;padding:0}
+.ri-paso{position:relative;margin:0 0 18px;border-radius:var(--v21-radio,14px);border:1px solid var(--v21-tarjeta-borde,#E6E9EF);background:var(--v21-superficie,#FFFFFF);box-shadow:var(--v21-sombra,0 4px 14px rgba(22,38,74,.05));transition:border-color .2s,box-shadow .2s}
+.ri-paso:not(:last-child)::after{content:"";position:absolute;left:37px;bottom:-19px;width:2px;height:18px;background:#D9DFEA}
+.ri-paso[data-estado=atencion]{border-color:#E9C46A;box-shadow:0 0 0 3px rgba(255,200,44,.16),var(--v21-sombra,0 4px 14px rgba(22,38,74,.05))}
+.ri-paso-cab{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--v21-borde-2,#EDF0F6);border-radius:var(--v21-radio,14px) var(--v21-radio,14px) 0 0;background:#FAFBFD}
+.ri-num{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;background:#FFFFFF;color:var(--v21-navy,#16264A);border:2px solid #C9D2E3}
+.ri-paso[data-estado=ok] .ri-num{background:#1F7A4D;border-color:#1F7A4D;color:#FFFFFF}
+.ri-paso[data-estado=atencion] .ri-num{background:#FFC82C;border-color:#E0A800;color:#3D2C00}
+.ri-paso[data-estado=opc] .ri-num,.ri-paso[data-estado=info] .ri-num{border-style:dashed;color:var(--v21-texto-2,#5B6680)}
+.ri-paso-tit{min-width:0;flex:1}
+.ri-paso-tit h4{margin:0;font-size:15px;line-height:1.3;font-weight:700;color:var(--v21-navy,#16264A)}
+.ri-paso-tit p{margin:2px 0 0;font-size:12.5px;line-height:1.4;color:var(--v21-texto-3,#8690A6)}
+.ri-estado{flex:none;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;background:#EEF1F6;color:var(--v21-texto-2,#5B6680)}
+.ri-estado[data-estado=ok]{background:var(--v21-verde-suave,#E6F4EC);color:#1F5130}
+.ri-estado[data-estado=atencion]{background:#FFF3D6;color:#7A5800}
+.ri-estado[data-estado=opc],.ri-estado[data-estado=info]{background:transparent;border:1px dashed #C9D2E3;color:var(--v21-texto-3,#8690A6)}
+.ri-cuerpo{padding:16px 18px 18px}
+.ri-cuerpo>.hint:first-child{margin-top:0!important}
+.ri-cuerpo .ri-ref{margin-top:0}
+.ri-paso[data-paso="5"]{background:#FBFCFE;box-shadow:none}
+.ri-paso[data-paso="5"] .ri-paso-cab{background:transparent}
+.ri-pie{margin:2px 0 0;padding:14px 18px;border-radius:var(--v21-radio,14px);border:1px solid var(--v21-tarjeta-borde,#E6E9EF);background:var(--v21-superficie,#FFFFFF);box-shadow:var(--v21-sombra,0 4px 14px rgba(22,38,74,.05))}
+.ri-cuerpo .ing-imss-ayuda{font-size:12px!important;line-height:1.5;color:var(--v21-texto-2,#5B6680);background:#F6F8FB;border-radius:9px;padding:8px 12px;margin:0 0 12px!important}
+.ri-pie .ing-err.activo{margin:0 0 10px}
+.ri-pie .hl-acc{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media (max-width:640px){.ri-cab{flex-direction:column;padding:14px}.ri-global{align-self:flex-start}.ri-paso-cab{padding:12px;gap:10px;flex-wrap:wrap}.ri-num{width:32px;height:32px;font-size:13px}.ri-paso-tit{flex:1 1 calc(100% - 52px)}.ri-paso-tit p{font-size:12px}.ri-estado{margin-left:42px}.ri-cuerpo{padding:12px}.ri-paso:not(:last-child)::after{left:27px}}
 `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -831,27 +865,67 @@ details.ri-ref summary{cursor:pointer;font-size:13px;color:var(--v21-navy,#16264
     const emps = empresasActivas();
     const pre = empPre || (borrador && borrador.empresa) || (emps.some((e) => e.id === p.empresa_id) ? p.empresa_id : '');
     const primera = !estado.relaciones.length;
-    montar('hl-form-ingreso', `<b>Registrar ingreso / reingreso</b>
-      <p class="hint" style="margin:4px 0 8px">Elige la empresa: BeeHuman indica si es un ingreso nuevo o un reingreso. Las relaciones anteriores y sus esquemas de pago no cambian ni se reactivan.</p>
-      <div class="ri-sec">1 · Persona</div>${expedienteHtml()}
-      <div class="ri-sec">2 · Empresa y registro patronal</div>
-      <div class="hl-grid">
+    const paso = (n, tit, sub, cuerpo) => `<li class="ri-paso" data-paso="${n}" data-estado="pend"><div class="ri-paso-cab">
+        <span class="ri-num" aria-hidden="true">${n}</span><div class="ri-paso-tit"><h4>${tit}</h4><p>${sub}</p></div>
+        <span class="ri-estado" data-estado="pend">Pendiente</span></div><div class="ri-cuerpo">${cuerpo}</div></li>`;
+    montar('hl-form-ingreso', `<div class="ri-cab"><div><h3 class="ri-titulo">Registrar ingreso / reingreso</h3>
+      <p class="ri-lead">Elige la empresa: BeeHuman indica si es un ingreso nuevo o un reingreso. Las relaciones anteriores y sus esquemas de pago no cambian ni se reactivan.</p></div>
+      <span class="ri-global" aria-live="polite"></span></div>
+      <ol class="ri-pasos">
+      ${paso(1, 'Persona', 'Expediente existente y datos de identificación', expedienteHtml())}
+      ${paso(2, 'Empresa y registro patronal', 'Empresa a la que ingresa; BeeHuman detecta si es ingreso o reingreso', `<div class="hl-grid">
         <div><label>Empresa</label><select name="empresa" required><option value="">Elige…</option>${emps.map((e) => `<option value="${e.id}" ${e.id === pre ? 'selected' : ''}>${esc(e.nombre)}</option>`).join('')}</select></div>
         <div><label>Registro patronal</label><select name="rp"></select></div>
-      </div><div class="ing-tipo"></div><div class="ing-aviso"></div><div class="ri-ref-caja"></div>
-      <div class="ri-sec">3 · Condiciones laborales</div>
-      <p class="hint ing-imss-ayuda" style="margin:0 0 8px">Con registro patronal se piden los datos del alta ante el IMSS. ${esc(SDI_AYUDA)}</p>
-      <div class="hl-grid">${camposCondiciones({ tt: '1', ts: '0', jo: '0', num: primera ? p.numero_interno_trabajador : '' })}</div><div class="ing-fecha"></div>
-      <div class="ri-sec">4 · Formas de pago</div>
-      <p class="hint" style="margin:0 0 8px">Una o varias (IMSS, efectivo, transferencia, honorarios…). Se ligan a este nuevo periodo e inician en la fecha de ingreso. Puedes dejarlas para después en Compensación.</p>
+      </div><div class="ing-tipo"></div><div class="ing-aviso"></div><div class="ri-ref-caja"></div>`)}
+      ${paso(3, 'Condiciones laborales', 'Fecha de ingreso y, con registro patronal, SDI, jornada y datos de afiliación', `<p class="hint ing-imss-ayuda" style="margin:0 0 8px">Con registro patronal se piden los datos del alta ante el IMSS. ${esc(SDI_AYUDA)}</p>
+      <div class="hl-grid">${camposCondiciones({ tt: '1', ts: '0', jo: '0', num: primera ? p.numero_interno_trabajador : '' })}</div><div class="ing-fecha"></div>`)}
+      ${paso(4, 'Formas de pago', 'IMSS, efectivo, transferencia, honorarios o una combinación', `<p class="hint" style="margin:0 0 8px">Una o varias (IMSS, efectivo, transferencia, honorarios…). Se ligan a este nuevo periodo e inician en la fecha de ingreso. Puedes dejarlas para después en Compensación.</p>
       <div class="esq-filas"></div>
-      <button type="button" class="hl-btn2" data-esq-agregar style="margin:0">Agregar otra forma de pago</button>
-      <div class="ri-sec">5 · Prestaciones y créditos</div>
-      <p class="hint" style="margin:0 0 8px">FONACOT se revisa en el expediente (sección 1). INFONAVIT y otros descuentos se registrarán en el módulo de créditos y deducciones (pendiente).</p>
-      <div class="ing-err" role="alert" aria-live="assertive"></div>
-      ${botones('Registrar ingreso')}`, (f) => enviarIngreso(f));
+      <button type="button" class="hl-btn2" data-esq-agregar style="margin:0">Agregar otra forma de pago</button>`)}
+      ${paso(5, 'Prestaciones y créditos', 'Referencia a los datos existentes y módulos relacionados', `<p class="hint" style="margin:0">FONACOT se revisa en el expediente (sección 1). INFONAVIT y otros descuentos se registrarán en el módulo de créditos y deducciones (pendiente).</p>`)}
+      </ol>
+      <div class="ri-pie"><div class="ing-err" role="alert" aria-live="assertive"></div>
+      ${botones('Registrar ingreso')}</div>`, (f) => enviarIngreso(f));
     const f = document.querySelector('#hl-form-ingreso form'); if (!f) return;
     f.dataset.siempreActivo = '1'; // nunca un botón que «no hace nada»: al enviar se dice qué falta
+    f.classList.add('ri-form');
+    // Estado visual de cada etapa (solo presentación; las reglas viven en revisarIngreso y en la base).
+    const pintarEtapas = () => {
+      const pon = (n, e, txt) => {
+        const li = f.querySelector(`.ri-paso[data-paso="${n}"]`); if (!li) return;
+        const pill = li.querySelector('.ri-estado');
+        if (li.dataset.estado !== e) li.dataset.estado = e;
+        if (pill.dataset.estado !== e) pill.dataset.estado = e;
+        if (pill.textContent !== txt) pill.textContent = txt;
+      };
+      const falta = (n) => !!f.querySelector(`.ri-paso[data-paso="${n}"] .hl-falta:not([title])`);
+      const v = (n) => (f.querySelector(`[name=${n}]`) || {}).value || '';
+      pon(1, 'ok', 'Identificada');
+      const tipoTxt = f.querySelector('.ing-tipo-txt');
+      const conf = f.querySelector('[name=confirma_adicional]');
+      if (f.querySelector('.ing-aviso .ri-bloqueo') || falta(2)) pon(2, 'atencion', 'Requiere atención');
+      else if (!v('empresa')) pon(2, 'pend', 'Pendiente');
+      else if (conf && !conf.checked) pon(2, 'atencion', 'Confirma la relación adicional');
+      else pon(2, 'ok', tipoTxt && tipoTxt.classList.contains('reingreso') ? 'Reingreso' : tipoTxt && tipoTxt.classList.contains('adicional') ? 'Relación adicional' : 'Ingreso nuevo');
+      if (falta(3)) pon(3, 'atencion', 'Requiere atención');
+      else pon(3, v('fecha') && (!v('rp') || v('sdi')) ? 'ok' : 'pend', v('fecha') && (!v('rp') || v('sdi')) ? 'Completo' : 'Pendiente');
+      const nPago = [...f.querySelectorAll('.esq-fila [data-esq=sueldo]')].filter((i) => i.value.trim()).length;
+      if (falta(4) || f.querySelector('.esq-fila .esq-nota.err')) pon(4, 'atencion', 'Requiere atención');
+      else pon(4, nPago ? 'ok' : 'opc', nPago ? (nPago === 1 ? '1 forma de pago' : nPago + ' formas de pago') : 'Opcional');
+      pon(5, 'info', 'Informativo');
+      const g = f.querySelector('.ri-global');
+      const est = [2, 3, 4].map((n) => f.querySelector(`.ri-paso[data-paso="${n}"]`).dataset.estado);
+      const pend = [[2, 'empresa'], [3, 'condiciones']].filter(([n]) => est[n - 2] === 'pend').map(([, t]) => t);
+      const [ge, gt] = est.includes('atencion') ? ['atencion', 'Revisa las etapas marcadas'] : pend.length ? ['pend', 'Falta: ' + pend.join(' y ')] : ['ok', 'Listo para registrar'];
+      if (g.dataset.estado !== ge) g.dataset.estado = ge;
+      if (g.textContent !== gt) g.textContent = gt;
+    };
+    let etapasRaf = 0;
+    const programarEtapas = () => { if (!etapasRaf) etapasRaf = requestAnimationFrame(() => { etapasRaf = 0; pintarEtapas(); }); };
+    ['input', 'change'].forEach((t) => f.addEventListener(t, programarEtapas));
+    new MutationObserver((ms) => { if (ms.some((m) => !m.target.closest || !m.target.closest('.ri-paso-cab, .ri-global'))) programarEtapas(); })
+      .observe(f, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style'] });
+    programarEtapas();
     const selE = f.querySelector('[name=empresa]'), selR = f.querySelector('[name=rp]');
     const caja = f.querySelector('.ing-aviso'), ref = f.querySelector('.ri-ref-caja'), avFecha = f.querySelector('.ing-fecha'), tipo = f.querySelector('.ing-tipo');
     const filas = f.querySelector('.esq-filas');

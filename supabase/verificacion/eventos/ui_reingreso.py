@@ -186,6 +186,7 @@ with sync_playwright() as p:
     pg.select_option(f + ' [name=empresa]', ALTI); pg.wait_for_timeout(300)
     ok(pg.is_visible(f + ' [name=sdi]') and pg.eval_on_selector(f + ' button[type=submit]', 'b => b.textContent') == 'Registrar reingreso' and habilitado(pg, f),
        'U8 de vuelta en ALTIPLANO con RP: pide los datos IMSS; el botón dice «Registrar reingreso» y está habilitado')
+    pg.eval_on_selector('#hl-form-ingreso .ri-cab', 'e => e.scrollIntoView({block: "center"})'); pg.wait_for_timeout(200); foto(pg, 'r02a-encabezado-etapas')
     foto(pg, 'r02-formulario-unico-reingreso')
     # Falta información: todo junto al botón, con su sección
     fecha('2025-05-20')

@@ -1,61 +1,78 @@
-# ui_reingreso.py · base LOCAL bhui con datos sintéticos (semilla_reingreso.sql) · 10-nov-2026 · rol Nómina (RH) · estado: reingreso + identidades (C1-C8)
 --- 6. Alta de personal con identificadores existentes: nunca se crea otra persona ni se elige un expediente al azar
 OK    C1 CURP de una persona y RFC de otra: bloquea, lista ambos expedientes con su coincidencia y no ofrece abrir ninguno  [No se dio de alta: los datos de identidad apuntan a expedientes distintos. Ninguno se abrió ni se modificó. Revísalos antes de continuar:
+        BEH-001001 · RAMIRO REYES SOTO (estatus Baja): coincide CURPBEH-001002 · S]
 OK    C2 tres personas con coincidencias distintas: bloquea y lista las tres; no se elige ninguna  [BEH-001001 · RAMIRO REYES SOTO (estatus Baja): coincide CURP | BEH-001002 · SOFIA TREJO LUNA (estatus Baja): coincide RFC | BEH-001003 · TOMAS UGALDE VARGAS (estatus Activo): coincide NSS]
 OK    C3 una sola coincidencia por NSS: identifica ese expediente y permite abrirlo  [No se creó otra persona: ya existe el expediente BEH-001003 · TOMAS UGALDE VARGAS (estatus Activo) con la misma NSS.
+      Si la persona regresa a trabajar, reg]
 OK    C4 si un identificador capturado difiere del expediente encontrado (sin apuntar a otra persona), se avisa la diferencia  [No se creó otra persona: ya existe el expediente BEH-001001 · RAMIRO REYES SOTO (estatus Baja) con la misma CURP. Ojo: el RFC capturado (RESR880808ZZ9) es distinto al del expediente (RESR880808AB1). Revísalo en el expedi]
 OK    C7 si falla la consulta de identidad, el alta se bloquea: no se envía ninguna ficha ni se crea nada  [No se dio de alta: no se pudo verificar si la CURP, el RFC o el NSS ya pertenecen a otro expediente. Revisa la conexión y vuelve a intentarlo.]
-OK    C8 dos expedientes con la misma CURP: bloquea, lista los dos y no selecciona ninguno; no crea ni modifica fichas  [BEH-001005 · XIMENA DUPLICADA (estatus Baja): coincide CURP | BEH-001006 · XIMENA DUPLICADA DOS (estatus Baja): coincide CURP]
+OK    C8 dos expedientes con la misma CURP: bloquea, lista los dos y no selecciona ninguno; no crea ni modifica fichas  [BEH-001006 · XIMENA DUPLICADA (estatus Baja): coincide CURP | BEH-001007 · XIMENA DUPLICADA DOS (estatus Baja): coincide CURP]
 OK    A1 CURP, RFC y NSS de la misma persona: un solo expediente (BEH-001001), se ofrece abrirlo  [No se creó otra persona: ya existe el expediente BEH-001001 · RAMIRO REYES SOTO (estatus Baja) con la misma CURP, RFC, NSS.
+      Si la persona regresa a trabajar, regist]
 OK    C5 ninguno de los expedientes encontrados se modificó
 OK    A2 «Abrir expediente para registrar el reingreso» abre la ficha existente directamente en el reingreso  [Expediente existente: registra aquí el regreso de la persona. No se creó otra ficha.]
---- 1, 2, 7, 8, 9. RAMIRO: baja en ALTIPLANO RP1 → reingreso a la misma empresa con otras condiciones
-OK    1a «Relación laboral» distingue «Registrar reingreso» y «Registrar nuevo ingreso»
-OK    P1a la tarjeta de la relación dice qué esquema de pago le pertenece (cerrado con la baja)  [Esquemas de pago de esta relación: IMSS · $2,800.00 bruto · Semanal (cerrado el 31/05/2025).]
-OK    1b «Nuevo ingreso» en una empresa donde ya trabajó: lo detiene, explica que es reingreso y el botón queda inactivo  [Es un reingreso. La persona ya trabajó en CONSTRUCTORA ALTIPLANO DEMO (RP Y1234567101, ingreso 01/02/2022, baja 31/05/2025). Regístralo como]
-OK    3.1-3.2 recupera el expediente: CURP, NSS, FONACOT y contacto anteriores visibles
-OK    3.5 muestra la relación anterior como referencia: ingreso, baja y causa, SDI, tipos, jornada, UMF, número interno y su esquema cerrado  [Relación anterior en CONSTRUCTORA ALTIPLANO DEMO (referencia)
-OK    3.4 propone el registro patronal de la relación anterior (se puede cambiar)
-OK    3.6 las condiciones del nuevo periodo empiezan vacías: no se dan por válidas las anteriores  [['', '', '', '', '', '', '']]
-OK    P3a el botón «Registrar reingreso» se ve inactivo mientras no se confirme el expediente
-OK    P3b al marcar la confirmación el botón cambia a habilitado
-OK    1c la fecha de reingreso debe ser posterior a la baja anterior (31/05/2025); no se envía nada  [La fecha de reingreso debe ser posterior a la baja anterior en CONSTRUCTORA ALTIPLANO DEMO (31/05/2025).]
-OK    3.3 actualizar un dato personal (teléfono de emergencia) no pierde lo capturado; el expediente se muestra actualizado y la confirmación se pide otra vez  [[True, '02/11/2026', '520', True, '']]
-OK    3.6b «Usar … anteriores como punto de partida» copia solo tipos, jornada, UMF y número interno, marcados para revisar  [['1', '0', '0', '015', 'R01']]
-OK    1d reingreso registrado: dice dónde, con qué fecha, el 08 pendiente y que la relación anterior no cambió  [Reingreso registrado en CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 con fecha 02/11/2026. El alta (08) quedó pendiente en la bandeja IDSE del registro patronal Y1234567101. Ver en la bandeja IDSE de ]
-OK    6 el expediente no se duplica: misma persona BEH-001001 (una sola CURP), estatus vuelve a Activo
-OK    2a nuevo periodo = relación nueva con sus propias condiciones (SDI 520, UMF 016)
-OK    1e la Historia laboral lo registra como «reingreso»
-OK    7a la relación anterior queda idéntica, byte a byte (ingreso 01/02/2022, baja 31/05/2025, causa 2, SDI 400)
-OK    7b sus eventos y sus movimientos 08 y 02 quedan idénticos; no se agregó nada a esa relación
-OK    8a el esquema anterior sigue cerrado y no se ligó al nuevo periodo
-OK    9a el reingreso con RP genera su alta (08) pendiente con la fecha y el SBC nuevos
-OK    3.7 «Definir el esquema de pago» abre Compensación con empresa, RP y fecha del nuevo periodo; sueldo y periodicidad se capturan  [[True, '0c000000-0000-4000-8000-000000000001', '0f900000-0000-4000-8000-000000000001', '2026-11-02', '', 'Nuevo esquema para la relación CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 (ingreso 02/11']]
-OK    2b el nuevo esquema (Mensual, $18,000 neto) queda ligado a la relación nueva; el anterior sigue cerrado (8b)
-OK    P1b Compensación dice a qué relación pertenece cada esquema (el nuevo y el cerrado del periodo anterior)  [Esquema de pago registrado para la relación CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 (ingreso 02/11/2026): IMSS · $1 || Activo Periodicidad Mensual Días del periodo 30de la periodicidad Empresa CONSTRUCTORA ALTIPLANO DEMO Registro patronal Y1234567101 Relación laboral CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 02/11/2026 Inicio 02/11/2026 Fin — || Cerrado Periodicidad Semanal Días del periodo 7de la periodicidad Empresa CONSTRUCTORA ALTIPLANO DEMO Registro patronal Y1234567101 Relación laboral CONSTRUCT]
-OK    7c Historia laboral muestra el periodo anterior (ingreso y baja) y el reingreso
-OK    9b el 08 del reingreso aparece en la bandeja IDSE del RP Y1234567101  [PersonaFechaRevisiónRAMIRO REYES SOTO02/11/2026
---- 3 y P4. SOFIA: trabajó en ALTIPLANO; regresa al grupo en SERVICIOS CUMBRE (sin RP)
-OK    3a el reingreso solo ofrece empresas donde ya trabajó; para otra empresa del grupo indica «Registrar nuevo ingreso»  [['Elige…', 'CONSTRUCTORA ALTIPLANO DEMO']]
-OK    3b nuevo ingreso en otra empresa: muestra sus antecedentes en el grupo como referencia y no lo bloquea
-OK    3c mismo expediente; relación separada en SERVICIOS CUMBRE  [Ingreso registrado en SERVICIOS CUMBRE DEMO · sin registro patronal con fecha 03/11/2026. Sin registro patronal: no gene]
-OK    P4a una relación SIN registro patronal no genera ningún movimiento IDSE
-OK    3d la relación anterior en ALTIPLANO no cambia
---- 4. TOMAS: ya tiene una relación vigente en ALTIPLANO RP1
-OK    4a reingreso con una relación vigente en la misma empresa y RP: lo impide y explica el motivo; el botón sigue inactivo aun confirmando  [No se puede registrar el reingreso. La persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 (ingreso 15/01/2024): solo puede haber una re]
-OK    4b aunque se fuerce el botón, la lógica de envío vuelve a revisar y no envía nada  [[] No se puede registrar el reingreso. La persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLA]
-OK    4c la base también lo impide (llamada directa) y nada de TOMAS cambió  [BeeHuman: la persona ya tiene una relación vigente con esa empresa y registro patronal.]
-OK    4d «Nuevo ingreso» en el mismo RP también queda bloqueado
---- 5. DIANA: relación migrada vigente sin fecha de ingreso (y una relación anterior dada de baja)
-OK    5a la relación migrada sin fecha no se confunde con un reingreso: se bloquea y ofrece «Corregir datos de esa relación»  [No es un reingreso. La persona sigue con una relación vigente en CONSTRUCTORA ALTIPLANO DEMO: CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal · ingreso —. El reingres]
-OK    5b lleva a «Corregir datos» de la relación migrada, indicando cuál se corrige
+OK    A3 en el expediente encontrado, BeeHuman ya identifica el reingreso a la empresa anterior  [Reingreso a CONSTRUCTORA ALTIPLANO DEMO. Trabajó ahí del 01/02/2022 al 31/05/2025 (RP Y1234567101). Se abre un periodo n]
+--- R1. RAMIRO: Compensación bloqueada sin relación vigente; atajo desde Estatus; reingreso misma empresa con IMSS + efectivo
+OK    S1 sin relación vigente, Compensación no agrega esquemas y dice que se registra el ingreso o reingreso  [Esta persona no tiene una relación laboral vigente. Registra su ingreso o reingreso en Relación laboral; ahí mismo defin]
+OK    S2 en Baja, el menú Estatus ofrece «Registrar ingreso / reingreso…» (Activo no se elige a mano)  [[['Activo', True], ['Baja', False], ['Suspendido', True], ['__ingreso', False]]]
+OK    S3 el atajo abre el registro en Relación laboral; el estatus no cambia hasta registrar  [Baja]
+OK    U1 un solo botón: «Registrar ingreso / reingreso»
+OK    U2 ofrece todas las empresas activas del tenant, no solo donde trabajó  [['Elige…', 'CONSTRUCTORA ALTIPLANO DEMO', 'SERVICIOS CUMBRE DEMO']]
+OK    U3 BeeHuman determina que es reingreso (trabajó ahí del 01/02/2022 al 31/05/2025)  [Reingreso a CONSTRUCTORA ALTIPLANO DEMO. Trabajó ahí del 01/02/2022 al 31/05/2025 (RP Y1234567101). Se abre un periodo nuevo; la relación anterior que]
+OK    U4 registro patronal según la empresa (con «Sin registro patronal»); propone el de la relación anterior
+OK    U5 recupera el expediente (CURP, FONACOT, contacto) sin volver a capturarlo y sin casilla obligatoria
+OK    U6 condiciones y forma de pago empiezan vacías (no se copian las anteriores) y ningún campo dice «null»
+OK    U7 al cambiar de empresa cambia la lista de RP y el tipo (ingreso nuevo); sin RP no se piden datos IMSS
+OK    U8 de vuelta en ALTIPLANO con RP: pide los datos IMSS; el botón dice «Registrar reingreso» y está habilitado
+OK    E1 si falta algo, junto al botón aparece la lista exacta (fecha posterior a la baja, SDI, periodicidad, importe) con su sección, a la vista; no se envía nada  [La fecha de ingreso debe ser posterior a la baja anterior en CONSTRUCTORA ALTIPLANO DEMO (31/05/2025) (sección 3). | Captura el SDI: la relación lleva registro patronal y genera el alta ante el IMSS (sección 3). | Elige la periodicidad de la forma de pago 1 (sección 4). | Indica si el sueldo de la forma de pago 1 es bruto o neto (sección 4). | Captura el importe de la forma de pago 1: un número ma]
+OK    E2 los campos que faltan quedan marcados
+OK    B1 actualizar un dato personal no pierde nada: fecha, SDI y las dos formas de pago siguen; el botón sigue habilitado  [['0f000000-0000-4000-8000-000000000001|0e000000-0000-4000-8000-000000000030|neto|18,000', '0f000000-0000-4000-8000-000000000002|0e000000-0000-4000-8000-000000000007|neto|1,500'] ]
+OK    U9 «Usar las condiciones anteriores» es opcional: copia tipos, jornada, UMF y número interno (marcados); el SDI capturado no cambia  [['1', '0', '0', '015', 'R01']]
+OK    R1a reingreso registrado: dónde, fecha, 08 pendiente y las dos formas de pago  [Reingreso registrado en CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 con fecha 02/11/2026. El alta (08) quedó pendiente en la bandeja IDSE del registro patronal Y1234567101. Ver en la bandeja IDSE de Y1234567101La relación anterior y su historia no cambiaron; sus esquemas de pago siguen cerrados.For]
+OK    R1b mismo expediente BEH-001001; la persona queda Activa y el atajo desaparece del menú
+OK    R1c la relación nueva tiene sus propias condiciones (SDI 520, UMF 016)
+OK    R1d la Historia laboral lo registra como «reingreso»
+OK    R1e las dos formas de pago quedan ligadas a la relación nueva: IMSS con su RP, efectivo sin RP, desde la fecha de ingreso  [EFECTIVO:1500.00:neto:sinRP:2026-11-02:true,IMSS:18000.00:neto:0f900000-0000-4000-8000-000000000001:2026-11-02:true]
+OK    R1f la relación anterior, sus eventos y sus movimientos 08/02 quedan idénticos
+OK    R1g el esquema anterior sigue cerrado y en su relación (no se reactivó)
+OK    R1h el reingreso con RP genera su alta (08) pendiente con fecha y SBC nuevos (uno solo)
+OK    R1i Compensación muestra las dos formas de pago vigentes ligadas al nuevo periodo  [EFECTIVO Activo $1,500.00 NETO por periodo Periodicidad Semanal Días del periodo 7 de la periodicidad Empresa CONSTRUCTORA ALTIPLANO DEMO Registro patronal — Relación laboral CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 02/11/2026 Inicio 02/11/2026 Fin — Editar Cerrar || IMSS Activo $18,00]
+OK    S4 con la relación vigente, Compensación permite agregar otro esquema (no depende del estatus anterior)
+OK    R1j el 08 aparece en la bandeja IDSE del RP Y1234567101  [PersonaFechaRevisiónRAMIRO REYES SOTO02/11/2026
+        Fecha con más de 5 días: revisa el plazo de presentación
+       ]
+--- R2. SOFIA: trabajó con IMSS en ALTIPLANO; entra a SERVICIOS CUMBRE (otra empresa, sin RP) en efectivo
+OK    R2a otra empresa del grupo: es ingreso nuevo en esa empresa, con sus antecedentes como referencia, en el mismo formulario
+OK    R2b una forma de pago IMSS sin registro patronal no procede: lo dice junto al botón y en la propia fila  [La forma de pago 1 (IMSS) es de nómina IMSS: elige un registro patronal (sección 2) o cambia la forma de pago.]
+OK    R2c sin RP no se pide SDI ni datos de afiliación
+OK    R2d mismo expediente, relación separada en SERVICIOS CUMBRE sin RP ni SDI  [Ingreso registrado en SERVICIOS CUMBRE DEMO · sin registro patronal con fecha 03/11/2026. Sin registro patronal: no genera movimiento IDSE.Formas de p]
+OK    R2e sin registro patronal no genera movimiento IDSE; en la historia es «ingreso» (nuevo en esa empresa)
+OK    R2f IMSS → efectivo: el esquema IMSS anterior sigue cerrado, el de efectivo es nuevo; la relación anterior no cambia; queda Activa
+--- R3. MARTA: IMSS en ALTIPLANO RP1; regresa a ALTIPLANO sin RP, pagada por transferencia
+OK    R3a honorarios exige RFC y CP fiscal del expediente: dice cuál falta y en qué sección  [Para la forma de pago 1 (HONORARIOS) el expediente debe tener Código postal fiscal completos y válidos: actualízalos en «Datos personales» (sección 1).]
+OK    R3b reingreso a la misma empresa sin RP: la pantalla lo registra como reingreso a ALTIPLANO y no genera IDSE
+OK    R3b2 (limitación conocida, fase B) con otro RP la Historia laboral lo guarda como «ingreso», no «reingreso»
+OK    R3c IMSS → transferencia: la transferencia queda en la relación nueva; el IMSS anterior sigue cerrado
+--- R4. Persona nueva (VALERIA, recién dada de alta sin relación): ingreso nuevo con IMSS + transferencia
+OK    R4a alta sin coincidencias: persona nueva sin relaciones
+OK    R4b sin historia: ingreso nuevo
+OK    R4c ingreso nuevo con RP2: 08 pendiente y las dos formas de pago (IMSS con RP, transferencia sin RP)
+--- R5. Bloqueos y relación adicional: TOMAS (vigente en ALTIPLANO RP1)
+OK    R5a misma empresa y RP con relación vigente: el aviso lo explica (el botón no queda «muerto»)  [No se puede registrar. La persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 (ingreso 15/01/2024): solo puede haber una relac]
+OK    R5b al intentarlo, junto al botón dice por qué no procede y no se envía nada  [Ya existe una relación vigente en esa empresa y registro patronal (sección 2): revisa el aviso en rojo.]
+OK    R5c la base también lo impide; nada de TOMAS cambió  [BeeHuman: la persona ya tiene una relación vigente con esa empresa y registro patronal.]
+OK    R5d con otro RP en la misma empresa es una relación adicional y pide confirmarla
+OK    R5e sin la confirmación no se registra y se dice qué falta  [Confirma que se creará una relación laboral adicional (sección 2).]
+--- R6. DIANA: relación migrada vigente sin fecha (no se confunde con un reingreso)
+OK    R6a la relación migrada sin fecha: lo explica y ofrece «Corregir datos de esa relación»  [No se puede registrar. La persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal (sin fecha de ingreso): solo puede haber ]
+OK    R6b lleva a «Corregir datos» de esa relación
 --- P2. Fechas de ingreso por relación
 OK    P2a si la fecha ya existe en otra relación, el aviso dice dónde está registrada y pide confirmar (botón inactivo)  [La fecha 02/04/2018 ya está registrada como fecha de ingreso de la relación CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102 (baja 30/06/2019). Esta corrección la guardaría también en CONSTRUCTORA ALTIPLA]
 OK    P2b con una fecha que no existe en otra relación, el aviso desaparece y se puede guardar
 OK    P2c la corrección actualiza esa misma relación (y lo dice); la otra relación no cambia  [Corrección registrada. Fecha de ingreso de la relación CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal: 06/01/2020.]
 OK    P2d cada relación muestra su propia fecha de ingreso  [CONSTRUCTORA ALTIPLANO DEMO · Sin registro patronal (sin IDSE) Vigente Sin fecha || CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102 Baja Estado Baja Ingreso 02/04/2018]
---- 5c. CESAR: «Nuevo ingreso» sin RP con su relación migrada sin fecha
-OK    5c «Nuevo ingreso» sin RP con una relación migrada sin fecha: se bloquea y lleva a «Corregir datos»
+--- 5c. CESAR: ingreso sin RP con su relación migrada sin fecha
+OK    5c sin RP con una relación migrada sin fecha: se bloquea y lleva a «Corregir datos»
 --- P2e. BENITO: misma fecha en sus dos relaciones, solo con confirmación
 OK    P2e la fecha ya está en la relación RP Y1234567101: se identifica y exige confirmar
 OK    P2f sin confirmar no se guarda (aunque se fuerce el botón)  [[] Esa fecha de ingreso ya está registrada en otra relación: revisa el aviso y confirma antes de guarda]
@@ -73,9 +90,8 @@ OK    P4b con RP genera su baja (02) pendiente; sin RP no genera movimiento IDSE
 OK    10a la baja recién registrada se puede anular (último movimiento, 02 sin presentar)
 OK    10b anular la baja: la relación vuelve a vigente, su 02 se cancela, el evento queda anulado y la persona vuelve a Activo
 OK    10c al anular la baja, el esquema que esa baja desactivó vuelve a estar activo  [true|-]
---- 6b. Alta sin coincidencias: se crea normalmente
-OK    C6 sin coincidencias: el alta se guarda normalmente (una sola ficha nueva)  [Persona registrada: VALERIA NUEVA PRUEBA (BEH-001007). Su compensación se captura en el expediente. Sin fecha de ingreso]
 OK    sin errores de JavaScript (Nómina)
-OK    M1 en móvil el reingreso no desborda la pantalla
+OK    M1 en móvil el formulario (con dos formas de pago) no desborda la pantalla
 OK    sin errores de JavaScript (móvil)
-68/68 pruebas OK
+
+78/78 pruebas OK

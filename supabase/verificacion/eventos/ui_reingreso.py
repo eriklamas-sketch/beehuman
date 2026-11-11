@@ -1,5 +1,6 @@
-"""Reingreso de personal reutilizando expediente (10-nov-2026), probado desde la interfaz
-como usuario de RH (rol Nómina), más las comprobaciones de baja, fechas e IDSE.
+"""Ingreso / reingreso en un solo formulario (fase A, 11-nov-2026), probado desde la interfaz
+como usuario de RH (rol Nómina): alta sin duplicar identidades, BeeHuman decide el tipo,
+formas de pago dentro del flujo, estatus, Compensación, bajas, fechas e IDSE.
 Base LOCAL bhui (montar_ui_eventos.sh + migraciones pendientes + semilla_reingreso.sql),
 datos sintéticos. Nunca toca Supabase.
 Uso: python3 ui_reingreso.py <index.html> <carpeta_capturas>"""
@@ -19,7 +20,7 @@ ALTI, CUMBRE = '0c000000-0000-4000-8000-000000000001', '0c000000-0000-4000-8000-
 RP1, RP2 = '0f900000-0000-4000-8000-000000000001', '0f900000-0000-4000-8000-000000000002'
 PID = {'RAMIRO': '0a200000-0000-4000-8000-000000000001', 'SOFIA': '0a200000-0000-4000-8000-000000000002',
        'TOMAS': '0a200000-0000-4000-8000-000000000003', 'ULISES': '0a200000-0000-4000-8000-000000000004',
-       'DIANA': '0a100000-0000-4000-8000-000000000014', 'BENITO': '0a100000-0000-4000-8000-000000000012'}
+       'DIANA': '0a100000-0000-4000-8000-000000000014', 'BENITO': '0a100000-0000-4000-8000-000000000012', 'MARTA': '0a200000-0000-4000-8000-000000000005'}
 _ficha = ficha
 def ficha(pg, nombre, seccion='historia'):
     # incluye personas con estatus Baja (el filtro de la lista arranca en Activo)
@@ -126,8 +127,27 @@ with sync_playwright() as p:
     ok(pg.is_visible('#modal-overlay') and pg.is_visible(f) and 'Registrar reingreso' in txt(pg, f) and 'Expediente existente' in txt(pg, '#rl-msg'),
        'A2 «Abrir expediente para registrar el reingreso» abre la ficha existente directamente en el reingreso', txt(pg, '#rl-msg')[:120])
 
+    ok('Reingreso a CONSTRUCTORA ALTIPLANO DEMO' in txt(pg, f + ' .ing-tipo') and pg.eval_on_selector(f + ' button[type=submit]', 'b => b.textContent') == 'Registrar reingreso',
+       'A3 en el expediente encontrado, BeeHuman ya identifica el reingreso a la empresa anterior', txt(pg, f + ' .ing-tipo')[:120])
+
+    # Formas de pago: una fila por esquema (sección 4)
+    IMSS, EFEC, TRANS, HONO = ('0f000000-0000-4000-8000-00000000000%d' % i for i in (1, 2, 3, 4))
+    SEM, MEN = '0e000000-0000-4000-8000-000000000007', '0e000000-0000-4000-8000-000000000030'
+    def fila(i, cl, per, mod, sueldo):
+        base = f'{f} .esq-filas > .esq-fila:nth-child({i})'
+        if not pg.query_selector(base): pg.click(f + ' [data-esq-agregar]'); pg.wait_for_timeout(150)
+        pg.select_option(base + ' [data-esq=cl]', cl); pg.select_option(base + ' [data-esq=per]', per)
+        pg.select_option(base + ' [data-esq=mod]', mod); pg.fill(base + ' [data-esq=sueldo]', sueldo); pg.dispatch_event(base + ' [data-esq=sueldo]', 'input')
+    def fecha(v): pg.fill(f + ' [name=fecha]', v); pg.dispatch_event(f + ' [name=fecha]', 'change')
+    errores = lambda: pg.eval_on_selector_all(f + ' .ing-err li', 'ls => ls.map(l => l.innerText)')
+    en_vista = lambda sel: pg.evaluate("s => { const r = document.querySelector(s).getBoundingClientRect(); return r.top >= 0 && r.bottom <= window.innerHeight; }", sel)
+    def registrar(espera=3000):
+        rpc.clear(); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(espera)
+    sin_null = lambda: pg.evaluate("""() => [...document.querySelectorAll('#hl-form-ingreso input, #hl-form-ingreso select')]
+        .every(e => (e.value || '') !== 'null' && (e.placeholder || '') !== 'null')""")
+
     # ------------------------------------------------------------------
-    print('--- 1, 2, 7, 8, 9. RAMIRO: baja en ALTIPLANO RP1 → reingreso a la misma empresa con otras condiciones')
+    print('--- R1. RAMIRO: Compensación bloqueada sin relación vigente; atajo desde Estatus; reingreso misma empresa con IMSS + efectivo')
     H_RAMIRO = huella(PID['RAMIRO'])
     REL_VIEJA = q(f"select id from relaciones_laborales where personal_id = '{PID['RAMIRO']}'")
     ESQ_VIEJO = q(f"select id from personal_registros_pago where personal_id = '{PID['RAMIRO']}'")
@@ -135,180 +155,211 @@ with sync_playwright() as p:
     EVS_VIEJOS = lista(f"select id from eventos_laborales where relacion_laboral_id = '{REL_VIEJA}'")
     MOVS_VIEJOS = lista(f"select id from idse_movimientos where relacion_laboral_id = '{REL_VIEJA}'")
     H_EVS, H_MOVS = huella_ids('eventos_laborales', EVS_VIEJOS), huella_ids('idse_movimientos', MOVS_VIEJOS)
-    ficha(pg, 'RAMIRO REYES SOTO', 'laboral')
-    ok(pg.is_visible('#hl-btn-reingreso') and pg.is_visible('#hl-btn-ingreso') and 'Registrar nuevo ingreso' in txt(pg, '#hl-btn-ingreso'),
-       '1a «Relación laboral» distingue «Registrar reingreso» y «Registrar nuevo ingreso»')
-    ok('IMSS · $2,800.00 bruto · Semanal (cerrado el 31/05/2025)' in txt(pg, f'[data-relacion="{REL_VIEJA}"]'),
-       'P1a la tarjeta de la relación dice qué esquema de pago le pertenece (cerrado con la baja)', txt(pg, f'[data-relacion="{REL_VIEJA}"] .rl-esqs'))
-    pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(400)
-    pg.select_option(f + ' [name=empresa]', ALTI); pg.wait_for_timeout(400)
-    blq = txt(pg, f + ' .ing-aviso')
-    ok('Es un reingreso' in blq and '31/05/2025' in blq and not habilitado(pg, f),
-       '1b «Nuevo ingreso» en una empresa donde ya trabajó: lo detiene, explica que es reingreso y el botón queda inactivo', blq[:140])
-    foto(pg, 'r02-nuevo-ingreso-es-reingreso')
-    pg.click(f + ' [data-ir-reingreso]'); pg.wait_for_timeout(500)
-    sec = txt(pg, f)
-    ok('Registrar reingreso' in sec and 'RESR880808HDFYTM01' in sec and '44444444440' in sec and 'F-778812' in sec and 'LUCIA SOTO' in sec,
-       '3.1-3.2 recupera el expediente: CURP, NSS, FONACOT y contacto anteriores visibles')
-    ref = txt(pg, f + ' .ri-ref-caja')
-    ok(all(k in ref for k in ('01/02/2022', '31/05/2025', 'Separación voluntaria', '$400.00', 'Permanente', 'Fijo', 'Semana completa', '015', 'R01', '$2,800.00 bruto', 'no se copian ni se reactivan')),
-       '3.5 muestra la relación anterior como referencia: ingreso, baja y causa, SDI, tipos, jornada, UMF, número interno y su esquema cerrado', ref[:200])
-    ok(pg.eval_on_selector(f + ' [name=rp]', 's => s.options[s.selectedIndex].text') == 'Y1234567101',
-       '3.4 propone el registro patronal de la relación anterior (se puede cambiar)')
-    vacios = pg.evaluate("f => ['fecha','sdi','tt','ts','jo','umf','num'].map(n => document.querySelector(f + ' [name=' + n + ']').value)", f)
-    ok(all(v == '' for v in vacios), '3.6 las condiciones del nuevo periodo empiezan vacías: no se dan por válidas las anteriores', str(vacios))
-    ok(not habilitado(pg, f), 'P3a el botón «Registrar reingreso» se ve inactivo mientras no se confirme el expediente')
-    foto(pg, 'r03-reingreso-formulario')
-    # Fecha no posterior a la baja anterior
-    pg.fill(f + ' [name=fecha]', '2025-05-20'); pg.dispatch_event(f + ' [name=fecha]', 'change')
-    pg.check(f + ' [name=confirma_expediente]'); pg.wait_for_timeout(200)
-    ok(habilitado(pg, f), 'P3b al marcar la confirmación el botón cambia a habilitado')
-    rpc.clear(); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(800)
-    ok('posterior a la baja anterior' in txt(pg, '#rl-msg') and 'laboral_registrar_ingreso' not in rpc,
-       '1c la fecha de reingreso debe ser posterior a la baja anterior (31/05/2025); no se envía nada', txt(pg, '#rl-msg')[:120])
-    # Datos personales: se actualizan en su sección y el reingreso capturado se conserva
-    pg.fill(f + ' [name=fecha]', '2026-11-02'); pg.dispatch_event(f + ' [name=fecha]', 'change')
+    ficha(pg, 'RAMIRO REYES SOTO', 'compensacion')
+    pg.evaluate('abrirFormRegistroPago()'); pg.wait_for_timeout(400)
+    ok(not pg.is_visible('#rp-form') and 'no tiene una relación laboral vigente' in txt(pg, '#toast-registros-pago'),
+       'S1 sin relación vigente, Compensación no agrega esquemas y dice que se registra el ingreso o reingreso', txt(pg, '#toast-registros-pago')[:120])
+    opc = pg.eval_on_selector_all('#d-estatus option', 'os => os.map(o => [o.value, o.disabled])')
+    ok(not pg.is_disabled('#d-estatus') and ['__ingreso', False] in opc and ['Activo', True] in opc,
+       'S2 en Baja, el menú Estatus ofrece «Registrar ingreso / reingreso…» (Activo no se elige a mano)', str(opc))
+    pg.select_option('#d-estatus', '__ingreso'); pg.wait_for_timeout(700)
+    ok(pg.is_visible(f) and pg.input_value('#d-estatus') == 'Baja' and pg.is_visible('[data-detail-section="laboral"]') if pg.query_selector('[data-detail-section="laboral"]') else pg.is_visible(f),
+       'S3 el atajo abre el registro en Relación laboral; el estatus no cambia hasta registrar', pg.input_value('#d-estatus'))
+    ok(pg.is_visible('#hl-btn-ingreso') and 'Registrar ingreso / reingreso' in txt(pg, '#hl-btn-ingreso') and not pg.query_selector('#hl-btn-reingreso'),
+       'U1 un solo botón: «Registrar ingreso / reingreso»')
+    emps = pg.eval_on_selector_all(f + ' [name=empresa] option', 'os => os.map(o => o.text)')
+    ok(emps == ['Elige…', 'CONSTRUCTORA ALTIPLANO DEMO', 'SERVICIOS CUMBRE DEMO'], 'U2 ofrece todas las empresas activas del tenant, no solo donde trabajó', str(emps))
+    ok('Reingreso a CONSTRUCTORA ALTIPLANO DEMO' in txt(pg, f + ' .ing-tipo') and '01/02/2022' in txt(pg, f + ' .ing-tipo') and '31/05/2025' in txt(pg, f + ' .ing-tipo'),
+       'U3 BeeHuman determina que es reingreso (trabajó ahí del 01/02/2022 al 31/05/2025)', txt(pg, f + ' .ing-tipo')[:150])
+    ok(pg.eval_on_selector_all(f + ' [name=rp] option', 'os => os.map(o => o.text)') == ['Sin registro patronal (sin IDSE)', 'Y1234567101', 'Y1234567102']
+       and pg.eval_on_selector(f + ' [name=rp]', 's => s.options[s.selectedIndex].text') == 'Y1234567101',
+       'U4 registro patronal según la empresa (con «Sin registro patronal»); propone el de la relación anterior')
+    ok('RESR880808HDFYTM01' in txt(pg, f) and 'F-778812' in txt(pg, f) and 'LUCIA SOTO' in txt(pg, f) and not pg.query_selector(f + ' [name=confirma_expediente]'),
+       'U5 recupera el expediente (CURP, FONACOT, contacto) sin volver a capturarlo y sin casilla obligatoria')
+    ok(pg.input_value(f + ' [name=sdi]') == '' and pg.input_value(f + ' [name=umf]') == '' and len(pg.query_selector_all(f + ' .esq-fila')) == 1
+       and pg.input_value(f + ' .esq-fila [data-esq=sueldo]') == '' and sin_null(),
+       'U6 condiciones y forma de pago empiezan vacías (no se copian las anteriores) y ningún campo dice «null»')
+    pg.select_option(f + ' [name=empresa]', CUMBRE); pg.wait_for_timeout(300)
+    ok(pg.eval_on_selector_all(f + ' [name=rp] option', 'os => os.map(o => o.text)') == ['Sin registro patronal (sin IDSE)'] and 'Ingreso nuevo a SERVICIOS CUMBRE' in txt(pg, f + ' .ing-tipo')
+       and not pg.is_visible(f + ' [name=sdi]'),
+       'U7 al cambiar de empresa cambia la lista de RP y el tipo (ingreso nuevo); sin RP no se piden datos IMSS')
+    pg.select_option(f + ' [name=empresa]', ALTI); pg.wait_for_timeout(300)
+    ok(pg.is_visible(f + ' [name=sdi]') and pg.eval_on_selector(f + ' button[type=submit]', 'b => b.textContent') == 'Registrar reingreso' and habilitado(pg, f),
+       'U8 de vuelta en ALTIPLANO con RP: pide los datos IMSS; el botón dice «Registrar reingreso» y está habilitado')
+    foto(pg, 'r02-formulario-unico-reingreso')
+    # Falta información: todo junto al botón, con su sección
+    fecha('2025-05-20')
+    fila(1, IMSS, '', '', '')
+    registrar(900)
+    errs = errores()
+    ok('laboral_registrar_ingreso' not in rpc and any('posterior a la baja anterior' in e and '31/05/2025' in e for e in errs) and any('SDI' in e and 'sección 3' in e for e in errs)
+       and any('periodicidad de la forma de pago 1' in e for e in errs) and any('importe de la forma de pago 1' in e for e in errs) and en_vista(f + ' .ing-err'),
+       'E1 si falta algo, junto al botón aparece la lista exacta (fecha posterior a la baja, SDI, periodicidad, importe) con su sección, a la vista; no se envía nada', ' | '.join(errs)[:400])
+    ok(pg.query_selector(f + ' [name=sdi].hl-falta') is not None and pg.query_selector(f + ' .esq-fila [data-esq=per].hl-falta') is not None,
+       'E2 los campos que faltan quedan marcados')
+    foto(pg, 'r03-faltantes-junto-al-boton')
+    # Datos personales: se actualizan en su sección y TODO lo capturado se conserva
+    fecha('2026-11-02')
     pg.fill(f + ' [name=sdi]', '520'); pg.dispatch_event(f + ' [name=sdi]', 'input')
+    fila(1, IMSS, MEN, 'neto', '18000'); fila(2, EFEC, SEM, 'neto', '1500')
     pg.click(f + ' [data-ir-seccion="contacto"]'); pg.wait_for_timeout(400)
     pg.fill('#d-emerg-telefono', '5559998888')
     pg.click('#btn-guardar-detalle'); pg.wait_for_timeout(2500)
     pg.click('[data-detail-tab="laboral"]'); pg.wait_for_timeout(600)
+    filas_v = pg.eval_on_selector_all(f + ' .esq-fila', 'fs => fs.map(x => [...x.querySelectorAll("[data-esq]")].map(e => e.value).join("|"))')
     ok(pg.is_visible(f) and pg.eval_on_selector(f + ' [name=fecha]', 'e => e.value') == '2026-11-02' and pg.input_value(f + ' [name=sdi]').replace(',', '') in ('520', '520.00')
-       and '5559998888' in txt(pg, f) and not pg.is_checked(f + ' [name=confirma_expediente]') and q(f"select contacto_emergencia_telefono from personal where id = '{PID['RAMIRO']}'") == '5559998888',
-       '3.3 actualizar un dato personal (teléfono de emergencia) no pierde lo capturado; el expediente se muestra actualizado y la confirmación se pide otra vez',
-       str([pg.is_visible(f), pg.input_value(f + ' [name=fecha]') if pg.query_selector(f) else None, pg.input_value(f + ' [name=sdi]') if pg.query_selector(f) else None, '5559998888' in txt(pg, f), txt(pg, '#rl-msg')[:80]]))
-    foto(pg, 'r04-reingreso-tras-actualizar-contacto')
-    # Usar los datos anteriores como punto de partida (explícito) y ajustarlos
+       and filas_v == [f'{IMSS}|{MEN}|neto|18,000', f'{EFEC}|{SEM}|neto|1,500'] and '5559998888' in txt(pg, f)
+       and q(f"select contacto_emergencia_telefono from personal where id = '{PID['RAMIRO']}'") == '5559998888' and habilitado(pg, f),
+       'B1 actualizar un dato personal no pierde nada: fecha, SDI y las dos formas de pago siguen; el botón sigue habilitado', str(filas_v) + ' ' + txt(pg, '#rl-msg')[:80])
     pg.click(f + ' [data-copiar-anterior]'); pg.wait_for_timeout(300)
     copiados = pg.evaluate("f => ['tt','ts','jo','umf','num'].map(n => document.querySelector(f + ' [name=' + n + ']').value)", f)
-    ok(copiados == ['1', '0', '0', '015', 'R01'] and pg.query_selector(f + ' [name=umf].hl-falta') is not None,
-       '3.6b «Usar … anteriores como punto de partida» copia solo tipos, jornada, UMF y número interno, marcados para revisar', str(copiados))
-    pg.fill(f + ' [name=umf]', '016')
-    pg.fill(f + ' [name=motivo]', 'Reingreso tras renuncia')
-    pg.check(f + ' [name=confirma_expediente]'); pg.wait_for_timeout(200)
-    rpc.clear(); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2500)
+    ok(copiados == ['1', '0', '0', '015', 'R01'] and pg.query_selector(f + ' [name=umf].hl-falta') is not None and pg.input_value(f + ' [name=sdi]').replace(',', '') in ('520', '520.00'),
+       'U9 «Usar las condiciones anteriores» es opcional: copia tipos, jornada, UMF y número interno (marcados); el SDI capturado no cambia', str(copiados))
+    pg.fill(f + ' [name=umf]', '016'); pg.fill(f + ' [name=motivo]', 'Reingreso tras renuncia')
+    foto(pg, 'r04-reingreso-imss-y-efectivo')
+    registrar()
     m = txt(pg, '#rl-msg')
-    ok('Reingreso registrado' in m and '02/11/2026' in m and 'pendiente' in m and 'Y1234567101' in m and 'sus esquemas de pago siguen cerrados' in m and 'Paso 2' in m,
-       '1d reingreso registrado: dice dónde, con qué fecha, el 08 pendiente y que la relación anterior no cambió', m[:200])
+    ok('Reingreso registrado' in m and '02/11/2026' in m and 'pendiente' in m and 'Y1234567101' in m and 'Formas de pago registradas: IMSS · $18,000.00 neto · Mensual; EFECTIVO · $1,500.00 neto · Semanal' in m,
+       'R1a reingreso registrado: dónde, fecha, 08 pendiente y las dos formas de pago', m[:300])
     foto(pg, 'r05-reingreso-registrado')
     REL_NUEVA = q(f"select id from relaciones_laborales where personal_id = '{PID['RAMIRO']}' and id <> '{REL_VIEJA}'")
-    ok(q(f"select count(*) from personal where curp = 'RESR880808HDFYTM01'") == '1' and q(f"select empleado_id || '|' || estatus from personal where id = '{PID['RAMIRO']}'") == 'BEH-001001|Activo',
-       '6 el expediente no se duplica: misma persona BEH-001001 (una sola CURP), estatus vuelve a Activo')
+    ok(q(f"select count(*) from personal where curp = 'RESR880808HDFYTM01'") == '1' and q(f"select empleado_id || '|' || estatus from personal where id = '{PID['RAMIRO']}'") == 'BEH-001001|Activo'
+       and pg.input_value('#d-estatus') == 'Activo' and not pg.query_selector('#d-estatus option[value="__ingreso"]'),
+       'R1b mismo expediente BEH-001001; la persona queda Activa y el atajo desaparece del menú')
     ok(q(f"select estado || '|' || fecha_ingreso || '|' || sdi || '|' || sbc || '|' || umf || '|' || numero_interno || '|' || registro_patronal_id from relaciones_laborales where id = '{REL_NUEVA}'")
-       == f'vigente|2026-11-02|520.00|520.00|016|R01|{RP1}',
-       '2a nuevo periodo = relación nueva con sus propias condiciones (SDI 520, UMF 016)')
+       == f'vigente|2026-11-02|520.00|520.00|016|R01|{RP1}', 'R1c la relación nueva tiene sus propias condiciones (SDI 520, UMF 016)')
     ok(q(f"select tipo || '|' || estado from eventos_laborales where relacion_laboral_id = '{REL_NUEVA}' and tipo in ('ingreso','reingreso')") == 'reingreso|vigente',
-       '1e la Historia laboral lo registra como «reingreso»')
-    ok(huella_ids('relaciones_laborales', [REL_VIEJA]) == H_REL_VIEJA and
-       q(f"select estado || '|' || fecha_ingreso || '|' || fecha_baja || '|' || causa_baja || '|' || sdi from relaciones_laborales where id = '{REL_VIEJA}'") == 'baja|2022-02-01|2025-05-31|2|400.00',
-       '7a la relación anterior queda idéntica, byte a byte (ingreso 01/02/2022, baja 31/05/2025, causa 2, SDI 400)')
-    ok(huella_ids('eventos_laborales', EVS_VIEJOS) == H_EVS and huella_ids('idse_movimientos', MOVS_VIEJOS) == H_MOVS
-       and q(f"select count(*) from eventos_laborales where relacion_laboral_id = '{REL_VIEJA}'") == str(len(EVS_VIEJOS))
-       and q(f"select string_agg(tipo_movimiento || ':' || estado, ',' order by tipo_movimiento desc) from idse_movimientos where relacion_laboral_id = '{REL_VIEJA}'") == '08:confirmado,02:confirmado',
-       '7b sus eventos y sus movimientos 08 y 02 quedan idénticos; no se agregó nada a esa relación')
-    ok(q(f"select activo || '|' || fecha_fin || '|' || relacion_laboral_id from personal_registros_pago where id = '{ESQ_VIEJO}'") == f'false|2025-05-31|{REL_VIEJA}'
-       and q(f"select count(*) from personal_registros_pago where relacion_laboral_id = '{REL_NUEVA}'") == '0',
-       '8a el esquema anterior sigue cerrado y no se ligó al nuevo periodo')
+       'R1d la Historia laboral lo registra como «reingreso»')
+    esq = q(f"select string_agg(c.nombre || ':' || x.sueldo || ':' || x.modalidad_sueldo || ':' || coalesce(x.registro_patronal_id::text, 'sinRP') || ':' || x.fecha_inicio || ':' || x.activo, ',' order by c.nombre) from personal_registros_pago x join clasificaciones_personal c on c.id = x.clasificacion_id where x.relacion_laboral_id = '{REL_NUEVA}'")
+    ok(esq == f'EFECTIVO:1500.00:neto:sinRP:2026-11-02:true,IMSS:18000.00:neto:{RP1}:2026-11-02:true',
+       'R1e las dos formas de pago quedan ligadas a la relación nueva: IMSS con su RP, efectivo sin RP, desde la fecha de ingreso', esq)
+    ok(huella_ids('relaciones_laborales', [REL_VIEJA]) == H_REL_VIEJA and huella_ids('eventos_laborales', EVS_VIEJOS) == H_EVS and huella_ids('idse_movimientos', MOVS_VIEJOS) == H_MOVS
+       and q(f"select count(*) from eventos_laborales where relacion_laboral_id = '{REL_VIEJA}'") == str(len(EVS_VIEJOS)),
+       'R1f la relación anterior, sus eventos y sus movimientos 08/02 quedan idénticos')
+    ok(q(f"select activo || '|' || fecha_fin || '|' || relacion_laboral_id from personal_registros_pago where id = '{ESQ_VIEJO}'") == f'false|2025-05-31|{REL_VIEJA}',
+       'R1g el esquema anterior sigue cerrado y en su relación (no se reactivó)')
     ok(q(f"select tipo_movimiento || '|' || estado || '|' || fecha_movimiento || '|' || sbc from idse_movimientos where relacion_laboral_id = '{REL_NUEVA}'") == '08|pendiente|2026-11-02|520.00',
-       '9a el reingreso con RP genera su alta (08) pendiente con la fecha y el SBC nuevos')
-    # Paso 2: el nuevo esquema de pago, ya ligado a la relación nueva
-    pg.click('#rl-msg [data-definir-esquema]'); pg.wait_for_timeout(1500)
-    ok(pg.is_visible('#rp-form') and pg.input_value('#rp-empresa') == ALTI and pg.input_value('#rp-registro-patronal') == RP1 and pg.eval_on_selector('#rp-fecha-inicio', 'e => e.value') == '2026-11-02'
-       and pg.input_value('#rp-sueldo') == '' and 'no se copian del periodo anterior' in txt(pg, '#toast-registros-pago'),
-       '3.7 «Definir el esquema de pago» abre Compensación con empresa, RP y fecha del nuevo periodo; sueldo y periodicidad se capturan',
-       str([pg.is_visible('#rp-form'), pg.input_value('#rp-empresa'), pg.input_value('#rp-registro-patronal'), pg.eval_on_selector('#rp-fecha-inicio', 'e => e.value'), pg.input_value('#rp-sueldo'), txt(pg, '#toast-registros-pago')[:90]]))
-    pg.select_option('#rp-clasificacion', '0f000000-0000-4000-8000-000000000001'); pg.select_option('#rp-periodicidad', '0e000000-0000-4000-8000-000000000030')
-    pg.select_option('#rp-modalidad', 'neto'); pg.fill('#rp-sueldo', '18000')
-    foto(pg, 'r06-paso2-esquema')
-    pg.click('#btn-rp-guardar'); pg.wait_for_timeout(2500)
-    ok(q(f"select relacion_laboral_id || '|' || activo || '|' || sueldo || '|' || modalidad_sueldo from personal_registros_pago where personal_id = '{PID['RAMIRO']}' and id <> '{ESQ_VIEJO}'")
-       == f'{REL_NUEVA}|true|18000.00|neto' and q(f"select activo::text from personal_registros_pago where id = '{ESQ_VIEJO}'") == 'false',
-       '2b el nuevo esquema (Mensual, $18,000 neto) queda ligado a la relación nueva; el anterior sigue cerrado (8b)')
-    tarjetas = pg.eval_on_selector_all('#d-registros-pago .rp-tarjeta', 'ts => ts.map(t => [...t.querySelectorAll("dt,dd,.pill")].map(x => x.textContent.trim()).join(" "))')
-    ok(any('Activo' in t and 'Relación laboral CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 02/11/2026' in t for t in tarjetas)
-       and any('Relación laboral CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 01/02/2022 · baja 31/05/2025' in t for t in tarjetas)
-       and 'Esquema de pago registrado' in txt(pg, '#sbc-msg'),
-       'P1b Compensación dice a qué relación pertenece cada esquema (el nuevo y el cerrado del periodo anterior)', txt(pg, '#sbc-msg')[:120] + ' || ' + ' || '.join(tarjetas)[:400])
-    pg.evaluate("document.querySelector('.rp-historicos') && (document.querySelector('.rp-historicos').open = true)")
-    foto(pg, 'r07-compensacion-esquemas-por-relacion')
-    pg.click('[data-detail-tab="historia"]'); pg.wait_for_timeout(700)
-    hist = txt(pg, '#hl-raiz')
-    ok('Reingreso' in hist and 'Baja' in hist and 'Ingreso' in hist, '7c Historia laboral muestra el periodo anterior (ingreso y baja) y el reingreso')
-    foto(pg, 'r08-historia-reingreso')
-    # Bandeja IDSE
+       'R1h el reingreso con RP genera su alta (08) pendiente con fecha y SBC nuevos (uno solo)')
+    pg.click('[data-detail-tab="compensacion"]'); pg.wait_for_timeout(700)
+    tarjetas = pg.eval_on_selector_all('#d-registros-pago .rp-tarjeta', 'ts => ts.map(t => t.innerText.replace(/\\s+/g, " "))')
+    ok(sum(1 for t in tarjetas if 'Activo' in t and 'ingreso 02/11/2026' in t) == 2, 'R1i Compensación muestra las dos formas de pago vigentes ligadas al nuevo periodo', ' || '.join(tarjetas)[:300])
+    pg.evaluate('abrirFormRegistroPago()'); pg.wait_for_timeout(400)
+    ok(pg.is_visible('#rp-form'), 'S4 con la relación vigente, Compensación permite agregar otro esquema (no depende del estatus anterior)')
+    pg.evaluate("document.querySelector('#btn-rp-cancelar') && document.querySelector('#btn-rp-cancelar').click()"); pg.wait_for_timeout(300)
+    foto(pg, 'r06-compensacion-dos-formas')
     if pg.is_visible('#modal-overlay'): pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
     if pg.query_selector('#hl-aviso-imss'): pg.click('#hl-aviso-imss [data-av="cerrar"]'); pg.wait_for_timeout(300)
     ir(pg, 'idse'); pg.wait_for_timeout(600)
     pg.select_option('#idse-rp', RP1); pg.wait_for_timeout(1200)
-    p08 = txt(pg, '#idse-pend-08')
-    ok('RAMIRO REYES SOTO' in p08 and '02/11/2026' in p08, '9b el 08 del reingreso aparece en la bandeja IDSE del RP Y1234567101', p08[:160])
-    foto(pg, 'r09-bandeja-08-reingreso')
+    ok('RAMIRO REYES SOTO' in txt(pg, '#idse-pend-08') and '02/11/2026' in txt(pg, '#idse-pend-08'), 'R1j el 08 aparece en la bandeja IDSE del RP Y1234567101', txt(pg, '#idse-pend-08')[:120])
 
     # ------------------------------------------------------------------
-    print('--- 3 y P4. SOFIA: trabajó en ALTIPLANO; regresa al grupo en SERVICIOS CUMBRE (sin RP)')
-    H_SOFIA = huella(PID['SOFIA']); REL_S = q(f"select id from relaciones_laborales where personal_id = '{PID['SOFIA']}'")
+    print('--- R2. SOFIA: trabajó con IMSS en ALTIPLANO; entra a SERVICIOS CUMBRE (otra empresa, sin RP) en efectivo')
+    REL_S = q(f"select id from relaciones_laborales where personal_id = '{PID['SOFIA']}'"); H_RS = huella_ids('relaciones_laborales', [REL_S])
+    ESQ_S = q(f"select id from personal_registros_pago where personal_id = '{PID['SOFIA']}'")
     ficha(pg, 'SOFIA TREJO LUNA', 'laboral')
-    pg.click('#hl-btn-reingreso'); pg.wait_for_timeout(400)
-    opc = pg.eval_on_selector_all(f + ' [name=empresa] option', 'os => os.map(o => o.text)')
-    ok(opc == ['Elige…', 'CONSTRUCTORA ALTIPLANO DEMO'] and 'otra empresa del grupo, usa «Registrar nuevo ingreso»' in txt(pg, f),
-       '3a el reingreso solo ofrece empresas donde ya trabajó; para otra empresa del grupo indica «Registrar nuevo ingreso»', str(opc))
-    pg.click(f + ' [data-cancelar]'); pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(400)
-    pg.select_option(f + ' [name=empresa]', CUMBRE); pg.wait_for_timeout(400)
-    ok('Antecedentes de esta persona en el grupo' in txt(pg, f) and '10/01/2021' in txt(pg, f + ' .ri-ref-caja') and txt(pg, f + ' .ing-aviso') == ''
-       and pg.eval_on_selector_all(f + ' [name=rp] option', 'os => os.map(o => o.text)') == ['Sin registro patronal (sin IDSE)'],
-       '3b nuevo ingreso en otra empresa: muestra sus antecedentes en el grupo como referencia y no lo bloquea')
-    pg.fill(f + ' [name=fecha]', '2026-11-03'); pg.dispatch_event(f + ' [name=fecha]', 'change')
-    foto(pg, 'r10-otra-empresa-del-grupo')
-    rpc.clear(); pg.click(f + ' button[type=submit]'); pg.wait_for_timeout(2500)
+    pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(400)
+    pg.select_option(f + ' [name=empresa]', CUMBRE); pg.wait_for_timeout(300)
+    ok('Ingreso nuevo a SERVICIOS CUMBRE DEMO' in txt(pg, f + ' .ing-tipo') and 'Antecedentes de esta persona en el grupo' in txt(pg, f + ' .ri-ref-caja') and '10/01/2021' in txt(pg, f + ' .ri-ref-caja'),
+       'R2a otra empresa del grupo: es ingreso nuevo en esa empresa, con sus antecedentes como referencia, en el mismo formulario')
+    fecha('2026-11-03'); fila(1, IMSS, SEM, 'bruto', '2500')
+    registrar(900)
+    ok('laboral_registrar_ingreso' not in rpc and any('es de nómina IMSS: elige un registro patronal' in e for e in errores())
+       and 'necesita un registro patronal' in txt(pg, f + ' .esq-fila .esq-nota'),
+       'R2b una forma de pago IMSS sin registro patronal no procede: lo dice junto al botón y en la propia fila', ' | '.join(errores()))
+    fila(1, EFEC, SEM, 'neto', '2500')
+    ok(not any('SDI' in e for e in errores()), 'R2c sin RP no se pide SDI ni datos de afiliación')
+    registrar()
     REL_S2 = q(f"select id from relaciones_laborales where personal_id = '{PID['SOFIA']}' and id <> '{REL_S}'")
-    ok('Ingreso registrado' in txt(pg, '#rl-msg') and 'no genera movimiento IDSE' in txt(pg, '#rl-msg')
-       and q(f"select count(*) from personal where curp = 'TELS910412MDFRNF02'") == '1'
-       and q(f"select empresa_id || '|' || estado || '|' || coalesce(registro_patronal_id::text, 'sinRP') from relaciones_laborales where id = '{REL_S2}'") == f'{CUMBRE}|vigente|sinRP',
-       '3c mismo expediente; relación separada en SERVICIOS CUMBRE', txt(pg, '#rl-msg')[:120])
-    ok(q(f"select count(*) from idse_movimientos where relacion_laboral_id = '{REL_S2}'") == '0',
-       'P4a una relación SIN registro patronal no genera ningún movimiento IDSE')
-    ok(q(f"select estado || '|' || empresa_id || '|' || fecha_baja from relaciones_laborales where id = '{REL_S}'") == f'baja|{ALTI}|2024-12-31'
-       and q(f"select string_agg(tipo_movimiento || ':' || estado, ',' order by tipo_movimiento desc) from idse_movimientos where relacion_laboral_id = '{REL_S}'") == '08:confirmado,02:confirmado',
-       '3d la relación anterior en ALTIPLANO no cambia')
-    foto(pg, 'r11-dos-empresas-relaciones-separadas')
+    ok('Ingreso registrado' in txt(pg, '#rl-msg') and 'no genera movimiento IDSE' in txt(pg, '#rl-msg') and 'EFECTIVO · $2,500.00 neto · Semanal' in txt(pg, '#rl-msg')
+       and q(f"select empresa_id || '|' || estado || '|' || coalesce(registro_patronal_id::text, 'sinRP') || '|' || coalesce(sdi::text, '-') from relaciones_laborales where id = '{REL_S2}'") == f'{CUMBRE}|vigente|sinRP|-',
+       'R2d mismo expediente, relación separada en SERVICIOS CUMBRE sin RP ni SDI', txt(pg, '#rl-msg')[:150])
+    ok(q(f"select count(*) from idse_movimientos where relacion_laboral_id = '{REL_S2}'") == '0' and q(f"select tipo from eventos_laborales where relacion_laboral_id = '{REL_S2}' and tipo in ('ingreso','reingreso')") == 'ingreso',
+       'R2e sin registro patronal no genera movimiento IDSE; en la historia es «ingreso» (nuevo en esa empresa)')
+    ok(q(f"select x.relacion_laboral_id || '|' || coalesce(x.registro_patronal_id::text,'sinRP') || '|' || x.activo from personal_registros_pago x where x.personal_id = '{PID['SOFIA']}' and x.id <> '{ESQ_S}'") == f'{REL_S2}|sinRP|true'
+       and q(f"select activo::text from personal_registros_pago where id = '{ESQ_S}'") == 'false' and huella_ids('relaciones_laborales', [REL_S]) == H_RS
+       and q(f"select estatus from personal where id = '{PID['SOFIA']}'") == 'Activo',
+       'R2f IMSS → efectivo: el esquema IMSS anterior sigue cerrado, el de efectivo es nuevo; la relación anterior no cambia; queda Activa')
+    foto(pg, 'r07-otra-empresa-efectivo')
 
     # ------------------------------------------------------------------
-    print('--- 4. TOMAS: ya tiene una relación vigente en ALTIPLANO RP1')
+    print('--- R3. MARTA: IMSS en ALTIPLANO RP1; regresa a ALTIPLANO sin RP, pagada por transferencia')
+    REL_M = q(f"select id from relaciones_laborales where personal_id = '{PID['MARTA']}'"); ESQ_M = q(f"select id from personal_registros_pago where personal_id = '{PID['MARTA']}'")
+    ficha(pg, 'MARTA MARIN ROMO', 'laboral')
+    pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(400)
+    pg.select_option(f + ' [name=empresa]', ALTI); pg.wait_for_timeout(200)
+    pg.select_option(f + ' [name=rp]', ''); pg.wait_for_timeout(300)
+    fecha('2026-11-04'); fila(1, HONO, MEN, 'bruto', '12000')
+    registrar(900)
+    ok('laboral_registrar_ingreso' not in rpc and any('HONORARIOS' in e and 'Código postal fiscal' in e and 'Datos personales' in e for e in errores()),
+       'R3a honorarios exige RFC y CP fiscal del expediente: dice cuál falta y en qué sección', ' | '.join(errores()))
+    fila(1, TRANS, MEN, 'neto', '12000')
+    registrar()
+    REL_M2 = q(f"select id from relaciones_laborales where personal_id = '{PID['MARTA']}' and id <> '{REL_M}'")
+    ok('Reingreso registrado' in txt(pg, '#rl-msg') and q(f"select count(*) from idse_movimientos where relacion_laboral_id = '{REL_M2}'") == '0',
+       'R3b reingreso a la misma empresa sin RP: la pantalla lo registra como reingreso a ALTIPLANO y no genera IDSE')
+    # LIMITACIÓN CONOCIDA (fase B, requiere migración): la base marca «reingreso» solo con la misma empresa Y el mismo RP;
+    # con otro RP (aquí: sin RP) el evento de la Historia laboral queda como «ingreso».
+    ok(q(f"select tipo from eventos_laborales where relacion_laboral_id = '{REL_M2}' and tipo in ('ingreso','reingreso')") == 'ingreso',
+       'R3b2 (limitación conocida, fase B) con otro RP la Historia laboral lo guarda como «ingreso», no «reingreso»')
+    ok(q(f"select c.nombre || ':' || coalesce(x.registro_patronal_id::text,'sinRP') || ':' || x.activo from personal_registros_pago x join clasificaciones_personal c on c.id = x.clasificacion_id where x.relacion_laboral_id = '{REL_M2}'") == 'TRANSFERENCIA:sinRP:true'
+       and q(f"select activo::text from personal_registros_pago where id = '{ESQ_M}'") == 'false',
+       'R3c IMSS → transferencia: la transferencia queda en la relación nueva; el IMSS anterior sigue cerrado')
+
+    # ------------------------------------------------------------------
+    print('--- R4. Persona nueva (VALERIA, recién dada de alta sin relación): ingreso nuevo con IMSS + transferencia')
+    if pg.is_visible('#modal-overlay'): pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
+    ir(pg, 'alta')
+    pg.fill('#f-nombres', 'VALERIA'); pg.fill('#f-apellido1', 'NUEVA'); pg.fill('#f-apellido2', 'PRUEBA')
+    pg.fill('#f-curp', 'NUPV950505MDFVRL09'); pg.fill('#f-rfc', 'NUPV950505AB3'); pg.fill('#f-nss', '88888888880')
+    pg.click('#btn-alta'); pg.wait_for_timeout(2500)
+    PV = q("select id from personal where curp = 'NUPV950505MDFVRL09'")
+    ok(PV and q(f"select count(*) from relaciones_laborales where personal_id = '{PV}'") == '0', 'R4a alta sin coincidencias: persona nueva sin relaciones')
+    ficha(pg, 'VALERIA NUEVA PRUEBA', 'laboral')
+    pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(400)
+    pg.select_option(f + ' [name=empresa]', ALTI); pg.wait_for_timeout(200); pg.select_option(f + ' [name=rp]', RP2); pg.wait_for_timeout(200)
+    ok('Ingreso nuevo a CONSTRUCTORA ALTIPLANO DEMO' in txt(pg, f + ' .ing-tipo'), 'R4b sin historia: ingreso nuevo')
+    fecha('2026-11-05'); pg.fill(f + ' [name=sdi]', '400'); pg.dispatch_event(f + ' [name=sdi]', 'input')
+    fila(1, IMSS, SEM, 'bruto', '2800'); fila(2, TRANS, SEM, 'neto', '700')
+    registrar()
+    RV = q(f"select id from relaciones_laborales where personal_id = '{PV}'")
+    ok('Ingreso registrado' in txt(pg, '#rl-msg') and q(f"select tipo_movimiento || '|' || estado || '|' || fecha_movimiento from idse_movimientos where relacion_laboral_id = '{RV}'") == '08|pendiente|2026-11-05'
+       and q(f"select string_agg(c.nombre || ':' || coalesce(x.registro_patronal_id::text,'sinRP'), ',' order by c.nombre) from personal_registros_pago x join clasificaciones_personal c on c.id = x.clasificacion_id where x.relacion_laboral_id = '{RV}'") == f'IMSS:{RP2},TRANSFERENCIA:sinRP',
+       'R4c ingreso nuevo con RP2: 08 pendiente y las dos formas de pago (IMSS con RP, transferencia sin RP)')
+
+    # ------------------------------------------------------------------
+    print('--- R5. Bloqueos y relación adicional: TOMAS (vigente en ALTIPLANO RP1)')
     H_TOMAS = huella(PID['TOMAS'])
     ficha(pg, 'TOMAS UGALDE VARGAS', 'laboral')
-    pg.click('#hl-btn-reingreso'); pg.wait_for_timeout(500)
+    pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(400)
+    pg.select_option(f + ' [name=empresa]', ALTI); pg.wait_for_timeout(200); pg.select_option(f + ' [name=rp]', RP1); pg.wait_for_timeout(300)
     blq = txt(pg, f + ' .ing-aviso')
-    pg.check(f + ' [name=confirma_expediente]'); pg.wait_for_timeout(200)
-    ok('No se puede registrar el reingreso' in blq and 'vigente' in blq and 'Y1234567101' in blq and '15/01/2024' in blq and not habilitado(pg, f),
-       '4a reingreso con una relación vigente en la misma empresa y RP: lo impide y explica el motivo; el botón sigue inactivo aun confirmando', blq[:170])
-    foto(pg, 'r12-reingreso-duplicado-bloqueado')
-    pg.fill(f + ' [name=fecha]', '2026-11-04')
-    rpc.clear(); pg.eval_on_selector(f, 'fm => { fm.querySelector("button[type=submit]").disabled = false; fm.requestSubmit(); }'); pg.wait_for_timeout(900)
-    ok('laboral_registrar_ingreso' not in rpc and 'No se puede registrar' in txt(pg, '#rl-msg'),
-       '4b aunque se fuerce el botón, la lógica de envío vuelve a revisar y no envía nada', str(rpc) + ' ' + txt(pg, '#rl-msg')[:100])
+    ok('No se puede registrar' in blq and 'vigente' in blq and '15/01/2024' in blq and habilitado(pg, f), 'R5a misma empresa y RP con relación vigente: el aviso lo explica (el botón no queda «muerto»)', blq[:160])
+    fecha('2026-11-04'); pg.fill(f + ' [name=sdi]', '420'); pg.dispatch_event(f + ' [name=sdi]', 'input')
+    registrar(900)
+    ok('laboral_registrar_ingreso' not in rpc and any('Ya existe una relación vigente' in e for e in errores()), 'R5b al intentarlo, junto al botón dice por qué no procede y no se envía nada', ' | '.join(errores()))
     err = pg.evaluate("""async () => { const r = await sb.rpc('laboral_registrar_ingreso', { p_personal_id: '%s', p_empresa_id: '%s', p_registro_patronal_id: '%s', p_fecha_ingreso: '2026-11-04' }); return r.error ? r.error.message : 'sin error'; }"""
                       % (PID['TOMAS'], ALTI, RP1))
-    ok('ya tiene una relación vigente con esa empresa y registro patronal' in err and huella(PID['TOMAS']) == H_TOMAS,
-       '4c la base también lo impide (llamada directa) y nada de TOMAS cambió', err[:120])
-    pg.click(f + ' [data-cancelar]'); pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(400)
-    pg.select_option(f + ' [name=empresa]', ALTI); pg.wait_for_timeout(300)
-    ok('No se puede registrar el ingreso' in txt(pg, f + ' .ing-aviso') and not habilitado(pg, f), '4d «Nuevo ingreso» en el mismo RP también queda bloqueado')
-
-    # ------------------------------------------------------------------
-    print('--- 5. DIANA: relación migrada vigente sin fecha de ingreso (y una relación anterior dada de baja)')
+    ok('ya tiene una relación vigente con esa empresa y registro patronal' in err and huella(PID['TOMAS']) == H_TOMAS, 'R5c la base también lo impide; nada de TOMAS cambió', err[:100])
+    pg.select_option(f + ' [name=rp]', ''); pg.wait_for_timeout(300)
+    ok('Relación adicional en CONSTRUCTORA ALTIPLANO DEMO' in txt(pg, f + ' .ing-tipo') and pg.query_selector(f + ' [name=confirma_adicional]') is not None,
+       'R5d con otro RP en la misma empresa es una relación adicional y pide confirmarla')
+    registrar(900)
+    ok('laboral_registrar_ingreso' not in rpc and any('relación laboral adicional' in e for e in errores()), 'R5e sin la confirmación no se registra y se dice qué falta', ' | '.join(errores()))
+    pg.click(f + ' [data-cancelar]')
+    print('--- R6. DIANA: relación migrada vigente sin fecha (no se confunde con un reingreso)')
     ficha(pg, 'DIANA FUENTES ORTIZ', 'laboral')
     REL_DA = q(f"select id from relaciones_laborales where personal_id = '{PID['DIANA']}' and estado = 'vigente'")
     REL_DB = q(f"select id from relaciones_laborales where personal_id = '{PID['DIANA']}' and estado = 'baja'")
     H_DB = huella_ids('relaciones_laborales', [REL_DB])
-    pg.click('#hl-btn-reingreso'); pg.wait_for_timeout(500)
+    pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(400)
+    pg.select_option(f + ' [name=empresa]', ALTI); pg.wait_for_timeout(200); pg.select_option(f + ' [name=rp]', ''); pg.wait_for_timeout(300)
     blq = txt(pg, f + ' .ing-aviso')
-    ok('No es un reingreso' in blq and 'solo le falta su fecha de ingreso' in blq and pg.query_selector(f + ' .ing-aviso [data-ir-corregir]') and not habilitado(pg, f),
-       '5a la relación migrada sin fecha no se confunde con un reingreso: se bloquea y ofrece «Corregir datos de esa relación»', blq[:170])
-    foto(pg, 'r13-migrada-sin-fecha-no-es-reingreso')
+    ok('solo le falta su fecha de ingreso' in blq and pg.query_selector(f + ' .ing-aviso [data-ir-corregir]'), 'R6a la relación migrada sin fecha: lo explica y ofrece «Corregir datos de esa relación»', blq[:160])
+    foto(pg, 'r08-migrada-sin-fecha')
     pg.click(f + ' .ing-aviso [data-ir-corregir]'); pg.wait_for_timeout(500)
     fc = f'#hl-form-{REL_DA} form'
-    ok(pg.is_visible(fc) and 'Relación que se corrige: CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal' in txt(pg, fc),
-       '5b lleva a «Corregir datos» de la relación migrada, indicando cuál se corrige')
+    ok(pg.is_visible(fc) and 'Relación que se corrige: CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal' in txt(pg, fc), 'R6b lleva a «Corregir datos» de esa relación')
     print('--- P2. Fechas de ingreso por relación')
     pg.fill(fc + ' [name=fecha_ingreso]', '2018-04-02'); pg.dispatch_event(fc + ' [name=fecha_ingreso]', 'change'); pg.wait_for_timeout(300)
     av = txt(pg, fc + ' .fd-caja')
@@ -325,12 +376,12 @@ with sync_playwright() as p:
     ok(any('Vigente' in c and '06/01/2020' in c for c in cards) and any('RP Y1234567102' in c and '02/04/2018' in c for c in cards),
        'P2d cada relación muestra su propia fecha de ingreso', ' || '.join(c[:80] for c in cards))
     foto(pg, 'r15-cada-relacion-su-fecha')
-    print('--- 5c. CESAR: «Nuevo ingreso» sin RP con su relación migrada sin fecha')
+    print('--- 5c. CESAR: ingreso sin RP con su relación migrada sin fecha')
     ficha(pg, 'CESAR DELGADILLO HINOJOSA', 'laboral')
     pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(400)
     pg.select_option(f + ' [name=empresa]', ALTI); pg.select_option(f + ' [name=rp]', ''); pg.wait_for_timeout(300)
-    ok('solo le falta su fecha de ingreso' in txt(pg, f + ' .ing-aviso') and pg.query_selector(f + ' .ing-aviso [data-ir-corregir]') and not habilitado(pg, f),
-       '5c «Nuevo ingreso» sin RP con una relación migrada sin fecha: se bloquea y lleva a «Corregir datos»')
+    ok('solo le falta su fecha de ingreso' in txt(pg, f + ' .ing-aviso') and pg.query_selector(f + ' .ing-aviso [data-ir-corregir]'),
+       '5c sin RP con una relación migrada sin fecha: se bloquea y lleva a «Corregir datos»')
     print('--- P2e. BENITO: misma fecha en sus dos relaciones, solo con confirmación')
     ficha(pg, 'BENITO ZAVALA GALINDO', 'laboral')
     RB1 = q(f"select rl.id from relaciones_laborales rl where personal_id = '{PID['BENITO']}' and registro_patronal_id = '{RP1}'")
@@ -406,24 +457,15 @@ with sync_playwright() as p:
        '10c al anular la baja, el esquema que esa baja desactivó vuelve a estar activo', q(f"select activo || '|' || coalesce(fecha_fin::text,'-') from personal_registros_pago where id = '{ESQ_U}'"))
     foto(pg, 'r21-baja-anulada')
 
-    print('--- 6b. Alta sin coincidencias: se crea normalmente')
-    if pg.is_visible('#modal-overlay'): pg.click('.detail-head-actions > button'); pg.wait_for_timeout(400)
-    if pg.query_selector('#hl-aviso-imss'): pg.click('#hl-aviso-imss [data-av="cerrar"]'); pg.wait_for_timeout(300)
-    n_antes = q("select count(*) from personal")
-    ir(pg, 'alta')
-    pg.fill('#f-nombres', 'VALERIA'); pg.fill('#f-apellido1', 'NUEVA'); pg.fill('#f-apellido2', 'PRUEBA')
-    pg.fill('#f-curp', 'NUPV950505MDFVRL09'); pg.fill('#f-rfc', 'NUPV950505AB3'); pg.fill('#f-nss', '88888888880')
-    pg.click('#btn-alta'); pg.wait_for_timeout(2500)
-    ok(q("select count(*) from personal") == str(int(n_antes) + 1) and q("select count(*) from personal where curp = 'NUPV950505MDFVRL09'") == '1'
-       and not pg.is_visible('#toast-alta') and 'Persona registrada: VALERIA NUEVA PRUEBA' in txt(pg, '#alta-guardada-texto'),
-       'C6 sin coincidencias: el alta se guarda normalmente (una sola ficha nueva)', txt(pg, '#alta-guardada-texto')[:120])
     ok(not pg.errores, 'sin errores de JavaScript (Nómina)', '; '.join(pg.errores)[:300])
     ctx.close()
     # Móvil: el formulario de reingreso no desborda
     ctx, pg = abrir(b, 'nomina', 390, 844)
-    ficha(pg, 'SOFIA TREJO LUNA', 'laboral')
-    pg.click('#hl-btn-reingreso'); pg.wait_for_timeout(500)
-    ok(pg.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'M1 en móvil el reingreso no desborda la pantalla')
+    ficha(pg, 'RAMIRO REYES SOTO', 'laboral')
+    pg.click('#hl-btn-ingreso'); pg.wait_for_timeout(500)
+    pg.select_option('#hl-form-ingreso form [name=empresa]', CUMBRE); pg.wait_for_timeout(300)
+    pg.click('#hl-form-ingreso form [data-esq-agregar]'); pg.wait_for_timeout(200)
+    ok(pg.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'M1 en móvil el formulario (con dos formas de pago) no desborda la pantalla')
     foto(pg, 'r22-reingreso-movil')
     ok(not pg.errores, 'sin errores de JavaScript (móvil)', '; '.join(pg.errores)[:200])
     ctx.close(); b.close()

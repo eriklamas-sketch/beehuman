@@ -1,9 +1,8 @@
-# ui_historia_salario.py · base LOCAL bhui (datos sintéticos) · 10-nov-2026 · estado: reingreso + identidades
 --- Historia laboral: bitácora de solo lectura
 OK    B1 la bitácora es solo consulta: sin «Modificar salario», «Dar de baja», «Corregir datos», «Registrar ingreso», «Anular» ni formularios (solo filtro y orden)
 OK    B2 con dos relaciones laborales, cada acontecimiento dice su empresa y RP  [CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 | CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102]
 OK    B3 la bitácora avisa que la persona tiene más de una relación
-OK    B4 cada acontecimiento dice quién lo registró y cuándo  [Registrado por Migración inicial el 10/11/2026 16:29]
+OK    B4 cada acontecimiento dice quién lo registró y cuándo  [Registrado por Migración inicial el 11/11/2026 08:44]
 OK    B5 los cambios se muestran como Dato | Anterior | Nuevo
 OK    B6 los acontecimientos sin fecha efectiva quedan al final con cualquier orden  [['15/08/2024', 'Sin fecha'] / ['15/08/2024', 'Sin fecha']]
 --- Relación laboral: gestión y organización visual
@@ -12,6 +11,7 @@ OK    R2 dos grupos: «Datos de la relación y seguridad social» y después «D
 OK    R3 la relación muestra estado, ingreso, antigüedad, tipo de trabajador, tipo de salario, jornada IMSS, SDI y UMF (sin SBC aparte)  [EstadoVigenteIngreso15/08/2024Antigüedad reconocida—Tipo de trabajador—Tipo de salario—Jornada IMSS—SDINo registradoUMF—Número interno102]
 --- Compensación: un solo dato, el SDI
 OK    S1 muestra el SDI vigente y el tope de hoy (25 UMA × UMA vigente), con formato  [Salario ante el IMSS (SDI)
+      SDI = salario diario integrado: el importe diario con las prestaciones integradas que se usa como base de cotización en los movimientos ante el IMSS. No es el sueldo diario nominal (sueld]
 OK    S2 explica qué es el SDI y que no es el sueldo diario nominal
 OK    S0 un solo campo de importe: «SDI — salario diario integrado» (ya no hay SBC y SDI por separado)
 OK    S3 SDI arriba del tope: no bloquea; el SBC técnico del 07 es el tope ($2,932.75) y se conserva el SDI  [$2,932.75 · El SDI ($3,000.00) rebasa el tope de cotización: el movimiento 07 llevará el tope ($2,932.75) como S]
@@ -39,9 +39,12 @@ OK    G1 «Ver en la bandeja IDSE» después de guardar: sin aviso de cambios si
 OK    S14 el enlace abre la bandeja IDSE en ese RP, con el 07 pendiente
 --- Faltantes: completar desde la bandeja y volver
 OK    F1 la bandeja dice qué falta y ofrece «Completar datos de la relación laboral»  [Falta: Tipo de trabajadorFalta: Tipo de salarioFalta: JornadaFecha con más de 5 días: revisa el plazo de presentación
+  ]
 OK    F2 abre la ficha en Relación laboral, en «Corregir datos» de esa relación, con los campos faltantes marcados  [tipo_trabajador,tipo_salario,jornada]
 OK    F3 al guardar, el aviso ofrece volver a la bandeja IDSE  [Corrección registrada. Relación CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101. Volver a la bandeja IDSE de Y1234567101]
 OK    F4 regresa a la bandeja sin aviso de cambios y el movimiento ya no tiene esos faltantes  [PersonaFechaSBC del movimientoRevisiónADELA PALACIOS GALVAN01/11/2026$415.00
+        Fecha con más de 5 días: revisa el plazo de presentación
+          Generar ]
 OK    F5 con un NSS inválido, la bandeja ofrece «Completar datos de la persona»
 OK    F6 abre Datos personales con el NSS marcado y el enlace para volver a la bandeja
 OK    V5 el aviso del 07 detecta el NSS con dígito verificador incorrecto y ya no pide la guía  [Se puede registrar el movimiento, pero su archivo todavía no estará listo para generar. Para el archivo IDSE falta: NSS válido (el dígito verificador no corresp]
@@ -52,6 +55,8 @@ OK    S15 SDI $3,000 sobre el tope: la relación guarda SDI 3,000 y el 07 lleva 
 OK    G3 cerrar la ficha después de guardar: sin advertencia
 OK    P3 al cambiar de sección y regresar el aviso ya no persiste
 OK    G4 con un SDI escrito y sin guardar, cerrar la ficha SÍ advierte (protección conservada)  [Hay cambios sin guardar en esta ficha.
+
+¿Cerrar y descartar ]
 OK    P4 el aviso de una persona no aparece en la ficha de otra
 --- Sueldo y SDI no se mezclan
 OK    N1 sin SDI vigente se dice explícitamente (no se inventa)
@@ -62,9 +67,12 @@ OK    N3 cambiar el sueldo NO cambia el SBC; ofrece el 07 de la relación de ESE
 OK    N3b la lista de esquemas de la relación ya muestra el sueldo recién guardado  [Esquemas de pago de esta relación: $3,100.00 bruto]
 OK    N4 el botón abre el 07 de la relación correcta y lo dice («solo para … RP Y1234567102»)
 OK    N4b el 07 abierto desde el esquema dice qué esquema lo origina y a qué relación y RP pertenece  [Modificación de salario (07) · CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102
+      Esta persona tiene 2 relaciones vigentes con registro patronal. El movimiento se registrará solo para CONSTRUCTORA ALT]
 OK    V3 al asignar, cada opción muestra empresa, RP e ingreso  [CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 15/08/2024 | CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102 · ingreso —]
 OK    V4 la asignación pide confirmación nombrando la relación y queda en la correcta  [¿Asignar este esquema de pago a la relación CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101?
+]
 OK    M3 Movimientos es la bitácora administrativa de la ficha: no lista acontecimientos laborales y remite a Historia laboral  [Movimientos
+      Bitácora administrativa de la ficha: qué datos generales se cambiaron con «Guardar cambios», cuándo y ]
 --- Ficha: navegación lateral, tarjeta en dos columnas y datos internos
 OK    D1 navegación lateral con más aire (padding 11/12 px, separación entre secciones) y estado activo con fondo propio  [['rgb(234, 240, 251)', '11px', '12px'] [163, 207]]
 OK    D2 tarjeta en dos columnas: izquierda estado, ingreso, antigüedad, tipo de trabajador; derecha tipo de salario, jornada IMSS, SDI, UMF, número interno  [[['Estado', 'Ingreso', 'Antigüedad reconocida', 'Tipo de trabajador'], ['Tipo de salario', 'Jornada IMSS', 'SDI', 'UMF', 'Número interno']] [483, 864]]
@@ -75,13 +83,14 @@ OK    D5 «Dar de baja» y «Corregir datos» siguen visibles en cada tarjeta (s
 OK    E1 sin botón independiente en el encabezado: la opción «Baja» del estatus es el acceso a la baja definitiva  [[False, False]]
 OK    E2 la tarjeta conserva la baja de UNA relación, rotulada «Dar de baja esta relación» (no es la baja definitiva)
 OK    E3 elegir «Baja» abre el formulario de baja definitiva en Relación laboral; el estatus no cambia como simple etiqueta
-OK    E4 lista las 2 relaciones vigentes de la empresa, con el RP donde irá cada 02, y pide confirmación expresa  [[['2517c576-fae6-483c-8d52-67fcb6c836da', 'CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 15/08/2024Genera la baja (02) pendiente en la bandeja IDSE de Y1234567101.Se desactiva: IMSS · $15,050]
+OK    E4 lista las 2 relaciones vigentes de la empresa, con el RP donde irá cada 02, y pide confirmación expresa  [[['5a5f2f35-ed47-4903-9ec3-ca5daa54efd6', 'CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 15/08/2024Genera la baja (02) pendiente en la bandeja IDSE de Y1234567101.Se desactiva: IMSS · $15,050]
 OK    E5 sin la confirmación no se registra nada  [Confirma que se terminan las 2 relaciones listadas.]
 OK    E6 si una relación no cumple las reglas (sin fecha de ingreso), no se da de baja ninguna: no queda una baja a medias  [No se registró ninguna baja. Lo impide:CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102 · ingreso —: falta su fecha de ingreso.Corregir la fecha de ingreso de esta ]
 OK    E7 (preparación) la persona queda también vigente en SERVICIOS CUMBRE DEMO, sin RP  [Ingreso registrado en SERVICIOS CUMBRE DEMO · sin registro patronal con fecha 01/10/2026. Sin regist]
 OK    E8 con relaciones vigentes en dos empresas, pide elegir la empresa antes de mostrar qué se termina
 OK    E9 sin empresa elegida no se registra nada
 OK    E10 al elegir CONSTRUCTORA lista sus 2 relaciones y avisa que la de SERVICIOS CUMBRE no cambia  [Se terminan estas 2 relaciones
+        CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 15/08/2024Genera la baja (02) pendiente en la bandeja IDSE de Y1234567101.Se desactiva: IMSS · $15,050.00 bruto · Mensual.CONS]
 OK    E10b el proceso se llama «Dar de baja en esta empresa» (no termina relaciones de otras empresas)
 OK    Q1 baja parcial (falla simulada en la 2.ª): la 1.ª queda registrada con su 02, la 2.ª sigue vigente sin 02 — limitación conocida, no atómica
 OK    Q2 el mensaje dice qué quedó dado de baja, qué no y por qué, y cómo terminar; el estatus sigue Activo  [La baja en la empresa quedó incompleta. Dadas de baja: CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101 · ingreso 15/08/2024. No se pudo dar de baja CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102 · ingreso 15/01/2025: falla simulada en la prueba Elige otra vez «Baja]
@@ -90,25 +99,30 @@ OK    E11 la baja definitiva termina las 2 relaciones de CONSTRUCTORA y NO la de
 OK    E12 un evento de baja y un 02 pendiente por relación, cada uno en su RP (Y1234567101 y Y1234567102); ninguno para la otra empresa
 OK    E13 estatus coherente: sigue Activo (vigente en otra empresa), la ficha pasa a SERVICIOS CUMBRE y «Baja» sigue disponible
 OK    E14 al terminar se muestra el aviso IDSE con el estado real de cada 02 (los dos pendientes de generar)  [Baja registrada en BeeHuman: falta el IMSS
+      La relación laboral se dio de baja en BeeHuman, pero el trabajador continúa registrado ante el IMSS. Se recomienda generar el archivo de baja (02) en IDSE y presentarlo an]
 OK    E15 el resultado dice qué se terminó, dónde quedó cada 02 y que la persona sigue activa en la otra empresa  [Baja registrada en CONSTRUCTORA ALTIPLANO DEMO. Se terminó 1 relación laboral:· CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567102 · ingreso 15/01/2025: movimiento de baja (02) pendiente en la bandeja IDSE de Y1234567102. Ver ]
 OK    E16 queda una sola empresa: la baja definitiva propone su única relación (sin RP: sin 02) sin pedir empresa; confirma esa relación
-OK    E17 sin relaciones vigentes el estatus pasa a Baja (resultado del proceso) y queda bloqueado: volver a Activo requiere reingreso; sin 02 ficticio
+OK    E17 sin relaciones vigentes el estatus pasa a Baja (resultado del proceso); Activo no se elige a mano: el menú ofrece registrar ingreso / reingreso; sin 02 ficticio
 --- Aviso al cerrar: baja en BeeHuman sin resultado del IMSS
 OK    A1 al cerrar, avisa por cada relación con 02 sin resultado (sin diálogo de cambios sin guardar)  [La baja todavía no está confirmada ante el IMSS
+      La relación laboral se dio de baja en BeeHuman, pero el trabajador continúa registrado ante el IMSS. Se recomienda generar el archivo de baja (02)]
 OK    A2 no afirma la baja ante el IMSS; etapas: BeeHuman ✓ · 02 por generar · presentar · resultado
 OK    A3 «Seguir en la ficha» deja la ficha abierta
 OK    A4 «Ir a la bandeja IDSE» cierra la ficha y muestra el 02 pendiente, sin más avisos  [PersonaFecha de bajaCausaRevisiónBENITO ZAVALA GALINDO06/11/20262 · Separación voluntaria
+        Lista
+          Genera]
 OK    A5 cada relación con su estado real: Y1234567101 generado (pendiente de presentar); Y1234567102 todavía por generar  [[['CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101\n        Baja en BeeHuman el 06/11/2026. Archivo de baja (02) generado, pendiente de presentar ante el IMSS.Baja registrada en BeeHumanArchivo de baja (]
 OK    A6 «Cerrar la ficha» cierra (el aviso informa, no impide)
 OK    A7 presentado sin resultado: lo dice y no afirma la baja ante el IMSS  [La baja todavía no está confirmada ante el IMSS
+      La relación laboral se dio de baja en BeeHuman, pero el trabajador continúa registrado ante el IMSS. Se recomienda generar el archivo de baja (02)]
 OK    A8 resultado registrado como rechazado: lo dice y marca la etapa  [[['CONSTRUCTORA ALTIPLANO DEMO · RP Y1234567101\n        Baja en BeeHuman el 06/11/2026. Resultado registrado: el IMSS rechazó la baja. Corrígela y vuelve a generar el 02.Baja registrada en BeeHumanAr]
 OK    A9 con resultado aceptado por el IMSS en ambos 02 ya no hay aviso: la ficha cierra directo
 --- Caso reportado: relación sin fecha de ingreso al dar de baja en la empresa (EDER)
 OK    F0 datos: EDER tiene una relación migrada vigente sin RP y sin fecha de ingreso
-OK    I1 ingreso SIN RP en la misma empresa: avisa que ya existe una relación igual y sugiere «Corregir datos»  [No se puede registrar el ingreso. La persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal (sin fecha de ingreso): solo p]
-OK    I2 y no lo intenta registrar (aun forzando el envío)
+OK    I1 ingreso SIN RP en la misma empresa: avisa que ya existe una relación igual y sugiere «Corregir datos»  [No se puede registrar. La persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal (sin fecha de ingreso): solo puede haber ]
+OK    I2 y no lo intenta registrar: lo dice junto al botón
 OK    I3 ingreso CON RP: aclara que no completa la relación sin RP, crea una adicional (con su 08) y pide confirmarlo  [Esta persona ya tiene una relación vigente en CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal (sin fecha de ingreso). Registrar este ingreso no la completa: crea una relación laboral adicional en RP Y1234567101, con ]
-OK    I4 sin la confirmación no crea nada
+OK    I4 sin la confirmación no crea nada (lo dice junto al botón)
 OK    I5 confirmado: queda el caso reportado (una relación con RP y fecha; otra sin RP y sin fecha)
 OK    F1 el formulario ya marca la relación sin fecha de ingreso y ofrece corregirla  [CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal · ingreso —Sin registro patronal: no genera movimiento IDSE.No tiene esquemas de pago activos asociados: no ]
 OK    F2 la baja no se registra: dice qué relación y qué dato lo impiden, con «Corregir la fecha de ingreso de esta relación»  [No se registró ninguna baja. Lo impide:CONSTRUCTORA ALTIPLANO DEMO · sin registro patronal · ingreso —: falta su fecha de ingreso.Corregir la fecha de ingreso de esta relación]
@@ -121,6 +135,7 @@ OK    F8 y vuelve a revisar todas las relaciones: ya cumplen  [Corrección regis
 OK    F9 la baja termina las 2 relaciones, con un evento de baja cada una
 OK    F10 un 02 solo para la relación con RP (Y1234567101); la otra sin movimiento IDSE; sin relaciones duplicadas; estatus Baja
 OK    F11 el aviso IDSE muestra solo el 02 de la relación con RP  [Baja registrada en BeeHuman: falta el IMSS
+      La relación laboral se dio de baja en BeeHuman, pero el trabajador continúa registrado ante el IMSS. Se recomie]
 --- Cerrar un esquema en Compensación no da de baja
 OK    X2 cerrar el esquema solo lo termina: la relación sigue vigente, estatus Activo, sin evento de baja ni 02
 OK    A10 sin bajas pendientes ante el IMSS, la ficha cierra sin aviso
@@ -131,4 +146,5 @@ OK    C2 sin errores de JavaScript (Consulta)
 OK    M1 en teléfono la bitácora no desborda la pantalla
 OK    M2 sin errores de JavaScript (teléfono)
 OK    X1 los eventos que ya existían quedan íntegros (mismo contenido, ninguno borrado)
+
 120/120 pruebas de pantalla correctas

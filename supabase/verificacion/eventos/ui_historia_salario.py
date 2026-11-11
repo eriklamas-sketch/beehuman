@@ -370,8 +370,8 @@ with sync_playwright() as p:
        'E16 queda una sola empresa: la baja definitiva propone su única relación (sin RP: sin 02) sin pedir empresa; confirma esa relación')
     pg.fill(f + ' [name=fecha]', '2026-11-07'); pg.select_option(f + ' [name=causa]', '2'); pg.check(f + ' [name=confirma]'); enviar(pg, f); pg.wait_for_timeout(2500)
     ok(estado_rel(RC) == 'baja' and n02(RC) == '0' and q(f"select estatus from personal where id = '{PER_B}'") == 'Baja'
-       and pg.eval_on_selector('#d-estatus', 's => [s.value, s.disabled]') == ['Baja', True] and txt(pg, '#d-estatus-pill') == 'Baja',
-       'E17 sin relaciones vigentes el estatus pasa a Baja (resultado del proceso) y queda bloqueado: volver a Activo requiere reingreso; sin 02 ficticio')
+       and pg.eval_on_selector('#d-estatus', 's => [s.value, s.options[0].disabled, !!s.querySelector("option[value=__ingreso]")]') == ['Baja', True, True] and txt(pg, '#d-estatus-pill') == 'Baja',
+       'E17 sin relaciones vigentes el estatus pasa a Baja (resultado del proceso); Activo no se elige a mano: el menú ofrece registrar ingreso / reingreso; sin 02 ficticio')
 
     print('--- Aviso al cerrar: baja en BeeHuman sin resultado del IMSS')
     av_rel = lambda rp: pg.eval_on_selector_all('#hl-aviso-imss .av-rel', f'rs => rs.filter(r => r.textContent.includes("{rp}")).map(r => [r.textContent, [...r.querySelectorAll(".av-pasos li")].map(l => l.className)])')
@@ -437,11 +437,11 @@ with sync_playwright() as p:
     pg.select_option(fi + ' [name=empresa]', E1); pg.wait_for_timeout(200)
     pg.select_option(fi + ' [name=rp]', ''); pg.wait_for_timeout(200)
     av = txt(pg, '#hl-form-ingreso .ing-aviso')
-    ok('No se puede registrar el ingreso' in av and 'solo le falta su fecha de ingreso' in av and '«Corregir datos»' in av and pg.query_selector('#hl-form-ingreso .ing-aviso [data-ir-corregir]')
-       and not pg.query_selector(fi + ' [name=confirma_adicional]') and pg.is_disabled(fi + ' button[type=submit]'),
+    ok('No se puede registrar' in av and 'solo le falta su fecha de ingreso' in av and '«Corregir datos»' in av and pg.query_selector('#hl-form-ingreso .ing-aviso [data-ir-corregir]')
+       and not pg.query_selector(fi + ' [name=confirma_adicional]'),
        'I1 ingreso SIN RP en la misma empresa: avisa que ya existe una relación igual y sugiere «Corregir datos»', av[:160])
     pg.fill(fi + ' [name=fecha]', '2026-10-01'); enviar(pg, fi); pg.wait_for_timeout(600)
-    ok('No se puede registrar el ingreso' in txt(pg, '#rl-msg') and rels_e() == '1', 'I2 y no lo intenta registrar (aun forzando el envío)')
+    ok('Ya existe una relación vigente' in txt(pg, '#hl-form-ingreso .ing-err') and rels_e() == '1', 'I2 y no lo intenta registrar: lo dice junto al botón')
     pg.select_option(fi + ' [name=rp]', RP1); pg.wait_for_timeout(200)
     av = txt(pg, '#hl-form-ingreso .ing-aviso')
     ok('crea una relación laboral adicional' in av and 'Y1234567101' in av and 'sin fecha de ingreso' in av and 'siguen vigentes' in av and pg.is_visible(fi + ' [name=confirma_adicional]'),
@@ -449,7 +449,7 @@ with sync_playwright() as p:
     foto(pg, 'd1-ingreso-relacion-adicional')
     pg.fill(fi + ' [name=sdi]', '450'); pg.fill(fi + ' [name=umf]', '001')
     enviar(pg, fi); pg.wait_for_timeout(600)
-    ok('Confirma que se creará una relación laboral adicional' in txt(pg, '#rl-msg') and rels_e() == '1', 'I4 sin la confirmación no crea nada')
+    ok('relación laboral adicional' in txt(pg, '#hl-form-ingreso .ing-err') and rels_e() == '1', 'I4 sin la confirmación no crea nada (lo dice junto al botón)')
     pg.check(fi + ' [name=confirma_adicional]'); enviar(pg, fi); pg.wait_for_timeout(2000)
     RE_B = q(f"select id from relaciones_laborales where personal_id = '{PER_E}' and registro_patronal_id = '{RP1}' and estado = 'vigente'")
     ok('Ingreso registrado' in txt(pg, '#rl-msg') and rels_e() == '2' and RE_B != '', 'I5 confirmado: queda el caso reportado (una relación con RP y fecha; otra sin RP y sin fecha)')

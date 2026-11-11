@@ -36,8 +36,8 @@ begin
   r := public.laboral_registrar_ingreso(p, alti, rp1, '2024-01-15', null, 420, 420, '1', '0', '0', '030', 'T03', null);
 
   -- R4 ULISES: dos relaciones vigentes en ALTIPLANO (RP1 y sin RP) y UN solo esquema, ligado a la de RP1.
-  insert into public.personal (id, tenant_id, nombres, primer_apellido, segundo_apellido, nombre_completo, curp, nss, empresa_id, estatus)
-  values ('0a200000-0000-4000-8000-000000000004', t, 'ULISES', 'VIDAL', 'ROJAS', 'ULISES VIDAL ROJAS', 'VIRU900101HDFDJL04', '77777777770', alti, 'Activo') returning id into p;
+  insert into public.personal (id, tenant_id, nombres, primer_apellido, segundo_apellido, nombre_completo, curp, rfc, nss, empresa_id, estatus)
+  values ('0a200000-0000-4000-8000-000000000004', t, 'ULISES', 'VIDAL', 'ROJAS', 'ULISES VIDAL ROJAS', 'VIRU900101HDFDJL04', 'VIRU900101AB4', '77777777770', alti, 'Activo') returning id into p;
   r := public.laboral_registrar_ingreso(p, alti, rp1, '2025-02-01', null, 450, 450, '1', '0', '0', '040', 'U04', null);
   r2 := public.laboral_registrar_ingreso(p, alti, null, '2025-02-01', null, null, null, null, null, null, null, null, 'Complemento en efectivo (sintético)');
   insert into public.personal_registros_pago (tenant_id, personal_id, clasificacion_id, periodicidad_id, sueldo, modalidad_sueldo, fecha_inicio, empresa_id, registro_patronal_id, relacion_laboral_id)
@@ -47,6 +47,22 @@ begin
   p := '0a100000-0000-4000-8000-000000000014';
   r := public.laboral_registrar_ingreso(p, alti, rp2, '2018-04-02', null, 300, 300, '1', '0', '0', '050', 'D05', 'Empleo anterior (sintético)');
   perform public.laboral_registrar_baja(r, '2019-06-30', '1', null);
+
+  -- Formas de pago del catálogo (11-nov): la de IMSS exige NSS, CURP y RFC (como «NOMINA IMSS»);
+  -- efectivo y transferencia no piden datos de afiliación; honorarios exige RFC y CP fiscal.
+  update public.clasificaciones_personal set requiere_nss = true, requiere_curp = true, requiere_rfc = true where id = imss;
+  insert into public.clasificaciones_personal (id, tenant_id, nombre, activo, requiere_rfc, requiere_cp_fiscal) values
+    ('0f000000-0000-4000-8000-000000000002', t, 'EFECTIVO', true, false, false),
+    ('0f000000-0000-4000-8000-000000000003', t, 'TRANSFERENCIA', true, false, false),
+    ('0f000000-0000-4000-8000-000000000004', t, 'HONORARIOS', true, true, true);
+
+  -- R6 MARTA: IMSS en ALTIPLANO RP1 (2023-2025); regresa a ALTIPLANO sin registro patronal, pagada por transferencia. Sin CP fiscal.
+  insert into public.personal (id, tenant_id, nombres, primer_apellido, segundo_apellido, nombre_completo, curp, rfc, nss, empresa_id, estatus)
+  values ('0a200000-0000-4000-8000-000000000005', t, 'MARTA', 'MARIN', 'ROMO', 'MARTA MARIN ROMO', 'MARM870303MDFRRT05', 'MARM870303AB5', '12121212120', alti, 'Activo') returning id into p;
+  r := public.laboral_registrar_ingreso(p, alti, rp1, '2023-06-01', null, 390, 390, '1', '0', '0', '025', 'M06', null);
+  insert into public.personal_registros_pago (tenant_id, personal_id, clasificacion_id, periodicidad_id, sueldo, modalidad_sueldo, fecha_inicio, empresa_id, registro_patronal_id)
+  values (t, p, imss, sem, 2700, 'bruto', '2023-06-01', alti, rp1);
+  perform public.laboral_registrar_baja(r, '2025-08-15', '2', null);
 
   -- Antecedentes: todos los movimientos IDSE de estas personas ya se presentaron y
   -- tienen resultado aceptado (archivo histórico sintético por RP y tipo).

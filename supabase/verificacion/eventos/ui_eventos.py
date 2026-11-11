@@ -92,8 +92,8 @@ with sync_playwright() as p:
        'ya tiene relación vigente sin RP en la empresa: el ingreso avisa que crea una relación adicional y pide confirmarlo', av[:160])
     n_rel = pg.locator('#rl-raiz .hl-card').count()
     enviar(pg, f); pg.wait_for_timeout(600)
-    ok('Confirma que se creará una relación laboral adicional' in msg(pg, '#rl-msg') and pg.locator('#rl-raiz .hl-card').count() == n_rel,
-       'sin confirmar no se registra el ingreso')
+    ok('relación laboral adicional' in msg(pg, '#hl-form-ingreso .ing-err') and pg.locator('#rl-raiz .hl-card').count() == n_rel,
+       'sin confirmar no se registra el ingreso (lo dice junto al botón)', msg(pg, '#hl-form-ingreso .ing-err')[:120])
     pg.check(f + ' [name=confirma_adicional]')
     enviar(pg, f); pg.wait_for_timeout(2000)
     t = pg.text_content('#rl-raiz') or ''

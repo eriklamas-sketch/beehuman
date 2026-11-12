@@ -1,0 +1,50 @@
+Semana de prueba: 2026-11-16 a 2026-11-22
+
+== A. Quién entra a la hoja y con qué relación ==
+OK    A1 Dos empresas: aparece en la hoja de cada empresa, cada una con su propia relación  [E1=7 1a200000-0 E2=7 1a200000-0]
+OK    A2 Dos relaciones en la misma empresa: la hoja usa la que tiene registro patronal  [7 1a200000-0]
+OK    A3 Relación dada de baja el miércoles: aparece lunes a miércoles
+OK    A4 Sin relación con la empresa del periodo: no aparece en su hoja aunque la ficha diga esa empresa; sí en la de su empresa real
+OK    A5 Captura a persona sin relación vigente en la empresa: rechazada  [ERROR:  BeeHuman: la persona no tiene relación laboral vigente con la empresa del periodo el 2026-11-16.]
+OK    A6 Captura después de la baja: rechazada  [ERROR:  BeeHuman: la persona no tiene relación laboral vigente con la empresa del periodo el 2026-11-19.]
+OK    A7 Cada renglón capturado guarda la relación de su empresa
+
+== B. Importes por empresa, relación y esquema ==
+OK    B1 Dos empresas, periodo de la empresa 1: solo el esquema IMSS de esa relación (2 h × 1,000/8 × 2)  [IMSS|bruto|500.00|pendiente|MULTI_E1]
+OK    B2 Dos empresas, periodo de la empresa 2: solo el efectivo de esa relación (2 h × 200/8 × 2)  [EFECTIVO|neto|100.00|pendiente|MULTI_E2]
+OK    B3 Varios esquemas: una línea por esquema (IMSS bruto, efectivo neto, transferencia neto), cada una con su relación  [IMSS|bruto|400.00|pendiente|VARIOS_RP ; EFECTIVO|neto|50.00|pendiente|VARIOS_SINRP ; TRANSFERENCIA|neto|50.00|pendiente|VARIOS_SINRP]
+OK    B4 Bruto y neto quedan separados; nunca se suman en un solo sueldo  [bruto=400.00 neto=100.00]
+OK    B5 Prima dominical por esquema (25 % de 800, 100 y 100)  [IMSS|bruto|200.00|pendiente|VARIOS_RP ; EFECTIVO|neto|25.00|pendiente|VARIOS_SINRP ; TRANSFERENCIA|neto|25.00|pendiente|VARIOS_SINRP]
+OK    B6 Concepto por tarifa: una línea sin esquema, ligada a la relación  [-|-|700.00|aceptado|VARIOS_RP]
+OK    B7 Relación dada de baja: el día anterior a la baja se paga con su esquema ya cerrado (2 h × 300/8 × 2)  [IMSS|bruto|150.00|pendiente|BAJA]
+OK    B8 Esquema no enlazado a la relación: no se usa; queda «sin sueldo» (no se inventa)  [-|-|null|sin_sueldo|NOENL]
+OK    B8b La línea explica por qué no tiene sueldo  [Sin esquema de pago enlazado a la relación de esta empresa en esas fechas]
+OK    B9 Ningún importe del periodo de la empresa 1 sale de un esquema de otra empresa  [0]
+OK    B10 Base «neto»: solo esquemas netos; el bruto no entra  [EFECTIVO|neto|50.00|pendiente|VARIOS_SINRP ; TRANSFERENCIA|neto|50.00|pendiente|VARIOS_SINRP]
+OK    B11 Base «neto» y la relación solo tiene IMSS bruto: sin sueldo (no toma el neto de la otra empresa)  [-|-|null|sin_sueldo|MULTI_E1]
+OK    B12 La versión 1 conserva sus líneas calculadas con base mixta
+OK    B13 Sueldo manual de Nómina: misma línea, ahora con importe (2 h × 400/8 × 2)  [-|manual|200.00|pendiente|NOENL]
+OK    B14 Esquema cerrado antes del periodo: su línea queda «descartado» (los importes no se borran)  [EFECTIVO|neto|50.00|pendiente|VARIOS_SINRP]
+OK    B15 Un recálculo no pisa la línea que Nómina modificó
+
+== C. Borrado de capturas según permisos ==
+OK    C0 authenticated tiene DELETE en las 4 tablas de captura y tarifas
+OK    C1 Otro coordinador no puede borrar la captura ajena (no se borra nada)
+OK    C2 Consulta y Nómina no borran capturas del coordinador
+OK    C3 El coordinador dueño borra su captura en borrador (cantidad, día y observación)
+OK    C4 Hoja enviada: nadie borra la captura (ni el dueño de la base)  [ERROR:  BeeHuman: la hoja ya fue enviada; corrige con devolución o complemento.]
+OK    C4b Hoja enviada: el coordinador tampoco la borra
+OK    C5 Nómina no borra tarifas por área
+OK    C6 El Administrador sí borra una tarifa por área
+
+== D. Privacidad ==
+OK    D1 coordA: no ve importes
+OK    D2 coordA: no ejecuta el sueldo por esquema  [ERROR:  permission denied for function inc_esquemas_dia]
+OK    D3 coordA: no ejecuta la búsqueda interna de relación  [ERROR:  permission denied for function inc_relacion_en]
+OK    D1 consulta: no ve importes
+OK    D2 consulta: no ejecuta el sueldo por esquema  [ERROR:  permission denied for function inc_esquemas_dia]
+OK    D3 consulta: no ejecuta la búsqueda interna de relación  [ERROR:  permission denied for function inc_relacion_en]
+OK    D4 La lista de personas de la hoja no trae sueldos  [p_hoja,personal_id,nombre_completo,empleado_id,area_id,proyecto_id,centro_costo_id,fecha,relacion_laboral_id]
+OK    D5 Los importes no se borran (ni el dueño de la base)  [ERROR:  BeeHuman: inc_importes es un registro histórico y no se puede delete .]
+
+RESULTADO: 39 de 39 verificaciones OK

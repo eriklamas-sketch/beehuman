@@ -3,7 +3,9 @@
 // Etapas 2 y 3: configuración (Administrador), periodos (Nómina y
 // Administrador) y hoja del coordinador. B1 (fase 2): revisión de Nómina
 // (tablero del periodo, hoja enviada, importes por esquema, devolución,
-// firmas, sueldo manual y procesado). Concentrado, comparativo y
+// firmas, sueldo manual y procesado). B1.1: valor por hora configurable
+// (factor doble y umbral por empresa, horas sencillas, esquema preferido,
+// esquema por asignar, motivo y bitácora de ajustes). Concentrado, comparativo y
 // exportaciones son etapas posteriores (B3, B4').
 // Toda regla de negocio y de permisos vive en la base (tablas inc_*):
 // esta pantalla solo la refleja. El coordinador nunca recibe importes
@@ -78,6 +80,11 @@
 #panel-incidencias .inc-dec.modificado{background:#EAF0FC;color:#22489E}
 #panel-incidencias .inc-dec.sin_sueldo{background:#B42318;color:#fff}
 #panel-incidencias .inc-dec.sin_importe,#panel-incidencias .inc-dec.descartado{background:#F1F2F4;color:#6B7385}
+#panel-incidencias .inc-dec.por_asignar{background:#8A5A00;color:#fff}
+#panel-incidencias .inc-imp tr.inc-por-asignar td{background:#FFFAEB}
+#panel-incidencias .inc-imp select.inc-esq{margin:4px 0 0;padding:4px 6px;font-size:12px;max-width:220px}
+#panel-incidencias .inc-imp input.inc-motivo-aj{width:110px;margin:4px 0 0;padding:4px 6px;font-size:12px;border:1px solid var(--v21-borde,#E5E9F1);border-radius:7px}
+#panel-incidencias .inc-calc{font-size:12px;color:#45506A;min-width:120px}
 #panel-incidencias .inc-imp td{text-align:left;padding:7px 8px;font-size:13px;border-top:1px solid #EDF0F6;vertical-align:middle}
 #panel-incidencias .inc-imp td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 #panel-incidencias .inc-imp th{text-align:left;font-size:12px;color:#45506A;background:#F3F5FA;padding:7px 8px;white-space:nowrap}
@@ -140,7 +147,7 @@
     const raiz = $('inc-raiz'); if (!raiz) return;
     await contexto();
     const vistas = rolActual === 'administrador' ? [['revision', 'Revisión'], ['periodos', 'Periodos'], ['config', 'Configuración']]
-      : rolActual === 'nomina' ? [['revision', 'Revisión'], ['periodos', 'Periodos']]
+      : rolActual === 'nomina' ? [['revision', 'Revisión'], ['periodos', 'Periodos'], ['config', 'Configuración']]
       : rolActual === 'coordinador' ? [['hojas', 'Mis hojas']] : [];
     if (!vistas.length) { raiz.innerHTML = '<div class="card"><p class="hint">Esta sección no está disponible para tu rol.</p></div>'; return; }
     if (!S.vista || !vistas.some(v => v[0] === S.vista)) S.vista = vistas[0][0];
@@ -206,16 +213,28 @@
   // =====================================================================
   // Configuración (Administrador)
   // =====================================================================
-  const TIPOS = [['horas_extra', 'Horas extra'], ['domingo', 'Domingo trabajado'], ['turno', 'Turno'], ['descuento', 'Descuento operativo'], ['otro', 'Otro']];
+  const TIPOS = [['horas_extra', 'Horas extra (dobles y triples)'], ['horas', 'Horas sencillas'], ['domingo', 'Domingo trabajado'], ['turno', 'Turno'], ['descuento', 'Descuento operativo'], ['otro', 'Otro']];
   const UNIDADES = [['horas', 'Horas'], ['turnos', 'Turnos'], ['dias', 'Días'], ['importe', 'Importe']];
   const MODOS = [['beehuman', 'Calcula BeeHuman'], ['tarifa', 'Tarifa propia'], ['sin_importe', 'Sin importe']];
   const PLANTILLAS = {
-    he: { nombre: 'Horas extra', abreviatura: 'HE', tipo: 'horas_extra', unidad: 'horas', modo: 'beehuman', factor: 2 },
+    he: { nombre: 'Horas extra', abreviatura: 'HE', tipo: 'horas_extra', unidad: 'horas', modo: 'beehuman' },
     dom: { nombre: 'Domingo trabajado', abreviatura: 'DOM', tipo: 'domingo', unidad: 'dias', modo: 'beehuman' },
     tn: { nombre: 'Turno nocturno', abreviatura: 'T', tipo: 'turno', unidad: 'turnos', modo: 'tarifa', tarifa: 700 },
     desc: { nombre: 'Descuento operativo', abreviatura: 'DESC', tipo: 'descuento', unidad: 'importe', modo: 'tarifa', tarifa: 1 }
   };
   const opciones = (lista, v) => lista.map(([k, n]) => `<option value="${k}" ${k === v ? 'selected' : ''}>${n}</option>`).join('');
+
+  const nombreClasif = id => { const c = (S.cfg.clasificaciones || []).find(x => x.id === id); return c ? c.nombre : 'Clasificación'; };
+  function valorConcepto(c) {
+    if (c.tipo === 'descuento') return 'Importe capturado';
+    if (c.modo === 'sin_importe') return 'Sin importe';
+    const area = S.cfg.tarifas.some(t => t.concepto_id === c.id) ? ' + por área' : '';
+    if (c.tarifa != null && (c.modo === 'tarifa' || c.tipo === 'domingo')) return dinero(c.tarifa) + (c.unidad === 'horas' ? ' por hora' : '') + area + (c.tipo === 'horas_extra' ? ' × dobles / triples' : '');
+    if (c.tipo === 'horas_extra') return 'Sueldo ÷ jornada × dobles / triples';
+    if (c.tipo === 'horas' || c.unidad === 'horas') return 'Sueldo ÷ jornada' + (c.factor != null && Number(c.factor) !== 1 ? ' × ' + c.factor : '');
+    if (c.tipo === 'domingo') return 'Prima dominical';
+    return c.factor != null ? 'Sueldo diario × ' + c.factor : 'Sueldo diario';
+  }
 
   async function vistaConfig() {
     const cont = $('inc-vista');
@@ -230,34 +249,38 @@
   }
   async function cargarConfig() {
     const emp = S.cfg.empresaId;
-    const [prm, con, are] = await Promise.all([
+    const [prm, con, are, cls] = await Promise.all([
       sb.from('inc_parametros').select('*').eq('empresa_id', emp).maybeSingle(),
       sb.from('inc_conceptos').select('*').eq('empresa_id', emp).order('orden').order('nombre'),
-      sb.from('areas').select('id, nombre').order('nombre')
+      sb.from('areas').select('id, nombre').order('nombre'),
+      sb.from('clasificaciones_personal').select('id, nombre').order('nombre')
     ]);
     const err = prm.error || con.error;
     if (err) { $('inc-c-cuerpo').innerHTML = `<div class="inc-msg err" style="display:block">${esc(limpiarError(err))}</div>`; return; }
-    S.cfg.prm = prm.data; S.cfg.conceptos = con.data || []; S.cfg.areas = are.data || [];
+    S.cfg.prm = prm.data; S.cfg.conceptos = con.data || []; S.cfg.areas = are.data || []; S.cfg.clasificaciones = cls.data || [];
     const ids = S.cfg.conceptos.map(c => c.id);
     const ta = ids.length ? await sb.from('inc_tarifas_area').select('*').in('concepto_id', ids) : { data: [] };
     S.cfg.tarifas = ta.data || [];
     pintarConfig();
   }
   function pintarConfig() {
-    const p = S.cfg.prm || { base_calculo: 'mixto', jornada_horas: 8, umbral_triples_semana: 9, factor_triple: 3, aviso_horas_dia: 3, aviso_dias_semana: 3, prima_dominical_pct: 25 };
+    const p = S.cfg.prm || { base_calculo: 'mixto', jornada_horas: 8, umbral_triples_semana: 9, factor_doble: 2, factor_triple: 3, aviso_horas_dia: 3, aviso_dias_semana: 3, prima_dominical_pct: 25 };
     const resp = (uid) => !uid ? 'Sin designar' : (uid === S.usuarioId ? 'Tú' : 'Otro usuario');
     const ed = S.cfg.editando || {};
+    const soloLectura = rolActual !== 'administrador';
     $('inc-c-cuerpo').innerHTML = `
       <h3 style="margin:18px 0 4px">Parámetros de cálculo</h3>
       <div class="inc-fila">
         <div><label for="inc-c-base">Base de cálculo</label><select id="inc-c-base">${opciones([['mixto', 'Mixto (todos los esquemas)'], ['bruto', 'Solo bruto'], ['neto', 'Solo neto']], p.base_calculo)}</select></div>
         <div><label for="inc-c-jor">Horas de la jornada</label><input id="inc-c-jor" type="number" step="0.5" min="1" value="${esc(p.jornada_horas)}"></div>
-        <div><label for="inc-c-umb">Horas dobles por semana antes de triples</label><input id="inc-c-umb" type="number" step="0.5" min="0" value="${esc(p.umbral_triples_semana)}"></div>
+        <div><label for="inc-c-umb">Horas dobles por semana antes de triples</label><input id="inc-c-umb" type="number" step="0.5" min="0" placeholder="Vacío = sin triples" value="${esc(p.umbral_triples_semana ?? '')}"></div>
+        <div><label for="inc-c-fdo">Factor de horas dobles</label><input id="inc-c-fdo" type="number" step="0.1" min="0" value="${esc(p.factor_doble ?? 2)}"></div>
         <div><label for="inc-c-ftr">Factor de horas triples</label><input id="inc-c-ftr" type="number" step="0.1" min="0" value="${esc(p.factor_triple)}"></div>
         <div><label for="inc-c-avh">Aviso: horas extra por día</label><input id="inc-c-avh" type="number" step="0.5" min="0" value="${esc(p.aviso_horas_dia)}"></div>
         <div><label for="inc-c-avd">Aviso: días con horas extra por semana</label><input id="inc-c-avd" type="number" step="1" min="0" value="${esc(p.aviso_dias_semana)}"></div>
         <div><label for="inc-c-pdm">Prima dominical (%)</label><input id="inc-c-pdm" type="number" step="0.5" min="0" value="${esc(p.prima_dominical_pct)}"></div>
       </div>
+      <p class="inc-nota">Valor por hora = tarifa del concepto, o sueldo diario del esquema ÷ horas de la jornada. Horas extra: × factor de dobles hasta el umbral de la semana (lunes a domingo, sumando todos los días); después × factor de triples. Umbral vacío: todas dobles.</p>
       <div class="inc-acciones"><button type="button" class="primary" id="inc-c-guardar-prm">Guardar parámetros</button>
         <span class="inc-nota">Historial de asignaciones desde: ${p.inicio_historial ? esc(fechaLarga(p.inicio_historial)) : 'se fija al crear el primer periodo'}</span></div>
       <div class="inc-msg" id="inc-c-msg-prm"></div>
@@ -272,13 +295,15 @@
       <h3 style="margin:18px 0 4px">Conceptos (columnas de la hoja)</h3>
       <div class="inc-acciones"><span class="inc-nota">Agregar rápido:</span>
         ${Object.entries(PLANTILLAS).map(([k, t]) => `<button type="button" class="inc-sec" data-inc-plantilla="${k}">${esc(t.nombre)}</button>`).join('')}</div>
-      ${S.cfg.conceptos.length ? `<div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista"><thead><tr><th>Columna</th><th>Concepto</th><th>Unidad</th><th>Cálculo</th><th>Tarifa / factor</th><th>Estado</th><th></th></tr></thead><tbody>
+      ${S.cfg.conceptos.length ? `<div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista"><thead><tr><th>Columna</th><th>Concepto</th><th>Unidad</th><th>Cálculo</th><th>Valor</th><th>Esquema preferido</th><th>Estado</th><th></th></tr></thead><tbody>
         ${S.cfg.conceptos.map(c => `<tr><td><b>${esc(c.abreviatura)}</b></td><td>${esc(c.nombre)}</td><td>${esc((UNIDADES.find(u => u[0] === c.unidad) || [, c.unidad])[1])}</td>
           <td>${esc((MODOS.find(m => m[0] === c.modo) || [, c.modo])[1])}</td>
-          <td>${c.tipo === 'descuento' ? 'Importe capturado' : c.tarifa != null ? esc(dinero(c.tarifa)) + (S.cfg.tarifas.some(t => t.concepto_id === c.id) ? ' + por área' : '') : c.factor != null ? '× ' + esc(c.factor) : c.tipo === 'domingo' ? 'Prima dominical' : '—'}</td>
+          <td>${esc(valorConcepto(c))}</td>
+          <td>${c.modo === 'tarifa' && c.tipo !== 'descuento' ? esc(c.clasificacion_pago_id ? nombreClasif(c.clasificacion_pago_id) : 'Sin preferido') : '—'}</td>
           <td>${c.activo ? '<span class="inc-estado enviada">Activo</span>' : '<span class="inc-estado borrador">Inactivo</span>'}</td>
-          <td><button type="button" class="inc-sec" data-inc-editar="${esc(c.id)}">Editar</button></td></tr>`).join('')}</tbody></table></div>`
+          <td>${soloLectura ? '' : `<button type="button" class="inc-sec" data-inc-editar="${esc(c.id)}">Editar</button>`}</td></tr>`).join('')}</tbody></table></div>`
         : '<p class="hint">Sin conceptos todavía. Usa «Agregar rápido» o el formulario.</p>'}
+      <div id="inc-c-form" ${soloLectura ? 'hidden' : ''}>
       <h3 style="margin:18px 0 4px" id="inc-c-form-titulo">${ed.id ? 'Editar concepto' : 'Nuevo concepto'}</h3>
       <div class="inc-fila">
         <div><label for="inc-k-nom">Nombre</label><input id="inc-k-nom" maxlength="60" value="${esc(ed.nombre || '')}"></div>
@@ -287,7 +312,8 @@
         <div><label for="inc-k-uni">Unidad</label><select id="inc-k-uni">${opciones(UNIDADES, ed.unidad || 'horas')}</select></div>
         <div><label for="inc-k-modo">Cálculo</label><select id="inc-k-modo">${opciones(MODOS, ed.modo || 'beehuman')}</select></div>
         <div><label for="inc-k-tar">Tarifa por unidad (opcional)</label><input id="inc-k-tar" type="number" step="0.01" min="0" value="${esc(ed.tarifa ?? '')}"></div>
-        <div><label for="inc-k-fac">Factor (× sueldo o × hora)</label><input id="inc-k-fac" type="number" step="0.01" min="0" value="${esc(ed.factor ?? '')}"></div>
+        <div><label for="inc-k-fac">Factor (turnos y otros)</label><input id="inc-k-fac" type="number" step="0.01" min="0" value="${esc(ed.factor ?? '')}"></div>
+        <div id="inc-k-cls-caja"><label for="inc-k-cls">Esquema preferido (tarifa)</label><select id="inc-k-cls"><option value="">Sin preferido</option>${(S.cfg.clasificaciones || []).map(x => `<option value="${esc(x.id)}" ${x.id === ed.clasificacion_pago_id ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select></div>
         <div><label for="inc-k-ord">Orden</label><input id="inc-k-ord" type="number" step="1" value="${esc(ed.orden ?? S.cfg.conceptos.length + 1)}"></div>
       </div>
       <p class="inc-nota" id="inc-k-ayuda"></p>
@@ -301,17 +327,26 @@
         <div class="inc-fila"><div><label for="inc-t-area">Área</label><select id="inc-t-area">${S.cfg.areas.map(a => `<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('')}</select></div>
           <div><label for="inc-t-monto">Tarifa</label><input id="inc-t-monto" type="number" step="0.01" min="0"></div>
           <div><button type="button" class="inc-sec" id="inc-t-agregar">Agregar tarifa por área</button></div></div>
-        <div class="inc-msg" id="inc-c-msg-tar"></div>` : ''}`;
+        <div class="inc-msg" id="inc-c-msg-tar"></div>` : ''}
+      </div>`;
+    if (soloLectura) {
+      $('inc-c-cuerpo').querySelectorAll('input, select, textarea, button').forEach(el => { el.disabled = true; });
+      $('inc-c-cuerpo').querySelectorAll('#inc-c-guardar-prm, [data-inc-resp], [data-inc-plantilla]').forEach(el => { el.hidden = true; });
+      $('inc-c-cuerpo').insertAdjacentHTML('afterbegin', '<div class="inc-msg info" style="display:block" id="inc-c-solo-lectura">Solo lectura: la configuración de cálculo la cambia el Administrador.</div>');
+      return;
+    }
     const ayuda = () => {
       const t = $('inc-k-tipo').value, m = $('inc-k-modo').value;
       const textos = {
-        horas_extra: 'Calcula BeeHuman: sueldo diario ÷ horas de jornada × factor (2 = doble); lo que pase del umbral semanal se paga con el factor de triples.',
+        horas_extra: m === 'tarifa' ? 'Tarifa por hora × factor de dobles hasta el umbral semanal de la empresa; después × factor de triples.' : m === 'sin_importe' ? 'Solo horas, sin importe.' : 'Valor por hora = sueldo diario del esquema ÷ horas de jornada; × factor de dobles hasta el umbral semanal, después × factor de triples.',
+        horas: m === 'tarifa' ? 'Horas × tarifa (sin dobles ni triples).' : m === 'sin_importe' ? 'Solo horas, sin importe.' : 'Horas × sueldo diario del esquema ÷ horas de jornada (sin dobles ni triples).',
         domingo: 'Si tiene tarifa (general o por área) esa es el pago completo; si no, se calcula la prima dominical sobre el sueldo diario.',
         turno: m === 'tarifa' ? 'Tarifa fija por turno.' : 'Calcula BeeHuman: sueldo diario × factor (por ejemplo 0.25 = 25 % de prima).',
         descuento: 'Importe capturado por el coordinador con motivo y conformidad; Nómina decide si se aplica.',
         otro: m === 'tarifa' ? 'Cantidad × tarifa.' : m === 'sin_importe' ? 'Solo cantidades, sin importe.' : 'Calcula BeeHuman: cantidad × sueldo diario × factor.'
       };
-      $('inc-k-ayuda').textContent = textos[t] || '';
+      $('inc-k-ayuda').textContent = (textos[t] || '') + (m === 'tarifa' && t !== 'descuento' ? ' El importe se liga al esquema preferido si la persona tiene exactamente uno vigente; sin preferido, si tiene un solo esquema. Si no, Nómina lo asigna en la revisión.' : '');
+      $('inc-k-cls-caja').hidden = !(m === 'tarifa' && t !== 'descuento');
       if (t === 'descuento') { $('inc-k-uni').value = 'importe'; $('inc-k-modo').value = 'tarifa'; $('inc-k-tar').value = 1; }
     };
     ['inc-k-tipo', 'inc-k-modo'].forEach(id => $(id).addEventListener('change', ayuda)); ayuda();
@@ -341,11 +376,13 @@
   }
   async function guardarParametros() {
     const v = {
-      base_calculo: $('inc-c-base').value, jornada_horas: num($('inc-c-jor').value), umbral_triples_semana: num($('inc-c-umb').value),
-      factor_triple: num($('inc-c-ftr').value), aviso_horas_dia: num($('inc-c-avh').value), aviso_dias_semana: Math.round(num($('inc-c-avd').value)),
+      base_calculo: $('inc-c-base').value, jornada_horas: num($('inc-c-jor').value),
+      umbral_triples_semana: $('inc-c-umb').value.trim() === '' ? null : num($('inc-c-umb').value),
+      factor_doble: num($('inc-c-fdo').value), factor_triple: num($('inc-c-ftr').value), aviso_horas_dia: num($('inc-c-avh').value), aviso_dias_semana: Math.round(num($('inc-c-avd').value)),
       prima_dominical_pct: num($('inc-c-pdm').value), actualizado_por: S.usuarioId, actualizado_en: new Date().toISOString()
     };
     if (v.jornada_horas <= 0) return msg('inc-c-msg-prm', 'err', 'Las horas de la jornada deben ser mayores a cero.');
+    if (!(v.factor_doble > 0) || !(v.factor_triple > 0)) return msg('inc-c-msg-prm', 'err', 'Los factores de dobles y triples deben ser mayores a cero.');
     const r = S.cfg.prm ? await sb.from('inc_parametros').update(v).eq('empresa_id', S.cfg.empresaId)
       : await sb.from('inc_parametros').insert(Object.assign({ empresa_id: S.cfg.empresaId, tenant_id: S.tenantId }, v));
     if (r.error) return msg('inc-c-msg-prm', 'err', limpiarError(r.error));
@@ -362,11 +399,12 @@
     const v = {
       nombre: $('inc-k-nom').value.trim(), abreviatura: $('inc-k-abr').value.trim().toUpperCase(), tipo: $('inc-k-tipo').value,
       unidad: $('inc-k-uni').value, modo: $('inc-k-modo').value, orden: Math.round(num($('inc-k-ord').value)),
-      tarifa: $('inc-k-tar').value === '' ? null : num($('inc-k-tar').value), factor: $('inc-k-fac').value === '' ? null : num($('inc-k-fac').value)
+      tarifa: $('inc-k-tar').value === '' ? null : num($('inc-k-tar').value), factor: $('inc-k-fac').value === '' ? null : num($('inc-k-fac').value),
+      clasificacion_pago_id: null
     };
+    if (v.modo === 'tarifa' && v.tipo !== 'descuento') v.clasificacion_pago_id = $('inc-k-cls').value || null;
     if (!v.nombre || !v.abreviatura) return msg('inc-c-msg-con', 'err', 'Nombre y abreviatura son obligatorios.');
     if (v.modo === 'tarifa' && v.tarifa == null) return msg('inc-c-msg-con', 'err', 'El cálculo «Tarifa propia» necesita una tarifa.');
-    if (v.tipo === 'horas_extra' && v.modo === 'beehuman' && v.factor == null) v.factor = 2;
     const r = ed.id ? await sb.from('inc_conceptos').update(v).eq('id', ed.id)
       : await sb.from('inc_conceptos').insert(Object.assign({ tenant_id: S.tenantId, empresa_id: S.cfg.empresaId, activo: true }, v));
     if (r.error) return msg('inc-c-msg-con', 'err', r.error.code === '23505' ? 'Ya existe un concepto con esa abreviatura en la empresa.' : limpiarError(r.error));
@@ -461,6 +499,7 @@
   // El coordinador solo ve importes que no dependen del sueldo.
   function importeVisible(c, persona, cant) {
     if (c.tipo === 'descuento') return cant;
+    if (c.tipo === 'horas_extra') return null;   // B1.1: dobles y triples se calculan en el servidor
     if (c.modo === 'tarifa' || (c.tipo === 'domingo' && tarifaDe(c, persona) != null)) { const t = tarifaDe(c, persona); return t == null ? null : cant * t; }
     return null;
   }
@@ -523,7 +562,7 @@
       <div class="inc-seg" role="tablist">${vistas.map(([k, n]) => `<button type="button" data-inc-v="${esc(k)}" class="${k === H.vista ? 'activo' : ''}">${esc(n)}</button>`).join('')}</div>
       <div class="inc-leyenda">${H.vista === 'asistencia' ? '<span><b>·</b> Asistió</span><span><b>F</b> Falta</span><span><b>I</b> Incapacidad</span><span><b>D</b> Descanso</span><span><b>V</b> Vacaciones</span><span><b>P</b> Permiso</span><span><b>—</b> Sin asignación contigo ese día</span>'
         : H.vista === 'proyecto' ? '<span>Cambia el proyecto solo los días que la persona trabajó en otro; la ficha no se modifica.</span>'
-        : conc ? `<span>Captura ${esc(conc.unidad === 'importe' ? 'el importe' : 'la cantidad de ' + conc.unidad)} por día.${conc.modo === 'beehuman' && !(conc.tipo === 'domingo' && conc.tarifa != null) ? ' El importe lo calcula Nómina.' : ''}</span>` : ''}</div>
+        : conc ? `<span>Captura ${esc(conc.unidad === 'importe' ? 'el importe' : 'la cantidad de ' + conc.unidad)} por día.${(conc.modo === 'beehuman' && !(conc.tipo === 'domingo' && conc.tarifa != null)) || (conc.tipo === 'horas_extra' && conc.modo !== 'sin_importe') ? ' El importe lo calcula Nómina.' : ''}</span>` : ''}</div>
       <div class="inc-tabla-wrap"><table class="inc-tabla"><thead><tr><th class="inc-col-persona">Colaborador</th>${H.dias.map(f => `<th>${esc(dia(f))}</th>`).join('')}
         ${H.conceptos.map(c => `<th title="${esc(c.nombre)}">${esc(c.abreviatura)}</th>`).join('')}<th>Avisos</th>${H.vista === 'asistencia' ? '<th>Observación</th>' : cDesc ? '<th>Motivo</th><th>Conformidad</th>' : ''}</tr></thead>
         <tbody>${H.personas.map(p => { return `<tr data-pid="${esc(p.id)}"><td class="inc-col-persona"><b>${esc(p.nombre)}</b><small>${esc(p.empleado || '')}</small></td>${H.dias.map(f => celda(p, f)).join('')}${totales(p)}<td data-av="${esc(p.id)}">${avisosHtml(p)}</td>${extra(p)}</tr>`; }).join('')}
@@ -648,8 +687,8 @@
   // =====================================================================
   const ESTADO_TAB = { sin_abrir: 'Sin abrir', borrador: 'En captura', enviada: 'Enviada', devuelta: 'Devuelta', procesada: 'Procesada' };
   const MODALIDAD = { bruto: 'Bruto', neto: 'Neto', manual: 'Sueldo manual' };
-  const DECISION = { pendiente: 'Por decidir', aceptado: 'Aceptado', modificado: 'Modificado', sin_sueldo: 'Sin sueldo', sin_importe: 'Sin importe', descartado: 'Descartado' };
-  const CATEGORIAS = [['bruto', 'Bruto'], ['neto', 'Neto'], ['manual', 'Sueldo manual'], ['tarifa', 'Por tarifa (sin esquema)'], ['descuento', 'Descuentos']];
+  const DECISION = { pendiente: 'Por decidir', aceptado: 'Aceptado', modificado: 'Modificado', sin_sueldo: 'Sin sueldo', sin_importe: 'Sin importe', descartado: 'Descartado', por_asignar: 'Esquema por asignar' };
+  const CATEGORIAS = [['bruto', 'Bruto'], ['neto', 'Neto'], ['manual', 'Sueldo manual'], ['tarifa', 'Sin esquema asignado'], ['descuento', 'Descuentos']];
   const errHtml = e => `<div class="inc-msg err" style="display:block">${esc(limpiarError(e))}</div>`;
   const fechaHora = ts => { try { return new Date(ts).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return String(ts).slice(0, 16); } };
   const plural = (n, s, p) => `${n} ${n === 1 ? s : (p || s + 's')}`;
@@ -767,7 +806,14 @@
     if (imp.error) { cont.innerHTML = `<div class="card">${errHtml(imp.error)}</div>`; return; }
     const lineas = imp.data || [];
     const uniq = a => [...new Set(a.filter(Boolean))];
-    const rpIds = uniq(lineas.map(l => l.registro_pago_id));
+    const lineaIds = lineas.map(l => l.id);
+    const conOpciones = lineas.some(l => l.origen === 'por_asignar' || (l.esquema_asignado_por && ['pendiente', 'aceptado'].includes(l.origen)));
+    const [aj, asg] = await Promise.all([
+      lineaIds.length ? sb.from('inc_importes_ajustes').select('*').in('importe_id', lineaIds).order('creado_en') : { data: [] },
+      conOpciones && h.estado === 'enviada' ? sb.rpc('inc_esquemas_asignables', { p_version: version.id }) : { data: [] }
+    ]);
+    const ajustes = aj.data || [];
+    const rpIds = uniq([...lineas.map(l => l.registro_pago_id), ...ajustes.map(a => a.esquema_anterior), ...ajustes.map(a => a.esquema_nuevo)]);
     const relIds = uniq(lineas.map(l => l.relacion_laboral_id));
     const pIds = uniq([...(datos.cantidades || []).map(q => q.personal_id), ...(datos.celdas || []).map(c => c.personal_id), ...(datos.observaciones || []).map(o => o.personal_id), ...lineas.map(l => l.personal_id)]);
     const [rps, rels, pers] = await Promise.all([
@@ -783,6 +829,7 @@
     const porId = arr => new Map((arr || []).map(x => [x.id, x]));
     S.rev.H = {
       h, periodo, version, datos, lineas, eventos: ev.data || [], comps: comps.data || [], coord: coord.data,
+      ajustes, opciones: (asg.data || []).reduce((m, o) => { (m[o.linea_id] = m[o.linea_id] || []).push(o); return m; }, {}),
       prm: prm.data || {}, manuales: new Map((man.data || []).map(m => [m.personal_id, m.sueldo_diario])),
       rps: porId(rps.data), rels: porId(rels.data), personas: porId(pers.data), cls: porId(cls.data), pats: porId(pats.data),
       conceptos: porId(datos.conceptos), verDescartadas: S.rev.H && S.rev.H.h.id === h.id ? S.rev.H.verDescartadas : false, devolviendo: false
@@ -802,13 +849,47 @@
     lineas.forEach(l => { const k = categoria(l, H), v = importeDe(l); if (k && v != null) t[k] += v; });
     return t;
   }
+  const fmtN = n => String(Math.round(Number(n) * 100) / 100);
+  function valorHoraHtml(l) {
+    const d = l.detalle || {};
+    if (d.valor_hora == null) return (d.horas_dobles != null || d.regla === 'horas_sueldo') && l.usa_sueldo && l.origen !== 'sin_sueldo' ? '<span class="inc-nota">Varía por fecha</span>' : '—';
+    const o = d.origen_valor === 'tarifa' ? 'tarifa' : d.origen_valor === 'manual' ? 'sueldo manual' : 'sueldo' + (d.clasificacion ? ' de ' + d.clasificacion : '') + (d.jornada_horas ? ' ÷ ' + fmtN(d.jornada_horas) + ' h' : '');
+    return `${esc(dinero(d.valor_hora))}<br><small class="inc-nota">${esc(o)}</small>`;
+  }
+  function calculoTxt(l) {
+    const d = l.detalle || {}, vh = d.valor_hora != null ? dinero(d.valor_hora) : 'valor por hora';
+    if (d.horas_dobles != null) {
+      const p = [];
+      if (Number(d.horas_dobles)) p.push(`${fmtN(d.horas_dobles)} h × ${vh} × ${fmtN(d.factor_doble)}`);
+      if (Number(d.horas_triples)) p.push(`${fmtN(d.horas_triples)} h × ${vh} × ${fmtN(d.factor_triple)}`);
+      return p.join(' + ') || '—';
+    }
+    if (d.regla === 'horas_sueldo') return `${fmtN(l.cantidad)} h × ${vh}` + (d.factor != null && Number(d.factor) !== 1 ? ' × ' + fmtN(d.factor) : '');
+    if (d.tarifa != null) return `${fmtN(l.cantidad)} × ${dinero(d.tarifa)}`;
+    if (d.regla === 'prima_dominical') return `${fmtN(l.cantidad)} × ${d.sueldo_diario != null ? dinero(d.sueldo_diario) : 'sueldo diario'} × ${fmtN(d.pct)} %`;
+    if (d.regla === 'porcentaje_sueldo') return `${fmtN(l.cantidad)} × ${d.sueldo_diario != null ? dinero(d.sueldo_diario) : 'sueldo diario'}` + (d.factor != null && Number(d.factor) !== 1 ? ' × ' + fmtN(d.factor) : '');
+    if (d.regla === 'descuento_operativo') return 'Importe capturado';
+    return '—';
+  }
+  const etiquetaOpcion = o => `${o.clasificacion || 'Esquema'} · ${MODALIDAD[o.modalidad] || o.modalidad}${o.registro_patronal ? ' · RP ' + o.registro_patronal : ''}`;
+  function nombreEsquema(id, H) {
+    if (!id) return 'por asignar';
+    const rp = H.rps.get(id), cl = rp ? H.cls.get(rp.clasificacion_id) : null;
+    return cl ? cl.nombre : 'esquema';
+  }
   function etiquetaEsquema(l, H) {
     const rel = H.rels.get(l.relacion_laboral_id);
     const pat = rel && rel.registro_patronal_id ? H.pats.get(rel.registro_patronal_id) : null;
     const relTxt = rel ? (pat ? 'RP ' + pat.registro_patronal : 'sin registro patronal') : '';
+    const opciones = H.h.estado === 'enviada' ? (H.opciones[l.id] || []) : [];
+    const selector = opciones.length ? `<br><select class="inc-esq" data-esq="${esc(l.id)}" aria-label="Esquema de pago"><option value="">Elige el esquema…</option>${opciones.map(o => `<option value="${esc(o.registro_pago_id)}" ${o.registro_pago_id === l.registro_pago_id ? 'selected' : ''}>${esc(etiquetaOpcion(o))}</option>`).join('')}</select><button type="button" class="inc-sec" data-asignar="${esc(l.id)}">${l.registro_pago_id ? 'Cambiar' : 'Asignar'}</button>` : '';
+    if (l.origen === 'por_asignar') {
+      return `<b>Esquema por asignar</b><span class="inc-motivo">${esc((l.detalle && l.detalle.motivo) || 'Nómina elige el esquema de pago.')}</span>${selector || (H.h.estado === 'enviada' ? '<span class="inc-motivo">Registra un esquema de pago vigente en la ficha de la persona.</span>' : '')}`;
+    }
     if (l.registro_pago_id) {
       const rp = H.rps.get(l.registro_pago_id), cl = rp ? H.cls.get(rp.clasificacion_id) : null;
-      return `<b>${esc(cl ? cl.nombre : 'Esquema')}</b>${relTxt ? `<br><small class="inc-nota">${esc(relTxt)}</small>` : ''}`;
+      const asig = l.detalle && l.detalle.asignacion === 'manual' ? 'asignado por Nómina' : l.detalle && l.detalle.asignacion === 'preferido' ? 'esquema preferido' : l.detalle && l.detalle.asignacion === 'unico' ? 'único esquema vigente' : '';
+      return `<b>${esc(cl ? cl.nombre : 'Esquema')}</b>${relTxt || asig ? `<br><small class="inc-nota">${esc([relTxt, asig].filter(Boolean).join(' · '))}</small>` : ''}${selector}`;
     }
     if (l.modalidad === 'manual') return `Sueldo manual${relTxt ? `<br><small class="inc-nota">${esc(relTxt)}</small>` : ''}`;
     if (l.origen === 'sin_sueldo') return `<b>Sin esquema enlazado</b>${relTxt ? `<br><small class="inc-nota">${esc(relTxt)}</small>` : ''}`;
@@ -858,29 +939,32 @@
     const nDesc = H.lineas.filter(l => l.origen === 'descartado').length;
     const nPend = H.lineas.filter(l => l.origen === 'pendiente' && l.sugerido != null).length;
     const nSin = H.lineas.filter(l => l.origen === 'sin_sueldo').length;
+    const nAsig = H.lineas.filter(l => l.origen === 'por_asignar').length;
     const totHoja = sumarPorCategoria(H.lineas.filter(l => l.origen !== 'descartado'), H);
     const porPersona = new Map(); visibles.forEach(l => { if (!porPersona.has(l.personal_id)) porPersona.set(l.personal_id, []); porPersona.get(l.personal_id).push(l); });
     const idsImp = [...porPersona.keys()].sort((a, b) => nombreP(a).localeCompare(nombreP(b), 'es'));
     const ordenCat = { bruto: 1, neto: 2, manual: 3, tarifa: 4, descuento: 5 };
     const filaLinea = l => {
       const c = H.conceptos.get(l.concepto_id) || {};
-      const decide = editable && !['descartado', 'sin_importe'].includes(l.origen);
+      const decide = editable && !['descartado', 'sin_importe', 'por_asignar'].includes(l.origen);
       const motivo = l.origen === 'sin_sueldo' ? `<span class="inc-motivo">${esc((l.detalle && l.detalle.motivo) || 'Sin sueldo para calcular este importe.')}</span>` : '';
-      return `<tr data-linea="${esc(l.id)}" data-origen="${esc(l.origen)}" data-cat="${esc(categoria(l, H) || '')}" class="${l.origen === 'sin_sueldo' ? 'inc-sin-sueldo' : ''} ${l.origen === 'descartado' ? 'inc-descartada' : ''}">
-        <td>${esc(c.abreviatura || '')} <small class="inc-nota">${esc(c.nombre || '')}</small></td>
+      const nAj = H.ajustes.filter(a => a.importe_id === l.id && a.tipo === 'importe').length;
+      return `<tr data-linea="${esc(l.id)}" data-origen="${esc(l.origen)}" data-cat="${esc(categoria(l, H) || '')}" class="${l.origen === 'sin_sueldo' ? 'inc-sin-sueldo' : ''} ${l.origen === 'descartado' ? 'inc-descartada' : ''} ${l.origen === 'por_asignar' ? 'inc-por-asignar' : ''}">
+        <td><b>${esc(c.abreviatura || '')}</b><br><small class="inc-nota">${esc(c.nombre || '')}</small></td>
         <td class="n">${esc(String(Number(l.cantidad)))} <small class="inc-nota">${esc(c.unidad || '')}</small></td>
-        <td>${etiquetaEsquema(l, H)}</td>
-        <td>${badgeModalidad(l, H)}</td>
+        <td class="n" data-valor-hora>${valorHoraHtml(l)}</td>
+        <td class="inc-calc" data-calculo>${esc(calculoTxt(l))}</td>
+        <td>${badgeModalidad(l, H)} ${etiquetaEsquema(l, H)}</td>
         <td class="n">${l.sugerido != null ? esc(dinero(l.sugerido)) : '—'}</td>
-        <td class="n">${decide ? `<input type="number" min="0" step="0.01" class="inc-final" data-final="${esc(l.id)}" value="${l.final != null ? esc(Number(l.final)) : ''}" placeholder="${l.sugerido != null ? esc(Number(l.sugerido)) : 'Importe'}" aria-label="Importe final">` : (l.final != null ? esc(dinero(l.final)) : '—')}</td>
-        <td><span class="inc-dec ${esc(l.origen)}">${esc(DECISION[l.origen] || l.origen)}</span>${motivo}</td>
+        <td class="n">${decide ? `<input type="number" min="0" step="0.01" class="inc-final" data-final="${esc(l.id)}" value="${l.final != null ? esc(Number(l.final)) : ''}" placeholder="${l.sugerido != null ? esc(Number(l.sugerido)) : 'Importe'}" aria-label="Importe final"><br><input type="text" maxlength="200" class="inc-motivo-aj" data-motivo="${esc(l.id)}" placeholder="Motivo si cambias el importe" aria-label="Motivo del ajuste">` : (l.final != null ? esc(dinero(l.final)) : '—')}</td>
+        <td><span class="inc-dec ${esc(l.origen)}">${esc(DECISION[l.origen] || l.origen)}</span>${nAj ? `<span class="inc-nota" style="display:block">${plural(nAj, 'ajuste')}</span>` : ''}${motivo}</td>
         <td>${decide ? `${l.origen === 'pendiente' && l.sugerido != null ? `<button type="button" class="inc-sec" data-aceptar="${esc(l.id)}">Aceptar</button>` : ''}<button type="button" class="inc-sec" data-guardar="${esc(l.id)}">Guardar</button>` : ''}</td></tr>`;
     };
-    const tablaImportes = idsImp.length ? `<div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista inc-imp" id="inc-r-importes"><thead><tr><th>Concepto</th><th class="n">Cantidad</th><th>Esquema de pago</th><th>Modalidad</th><th class="n">Sugerido</th><th class="n">Final</th><th>Estado</th><th></th></tr></thead><tbody>${idsImp.map(pid => {
+    const tablaImportes = idsImp.length ? `<div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista inc-imp" id="inc-r-importes"><thead><tr><th>Concepto</th><th class="n">Cantidad</th><th class="n">Valor por hora</th><th>Cálculo</th><th>Esquema de pago</th><th class="n">Sugerido</th><th class="n">Final</th><th>Estado</th><th></th></tr></thead><tbody>${idsImp.map(pid => {
       const ls = porPersona.get(pid).slice().sort((a, b) => (String((H.conceptos.get(a.concepto_id) || {}).orden || 0) + (ordenCat[categoria(a, H)] || 9)).localeCompare(String((H.conceptos.get(b.concepto_id) || {}).orden || 0) + (ordenCat[categoria(b, H)] || 9)));
       const sinS = ls.some(l => l.origen === 'sin_sueldo');
       const man = H.manuales.get(pid);
-      return `<tr class="inc-persona" data-persona="${esc(pid)}"><td colspan="8">${esc(nombreP(pid))} ${resumenTotales(sumarPorCategoria(ls.filter(l => l.origen !== 'descartado'), H))}
+      return `<tr class="inc-persona" data-persona="${esc(pid)}"><td colspan="9">${esc(nombreP(pid))} ${resumenTotales(sumarPorCategoria(ls.filter(l => l.origen !== 'descartado'), H))}
           ${editable && (sinS || man != null) ? `<div style="margin-top:6px;font-weight:400">${sinS ? '<span class="inc-motivo" style="display:inline">Sin sueldo en esta empresa: </span>' : ''}<input type="number" min="0.01" step="0.01" class="inc-manual" data-manual="${esc(pid)}" value="${man != null ? esc(Number(man)) : ''}" placeholder="Sueldo diario" aria-label="Sueldo diario manual de ${esc(nombreP(pid))}"><button type="button" class="inc-sec" data-manual-btn="${esc(pid)}">${man != null ? 'Actualizar sueldo manual' : 'Usar sueldo diario manual'}</button></div>` : (man != null ? `<div class="inc-nota" style="font-weight:400">Sueldo diario manual del periodo: ${esc(dinero(man))}</div>` : '')}
         </td></tr>${ls.map(filaLinea).join('')}`;
     }).join('')}</tbody></table></div>` : '<p class="hint">Esta versión no generó importes.</p>';
@@ -906,12 +990,20 @@
       <p class="inc-nota">Una línea por esquema de pago. Bruto y neto se muestran por separado y nunca se suman entre sí. Base de la empresa al enviar: ${esc(((H.datos.parametros || {}).base_calculo) || '—')}.</p>
       <div class="inc-chips" id="inc-r-totales">${CATEGORIAS.filter(([k]) => k === 'bruto' || k === 'neto' || totHoja[k]).map(([k, n]) =>`<span class="inc-chip" data-total="${k}">${esc(n)}: ${esc(dinero(totHoja[k]))}</span>`).join('')}
         ${nSin ? `<span class="inc-chip alerta" id="inc-r-sinsueldo">${plural(nSin, 'línea')} sin sueldo</span>` : ''}
+        ${nAsig ? `<span class="inc-chip alerta" id="inc-r-porasignar">${plural(nAsig, 'línea')} con esquema por asignar</span>` : ''}
         ${nPend ? `<span class="inc-chip">${plural(nPend, 'importe')} por decidir</span>` : ''}</div>
       <div class="inc-acciones">
         ${editable && nPend ? `<button type="button" class="primary" id="inc-r-aceptar-todos">Aceptar los ${nPend} sugeridos pendientes</button>` : ''}
         ${nDesc ? `<button type="button" class="inc-sec" id="inc-r-descartadas">${H.verDescartadas ? 'Ocultar' : 'Mostrar'} ${plural(nDesc, 'línea descartada', 'líneas descartadas')}</button>` : ''}
       </div>
       ${tablaImportes}
+      ${H.ajustes.length ? `<h3 style="margin:18px 0 6px">Bitácora de ajustes</h3>
+      <p class="inc-nota">Cada cambio de importe o de esquema queda registrado y no se puede editar ni borrar. El sugerido original se conserva.</p>
+      <div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista inc-imp" id="inc-r-ajustes"><thead><tr><th>Fecha</th><th>Persona</th><th>Concepto</th><th>Cambio</th><th>Motivo</th><th>Quién</th></tr></thead><tbody>${H.ajustes.slice().reverse().map(a => {
+        const l = H.lineas.find(x => x.id === a.importe_id) || {}, c = H.conceptos.get(l.concepto_id) || {};
+        const cambio = a.tipo === 'importe' ? `${dinero(a.anterior)} → ${dinero(a.nuevo)}` : `Esquema: ${nombreEsquema(a.esquema_anterior, H)} → ${nombreEsquema(a.esquema_nuevo, H)}`;
+        return `<tr data-ajuste="${esc(a.tipo)}"><td>${esc(fechaHora(a.creado_en))}</td><td>${esc(nombreP(l.personal_id))}</td><td>${esc(c.abreviatura || '')}</td><td>${esc(cambio)}</td><td>${esc(a.motivo || '—')}</td><td>${esc(a.nombre || '')}</td></tr>`;
+      }).join('')}</tbody></table></div>` : ''}
 
       ${editable ? `<div class="inc-panel" id="inc-r-devolver-panel">
         ${H.devolviendo ? `<b>Devolver al coordinador</b>
@@ -934,12 +1026,21 @@
       const inp = cont.querySelector(`[data-final="${b.dataset.guardar}"]`);
       const v = inp && inp.value.trim();
       if (!v) return msg('inc-r-msg', 'err', 'Escribe el importe final o usa «Aceptar».');
-      b.disabled = true; accion(() => sb.rpc('inc_decidir_importe', { p_importe: b.dataset.guardar, p_final: num(v) }), 'Importe guardado.');
+      const l = H.lineas.find(x => x.id === b.dataset.guardar) || {};
+      const mot = (cont.querySelector(`[data-motivo="${b.dataset.guardar}"]`) || {}).value || '';
+      const cambia = l.sugerido == null || num(v) !== Number(l.sugerido) || l.origen === 'modificado';
+      if (cambia && !mot.trim() && !(l.final != null && num(v) === Number(l.final))) return msg('inc-r-msg', 'err', 'Escribe el motivo del ajuste: queda en la bitácora.');
+      b.disabled = true; accion(() => sb.rpc('inc_decidir_importe', { p_importe: b.dataset.guardar, p_final: num(v), p_motivo: mot.trim() || null }), 'Importe guardado.');
     }));
     cont.querySelectorAll('[data-manual-btn]').forEach(b => b.addEventListener('click', () => {
       const inp = cont.querySelector(`[data-manual="${b.dataset.manualBtn}"]`), v = num(inp && inp.value);
       if (!(v > 0)) return msg('inc-r-msg', 'err', 'Escribe un sueldo diario mayor a cero.');
       b.disabled = true; accion(() => sb.rpc('inc_capturar_sueldo_manual', { p_periodo: H.periodo.id, p_personal: b.dataset.manualBtn, p_sueldo: v }), 'Sueldo diario guardado y importes recalculados. Lo que ya modificaste no cambió.');
+    }));
+    cont.querySelectorAll('[data-asignar]').forEach(b => b.addEventListener('click', () => {
+      const sel = cont.querySelector(`[data-esq="${b.dataset.asignar}"]`);
+      if (!sel || !sel.value) return msg('inc-r-msg', 'err', 'Elige el esquema de pago de la línea.');
+      b.disabled = true; accion(() => sb.rpc('inc_asignar_esquema', { p_importe: b.dataset.asignar, p_registro_pago: sel.value }), 'Esquema asignado. Ahora acepta o modifica el importe.');
     }));
     if ($('inc-r-aceptar-todos')) $('inc-r-aceptar-todos').addEventListener('click', () => { $('inc-r-aceptar-todos').disabled = true; accion(() => sb.rpc('inc_aceptar_sugeridos', { p_version: H.version.id }), n => `${plural(n || 0, 'importe aceptado', 'importes aceptados')}.`); });
     if ($('inc-r-descartadas')) $('inc-r-descartadas').addEventListener('click', () => { H.verDescartadas = !H.verDescartadas; pintarRevHoja(); });

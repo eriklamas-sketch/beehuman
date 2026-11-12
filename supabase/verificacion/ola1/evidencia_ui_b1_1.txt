@@ -1,0 +1,30 @@
+OK    C6 El coordinador ve 14 horas extra de BENITO sin importe (el importe con dobles y triples lo decide Nómina)  [14]
+OK    Coordinador: sin errores de JavaScript  [[]]
+OK    C1 Columnas de la revisión  [Concepto | Cantidad | Valor por hora | Cálculo | Esquema de pago | Sugerido | Final | Estado | ]
+OK    C1 BENITO 14 h por tarifa (6 lunes + 8 martes): «9 h × $50.00 × 2 + 5 h × $50.00 × 3» = $1,650.00  [9 h × $50.00 × 2 + 5 h × $50.00 × 3]
+OK    C1 Valor por hora $50.00 (tarifa); ligado a su único esquema (IMSS bruto)  [$50.00 tarifa]
+OK    C2 Línea del sueldo: $12,000/30 ÷ 8 = $50.00 por hora (sueldo de IMSS) → 1 h × $50.00 × 2 = $100.00  [$50.00 sueldo de IMSS ÷ 8 h / 1 h × $50.00 × 2]
+OK    C3 ADELA (IMSS y EFECTIVO) sin preferido: $200.00 «Esquema por asignar», destacada  [HET Horas extra tarifa 2 horas $50.00 tarifa 2 h × $50.00 × 2 Tarifa Esquema por asignar La persona tiene 2 es]
+OK    C3 El selector ofrece solo sus esquemas vigentes (IMSS bruto y EFECTIVO neto)  [Elige el esquema… | IMSS · Bruto | EFECTIVO · Neto]
+OK    C3 Sin esquema no se decide el importe; aviso de líneas por asignar
+OK    C3 El tablero lo lista entre lo que falta y no deja procesar  [Faltan 4 pendientes para procesar:
+EDER LOPEZ RUIZ: no ha abierto su hoja
+ADELA PALACIOS GALVAN · Horas extra tarifa: esquema de pago por asignar — hoja de JOSE]
+OK    C3 Nómina asigna EFECTIVO: neto, por decidir, «asignado por Nómina»  [HET Horas extra tarifa 2 horas $50.00 tarifa 2 h × $50.00 × 2 Neto EFECTIVO sin registro patronal · asignado p]
+OK    C3 La asignación aparece en la bitácora  [Fecha	Persona	Concepto	Cambio	Motivo	Quién
+12/11/2026, 11:11 a.m.	ADELA PALACIOS GALVAN	HET	Esquema: por asignar → EFECT]
+OK    C4 Modificar sin motivo no se permite  [Escribe el motivo del ajuste: queda en la bitácora.]
+OK    C5 Sugerido $1,650.00 intacto, final 1,620 y «2 ajustes»  [HET Horas extra tarifa 14 horas $50.00 tarifa 9 h × $50.00 × 2 + 5 h × $50.00 × 3 Bruto IMSS sin registro patronal · úni]
+OK    C5 Bitácora con los dos ajustes: anterior, nuevo, motivo y quién  [12/11/2026, 11:11 a.m. BENITO ZAVALA GALINDO HET $1,600.00 → $1,620.00 Ajuste acordado nomina@demo.invalid | 12/11/2026, 11:11 a.m. BENITO ZAVALA GALINDO HET $1,650.00 → $1,600.00 Se pagan 13 h nomina@demo.invalid]
+OK    Nómina (revisión): sin errores de JavaScript  [[]]
+OK    E2 Nómina ve la configuración en solo lectura (sin guardar ni editar)
+OK    Celular: la revisión no desborda la página (la tabla se desplaza dentro de su caja)  [scrollWidth=390]
+OK    E1 Campo «Factor de horas dobles» (2)  [2]
+OK    E1 Umbral vacío (sin triples) y factor doble 2.5 guardados  [Parámetros guardados. Aplican a las hojas que se envíen desde ahora.]
+OK    E1 Con tarifa aparece «Esquema preferido» y la ayuda explica la asignación  [Horas × tarifa (sin dobles ni triples). El importe se liga al esquema preferido si la pers]
+OK    E1 Concepto de horas sencillas por tarifa con esquema preferido EFECTIVO
+OK    E1 La lista muestra valor y esquema preferido  [HS Horas sencillas Horas Tarifa propia $50.00 por hora EFECTIVO Activo Editar]
+OK    Administrador: sin errores de JavaScript  [[]]
+OK    C6 El coordinador nunca pidió importes, bitácora ni esquemas  [[]]
+
+RESULTADO: 25 de 25 OK

@@ -91,7 +91,8 @@ with sync_playwright() as p:
 
     # ================= Nómina: periodo =================
     ctx, pg = abrir(b, 'nomina'); ir_incidencias(pg)
-    ok(not pg.is_visible('[data-inc-vista="config"]'), 'Nómina no ve la configuración')
+    # B1.1: Nómina ve la configuración en solo lectura (criterio E2); la edición sigue siendo del Administrador
+    ok(pg.is_visible('[data-inc-vista="config"]'), 'Nómina ve la configuración (solo lectura, B1.1)')
     pg.click('[data-inc-vista="periodos"]'); pg.wait_for_timeout(900)  # B1: Nómina abre en «Revisión»
     pg.fill('#inc-p-ini', '2026-10-19'); pg.dispatch_event('#inc-p-ini', 'change'); pg.click('#inc-p-crear'); pg.wait_for_timeout(700)
     ok('no hay historial' in pg.inner_text('#inc-p-msg'), 'Periodo anterior al historial: la pantalla muestra el rechazo', pg.inner_text('#inc-p-msg')[:80])

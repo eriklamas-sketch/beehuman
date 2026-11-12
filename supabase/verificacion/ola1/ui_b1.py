@@ -160,7 +160,8 @@ with sync_playwright() as p:
        'R4 Una persona con dos esquemas: dos líneas (IMSS bruto $333.33 y EFECTIVO neto $50.00)', ' | '.join(l['txt'][:70] for l in la))
     # R5 totales separados
     tb = texto(pg, '#inc-r-totales [data-total="bruto"]'); tn = texto(pg, '#inc-r-totales [data-total="neto"]')
-    ok('583.33' in tb and '50.00' in tn, 'R5 Totales por separado: Bruto $583.33 y Neto $50.00', f'{tb} / {tn}')
+    # B1.1: el turno por tarifa de CESAR se liga a su único esquema (IMSS bruto) y entra al total bruto: 583.33 + 700
+    ok('1,283.33' in tb and '50.00' in tn, 'R5 Totales por separado: Bruto $1,283.33 (incluye el turno por tarifa ligado a IMSS, B1.1) y Neto $50.00', f'{tb} / {tn}')
     todo = texto(pg, '#inc-r-totales') + ' ' + texto(pg, '#inc-r-importes')
     ok('633.33' not in todo, 'R5 Ningún total suma bruto con neto ($633.33 no aparece)')
     ok(all(l['cat'] in ('bruto', 'neto') for l in la) and 'Bruto' in la[0]['txt'] + la[1]['txt'] and 'Neto' in la[0]['txt'] + la[1]['txt'], 'R5 Cada línea dice si es Bruto o Neto')
@@ -172,11 +173,12 @@ with sync_playwright() as p:
     clase = pg.eval_on_selector(f'#inc-r-importes tr[data-linea="{lf[0]["id"]}"]', 'e => e.className') if lf else ''
     ok('inc-sin-sueldo' in clase, 'R6 La línea sin sueldo se resalta')
     lt = linea(pg, 'CESAR')
-    ok(len(lt) == 1 and lt[0]['cat'] == 'tarifa' and '700.00' in lt[0]['txt'] and 'Aceptado' in lt[0]['txt'], 'R4 Concepto por tarifa: una línea sin esquema, aceptada', lt[0]['txt'][:90] if lt else '')
+    # B1.1: con un solo esquema vigente, la línea por tarifa se liga a él automáticamente
+    ok(len(lt) == 1 and lt[0]['cat'] == 'bruto' and '700.00' in lt[0]['txt'] and 'Aceptado' in lt[0]['txt'] and 'único esquema vigente' in lt[0]['txt'], 'R4 Concepto por tarifa: una línea, aceptada y ligada a su único esquema (B1.1)', lt[0]['txt'][:90] if lt else '')
     pg.screenshot(path=f'{OUT}/b1_02_importes.png', full_page=True)
     # R7 modificar y aceptar
     lb = linea(pg, 'BENITO')[0]
-    pg.fill(f'[data-final="{lb["id"]}"]', '300'); pg.click(f'[data-guardar="{lb["id"]}"]'); espera(pg, 1200)
+    pg.fill(f'[data-final="{lb["id"]}"]', '300'); pg.fill(f'[data-motivo="{lb["id"]}"]', 'B1.1: motivo obligatorio'); pg.click(f'[data-guardar="{lb["id"]}"]'); espera(pg, 1200)
     lb2 = linea(pg, 'BENITO')[0]
     v2 = pg.input_value(f'[data-final="{lb2["id"]}"]')
     ok(lb2['origen'] == 'modificado' and 'Modificado' in lb2['txt'] and v2 == '300', 'R7 Modificar un importe (250 → 300)', f"{lb2['txt'][:60]} final={v2}")
@@ -230,7 +232,7 @@ with sync_playwright() as p:
     pg.click('#inc-r-tablero [data-rev-hoja]'); espera(pg, 1200)
     lc = linea(pg, 'CESAR')
     ok(all(l['origen'] != 'modificado' for per in ('BENITO',) for l in linea(pg, per)), 'R11 La versión 2 se decide de nuevo (las decisiones eran de la versión 1)')
-    ok(any(l['cat'] == 'bruto' for l in lc) and any(l['cat'] == 'tarifa' for l in lc), 'R11 La versión 2 trae su propio cálculo (HE de CESAR por esquema + turno por tarifa)', ' | '.join(l['txt'][:50] for l in lc))
+    ok(len(lc) == 2 and all(l['cat'] == 'bruto' for l in lc), 'R11 La versión 2 trae su propio cálculo (HE de CESAR por esquema + turno por tarifa ligado a IMSS, B1.1)', ' | '.join(l['txt'][:50] for l in lc))
     pg.click('#inc-r-volver'); espera(pg)
     falta = texto(pg, '#inc-r-faltantes')
     ok('EDER LOPEZ RUIZ: no ha abierto su hoja' in falta and 'importe por decidir' in falta and 'falta la firma de Nómina' in falta and 'falta la firma de RH' in falta

@@ -1,0 +1,35 @@
+OK    Administrador ve «Incidencias» en el menú
+OK    Administrador agrega 4 conceptos con «Agregar rápido»  [HE,DOM,T,DESC]
+OK    Parámetros guardados (base: solo bruto)
+OK    Administrador se designa responsable de RH
+OK    Tarifa por área agregada (turno nocturno en ACABADOS: $900)
+OK    Administrador: sin errores de JavaScript  [[]]
+OK    Nómina ve la configuración (solo lectura, B1.1)
+OK    Periodo anterior al historial: la pantalla muestra el rechazo  [no hay historial de asignaciones antes del 2026-10-26; no se puede crear el peri]
+OK    El fin se calcula con los 7 días de la periodicidad semanal
+OK    Nómina crea el periodo 26-oct a 1-nov
+OK    Nómina: sin errores de JavaScript  [[]]
+OK    Consulta no ve «Incidencias»
+OK    Coordinador ve «Mi equipo» e «Incidencias»
+OK    La hoja trae precargadas las 6 personas del coordinador  [6]
+OK    Aviso visible: ADELA con más de 3 h extra al día  [1]
+OK    Proyecto por día: oculto con aviso (el coordinador no lee el catálogo de proyectos)
+OK    Guardar borrador  [Borrador guardado.]
+OK    Se guardaron 8 cantidades, 2 celdas (F y D) y 1 observación  [8/2/1]
+OK    Descuento con motivo y conformidad declarada (queda quién la declaró)
+OK    Coordinador ve importes de tarifa propia: CESAR 2 × $700; BENITO 1 × $900 (tarifa de su área)
+OK    Coordinador no ve importes calculados con sueldo
+OK    Borrar una cantidad en borrador la elimina (7 restantes)
+OK    El envío pide confirmación
+OK    Hoja enviada: versión 1
+OK    Hoja enviada: la cuadrícula queda de solo lectura
+OK    La observación general escrita antes de guardar viaja en la versión enviada
+OK    Importe calculado en el servidor (base bruto 20,000/30; 12 h → 9 dobles + 3 triples = $2,250.00)  [2250.00]
+OK    Abre el complemento
+OK    En el complemento, lo ya enviado aparece fijo y no editable  [3]
+OK    El complemento guarda solo lo omitido
+OK    Coordinador: sin errores de JavaScript  [[]]
+OK    El coordinador nunca escribió importes ni sueldos  [['POST /rest/v1/rpc/equipo_coordinador', 'POST /rest/v1/rpc/inc_abrir_hoja', 'POST /rest/v1/rpc/inc_personas_hoja']]
+OK    Celular (390 px): la página no se desborda; la cuadrícula se desplaza dentro de su recuadro  [390]
+
+RESULTADO: 33 de 33 OK

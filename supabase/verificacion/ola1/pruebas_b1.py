@@ -76,7 +76,7 @@ X_HE, Y_HE, X_DESC, X_OBS = lid('X', HE), lid('Y', HE), lid('X', DESC), lid('X',
 falla_con(f"select public.inc_decidir_importe('{X_OBS}', null)", 'nomina', 'no lleva importe', 'S3 Una línea «sin importe» no se decide')
 falla_con(f"select public.inc_decidir_importe('{X_HE}', -5)", 'nomina', 'negativo', 'S3 No se aceptan importes negativos')
 falla_con(f"select public.inc_decidir_importe('{X_HE}', 10)", 'coordA', 'sin permiso', 'S3 El coordinador no decide importes')
-val(f"select public.inc_decidir_importe('{Y_HE}', 999)", 'nomina')
+val(f"select public.inc_decidir_importe('{Y_HE}', 999, 'B1.1: motivo obligatorio')", 'nomina')
 n = val(f"select public.inc_aceptar_sugeridos('{V1}')", 'nomina')
 est = val(f"select string_agg(substr(p.nombre_completo,9)||'-'||k.abreviatura||'='||i.origen, ',' order by p.nombre_completo, k.abreviatura) from public.inc_importes i join public.personal p on p.id=i.personal_id join public.inc_conceptos k on k.id=i.concepto_id where i.version_id='{V1}'", 'nomina')
 ok(n == '2' and est == 'X-CAP=sin_importe,X-DESC=aceptado,X-HE=aceptado,Y-HE=modificado', 'S2 «Aceptar sugeridos» acepta solo los pendientes con sugerencia (no toca modificado ni sin importe)', f'{n}: {est}')

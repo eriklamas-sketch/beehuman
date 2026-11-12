@@ -206,7 +206,8 @@ ok(imp('P1', 'HE') == '2250.00/pendiente', 'C2/C15: 12 h extra con $20,000/30 �
 ok(imp('P4', 'HE') == '666.67/pendiente', 'Corrección recalculada: 4 h extra de P4 → $666.67', imp('P4', 'HE'))
 ok(imp('P4', 'HE', V1) == '333.33/pendiente', 'C1: en la versión 1, 2 h extra → $333.33', imp('P4', 'HE', V1))
 ok(imp('P1', 'DOM') == '166.67/pendiente', 'C7: domingo al 25 % de $666.67 → $166.67', imp('P1', 'DOM'))
-ok(imp('P2', 'DOMT') == '700.00/aceptado', 'C8: domingo con tarifa del área B → $700 (sustituye la prima)', imp('P2', 'DOMT'))
+# B1.1: P2 tiene dos esquemas vigentes y el concepto no tiene preferido: la línea por tarifa queda «por asignar»
+ok(imp('P2', 'DOMT') == '700.00/por_asignar', 'C8: domingo con tarifa del área B → $700 (sustituye la prima); por asignar esquema (B1.1)', imp('P2', 'DOMT'))
 ok(imp('P3', 'DOMT') == '600.00/aceptado', 'C9: domingo con tarifa general → $600', imp('P3', 'DOMT'))
 ok(imp('P3', 'HT') == '950.00/aceptado', 'C6: tarifa propia 19 × $50 → $950', imp('P3', 'HT'))
 ok(imp('PNOI', 'HE') == 'null/sin_sueldo', 'C10: sin esquema de pago → sin importe, no se inventa sueldo', imp('PNOI', 'HE'))
@@ -224,7 +225,7 @@ ok(imp('PNOI', 'HE') == '300.00/pendiente', 'Sueldo manual capturado por Nómina
 iid = val(f"select id from public.inc_importes where version_id='{V2}' and personal_id='{P['P1']}' and concepto_id='{K['HE']}'", 'nomina')
 val(f"select public.inc_decidir_importe('{iid}', null)", 'nomina')
 ok(val(f"select final||'/'||origen from public.inc_importes where id='{iid}'", 'nomina') == '2250.00/aceptado', 'C11: Nómina acepta la sugerencia')
-val(f"select public.inc_decidir_importe('{iid}', 2200)", 'nomina')
+val(f"select public.inc_decidir_importe('{iid}', 2200, 'B1.1: motivo obligatorio')", 'nomina')
 ok(val(f"select final||'/'||sugerido||'/'||origen from public.inc_importes where id='{iid}'", 'nomina') == '2200.00/2250.00/modificado', 'C12: Nómina modifica; se conservan sugerido y final')
 val(f"select public.inc_capturar_sueldo_manual('{PER}','{P['PNOI']}',400)", 'nomina')
 ok(val(f"select final||'/'||origen from public.inc_importes where id='{iid}'", 'nomina') == '2200.00/modificado', 'Un recálculo no pisa el importe modificado por Nómina')
@@ -269,9 +270,12 @@ print('\n== Procesado y complementos ==')
 val(f"select public.inc_enviar_hoja('{HB}')", 'coordB')
 # B1: solo se procesa una prenómina completa (importes decididos y firmas requeridas)
 falla_con(f"select public.inc_marcar_procesado('{PER}')", 'nomina', 'no se puede procesar', 'B1: procesar con importes por decidir y sin firmas: rechazado')
+# B1.1: Nómina asigna el esquema de las líneas por asignar (el primero que ofrece BeeHuman)
+for x in (val(f"select string_agg(distinct linea_id::text||'/'||(select registro_pago_id from public.inc_esquemas_asignables(i.version_id) a where a.linea_id = i.id limit 1), ',') from public.inc_importes i join public.inc_versiones v on v.id=i.version_id join public.inc_hojas h on h.id=v.hoja_id and v.numero=h.version_actual cross join lateral (select i.id as linea_id) z where h.periodo_id='{PER}' and i.origen = 'por_asignar'", 'nomina') or '').split(','):
+    if x: val(f"select public.inc_asignar_esquema('{x.split('/')[0]}','{x.split('/')[1]}')", 'nomina')
 pend = val(f"select string_agg(i.id::text||'/'||coalesce(i.sugerido::text,''), ',') from public.inc_importes i join public.inc_versiones v on v.id=i.version_id join public.inc_hojas h on h.id=v.hoja_id and v.numero=h.version_actual where h.periodo_id='{PER}' and i.origen in ('pendiente','sin_sueldo')", 'nomina')
 for x in (pend.split(',') if pend else []):
-    iid, sug = x.split('/'); val(f"select public.inc_decidir_importe('{iid}', {'null' if sug else '100'})", 'nomina')
+    iid, sug = x.split('/'); val(f"select public.inc_decidir_importe('{iid}', {'null' if sug else "100, 'B1.1: motivo obligatorio'"})", 'nomina')
 for hh in (HA, HB):
     for area, quien in (('nomina', 'nomina'), ('rh', 'rh')):
         if val(f"select count(*) from public.inc_eventos e join public.inc_hojas h on h.id=e.hoja_id join public.inc_versiones v on v.id=e.version_id and v.numero=h.version_actual where e.hoja_id='{hh}' and e.tipo='firma_{area}'") == '0':

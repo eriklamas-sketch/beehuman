@@ -3,9 +3,9 @@ Periodo de prueba: 2026-11-16 a 2026-11-22
 == Bloqueante 1 · Historial de asignaciones ==
 OK    Carga inicial: ningún tramo anterior a hoy (no se supone historial)
 OK    Carga inicial: 9 personas con coordinador, tramo desde hoy
-OK    Periodo anterior al historial: se rechaza  [ERROR:  BeeHuman: no hay historial de asignaciones antes del 2026-11-11; no se puede crear el periodo.]
+OK    Periodo anterior al historial: se rechaza  [ERROR:  BeeHuman: no hay historial de asignaciones antes del 2026-11-12; no se puede crear el periodo.]
 OK    Nómina crea el periodo semanal
-OK    Fecha efectiva explícita: tramo A cierra el miércoles, B inicia el jueves  [0a100000-0000-4000-8000-000000000001 2026-11-11 2026-11-18 | 0a100000-0000-4000-8000-000000000002 2026-11-19 ∞]
+OK    Fecha efectiva explícita: tramo A cierra el miércoles, B inicia el jueves  [0a100000-0000-4000-8000-000000000001 2026-11-12 2026-11-18 | 0a100000-0000-4000-8000-000000000002 2026-11-19 ∞]
 OK    Tramos traslapados: la base los rechaza aun como dueño  [ERROR:  conflicting key value violates exclusion constraint "inc_asignaciones_personal_id_daterange_excl"]
 OK    Registro sin motivo o fuente: rechazado  [ERROR:  BeeHuman: indica el motivo o la fuente de la fecha.]
 OK    Coordinador no puede registrar asignaciones  [ERROR:  BeeHuman: sin permiso.]
@@ -98,7 +98,9 @@ OK    I5: Consulta no firma  [ERROR:  BeeHuman: solo el responsable designado de
 OK    Consulta ve cantidades de su alcance (sin importes)
 
 == Procesado y complementos ==
-OK    D7: marcar procesado dos veces no duplica el procesamiento  [Ya estaba procesado el 2026-11-11 17:39; no se reg]
+OK    B1: procesar con importes por decidir y sin firmas: rechazado  [ERROR:  BeeHuman: no se puede procesar; faltan 7 pendiente(s): PERSONA P1 · Descuento operativo: importe por decidir — hoja de PERSONA CA; P]
+OK    B1: con todo decidido y firmado ya no falta nada
+OK    D7: marcar procesado dos veces no duplica el procesamiento  [Ya estaba procesado el 2026-11-12 09:29; no se reg]
 OK    Periodo procesado: no se abre otra hoja normal  [ERROR:  BeeHuman: el periodo ya fue procesado; usa un complemento.]
 OK    La hoja normal queda procesada
 OK    D6: complemento posterior al procesamiento identificado
@@ -106,4 +108,4 @@ OK    D5: el complemento no repite persona-día-concepto ya enviado  [ERROR:  du
 OK    (f) Un solo ajuste por línea original en el complemento  [ERROR:  duplicate key value violates unique constraint "inc_cant_ajuste"]
 OK    D6: enviar el complemento no reabre el periodo ni la hoja procesada
 
-RESULTADO: 90 de 90 verificaciones OK
+RESULTADO: 92 de 92 verificaciones OK

@@ -267,6 +267,16 @@ ok(val("select count(*) from public.inc_cantidades", 'consulta') != '0', 'Consul
 # =====================================================================
 print('\n== Procesado y complementos ==')
 val(f"select public.inc_enviar_hoja('{HB}')", 'coordB')
+# B1: solo se procesa una prenómina completa (importes decididos y firmas requeridas)
+falla_con(f"select public.inc_marcar_procesado('{PER}')", 'nomina', 'no se puede procesar', 'B1: procesar con importes por decidir y sin firmas: rechazado')
+pend = val(f"select string_agg(i.id::text||'/'||coalesce(i.sugerido::text,''), ',') from public.inc_importes i join public.inc_versiones v on v.id=i.version_id join public.inc_hojas h on h.id=v.hoja_id and v.numero=h.version_actual where h.periodo_id='{PER}' and i.origen in ('pendiente','sin_sueldo')", 'nomina')
+for x in (pend.split(',') if pend else []):
+    iid, sug = x.split('/'); val(f"select public.inc_decidir_importe('{iid}', {'null' if sug else '100'})", 'nomina')
+for hh in (HA, HB):
+    for area, quien in (('nomina', 'nomina'), ('rh', 'rh')):
+        if val(f"select count(*) from public.inc_eventos e join public.inc_hojas h on h.id=e.hoja_id join public.inc_versiones v on v.id=e.version_id and v.numero=h.version_actual where e.hoja_id='{hh}' and e.tipo='firma_{area}'") == '0':
+            val(f"select public.inc_firmar_hoja('{hh}','{area}')", quien)
+ok(val(f"select count(*) from public.inc_faltantes_procesar('{PER}')", 'nomina') == '0', 'B1: con todo decidido y firmado ya no falta nada')
 m1 = val(f"select public.inc_marcar_procesado('{PER}')", 'nomina')
 m2 = val(f"select public.inc_marcar_procesado('{PER}')", 'nomina')
 ok('procesado' in m1 and 'Ya estaba procesado' in m2 and val(f"select count(*) from public.inc_eventos where periodo_id='{PER}' and tipo='procesado'") == '1',

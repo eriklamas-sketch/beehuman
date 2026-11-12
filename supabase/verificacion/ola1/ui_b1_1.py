@@ -134,6 +134,8 @@ with sync_playwright() as p:
     ok(celda(lb['id'], 'data-calculo') == '9 h × $50.00 × 2 + 5 h × $50.00 × 3' and '1,650.00' in lb['txt'],
        'C1 BENITO 14 h por tarifa (6 lunes + 8 martes): «9 h × $50.00 × 2 + 5 h × $50.00 × 3» = $1,650.00', celda(lb['id'], 'data-calculo'))
     ok(celda(lb['id'], 'data-valor-hora') == '$50.00 tarifa' and 'único esquema vigente' in lb['txt'] and lb['cat'] == 'bruto', 'C1 Valor por hora $50.00 (tarifa); ligado a su único esquema (IMSS bruto)', celda(lb['id'], 'data-valor-hora'))
+    # B1.1a: el esquema se asigna solo, pero el importe llega por decidir
+    ok(lb['origen'] == 'pendiente' and 'Por decidir' in lb['txt'] and pg.query_selector(f'[data-aceptar="{lb["id"]}"]') is not None, 'B1.1a La línea con esquema automático llega «Por decidir», con su botón Aceptar', lb['txt'][-60:])
     lc = linea(pg, 'CESAR')[0]
     ok(celda(lc['id'], 'data-valor-hora') == '$50.00 sueldo de IMSS ÷ 8 h' and celda(lc['id'], 'data-calculo') == '1 h × $50.00 × 2' and '100.00' in lc['txt'],
        'C2 Línea del sueldo: $12,000/30 ÷ 8 = $50.00 por hora (sueldo de IMSS) → 1 h × $50.00 × 2 = $100.00', celda(lc['id'], 'data-valor-hora') + ' / ' + celda(lc['id'], 'data-calculo'))
@@ -156,7 +158,7 @@ with sync_playwright() as p:
     # C4 / C5
     lb = linea(pg, 'BENITO')[0]
     pg.fill(f'[data-final="{lb["id"]}"]', '1600'); pg.click(f'[data-guardar="{lb["id"]}"]'); espera(pg, 800)
-    ok('motivo' in texto(pg, '#inc-r-msg').lower() and linea(pg, 'BENITO')[0]['origen'] == 'aceptado', 'C4 Modificar sin motivo no se permite', texto(pg, '#inc-r-msg'))
+    ok('motivo' in texto(pg, '#inc-r-msg').lower() and linea(pg, 'BENITO')[0]['origen'] == 'pendiente', 'C4 Modificar sin motivo no se permite (la línea sigue por decidir)', texto(pg, '#inc-r-msg'))
     pg.fill(f'[data-final="{lb["id"]}"]', '1600'); pg.fill(f'[data-motivo="{lb["id"]}"]', 'Se pagan 13 h'); pg.click(f'[data-guardar="{lb["id"]}"]'); espera(pg, 1300)
     lb = linea(pg, 'BENITO')[0]
     pg.fill(f'[data-final="{lb["id"]}"]', '1620'); pg.fill(f'[data-motivo="{lb["id"]}"]', 'Ajuste acordado'); pg.click(f'[data-guardar="{lb["id"]}"]'); espera(pg, 1300)

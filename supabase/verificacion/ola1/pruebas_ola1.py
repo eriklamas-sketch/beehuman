@@ -208,8 +208,9 @@ ok(imp('P4', 'HE', V1) == '333.33/pendiente', 'C1: en la versión 1, 2 h extra �
 ok(imp('P1', 'DOM') == '166.67/pendiente', 'C7: domingo al 25 % de $666.67 → $166.67', imp('P1', 'DOM'))
 # B1.1: P2 tiene dos esquemas vigentes y el concepto no tiene preferido: la línea por tarifa queda «por asignar»
 ok(imp('P2', 'DOMT') == '700.00/por_asignar', 'C8: domingo con tarifa del área B → $700 (sustituye la prima); por asignar esquema (B1.1)', imp('P2', 'DOMT'))
-ok(imp('P3', 'DOMT') == '600.00/aceptado', 'C9: domingo con tarifa general → $600', imp('P3', 'DOMT'))
-ok(imp('P3', 'HT') == '950.00/aceptado', 'C6: tarifa propia 19 × $50 → $950', imp('P3', 'HT'))
+# B1.1a: la línea por tarifa con esquema automático nace por decidir (antes, aceptada)
+ok(imp('P3', 'DOMT') == '600.00/pendiente', 'C9: domingo con tarifa general → $600, por decidir (B1.1a)', imp('P3', 'DOMT'))
+ok(imp('P3', 'HT') == '950.00/pendiente', 'C6: tarifa propia 19 × $50 → $950, por decidir (B1.1a)', imp('P3', 'HT'))
 ok(imp('PNOI', 'HE') == 'null/sin_sueldo', 'C10: sin esquema de pago → sin importe, no se inventa sueldo', imp('PNOI', 'HE'))
 ok(imp('P4', 'BSI') == 'null/sin_importe', 'B4: concepto sin importe → sin monto', imp('P4', 'BSI'))
 ok(imp('P1', 'DESC') == '150.00/pendiente', 'Descuento operativo: queda pendiente de decisión de Nómina', imp('P1', 'DESC'))

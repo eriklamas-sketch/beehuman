@@ -121,7 +121,7 @@ _, _, v = caso(7, [('P1', 0, 'HE-T', 1)]); l = lineas(v, 'P1')
 ok(len(l) == 1 and l[0]['sug'] == 100.00, 'A4 HE tarifa $50, 1 h: 1 × 50 × 2 = 100.00', fmt(l))
 _, _, v = caso(8, [('P1', 0, 'HE-T', 14)]); l = lineas(v, 'P1'); A5 = l
 ok(len(l) == 1 and l[0]['sug'] == 1650.00 and l[0]['det']['valor_hora'] == 50 and l[0]['det']['origen_valor'] == 'tarifa', 'A5 HE tarifa $50, 14 h: 9 × 50 × 2 + 5 × 50 × 3 = 1,650.00', fmt(l))
-ok(l[0]['rp'] == RP['P1-IMSS'] and l[0]['origen'] == 'aceptado' and l[0]['det'].get('asignacion') == 'unico', 'B1 Un solo esquema vigente: se asigna automáticamente (IMSS)', f"{l[0]['rp'] == RP['P1-IMSS']} {l[0]['origen']} {l[0]['det'].get('asignacion')}")
+ok(l[0]['rp'] == RP['P1-IMSS'] and l[0]['origen'] == 'pendiente' and l[0]['det'].get('asignacion') == 'unico', 'B1 Un solo esquema vigente: se asigna automáticamente (IMSS) y el importe nace por decidir (B1.1a)', f"{l[0]['rp'] == RP['P1-IMSS']} {l[0]['origen']} {l[0]['det'].get('asignacion')}")
 _, _, v = caso(9, [('P1', 0, 'HS-T', 1)]); l1 = lineas(v, 'P1')
 _, _, v = caso(10, [('P1', 0, 'HS-T', 14)]); l2 = lineas(v, 'P1')
 ok(l1[0]['sug'] == 50.00 and l2[0]['sug'] == 700.00 and 'horas_dobles' not in l2[0]['det'], 'A6 Horas sencillas tarifa: 1 h = 50.00 y 14 h = 700.00 (sin dobles ni triples)', f'{fmt(l1)} | {fmt(l2)}')
@@ -136,6 +136,10 @@ ok(l[0]['sug'] == 1650.00, 'A10 La configuración de la Empresa B no altera la E
 _, _, v = caso(15, [('P3', 0, 'HE-S', 2)]); l = lineas(v, 'P3')
 ok(len(l) == 1 and l[0]['origen'] == 'sin_sueldo' and 'Sin esquema' in l[0]['det'].get('motivo', ''), 'A11 Esquema sin enlazar a la relación: «Sin sueldo» con motivo (como B2)', fmt(l))
 
+# B1.1a (decisión de Erik 11:45): asignar el esquema no es aceptar el importe
+na = val(f"select count(*) from public.inc_importes where tenant_id='{T}' and origen = 'aceptado' and decidido_por is null", 'nomina')
+nt = val(f"select count(*) from public.inc_importes where tenant_id='{T}' and detalle->>'origen_valor' = 'tarifa' and registro_pago_id is not null and origen = 'pendiente'", 'nomina')
+ok(na == '0' and nt == '7', 'B1.1a Ninguna línea nace aceptada: las 7 de tarifa con esquema automático (A3c, A4, A5, A6 ×2, A9, A10) llegan por decidir', f'aceptadas sin decisión={na}, tarifa con esquema por decidir={nt}')
 print('== B Esquema de pago ==')
 PER16, H16, V16 = caso(16, [('P2', 0, 'HE-T', 2), ('P5', 0, 'HE-TE', 2), ('P1', 0, 'HE-TE', 2), ('P4', 0, 'HE-T', 2)])
 b2 = lineas(V16, 'P2')

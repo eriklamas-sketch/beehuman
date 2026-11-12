@@ -1,0 +1,22 @@
+B1.1a · Evidencia de reversión (base local, 12-nov-2026)
+Huella con B1.1 (antes de B1.1a):
+col|544|4842f7ac88a0b2ce08ab1870135131a2
+con|283|016bd9e33bd1e73d9eb4298ae6de03ff
+fn|94|781746f45c54f019d5300ee968ee8694
+trg|82|70aa262e14968ebdf05c094244fa1c74
+pol|80|9351bf22dfd396e429d9d301fea35beb
+acl|54|3516a7f12ea8afe1332ee233908a0523
+cmt|24|a32c349347a39ad431ad60f968c7ce26
+
+Huella con B1.1a:
+col|546|10752858da8a2441c4332390dc91510d
+con|283|016bd9e33bd1e73d9eb4298ae6de03ff
+fn|94|05b5b72ab1b83631642b8762206ec967
+trg|82|70aa262e14968ebdf05c094244fa1c74
+pol|80|9351bf22dfd396e429d9d301fea35beb
+acl|55|4d0734b80e963366afbd4dd3d86f6b79
+cmt|24|a32c349347a39ad431ad60f968c7ce26
+
+Aplicar → revertir: IDÉNTICA a B1.1
+Revertir → reaplicar: IDÉNTICA a la primera aplicación
+Aplicar dos veces: se niega (ya está aplicada)

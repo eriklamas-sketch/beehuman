@@ -46,8 +46,8 @@ OK    Corrección recalculada: 4 h extra de P4 → $666.67  [666.67/pendiente]
 OK    C1: en la versión 1, 2 h extra → $333.33  [333.33/pendiente]
 OK    C7: domingo al 25 % de $666.67 → $166.67  [166.67/pendiente]
 OK    C8: domingo con tarifa del área B → $700 (sustituye la prima); por asignar esquema (B1.1)  [700.00/por_asignar]
-OK    C9: domingo con tarifa general → $600  [600.00/aceptado]
-OK    C6: tarifa propia 19 × $50 → $950  [950.00/aceptado]
+OK    C9: domingo con tarifa general → $600, por decidir (B1.1a)  [600.00/pendiente]
+OK    C6: tarifa propia 19 × $50 → $950, por decidir (B1.1a)  [950.00/pendiente]
 OK    C10: sin esquema de pago → sin importe, no se inventa sueldo  [null/sin_sueldo]
 OK    B4: concepto sin importe → sin monto  [null/sin_importe]
 OK    Descuento operativo: queda pendiente de decisión de Nómina  [150.00/pendiente]
@@ -98,9 +98,9 @@ OK    I5: Consulta no firma  [ERROR:  BeeHuman: solo el responsable designado de
 OK    Consulta ve cantidades de su alcance (sin importes)
 
 == Procesado y complementos ==
-OK    B1: procesar con importes por decidir y sin firmas: rechazado  [ERROR:  BeeHuman: no se puede procesar; faltan 8 pendiente(s): PERSONA P1 · Descuento operativo: importe por decidir — hoja de PERSONA CA; P]
+OK    B1: procesar con importes por decidir y sin firmas: rechazado  [ERROR:  BeeHuman: no se puede procesar; faltan 10 pendiente(s): PERSONA P1 · Descuento operativo: importe por decidir — hoja de PERSONA CA; ]
 OK    B1: con todo decidido y firmado ya no falta nada
-OK    D7: marcar procesado dos veces no duplica el procesamiento  [Ya estaba procesado el 2026-11-12 11:11; no se reg]
+OK    D7: marcar procesado dos veces no duplica el procesamiento  [Ya estaba procesado el 2026-11-12 11:54; no se reg]
 OK    Periodo procesado: no se abre otra hoja normal  [ERROR:  BeeHuman: el periodo ya fue procesado; usa un complemento.]
 OK    La hoja normal queda procesada
 OK    D6: complemento posterior al procesamiento identificado

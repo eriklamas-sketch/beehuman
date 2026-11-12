@@ -174,7 +174,8 @@ with sync_playwright() as p:
     ok('inc-sin-sueldo' in clase, 'R6 La línea sin sueldo se resalta')
     lt = linea(pg, 'CESAR')
     # B1.1: con un solo esquema vigente, la línea por tarifa se liga a él automáticamente
-    ok(len(lt) == 1 and lt[0]['cat'] == 'bruto' and '700.00' in lt[0]['txt'] and 'Aceptado' in lt[0]['txt'] and 'único esquema vigente' in lt[0]['txt'], 'R4 Concepto por tarifa: una línea, aceptada y ligada a su único esquema (B1.1)', lt[0]['txt'][:90] if lt else '')
+    # B1.1a: asignar el esquema no acepta el importe; la línea llega «Por decidir»
+    ok(len(lt) == 1 and lt[0]['cat'] == 'bruto' and '700.00' in lt[0]['txt'] and 'Por decidir' in lt[0]['txt'] and 'único esquema vigente' in lt[0]['txt'], 'R4 Concepto por tarifa: una línea ligada a su único esquema, por decidir (B1.1, B1.1a)', lt[0]['txt'][:90] if lt else '')
     pg.screenshot(path=f'{OUT}/b1_02_importes.png', full_page=True)
     # R7 modificar y aceptar
     lb = linea(pg, 'BENITO')[0]

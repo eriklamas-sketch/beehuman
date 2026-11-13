@@ -1327,9 +1327,10 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
 
         <section class="alta-card">
           <h3 class="alta-card-title">Prestaciones y créditos</h3>
-        <div class="grid3">
+        <div class="grid3" id="f-fonacot-legado">
           <div><label>No. FONACOT</label><input id="f-fonacot" type="text"></div>
         </div>
+        <p class="hint" id="f-creditos-aviso" style="display:none">Los créditos (INFONAVIT, FONACOT, préstamos, pensiones y otros descuentos) se registran en la ficha de la persona, sección «Prestaciones y créditos», una vez dada de alta.</p>
         <h4 class="alta-subtitle">Salud</h4>
         <div class="grid">
           <div><label>Restricciones de salud</label><textarea id="f-restricciones"></textarea></div>
@@ -1867,9 +1868,10 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
 
       </section><section class="detail-section" data-detail-section="prestaciones">
       <h3>Prestaciones y créditos</h3>
-      <div class="grid3">
+      <div class="grid3" id="d-fonacot-legado">
         <div><label>No. FONACOT</label><input id="d-fonacot"></div>
       </div>
+      <div id="cred-ficha"></div>
       <h3>Salud</h3>
       <div class="grid">
         <div><label>Restricciones de salud</label><textarea id="d-restricciones"></textarea></div>
@@ -3512,7 +3514,8 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     fecha_inicio_contrato: document.getElementById('f-fechainicio').value || null,
     fecha_vencimiento_contrato: document.getElementById('f-fechavencimiento').value || null,
     subcontratacion: document.getElementById('f-subcontratacion').checked,
-    no_fonacot: document.getElementById('f-fonacot').value.trim(),
+    // B5: con el módulo de créditos, «No. FONACOT» ya no se captura aquí.
+    ...(OLA1_ACTIVA ? {} : { no_fonacot: document.getElementById('f-fonacot').value.trim() }),
     restricciones_salud: document.getElementById('f-restricciones').value.trim(),
     contacto_emergencia_nombre: document.getElementById('f-emerg-nombre').value.trim(),
     contacto_emergencia_telefono: document.getElementById('f-emerg-telefono').value.trim(),
@@ -3667,6 +3670,8 @@ async function abrirDetalle(id, seccionInicial = 'personal'){
   const p = personal.find(x=>x.id===id);
   if(!p) return;
   detalleActual = {...p};
+  // B5: créditos y descuentos de la persona (solo Administrador y Nómina).
+  if (window.credFicha) window.credFicha(p.id);
   // Una ficha nueva no hereda mensajes de la anterior.
   ['toast-detalle', 'toast-registros-pago'].forEach(idToast => {
     const t = document.getElementById(idToast);
@@ -4699,7 +4704,8 @@ async function guardarDetalleUnaVez(){
     estatus: document.getElementById('d-estatus').value,
     fecha_baja: document.getElementById('d-fechabaja').value || null,
     comentario_baja: document.getElementById('d-comentariobaja').value.trim() || null,
-    no_fonacot: document.getElementById('d-fonacot').value.trim(),
+    // B5: con el módulo de créditos, el campo anterior no se edita ni se sobrescribe (se conserva).
+    ...(OLA1_ACTIVA ? {} : { no_fonacot: document.getElementById('d-fonacot').value.trim() }),
     restricciones_salud: document.getElementById('d-restricciones').value.trim(),
     contacto_emergencia_nombre: document.getElementById('d-emerg-nombre').value.trim(),
     contacto_emergencia_telefono: document.getElementById('d-emerg-telefono').value.trim(),
@@ -6412,6 +6418,13 @@ document.getElementById('equipo-incluir-bajas').addEventListener('change', rende
 if (OLA1_ACTIVA) {
   document.body.classList.add('ola1-activa');
   const s = document.createElement('script'); s.src = 'incidencias.js'; document.body.appendChild(s);
+}
+// B5: créditos y descuentos, con la prenómina. El campo anterior «No. FONACOT»
+// se oculta (su valor se conserva y quedó convertido en un crédito incompleto).
+if (OLA1_ACTIVA) {
+  ['f-fonacot-legado', 'd-fonacot-legado'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  const av = document.getElementById('f-creditos-aviso'); if (av) av.style.display = 'block';
+  const s3 = document.createElement('script'); s3.src = 'creditos.js'; document.body.appendChild(s3);
 }
 // Etapa 1: Historia laboral e IDSE, con su propio interruptor.
 if (LABORAL_ACTIVO) {

@@ -1,0 +1,29 @@
+B5 · Evidencia de reversión (base local, 13-nov-2026, v2 con saldo disponible)
+Huella antes de B5 (B1.1b + 2 personas ficticias con no_fonacot):
+col|548|45ca25a5af627fd4b207d40cfffba48b
+con|283|016bd9e33bd1e73d9eb4298ae6de03ff
+fn|94|d35758ca1f1535ed22c0bfdf45b8cee3
+trg|82|70aa262e14968ebdf05c094244fa1c74
+pol|80|9351bf22dfd396e429d9d301fea35beb
+acl|56|a35d6f632687a956cc7e8015c5f3d95e
+cmt|24|0e5f8479868c2a376226500c7895bd7d
+
+Huella con B5:
+col|619|c7744a1c285c146fd0dee69dda5dfc2e
+con|331|62a89c3db49d073787f054e1ba4ecb3a
+fn|109|64dac1c6f244496a422308a8bbe63891
+trg|93|47597d56345993e7716bede3e9d17a10
+pol|85|b9292637213b4eaeefcfeb64392fbe1f
+acl|62|b27709ce825f577b0ae9e2192dac604b
+cmt|24|0e5f8479868c2a376226500c7895bd7d
+
+Conversión de no_fonacot al aplicar: 2 → FON-REV incompleto ligado a 7a900000-0000-4000-8000-000000000001, historia: conversion; FON-REV2 incompleto sin relación, historia: conversion
+Tabla personal sin cambios al aplicar (md5 antes = después): sí (e6af310001a3e337c22762ae6f16c1f6)
+cred_disponible existe con B5: 1
+Aplicar → revertir: IDÉNTICA a antes de B5
+cred_disponible tras revertir: 0 funciones; tablas cred_*: 0
+personal.no_fonacot tras revertir: FON-REV, FON-REV2 (intacto)
+Revertir → reaplicar: IDÉNTICA a la primera aplicación
+Aplicar dos veces: se niega (BeeHuman: la migración B5 ya está aplicada)
+Con datos capturados con B5 la reversión se niega: BeeHuman: hay créditos, descuentos o movimientos capturados con B5; la reversión los perdería
+… y B5 sigue intacta: huella igual a la aplicada

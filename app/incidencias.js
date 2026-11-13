@@ -733,6 +733,9 @@
   async function revPeriodo() {
     const cont = $('inc-vista');
     cont.innerHTML = '<div class="card"><p class="hint">Cargando el periodo…</p></div>';
+    // B5: primero se sincronizan los descuentos de créditos del periodo, para
+    // que la lista de faltantes los incluya. Sin el módulo, se ignora.
+    const cred = window.credPanelPeriodo ? await sb.rpc('cred_descuentos_periodo', { p_periodo: S.rev.periodoId }) : null;
     const [pe, tb, fl] = await Promise.all([
       sb.from('inc_periodos').select('*').eq('id', S.rev.periodoId).single(),
       sb.rpc('inc_tablero_periodo', { p_periodo: S.rev.periodoId }),
@@ -762,15 +765,17 @@
         <td>${f.complementos || '—'}</td>
         <td>${f.version_actual ? `<button type="button" class="inc-sec" data-rev-hoja="${esc(f.hoja_id)}">Revisar</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`
         : '<p class="hint">Ningún coordinador tiene personal con relación laboral en esta empresa durante el periodo.</p>'}
+      <div id="inc-r-cred">${cred && cred.error ? `<div class="inc-msg err" style="display:block">Descuentos de créditos: ${esc(limpiarError(cred.error))}</div>` : ''}</div>
       <div class="inc-msg" id="inc-r-msg"></div>
       ${p.procesado_en ? `<p class="inc-nota">Procesado el ${esc(fechaHora(p.procesado_en))}. Lo que llegue después entra como complemento.</p>`
         : `<div class="inc-panel" id="inc-r-proc-panel"><b>Marcar el periodo como procesado</b>
-        <p class="hint">Solo se procesa una prenómina completa: todas las hojas enviadas, todos los importes aceptados o modificados y las firmas requeridas.</p>
+        <p class="hint">Solo se procesa una prenómina completa: todas las hojas enviadas, todos los importes y descuentos aceptados o modificados y las firmas requeridas.</p>
         ${faltan.length ? `<div class="inc-msg err" style="display:block" id="inc-r-faltantes"><b>Falta${faltan.length === 1 ? '' : 'n'} ${faltan.length} pendiente${faltan.length === 1 ? '' : 's'} para procesar:</b><ul style="margin:6px 0 0 18px;padding:0">${faltan.map(f => `<li data-tipo="${esc(f.tipo)}">${esc(f.detalle)}</li>`).join('')}</ul></div>`
           : '<div class="inc-msg ok" style="display:block" id="inc-r-faltantes">Todo está completo: hojas enviadas, importes decididos y firmas registradas.</div>'}
         <div class="inc-acciones"><button type="button" class="primary" id="inc-r-proc" ${faltan.length ? 'disabled' : ''}>Marcar como procesado</button></div></div>`}
     </div>`;
     $('inc-r-volver').addEventListener('click', () => { S.rev = {}; vistaRevision(); });
+    if (cred && cred.data && window.credPanelPeriodo) window.credPanelPeriodo($('inc-r-cred'), Object.assign({ periodo_id: p.id }, cred.data), revPeriodo);
     cont.querySelectorAll('[data-rev-hoja]').forEach(b => b.addEventListener('click', () => { S.rev = { periodoId: p.id, hojaId: b.dataset.revHoja }; vistaRevision(); }));
     const bp = $('inc-r-proc');
     if (bp) bp.addEventListener('click', async () => {

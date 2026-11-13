@@ -1,0 +1,59 @@
+OK    R1 admin: ve «Revisión»  [Revisión, Periodos, Configuración]
+OK    R1 nomina: ve «Revisión»  [Revisión, Periodos, Configuración]
+OK    R1 coord: no ve «Revisión»  [Mis hojas de incidencias
+
+Captura lo que no fue un día norma]
+OK    R1 consulta: no ve «Revisión»  [sin pestaña Incidencias]
+OK    R2 Lista de periodos con «Revisar»
+OK    R2 Tablero: un renglón por coordinador (uno enviado v1 y otro sin abrir)  [EDER LOPEZ RUIZ 2 Sin abrir — — | JOSE MANUEL LOPEZ PALMA 6 Enviada v1 · 13/11/2026, 02:14 p.m]
+OK    R2 Muestra quién falta por enviar  [Falta por enviar: EDER LOPEZ RUIZ]
+OK    R2 Personas por coordinador según la relación laboral (6 y 2)  [['02=2', '01=6']]
+OK    R3 Captura enviada en solo lectura (sin campos editables)  [campos=0]
+OK    R4 Una persona con dos esquemas: dos líneas (IMSS bruto $333.33 y EFECTIVO neto $50.00)  [HE Horas extra 2 horas $83.33 sueldo de IMSS ÷ 8 h 2 h × $83.33 × 2 Br | HE Horas extra 2 horas $12.50 sueldo de EFECTIVO ÷ 8 h 2 h × $12.50 × ]
+OK    R5 Totales por separado: Bruto $1,283.33 (incluye el turno por tarifa ligado a IMSS, B1.1) y Neto $50.00  [Bruto: $1,283.33 / Neto: $50.00]
+OK    R5 Ningún total suma bruto con neto ($633.33 no aparece)
+OK    R5 Cada línea dice si es Bruto o Neto
+OK    R6 Esquema sin relación: línea «Sin sueldo» con motivo  [HE Horas extra 2 horas — 2 h × valor por hora × 2 — Sin esquema enlazado sin registro patronal — Sin sueldo Sin esquema ]
+OK    R6 Aviso visible en los totales  [1 línea sin sueldo]
+OK    R6 La línea sin sueldo se resalta
+OK    R4 Concepto por tarifa: una línea ligada a su único esquema, por decidir (B1.1, B1.1a)  [T Turno nocturno 1 turnos — 1 × $700.00 Bruto IMSS sin registro patronal · único esquema v]
+OK    R7 Modificar un importe (250 → 300)  [HE Horas extra 2 horas $62.50 sueldo de IMSS ÷ 8 h 2 h × $62 final=300]
+OK    R7 Aceptar un importe sugerido
+OK    R7 Sueldo manual: la línea pasa a «Sueldo manual» con importe (2 h × 400/8 × 2)  [HE Horas extra 2 horas $50.00 sueldo manual 2 h × $50.00 × 2 Sueldo manual Sueldo manual sin registr]
+OK    R7 El recálculo no pisó el importe modificado por Nómina  [modificado final=300]
+OK    R7 El recálculo conserva lo aceptado
+OK    R8 Aceptar todos los sugeridos pendientes  [Aceptar los 3 sugeridos pendientes → 3 importes aceptados.]
+OK    R8 «Aceptar todos» no toca lo modificado
+OK    R9 Nómina (responsable de Nómina) ve solo su botón de firma  [Firmar como Nómina
+RH: sin firma]
+OK    R9 Firma de Nómina registrada sobre la versión vigente  [✓ Nómina: nomina@demo.invalid · 13/11/2026, 02:14 p.m.
+RH: sin firma]
+OK    R9 El responsable de RH ve solo el botón de RH
+OK    R9 Ambas firmas visibles  [✓ Nómina: nomina@demo.invalid · 13/11/2026, 02:14 p.m.
+✓ RH: rh@demo.invalid · 13/11/2026, 02:14 p.m.]
+OK    R9 El Administrador no designado no puede firmar  [✓ Nómina: nomina@demo.invalid · 13/11/2026, 02:14 p.m.
+✓ RH: rh@demo.invalid · 13/11/2026, 02:14 p.m.]
+OK    R10 Devolver sin motivo: no se permite  [Escribe el motivo de la devolución.]
+OK    R10 Hoja devuelta: estado «Devuelta» y sin decisiones de importe  [Devuelta]
+OK    R10 El tablero muestra la devolución y su motivo  [JOSE MANUEL LOPEZ PALMA
+Devuelta: Falta la hora extra de CESAR del jueves
+	6	Devuelta v1 · 13/11/202]
+OK    R10 Con una hoja devuelta no se puede procesar (lo dice y el botón está deshabilitado)  [Faltan 2 pendientes para procesar:
+EDER LOPEZ RUIZ: no ha abierto su hoja
+JOSE MANUEL LOPEZ PALMA: su hoja está devuelta y no la ha reenviad]
+OK    R11 Reenvío: versión 2 y firmas pendientes de nuevo  [JOSE MANUEL LOPEZ PALMA	6	Enviada v2 · 13/11/2026, 02:14 p.m.	— Nómina · — RH	—	Revisar]
+OK    R11 La versión 2 se decide de nuevo (las decisiones eran de la versión 1)
+OK    R11 La versión 2 trae su propio cálculo (HE de CESAR por esquema + turno por tarifa ligado a IMSS, B1.1)  [HE Horas extra 1 horas $50.00 sueldo de IMSS ÷ 8 h | T Turno nocturno 1 turnos — 1 × $700.00 Bruto IMSS]
+OK    R11 Antes de procesar dice exactamente qué falta (hoja sin abrir, importes, firmas) y no deja procesar  [Faltan 9 pendientes para procesar:
+EDER LOPEZ RUIZ: no ha abierto su hoja
+ADELA PALACIOS GALVAN · Horas extra: importe por decidir — hoja de JOSE MANUEL LOPEZ P]
+OK    R11 No existe confirmación ni otro botón que permita saltarse la regla  [['Marcar como procesado (deshabilitado)']]
+OK    R11 Con todo completo, el botón se habilita  [Todo está completo: hojas enviadas, importes decididos y firmas registradas.]
+OK    R11 Periodo marcado como procesado  [Periodo marcado como procesado.]
+OK    R11 Hoja procesada: solo lectura
+OK    R12 Celular (390 px): la página no se desborda; las tablas se desplazan dentro de su recuadro  [390]
+OK    R12 Nómina: sin errores de JavaScript  [[]]
+OK    R12 El coordinador nunca pide importes, sueldos ni el tablero  [[]]
+OK    R12 Coordinador: sin errores de JavaScript  [[]]
+
+RESULTADO: 45 de 45 OK

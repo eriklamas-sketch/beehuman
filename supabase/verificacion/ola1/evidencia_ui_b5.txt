@@ -1,0 +1,33 @@
+OK    F1 La ficha ya no muestra el campo anterior «No. FONACOT»; muestra el módulo de créditos
+OK    F1 Sin créditos: lo dice y explica crédito ≠ descuento
+OK    F2 FONACOT: el formulario indica capturar la retención por periodo, sin prorrateo
+OK    F2 Sin retención por periodo: mensaje claro de la base  [captura el descuento por periodo y su periodicidad (retención de la cédula, sin prorratear).]
+OK    F2 FONACOT registrado: activo, $300 por periodo, ligado a la relación (empresa)  [FONACOT · FON-555 CONSTRUCTORA ALTIPLANO DEMO Activo 01/11/2026 – indefinida $300.00 Semanal — Editar SuspenderTerminar ]
+OK    F3 Editar sin motivo: se rechaza  [Escribe el motivo del cambio: queda en la historia.]
+OK    F3 La historia muestra el alta y el cambio con su motivo
+OK    F3 Suspender sin motivo: se rechaza
+OK    F3 Suspendido con motivo
+OK    F2 INFONAVIT: informativo para NOI, sin importe por periodo  [INFONAVIT · 1234567890 CONSTRUCTORA ALTIPLANO DEMO Activo 01/11/2026 – indefinida Informativo para NOI: Cuota ]
+OK    Administrador: sin errores de JavaScript  [[]]
+OK    Alta: sin el campo FONACOT; aviso de dónde se registran los créditos
+OK    P1 Préstamo ($1,500, saldo $10,000) y FONACOT ($350) por decidir  [BENITO ZAVALA GALINDO BEH-000012 Préstamo · PR-77 $10,000.00 $1,500.00 | CESAR DELGADILLO HINOJOSA BEH-000013 FONACOT · FON-555 — $350.00 Por d]
+OK    P1 INFONAVIT aparece como informativo (datos para NOI), sin línea de descuento
+OK    P1 Faltantes incluyen los descuentos por decidir; procesar bloqueado
+OK    P2 Modificar sin motivo: se rechaza  [Escribe el motivo del ajuste: queda en la bitácora.]
+OK    P2 Con motivo: modificado y visible en la bitácora  [BENITO ZAVALA GALINDO BEH-000012 Préstamo · PR-77 $10,000.00 $1,500.00 Modificado 1 ajuste: $1,500.00 → $1,200.00 (Acuerdo con el trabajador]
+OK    P2 «Aceptar los N»: ya no quedan descuentos en los faltantes  [['modificado', 'aceptado']]
+OK    P2 Decidir no toca el saldo (baja solo al procesar)
+OK    Nómina: sin errores de JavaScript  [[]]
+OK    Celular: el panel no desborda la página  [scrollWidth=390]
+OK    S Periodo siguiente: la línea muestra el saldo disponible ($10,000 − $1,200 comprometidos en el anterior)  [BENITO ZAVALA GALINDO BEH-000012 Préstamo · PR-77 $10,000.00 Disponible $8,800.00: $1,200.00 comprometido en otros periodos abiertos $1,500.00 Por decidir Acept]
+OK    S Modificar por encima del disponible: mensaje claro y no se guarda  [el descuento no puede exceder el saldo disponible del crédito ($8,800.00: saldo $10,000.00 menos $1,200.00 comprometidos en otros periodos abiertos).]
+OK    S … la línea sigue por decidir
+OK    Nómina (periodo siguiente): sin errores de JavaScript  [[]]
+OK    E1 coord: no ve el módulo de créditos
+OK    E1 coord: sin errores de JavaScript  [[]]
+OK    E1 consulta: no ve el módulo de créditos
+OK    E1 consulta: sin errores de JavaScript  [[]]
+OK    E1 coord: nunca pidió datos de créditos  [[]]
+OK    E1 consulta: nunca pidió datos de créditos  [[]]
+
+RESULTADO: 31 de 31 OK

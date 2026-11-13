@@ -100,12 +100,13 @@ with sync_playwright() as p:
     abrir_ficha(pg, 'ADELA PALACIOS GALVAN')
     for i, s in enumerate(SECCIONES):
         seccion(pg, s); pg.screenshot(path=f'{OUT}/1{i}-ficha-{s}.png', full_page=True)
-    seccion(pg, 'prestaciones'); pg.fill('#d-fonacot', 'FON-12345')
+    # B5: «No. FONACOT» ya no se edita en la ficha (módulo de créditos); se usa otro campo de la misma sección
+    seccion(pg, 'prestaciones'); pg.fill('#d-restricciones', 'SIN RESTRICCIONES')
     seccion(pg, 'contacto'); pg.fill('#d-emerg-telefono', '5512345678')
     seccion(pg, 'personal')
-    resultados['valor_tras_navegar'] = [pg.input_value('#d-fonacot'), pg.input_value('#d-emerg-telefono')]
+    resultados['valor_tras_navegar'] = [pg.input_value('#d-restricciones'), pg.input_value('#d-emerg-telefono')]
     pg.click('#btn-guardar-detalle'); pg.wait_for_timeout(1800)
-    resultados['guardado_bd'] = sql("select no_fonacot||'|'||contacto_emergencia_telefono from personal where id='0a100000-0000-4000-8000-000000000011'")
+    resultados['guardado_bd'] = sql("select restricciones_salud||'|'||contacto_emergencia_telefono from personal where id='0a100000-0000-4000-8000-000000000011'")
     resultados['movimientos_bd'] = sql("select string_agg(campo, ',' order by campo) from movimientos where personal_id='0a100000-0000-4000-8000-000000000011'")
     resultados['toast_guardado'] = pg.inner_text('#toast-detalle')
 

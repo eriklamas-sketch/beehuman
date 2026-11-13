@@ -100,7 +100,7 @@ OK    Consulta ve cantidades de su alcance (sin importes)
 == Procesado y complementos ==
 OK    B1: procesar con importes por decidir y sin firmas: rechazado  [ERROR:  BeeHuman: no se puede procesar; faltan 10 pendiente(s): PERSONA P1 · Descuento operativo: importe por decidir — hoja de PERSONA CA; ]
 OK    B1: con todo decidido y firmado ya no falta nada
-OK    D7: marcar procesado dos veces no duplica el procesamiento  [Ya estaba procesado el 2026-11-12 11:54; no se reg]
+OK    D7: marcar procesado dos veces no duplica el procesamiento  [Ya estaba procesado el 2026-11-12 16:39; no se reg]
 OK    Periodo procesado: no se abre otra hoja normal  [ERROR:  BeeHuman: el periodo ya fue procesado; usa un complemento.]
 OK    La hoja normal queda procesada
 OK    D6: complemento posterior al procesamiento identificado

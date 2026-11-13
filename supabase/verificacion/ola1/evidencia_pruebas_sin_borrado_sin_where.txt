@@ -1,0 +1,5 @@
+OK    Se revisaron las funciones de public  [94 funciones]
+OK    Ninguna función tiene DELETE o UPDATE sin WHERE (safeupdate de Supabase)
+OK    Control: el detector sí encuentra un DELETE sin WHERE en una función de muestra  [_bh_muestra_sin_where()	CREATE OR REPLACE FUNCTION public._bh_muestra_sin_where(]
+
+RESULTADO: 3 de 3 verificaciones OK

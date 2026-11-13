@@ -13,10 +13,10 @@ EDER LOPEZ RUIZ: no ha abierto su hoja
 ADELA PALACIOS GALVAN · Horas extra tarifa: esquema de pago por asignar — hoja de JOSE]
 OK    C3 Nómina asigna EFECTIVO: neto, por decidir, «asignado por Nómina»  [HET Horas extra tarifa 2 horas $50.00 tarifa 2 h × $50.00 × 2 Neto EFECTIVO sin registro patronal · asignado p]
 OK    C3 La asignación aparece en la bitácora  [Fecha	Persona	Concepto	Cambio	Motivo	Quién
-12/11/2026, 11:54 a.m.	ADELA PALACIOS GALVAN	HET	Esquema: por asignar → EFECT]
+12/11/2026, 04:39 p.m.	ADELA PALACIOS GALVAN	HET	Esquema: por asignar → EFECT]
 OK    C4 Modificar sin motivo no se permite (la línea sigue por decidir)  [Escribe el motivo del ajuste: queda en la bitácora.]
 OK    C5 Sugerido $1,650.00 intacto, final 1,620 y «2 ajustes»  [HET Horas extra tarifa 14 horas $50.00 tarifa 9 h × $50.00 × 2 + 5 h × $50.00 × 3 Bruto IMSS sin registro patronal · úni]
-OK    C5 Bitácora con los dos ajustes: anterior, nuevo, motivo y quién  [12/11/2026, 11:54 a.m. BENITO ZAVALA GALINDO HET $1,600.00 → $1,620.00 Ajuste acordado nomina@demo.invalid | 12/11/2026, 11:54 a.m. BENITO ZAVALA GALINDO HET $1,650.00 → $1,600.00 Se pagan 13 h nomina@demo.invalid]
+OK    C5 Bitácora con los dos ajustes: anterior, nuevo, motivo y quién  [12/11/2026, 04:39 p.m. BENITO ZAVALA GALINDO HET $1,600.00 → $1,620.00 Ajuste acordado nomina@demo.invalid | 12/11/2026, 04:39 p.m. BENITO ZAVALA GALINDO HET $1,650.00 → $1,600.00 Se pagan 13 h nomina@demo.invalid]
 OK    Nómina (revisión): sin errores de JavaScript  [[]]
 OK    E2 Nómina ve la configuración en solo lectura (sin guardar ni editar)
 OK    Celular: la revisión no desborda la página (la tabla se desplaza dentro de su caja)  [scrollWidth=390]

@@ -5,7 +5,7 @@ OK    R1 coord: no ve «Revisión»  [Mis hojas de incidencias
 Captura lo que no fue un día norma]
 OK    R1 consulta: no ve «Revisión»  [sin pestaña Incidencias]
 OK    R2 Lista de periodos con «Revisar»
-OK    R2 Tablero: un renglón por coordinador (uno enviado v1 y otro sin abrir)  [EDER LOPEZ RUIZ 2 Sin abrir — — | JOSE MANUEL LOPEZ PALMA 6 Enviada v1 · 12/11/2026, 11:54 a.m]
+OK    R2 Tablero: un renglón por coordinador (uno enviado v1 y otro sin abrir)  [EDER LOPEZ RUIZ 2 Sin abrir — — | JOSE MANUEL LOPEZ PALMA 6 Enviada v1 · 12/11/2026, 04:39 p.m]
 OK    R2 Muestra quién falta por enviar  [Falta por enviar: EDER LOPEZ RUIZ]
 OK    R2 Personas por coordinador según la relación laboral (6 y 2)  [['02=2', '01=6']]
 OK    R3 Captura enviada en solo lectura (sin campos editables)  [campos=0]
@@ -26,13 +26,13 @@ OK    R8 Aceptar todos los sugeridos pendientes  [Aceptar los 3 sugeridos pendie
 OK    R8 «Aceptar todos» no toca lo modificado
 OK    R9 Nómina (responsable de Nómina) ve solo su botón de firma  [Firmar como Nómina
 RH: sin firma]
-OK    R9 Firma de Nómina registrada sobre la versión vigente  [✓ Nómina: nomina@demo.invalid · 12/11/2026, 11:55 a.m.
+OK    R9 Firma de Nómina registrada sobre la versión vigente  [✓ Nómina: nomina@demo.invalid · 12/11/2026, 04:40 p.m.
 RH: sin firma]
 OK    R9 El responsable de RH ve solo el botón de RH
-OK    R9 Ambas firmas visibles  [✓ Nómina: nomina@demo.invalid · 12/11/2026, 11:55 a.m.
-✓ RH: rh@demo.invalid · 12/11/2026, 11:55 a.m.]
-OK    R9 El Administrador no designado no puede firmar  [✓ Nómina: nomina@demo.invalid · 12/11/2026, 11:55 a.m.
-✓ RH: rh@demo.invalid · 12/11/2026, 11:55 a.m.]
+OK    R9 Ambas firmas visibles  [✓ Nómina: nomina@demo.invalid · 12/11/2026, 04:40 p.m.
+✓ RH: rh@demo.invalid · 12/11/2026, 04:40 p.m.]
+OK    R9 El Administrador no designado no puede firmar  [✓ Nómina: nomina@demo.invalid · 12/11/2026, 04:40 p.m.
+✓ RH: rh@demo.invalid · 12/11/2026, 04:40 p.m.]
 OK    R10 Devolver sin motivo: no se permite  [Escribe el motivo de la devolución.]
 OK    R10 Hoja devuelta: estado «Devuelta» y sin decisiones de importe  [Devuelta]
 OK    R10 El tablero muestra la devolución y su motivo  [JOSE MANUEL LOPEZ PALMA
@@ -41,7 +41,7 @@ Devuelta: Falta la hora extra de CESAR del jueves
 OK    R10 Con una hoja devuelta no se puede procesar (lo dice y el botón está deshabilitado)  [Faltan 2 pendientes para procesar:
 EDER LOPEZ RUIZ: no ha abierto su hoja
 JOSE MANUEL LOPEZ PALMA: su hoja está devuelta y no la ha reenviad]
-OK    R11 Reenvío: versión 2 y firmas pendientes de nuevo  [JOSE MANUEL LOPEZ PALMA	6	Enviada v2 · 12/11/2026, 11:55 a.m.	— Nómina · — RH	—	Revisar]
+OK    R11 Reenvío: versión 2 y firmas pendientes de nuevo  [JOSE MANUEL LOPEZ PALMA	6	Enviada v2 · 12/11/2026, 04:40 p.m.	— Nómina · — RH	—	Revisar]
 OK    R11 La versión 2 se decide de nuevo (las decisiones eran de la versión 1)
 OK    R11 La versión 2 trae su propio cálculo (HE de CESAR por esquema + turno por tarifa ligado a IMSS, B1.1)  [HE Horas extra 1 horas $50.00 sueldo de IMSS ÷ 8 h | T Turno nocturno 1 turnos — 1 × $700.00 Bruto IMSS]
 OK    R11 Antes de procesar dice exactamente qué falta (hoja sin abrir, importes, firmas) y no deja procesar  [Faltan 9 pendientes para procesar:

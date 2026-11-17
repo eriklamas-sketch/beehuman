@@ -125,11 +125,17 @@
   const dinero = n => Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
   const num = v => { const n = Number(String(v).replace(',', '.')); return isFinite(n) ? n : 0; };
   const limpiarError = e => String((e && (e.message || e.details)) || e || 'Error desconocido').replace(/^BeeHuman:\s*/, '');
-  const nombreEmpresa = id => { const e = (typeof empresas !== 'undefined' ? empresas : []).find(x => x.id === id); return e ? e.nombre : ''; };
+  // El coordinador no lee la tabla empresas: sus nombres llegan de inc_empresas_visibles (solo empresas de sus periodos).
+  const nombreEmpresa = id => { const e = (typeof empresas !== 'undefined' ? empresas : []).find(x => x.id === id); return e ? e.nombre : (S.empVisibles.get(id) || ''); };
+  async function cargarEmpresasVisibles() {
+    if (rolActual !== 'coordinador') return;
+    const { data, error } = await sb.rpc('inc_empresas_visibles');
+    if (!error) S.empVisibles = new Map((data || []).map(e => [e.id, e.nombre]));
+  }
   const conEmpresa = id => { const n = nombreEmpresa(id); return n ? n + ' · ' : ''; };
   function msg(id, tipo, texto) { const el = $(id); if (!el) return; el.className = 'inc-msg ' + tipo; el.textContent = texto; }
 
-  const S = { vista: null, usuarioId: null, tenantId: null, cfg: { empresaId: null }, hoja: null, obsGral: {}, rev: {} };
+  const S = { vista: null, usuarioId: null, tenantId: null, cfg: { empresaId: null }, hoja: null, obsGral: {}, rev: {}, empVisibles: new Map() };
   // La observación general se guarda en la base al enviar; mientras tanto se conserva como borrador local.
   const obsGralLeer = id => { if (S.obsGral[id] != null) return S.obsGral[id]; try { return localStorage.getItem('bh-inc-obs-' + id); } catch (e) { return null; } };
   const obsGralGuardar = (id, v) => { S.obsGral[id] = v; try { v ? localStorage.setItem('bh-inc-obs-' + id, v) : localStorage.removeItem('bh-inc-obs-' + id); } catch (e) { /* sin almacenamiento */ } };
@@ -414,24 +420,44 @@
   // =====================================================================
   // Coordinador: mis hojas
   // =====================================================================
+  // Ids de las hojas candidatas que no tienen personas asignadas ni capturas (celdas, cantidades u observaciones).
+  async function hojasVaciasSinPersonas(cands) {
+    if (!cands.length) return new Set();
+    const ids = cands.map(x => x.id);
+    const [ce, ca, ob, ...gente] = await Promise.all([
+      sb.from('inc_celdas').select('hoja_id').in('hoja_id', ids),
+      sb.from('inc_cantidades').select('hoja_id').in('hoja_id', ids),
+      sb.from('inc_observaciones').select('hoja_id').in('hoja_id', ids),
+      ...ids.map(id => sb.rpc('inc_personas_hoja', { p_hoja: id }))
+    ]);
+    if (ce.error || ca.error || ob.error || gente.some(g => g.error)) return new Set();
+    const conCaptura = new Set([...(ce.data || []), ...(ca.data || []), ...(ob.data || [])].map(x => x.hoja_id));
+    return new Set(ids.filter((id, i) => !conCaptura.has(id) && !(gente[i].data || []).length));
+  }
+
   async function vistaMisHojas() {
     const cont = $('inc-vista');
     cont.innerHTML = `<div class="card"><h2>Mis hojas de incidencias</h2>
       <p class="hint">Captura lo que no fue un día normal de tu gente y envía la hoja al cerrar el periodo. Al enviarla queda cerrada para ti; si hay un error, Nómina te la devuelve o puedes mandar un complemento.</p>
       <div id="inc-h-lista"><p class="hint">Cargando…</p></div><div class="inc-msg" id="inc-h-msg"></div></div>`;
     if (!rolPersonalId) { $('inc-h-lista').innerHTML = '<p class="hint">Tu usuario no está ligado a una ficha de persona. Pide al administrador que lo vincule.</p>'; return; }
+    // La base ya filtra: solo periodos donde el coordinador tiene personal o una hoja suya.
     const [per, hj] = await Promise.all([
       sb.from('inc_periodos').select('id, empresa_id, inicio, fin, procesado_en').order('inicio', { ascending: false }).limit(30),
-      sb.from('inc_hojas').select('id, periodo_id, tipo, estado, version_actual, hoja_raiz_id, creado_en').order('creado_en')
+      sb.from('inc_hojas').select('id, periodo_id, tipo, estado, version_actual, hoja_raiz_id, observacion_general, creado_en').order('creado_en'),
+      cargarEmpresasVisibles()
     ]);
     if (per.error || hj.error) { $('inc-h-lista').innerHTML = `<div class="inc-msg err" style="display:block">${esc(limpiarError(per.error || hj.error))}</div>`; return; }
     if (!per.data.length) { $('inc-h-lista').innerHTML = '<p class="hint">Nómina todavía no abre ningún periodo.</p>'; return; }
     const hojas = hj.data || [];
+    // Hojas vacías sin personas (misma regla que la hoja y la base): se ofrecen como «Ver hoja», no «Capturar».
+    const vacias = await hojasVaciasSinPersonas(hojas.filter(x => x.tipo === 'normal' && x.estado === 'borrador' && !x.version_actual
+      && !String(x.observacion_general || '').trim() && !String(obsGralLeer(x.id) || '').trim()));
     $('inc-h-lista').innerHTML = `<table class="inc-lista"><thead><tr><th>Periodo</th><th>Empresa</th><th>Mi hoja</th><th></th></tr></thead><tbody>${per.data.map(p => {
       const h = hojas.find(x => x.periodo_id === p.id && x.tipo === 'normal');
       const comps = hojas.filter(x => x.periodo_id === p.id && x.tipo === 'complemento');
       const estado = h ? `<span class="inc-estado ${h.estado}">${ESTADOS[h.estado]}</span>` : (p.procesado_en ? '<span class="inc-estado procesada">Procesado</span>' : '<span class="inc-estado borrador">Sin abrir</span>');
-      const accion = h ? `<button type="button" class="inc-sec" data-inc-hoja="${esc(h.id)}">${h.estado === 'borrador' || h.estado === 'devuelta' ? 'Capturar' : 'Ver'}</button>`
+      const accion = h ? `<button type="button" class="inc-sec" data-inc-hoja="${esc(h.id)}">${vacias.has(h.id) ? 'Ver hoja' : h.estado === 'borrador' || h.estado === 'devuelta' ? 'Capturar' : 'Ver'}</button>`
         : (p.procesado_en ? '' : `<button type="button" class="primary" style="margin:0" data-inc-abrir="${esc(p.id)}">Abrir hoja</button>`);
       return `<tr><td>${esc(fechaLarga(p.inicio))} – ${esc(fechaLarga(p.fin))}</td><td>${esc(nombreEmpresa(p.empresa_id) || '—')}</td><td>${estado}${comps.length ? ` <span class="inc-nota">+ ${comps.length} complemento${comps.length > 1 ? 's' : ''}</span>` : ''}</td><td>${accion}
         ${comps.map((c, i) => `<button type="button" class="inc-sec" data-inc-hoja="${esc(c.id)}">Complemento ${i + 1}</button>`).join(' ')}</td></tr>`;
@@ -464,6 +490,7 @@
     ]);
     const err = pe.error || gente.error || ce.error || ca.error || ob.error || co.error;
     if (err) { cont.innerHTML = `<div class="card"><div class="inc-msg err" style="display:block">${esc(limpiarError(err))}</div></div>`; return; }
+    if (!S.empVisibles.has(pe.data.empresa_id)) await cargarEmpresasVisibles();
     const periodo = pe.data;
     const conceptos = (co.data || []).filter(c => c.empresa_id === periodo.empresa_id && (c.activo || (ca.data || []).some(q => q.concepto_id === c.id)));
     const ids = conceptos.map(c => c.id);
@@ -517,8 +544,14 @@
     return out;
   }
 
+  // D2: hoja normal nunca enviada, sin personas asignadas y sin ninguna captura u observación.
+  // No se envía y no bloquea el procesamiento (la base aplica la misma regla).
+  const hojaVaciaSinPersonas = H => H.h.tipo === 'normal' && !H.h.version_actual && !H.personas.length
+    && !H.celdas.size && !H.cant.size && !H.obs.size && !String(H.h.observacion_general || '').trim();
+
   function pintarHoja() {
-    const H = S.hoja, ed = editable(), dis = ed ? '' : 'disabled';
+    const H = S.hoja, vacia = hojaVaciaSinPersonas(S.hoja), ed = editable() && !vacia, dis = ed ? '' : 'disabled';
+    const empresaTxt = nombreEmpresa(H.periodo.empresa_id) || 'esta empresa';
     const cont = $('inc-vista');
     const dev = H.h.estado === 'devuelta' ? H.eventos.find(e => e.tipo === 'devolucion') : null;
     const vistas = [['asistencia', 'Asistencia'], ...H.conceptos.map(c => [c.id, c.abreviatura + ' · ' + c.nombre]), ...(H.proyectos.length ? [['proyecto', 'Proyecto por día']] : [])];
@@ -557,7 +590,8 @@
         <div><span class="inc-estado ${H.h.estado}">${ESTADOS[H.h.estado]}</span>${H.h.version_actual ? ` <span class="inc-nota">Versión ${H.h.version_actual}</span>` : ''}</div></div>
       ${dev ? `<div class="inc-msg err" style="display:block"><b>Devuelta por ${esc(dev.nombre || 'Nómina')}:</b> ${esc(dev.motivo)}</div>` : ''}
       ${H.h.tipo === 'complemento' ? '<div class="inc-msg info" style="display:block">Registra solo lo que faltó en la hoja original. Lo que ya se envió aparece como dato fijo y no se puede repetir.</div>' : ''}
-      ${!H.personas.length ? '<div class="inc-msg info" style="display:block">No tienes personas asignadas en este periodo y esta empresa.</div>' : ''}
+      ${vacia ? `<div class="inc-msg info" style="display:block" id="inc-sin-personas">No tienes personas asignadas en <b>${esc(empresaTxt)}</b> durante este periodo. Esta hoja no se envía y no bloquea el procesamiento del periodo.</div>`
+        : !H.personas.length ? `<div class="inc-msg info" style="display:block" id="inc-sin-personas">No tienes personas asignadas en <b>${esc(empresaTxt)}</b> durante este periodo.</div>` : ''}
       ${!H.proyectos.length && ed ? '<p class="inc-nota" id="inc-nota-proyecto">Proyecto por día: pendiente. Tu usuario no tiene acceso al catálogo de proyectos; habilitarlo requiere una función nueva en la base. Mientras tanto, anótalo en la observación de la persona.</p>' : ''}
       <div class="inc-seg" role="tablist">${vistas.map(([k, n]) => `<button type="button" data-inc-v="${esc(k)}" class="${k === H.vista ? 'activo' : ''}">${esc(n)}</button>`).join('')}</div>
       <div class="inc-leyenda">${H.vista === 'asistencia' ? '<span><b>·</b> Asistió</span><span><b>F</b> Falta</span><span><b>I</b> Incapacidad</span><span><b>D</b> Descanso</span><span><b>V</b> Vacaciones</span><span><b>P</b> Permiso</span><span><b>—</b> Sin asignación contigo ese día</span>'
@@ -567,13 +601,13 @@
         ${H.conceptos.map(c => `<th title="${esc(c.nombre)}">${esc(c.abreviatura)}</th>`).join('')}<th>Avisos</th>${H.vista === 'asistencia' ? '<th>Observación</th>' : cDesc ? '<th>Motivo</th><th>Conformidad</th>' : ''}</tr></thead>
         <tbody>${H.personas.map(p => { return `<tr data-pid="${esc(p.id)}"><td class="inc-col-persona"><b>${esc(p.nombre)}</b><small>${esc(p.empleado || '')}</small></td>${H.dias.map(f => celda(p, f)).join('')}${totales(p)}<td data-av="${esc(p.id)}">${avisosHtml(p)}</td>${extra(p)}</tr>`; }).join('')}
         ${conc ? `<tr class="inc-sum"><td class="inc-col-persona">Total del día</td>${H.dias.map(sumaCol).join('')}${H.conceptos.map(() => '<td></td>').join('')}<td></td>${cDesc ? '<td></td><td></td>' : ''}</tr>` : ''}</tbody></table></div>
-      <div style="margin-top:14px"><label for="inc-obs-gral" class="inc-nota">Observación general de la hoja (por ejemplo, por qué subieron las horas extra)</label>
-        <textarea id="inc-obs-gral" ${dis}>${esc(H.h.observacion_general || '')}</textarea></div>
+      ${vacia ? '' : `<div style="margin-top:14px"><label for="inc-obs-gral" class="inc-nota">Observación general de la hoja (por ejemplo, por qué subieron las horas extra)</label>
+        <textarea id="inc-obs-gral" ${dis}>${esc(H.h.observacion_general || '')}</textarea></div>`}
       <div class="inc-acciones">
         ${ed ? `<button type="button" class="inc-sec" id="inc-guardar">Guardar borrador</button>
           <button type="button" class="primary" style="margin:0" id="inc-enviar">${H.confirmarEnvio ? 'Confirmar: enviar y cerrar' : 'Enviar y cerrar'}</button>
           ${H.confirmarEnvio ? '<span class="inc-nota">Al enviar ya no podrás editarla; solo Nómina puede devolvértela.</span>' : ''}` : ''}
-        ${!ed && H.h.tipo === 'normal' ? '<button type="button" class="inc-sec" id="inc-complemento">Agregar complemento</button>' : ''}
+        ${!ed && !vacia && H.h.tipo === 'normal' ? '<button type="button" class="inc-sec" id="inc-complemento">Agregar complemento</button>' : ''}
         <span class="inc-nota" id="inc-sucio">${H.sucio ? 'Cambios sin guardar' : ''}</span>
       </div>
       <div class="inc-msg" id="inc-msg"></div>
@@ -744,8 +778,13 @@
     if (pe.error || tb.error) { cont.innerHTML = `<div class="card">${errHtml(pe.error || tb.error)}</div>`; return; }
     const p = pe.data, filas = tb.data || [];
     const faltan = p.procesado_en ? [] : (fl.error ? [{ tipo: 'error', detalle: limpiarError(fl.error) }] : (fl.data || []));
+    // D2: una hoja en borrador sin personas que la base no cuenta como faltante
+    // (sin capturas ni observaciones) se muestra, pero no bloquea.
+    const noBloquea = f => !p.procesado_en && !fl.error && f.estado === 'borrador' && !f.version_actual && Number(f.personas) === 0
+      && !faltan.some(x => x.tipo === 'hoja' && String(x.detalle).startsWith(f.coordinador + ':'));
     const env = filas.filter(f => ['enviada', 'procesada'].includes(f.estado)).length;
-    const sinEnviar = filas.filter(f => ['sin_abrir', 'borrador'].includes(f.estado));
+    const sinEnviar = filas.filter(f => ['sin_abrir', 'borrador'].includes(f.estado) && !noBloquea(f));
+    const noRequieren = filas.filter(noBloquea).length, requeridas = filas.length - noRequieren;
     const dev = filas.filter(f => f.estado === 'devuelta');
     cont.innerHTML = `<div class="card">
       <button type="button" class="inc-volver" id="inc-r-volver">← Periodos</button>
@@ -753,14 +792,15 @@
         <p class="hint">Una fila por coordinador con personal de esta empresa (relación laboral vigente) en el periodo.</p></div>
         <div>${p.procesado_en ? '<span class="inc-estado procesada">Procesado</span>' : '<span class="inc-estado borrador">Abierto</span>'}</div></div>
       <div class="inc-chips" id="inc-r-resumen">
-        <span class="inc-chip ${filas.length && env === filas.length ? 'ok' : ''}">${env} de ${plural(filas.length, 'hoja')} enviadas</span>
+        ${requeridas ? `<span class="inc-chip ${env === requeridas ? 'ok' : ''}">${env} de ${plural(requeridas, 'hoja')} enviadas</span>` : ''}
+        ${noRequieren ? `<span class="inc-chip" id="inc-r-no-requieren">${plural(noRequieren, 'hoja')} sin personal: no requiere${noRequieren === 1 ? '' : 'n'} envío</span>` : ''}
         ${sinEnviar.length ? `<span class="inc-chip alerta" id="inc-r-faltan">Falta${sinEnviar.length === 1 ? '' : 'n'} por enviar: ${esc(sinEnviar.map(f => f.coordinador).join(', '))}</span>` : ''}
         ${dev.length ? `<span class="inc-chip alerta">${plural(dev.length, 'devuelta')} sin reenviar</span>` : ''}
       </div>
       ${filas.length ? `<div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista" id="inc-r-tablero"><thead><tr><th>Coordinador</th><th>Personas</th><th>Hoja</th><th>Firmas (versión vigente)</th><th>Complementos</th><th></th></tr></thead><tbody>${filas.map(f => `<tr data-coord="${esc(f.coordinador_id)}" data-estado="${esc(f.estado)}">
         <td><b>${esc(f.coordinador)}</b>${f.estado === 'devuelta' && f.ultimo_motivo ? `<span class="inc-motivo">Devuelta: ${esc(f.ultimo_motivo)}</span>` : ''}</td>
         <td>${f.personas}</td>
-        <td><span class="inc-estado ${esc(f.estado)}">${esc(ESTADO_TAB[f.estado] || f.estado)}</span>${f.version_actual ? ` <span class="inc-nota">v${f.version_actual}${f.enviada_en ? ' · ' + esc(fechaHora(f.enviada_en)) : ''}</span>` : ''}</td>
+        <td><span class="inc-estado ${esc(f.estado)}">${esc(ESTADO_TAB[f.estado] || f.estado)}</span>${noBloquea(f) ? ' <span class="inc-nota" data-no-bloquea>sin personas · no bloquea</span>' : ''}${f.version_actual ? ` <span class="inc-nota">v${f.version_actual}${f.enviada_en ? ' · ' + esc(fechaHora(f.enviada_en)) : ''}</span>` : ''}</td>
         <td>${f.version_actual ? `${f.firma_nomina ? '✓' : '—'} Nómina · ${f.firma_rh ? '✓' : '—'} RH` : '—'}</td>
         <td>${f.complementos || '—'}</td>
         <td>${f.version_actual ? `<button type="button" class="inc-sec" data-rev-hoja="${esc(f.hoja_id)}">Revisar</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`
@@ -771,6 +811,7 @@
         : `<div class="inc-panel" id="inc-r-proc-panel"><b>Marcar el periodo como procesado</b>
         <p class="hint">Solo se procesa una prenómina completa: todas las hojas enviadas, todos los importes y descuentos aceptados o modificados y las firmas requeridas.</p>
         ${faltan.length ? `<div class="inc-msg err" style="display:block" id="inc-r-faltantes"><b>Falta${faltan.length === 1 ? '' : 'n'} ${faltan.length} pendiente${faltan.length === 1 ? '' : 's'} para procesar:</b><ul style="margin:6px 0 0 18px;padding:0">${faltan.map(f => `<li data-tipo="${esc(f.tipo)}">${esc(f.detalle)}</li>`).join('')}</ul></div>`
+          : noRequieren ? '<div class="inc-msg ok" style="display:block" id="inc-r-faltantes">No hay pendientes que bloqueen el procesamiento. Las hojas sin personal asignado y sin capturas no requieren envío.</div>'
           : '<div class="inc-msg ok" style="display:block" id="inc-r-faltantes">Todo está completo: hojas enviadas, importes decididos y firmas registradas.</div>'}
         <div class="inc-acciones"><button type="button" class="primary" id="inc-r-proc" ${faltan.length ? 'disabled' : ''}>Marcar como procesado</button></div></div>`}
     </div>`;

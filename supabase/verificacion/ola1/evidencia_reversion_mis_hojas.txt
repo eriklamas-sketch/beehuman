@@ -1,0 +1,28 @@
+Corrección «Mis hojas» · evidencia de reversión (base local, 16-11-2026, con B5 aplicada)
+Huella antes:
+col|619|c7744a1c285c146fd0dee69dda5dfc2e
+con|331|62a89c3db49d073787f054e1ba4ecb3a
+fn|109|64dac1c6f244496a422308a8bbe63891
+trg|93|47597d56345993e7716bede3e9d17a10
+pol|85|b9292637213b4eaeefcfeb64392fbe1f
+acl|62|b27709ce825f577b0ae9e2192dac604b
+cmt|24|a6f52fbb145cdb4151dd773b92aa31f8
+pol|49e49244440dcf69b4983777d9dd0118
+
+Huella con la corrección:
+col|621|d5b04b90b24755628ca51ab9c18f76fe
+con|331|62a89c3db49d073787f054e1ba4ecb3a
+fn|113|1bc24fdcaf78bf99d4c55eb3a7d7b8b9
+trg|93|47597d56345993e7716bede3e9d17a10
+pol|85|cd9595f55ec063aeda34b93e8ea156e4
+acl|63|5d95eb856de1302a43ad8300b13d315d
+cmt|24|a6f52fbb145cdb4151dd773b92aa31f8
+pol|355042c8edcb8317a896d8818faff6a3
+Política con la corrección: ((tenant_id = current_tenant_id()) AND inc_periodo_visible(id))
+Aplicar dos veces: se niega (BeeHuman: la corrección «Mis hojas» ya está aplicada)
+Aplicar → revertir: IDÉNTICA a antes
+Política tras revertir: (tenant_id = current_tenant_id())
+Funciones nuevas tras revertir: 0
+Revertir dos veces: se niega (BeeHuman: la corrección «Mis hojas» no está aplicada (falta respaldo)
+Revertir → reaplicar: IDÉNTICA a la primera aplicación
+Política distinta a la esperada: la migración se niega (BeeHuman: la política inc_periodos_select no es la esperada; revisar antes de aplicar) y no deja nada: 0 funciones nuevas

@@ -1,0 +1,28 @@
+OK    M1 Columna Empresa con nombre en todas las filas  [['CONSTRUCTORA ALTIPLANO DEMO', 'EMPRESA HOJA VACIA UI']]
+OK    M1 Aparece su empresa y la de su hoja vacía
+OK    M1 No aparece el periodo de la empresa ajena (sin personas asignadas)
+OK    M1 La hoja vacía sin personas ofrece «Ver hoja» (no «Capturar»)  [Ver hoja]
+OK    M1 El periodo con personal sigue ofreciendo «Abrir hoja»
+OK    M2 Aviso «sin personas» con el nombre de la empresa  [No tienes personas asignadas en EMPRESA HOJA VACIA UI durante este periodo. Esta hoja no se envía y no bloquea el procesamiento del periodo.]
+OK    M2 Sin «Enviar», «Guardar», complemento ni observación general
+OK    M2 El encabezado de la hoja muestra la empresa
+OK    M2 La hoja vacía no cambió
+OK    M3 «Abrir hoja» en el periodo con personal crea su hoja  [‹ Mis hojas
+
+Hoja de incidencias
+
+CONSTRUCTORA ALTIPLANO DEMO · 02/11/2026 – 08/11/2026
+
+Borrador]
+OK    M3 Hoja normal: sin aviso y con «Enviar y cerrar»
+OK    Coordinador: sin errores de JavaScript  [[]]
+OK    M4 Tablero: la hoja vacía aparece marcada «sin personas · no bloquea»
+OK    M4 No aparece en «Falta por enviar»
+OK    M4 Mensaje: no hay pendientes que bloqueen; las hojas sin personal no requieren envío  [No hay pendientes que bloqueen el procesamiento. Las hojas sin personal asignado y sin capturas no requieren envío.]
+OK    M4 Sin «0 de 1 hojas enviadas»; indica la hoja que no requiere envío  [1 hoja sin personal: no requiere envío]
+OK    M4 El periodo se procesa
+OK    M4 La hoja vacía se conserva sin cambios
+OK    Nómina: sin errores de JavaScript  [[]]
+OK    Coordinador: los nombres llegan de inc_empresas_visibles
+
+RESULTADO: 20 de 20 OK

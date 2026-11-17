@@ -1,0 +1,53 @@
+== Preparación: C4 abre su hoja en PA1 y después pierde la asignación ==
+OK    C4 tiene una hoja en PA1; su asignación ahora termina antes de PA1
+== 1 y 2 · Visibilidad de periodos (D1) ==
+OK    1  Coordinador con personal en la empresa: ve sus periodos (PA0, PA1, PA2)
+OK    2  … y no ve los de empresas donde no tiene personal (B, C) ni de otro tenant
+OK    1b Asignación ya terminada: ve el periodo pasado en que estuvo vigente (PA0) y no los posteriores  [1]
+OK    1c Perdió la asignación: conserva el periodo con su hoja (PA1) y el pasado (PA0); no ve PA2
+OK    2  Coordinador sin personal en A ni en C: solo ve el periodo de B  [1]
+OK    2  … ni siquiera consultando el periodo ajeno por su id
+OK    9  Otro tenant: el coordinador solo ve su periodo
+OK    Administrador, Nómina y Consulta: siguen viendo todos los periodos del tenant (8)
+OK    9  Nómina de un tenant no ve periodos del otro
+== 3 y 4 · Abrir hoja (D2) ==
+OK    3  Con asignación vigente en el periodo: abre su hoja
+OK    3b Asignación que empieza a mitad del periodo: abre y ve los 4 días que le tocan
+OK    4  Sin asignaciones en la empresa: se rechaza y el mensaje nombra la empresa  [ERROR:  BeeHuman: no tienes personas asignadas en EMPRESA A MH durante este periodo; no hay hoja que abrir.]
+OK    4  … y no se crea ninguna hoja
+OK    4b Perdió la asignación: no puede abrir un periodo nuevo (PA2)  [ERROR:  BeeHuman: no tienes personas asignadas en EMPRESA A MH durante este periodo; no hay hoja que abrir.]
+OK    9  No puede abrir una hoja en un periodo de otro tenant  [ERROR:  BeeHuman: periodo no encontrado.]
+OK    1c Su hoja existente se sigue abriendo (devuelve la misma hoja)
+== 5 · Hoja con personal y sin incidencias se envía ==
+OK    5  Sin capturas, con personal asignado: se envía (versión 1)
+== 6 y 10 · Hoja vacía sin personal (como las de B5) ==
+OK    6  El coordinador conserva la vista del periodo de su hoja vacía (C)
+OK    6  Abrirla devuelve la hoja existente (no se crea otra)
+OK    10 Enviar la hoja vacía sin personal: se rechaza  [ERROR:  BeeHuman: no tienes personas asignadas en esta empresa durante el periodo; esta hoja no se envía y no bloquea el procesamiento.]
+OK    10 … y sigue en borrador, sin versiones
+OK    6  Nómina la sigue viendo en el tablero (0 personas, borrador)  [PERSONA C2 MH:0:borrador]
+OK    6  No aparece en faltantes  [ninguno]
+OK    6  El periodo se procesa
+OK    6  La hoja vacía se conserva tal cual (no se borra ni se altera)
+== 6b · Con cualquier captura u observación, bloquea como hoy ==
+OK    6b Sin personal pero con una observación por persona: bloquea  [hoja: PERSONA C2 MH: no ha enviado su hoja]
+OK    6b Sin personal pero con observación general: bloquea  [hoja: PERSONA C2 MH: no ha enviado su hoja]
+OK    6b … y el procesado se rechaza  [ERROR:  BeeHuman: no se puede procesar; faltan 1 pendiente(s): PERSONA C2 MH: no ha enviado su hoja]
+OK    10b Sin personal pero con observación general al enviar: se envía (comportamiento normal)
+== 7 · Hojas con personal sin enviar bloquean ==
+OK    7  Hojas con personal en borrador: bloquean  [hoja: PERSONA C1 MH: no ha enviado su hoja | hoja: PERSONA C5 MH: no ha enviado su hoja]
+OK    6c La hoja de C4 (perdió la asignación, sin capturas) es una hoja vacía sin personal: no bloquea
+OK    7b Hoja devuelta: bloquea igual que hoy  [hoja: PERSONA C2 MH: su hoja está devuelta y no la ha reenviado]
+== 8 y 9 · Nombre de empresa sin ampliar permisos (D3) ==
+OK    8  C1 obtiene solo el nombre de su empresa  [EMPRESA A MH]
+OK    8  C2: su empresa y la de sus hojas (B y C), no A  [EMPRESA B MH,EMPRESA C MH]
+OK    8  La tabla empresas sigue sin filas para el coordinador (permisos sin cambio)
+OK    8  La política de empresas no cambió
+OK    9  Otro tenant: solo su empresa  [EMPRESA OTRO TENANT MH]
+OK    9  Nómina no obtiene empresas de otro tenant
+== E · Funciones internas ==
+OK    E  Interna no expuesta a la aplicación  [public.inc_coordinador_tiene_personal]
+OK    E  Interna no expuesta a la aplicación  [public.inc_hoja_vacia_sin_personal]
+OK    E  inc_periodo_visible solo responde verdadero/falso para quien llama (la política la necesita)
+
+RESULTADO: 42 de 42 verificaciones OK

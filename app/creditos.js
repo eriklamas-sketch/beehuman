@@ -50,6 +50,29 @@
 .cred input.cred-final{width:100px;text-align:right}
 .cred input.cred-motivo{width:140px}
 .cred h3.cred-h{font:700 13px Montserrat,sans-serif;letter-spacing:.045em;text-transform:uppercase;color:#2E6945;margin:22px 0 8px}
+.cred .cred-lista{display:flex;flex-direction:column;gap:12px}
+.cred .cred-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:12px}
+.cred .cred-card{background:#fff;border:1px solid #E5E9F1;border-left:4px solid #2E6945;border-radius:14px;padding:12px 16px;display:flex;flex-direction:column;gap:9px;min-width:0}
+.cred .cred-card.abierta{grid-column:1/-1}
+.cred .cred-card.pendiente{border-left-color:#E0A526;background:#FFFCF3}
+.cred .cred-card.informativo{border-left-color:#6B7FA6;background:#F7F9FC}
+.cred .cred-card.suspendido{border-left-color:#9AA3B2}
+.cred .cred-card.terminado{border-left-color:#C9CED8;background:#FAFAFB;opacity:.85}
+.cred .cred-card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.cred .cred-nombre{font:700 14.5px Montserrat,sans-serif;color:#26324A}
+.cred .cred-est.activo{background:#EAF4EE;color:#1F6B40}.cred .cred-est.informativo{background:#E8EEF8;color:#34466F}
+.cred .cred-metricas{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px 14px;border-top:1px solid #EEF1F6;padding-top:10px}
+.cred .cred-m{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cred .cred-m-t{font:600 10.5px Montserrat,sans-serif;text-transform:uppercase;letter-spacing:.04em;color:#6B7385}
+.cred .cred-m b{font-size:15px;color:#26324A}
+.cred .cred-m-n{font-size:11.5px;color:#6B7385}
+.cred .cred-aviso{background:#FFF4D6;color:#6A4A00;border-radius:10px;padding:8px 11px;font-size:12.5px}
+.cred .cred-aviso.listo{background:#FFF0C7}
+.cred .cred-acciones{display:flex;flex-wrap:wrap;gap:4px}
+.cred .cred-sec.cred-activar{background:#F2B51D;border-color:#F2B51D;color:#2B2100;font-weight:700}
+.cred .cred-hist{background:#FAFBFC;border-radius:10px;padding:8px 10px;font-size:12.5px}
+.cred details.cred-term>summary{cursor:pointer;font:600 12.5px Inter,sans-serif;color:#45506A;padding:6px 2px}
+.cred details.cred-term>.cred-cards{margin-top:8px}
 @media (max-width:640px){.cred .cred-grid{grid-template-columns:1fr}}`;
     document.head.appendChild(st);
   }
@@ -63,18 +86,21 @@
     const box = $('cred-ficha');
     if (!box) return;
     if (!puede()) { box.innerHTML = ''; return; }
-    F.personal = personalId; F.editando = null; F.abierto = {};
+    F.personal = personalId; F.editando = null; F.abierto = {}; F.termAbierto = false;
     box.innerHTML = '<p class="hint">Cargando créditos…</p>';
     await cargarFicha(); pintarFicha();
   };
 
   async function cargarFicha() {
-    const [c, r, p] = await Promise.all([
+    const [c, r, p, d] = await Promise.all([
       sb.rpc('cred_creditos_persona', { p_personal: F.personal }),
       sb.from('relaciones_laborales').select('id, empresa_id, registro_patronal_id, estado, fecha_ingreso, fecha_baja').eq('personal_id', F.personal),
-      sb.from('periodicidades').select('id, nombre').order('nombre')
+      sb.from('periodicidades').select('id, nombre').order('nombre'),
+      // Solo lectura: descuentos ya registrados por periodo (propuesto y procesado). No calcula nada.
+      sb.from('cred_descuentos').select('credito_id, sugerido, final, origen, periodo:inc_periodos(inicio, fin, procesado_en)').eq('personal_id', F.personal)
     ]);
     F.error = c.error; F.creditos = c.data || [];
+    F.lineasError = !!d.error; F.lineas = d.error ? [] : (d.data || []);
     F.rels = (r.data || []).filter(x => x.estado !== 'anulada'); F.pers = p.data || [];
   }
 
@@ -83,56 +109,115 @@
   // true solo si la base respondió explícitamente que no falta nada (null); undefined u otro valor ≠ completo.
   const datosCompletos = x => x.credito.estado === 'incompleto' && Object.prototype.hasOwnProperty.call(x, 'falta_para_activar') && x.falta_para_activar === null;
 
-  function descuentoTxt(x) {
+  // Créditos informativos: datos para NOI; nunca descuentan en BeeHuman ni se «activan».
+  const esInformativo = c => c.tipo === 'infonavit' || (c.tipo === 'pension' && c.pension_forma === 'porcentaje');
+  const ORIGEN_LINEA = { pendiente: 'Por decidir', aceptado: 'Aceptado', modificado: 'Modificado' };
+  const perTxt = p => p ? `${fecha(p.inicio)} – ${fecha(p.fin)}` : '';
+
+  // Propuesto (periodo abierto más reciente) y procesado (último periodo procesado), tal como están
+  // guardados en cred_descuentos. La ficha no calcula importes: si no hay línea, lo dice.
+  function lineasDe(c) {
+    const ls = (F.lineas || []).filter(l => l.credito_id === c.id && l.origen !== 'descartado' && l.periodo);
+    const porInicio = (a, b) => String(b.periodo.inicio).localeCompare(String(a.periodo.inicio));
+    const abiertas = ls.filter(l => !l.periodo.procesado_en).sort(porInicio);
+    const procesadas = ls.filter(l => l.periodo.procesado_en && l.final != null).sort(porInicio);
+    return { propuesta: abiertas[0] || null, otrasAbiertas: Math.max(abiertas.length - 1, 0), procesada: procesadas[0] || null };
+  }
+
+  function estadoTxt(x, listo) {
     const c = x.credito;
-    if (c.tipo === 'infonavit') return `<span class="cred-info">Informativo para NOI: ${esc(INF_TIPOS[c.infonavit_tipo] || '')} ${esc(c.infonavit_valor ?? '')}</span>`;
-    if (c.tipo === 'pension' && c.pension_forma === 'porcentaje') return `<span class="cred-info">Informativo: ${esc(c.pension_valor)} % (se calcula con el neto)</span>`;
-    // Incompleto: la base dice qué falta (misma validación que «Activar»). Solo un null EXPLÍCITO
-    // significa «datos completos»; si el dato no llega (undefined), no se asume completo.
-    if (c.estado === 'incompleto') {
-      if (datosCompletos(x)) return `${esc(dinero(c.importe_periodo))} <span class="cred-info">${esc(x.periodicidad || '')}</span><div class="cred-info" data-cred-listo>Datos completos: pulsa «Activar» para que empiece a proponer descuentos.</div>`;
-      if (typeof x.falta_para_activar === 'string' && x.falta_para_activar) return `<span class="cred-info" data-cred-falta>Faltan datos: ${esc(x.falta_para_activar)} Sin descuento hasta completarlo.</span>`;
-      return '<span class="cred-info" data-cred-sin-dato>Incompleto: no se pudo comprobar si los datos están completos. Vuelve a abrir la ficha.</span>';
+    if (esInformativo(c)) return 'Informativo NOI · Sin descuento en BeeHuman' + (c.estado !== 'activo' ? ' · ' + ESTADOS[c.estado] : '');
+    if (c.estado === 'incompleto') return listo ? 'Completo · falta activar' : 'Incompleto · faltan datos';
+    return { activo: 'Activo · propone descuento', suspendido: 'Suspendido · no propone descuento', terminado: 'Terminado' }[c.estado] || ESTADOS[c.estado];
+  }
+
+  function avisoTxt(x, listo) {
+    const c = x.credito;
+    if (c.estado !== 'incompleto' || esInformativo(c)) return '';
+    // Solo un null EXPLÍCITO en falta_para_activar significa «datos completos» (misma validación que «Activar»).
+    if (listo) return '<div class="cred-aviso listo" data-cred-listo>Datos completos: pulsa «Activar» para que empiece a proponer descuentos. Te pedirá fecha efectiva y motivo.</div>';
+    if (typeof x.falta_para_activar === 'string' && x.falta_para_activar) return `<div class="cred-aviso" data-cred-falta>Faltan datos: ${esc(x.falta_para_activar)} Sin descuento hasta completarlo.</div>`;
+    return '<div class="cred-aviso" data-cred-sin-dato>Incompleto: no se pudo comprobar si los datos están completos. Vuelve a abrir la ficha.</div>';
+  }
+
+  const metrica = (titulo, valor, nota, attr) => `<div class="cred-m"${attr ? ' ' + attr : ''}><span class="cred-m-t">${titulo}</span><b>${valor}</b>${nota ? `<span class="cred-m-n">${nota}</span>` : ''}</div>`;
+
+  function metricasHtml(x) {
+    const c = x.credito;
+    if (esInformativo(c)) {
+      const datos = c.tipo === 'infonavit'
+        ? metrica('Tipo de descuento (NOI)', esc(INF_TIPOS[c.infonavit_tipo] || '—'), '') + metrica('Valor', esc(c.infonavit_valor == null ? '—' : c.infonavit_tipo === 'cuota_fija' ? dinero(c.infonavit_valor) : c.infonavit_tipo === 'porcentaje' ? c.infonavit_valor + ' %' : c.infonavit_valor), '')
+          + metrica('Aviso de retención', esc(fecha(c.infonavit_fecha_aviso)), '')
+        : metrica('Porcentaje (NOI)', esc((c.pension_valor ?? '—') + ' %'), 'Se calcula con el neto');
+      return datos + metrica('Descuento en BeeHuman', 'No genera', 'Informativo');
     }
-    return `${esc(dinero(c.importe_periodo))} <span class="cred-info">${esc(x.periodicidad || '')}</span>`;
+    const { propuesta, otrasAbiertas, procesada } = lineasDe(c);
+    const prop = F.lineasError ? metrica('Descuento propuesto', '—', 'No se pudo consultar', 'data-propuesto')
+      : propuesta ? metrica('Descuento propuesto', esc(dinero(propuesta.final != null ? propuesta.final : propuesta.sugerido)),
+          `${esc(ORIGEN_LINEA[propuesta.origen] || '')} · ${esc(perTxt(propuesta.periodo))}${otrasAbiertas ? ` · +${otrasAbiertas} periodo${otrasAbiertas === 1 ? '' : 's'} abierto${otrasAbiertas === 1 ? '' : 's'}` : ''}`, 'data-propuesto')
+      : metrica('Descuento propuesto', 'Sin propuesta aún', c.estado === 'incompleto' ? 'Se propone al activarlo' : c.estado === 'activo' ? 'Aparece al abrir la revisión del periodo' : '', 'data-propuesto');
+    const proc = F.lineasError ? metrica('Procesado', '—', 'No se pudo consultar', 'data-procesado')
+      : procesada ? metrica('Procesado', esc(dinero(procesada.final)), 'Periodo ' + esc(perTxt(procesada.periodo)), 'data-procesado')
+      : metrica('Procesado', '—', 'Sin descuentos procesados', 'data-procesado');
+    const saldo = x.saldo != null ? metrica('Saldo pendiente', esc(dinero(x.saldo)), 'de ' + esc(dinero(c.monto_total)), 'data-saldo') : '';
+    return metrica('Importe configurado', c.importe_periodo != null ? esc(dinero(c.importe_periodo)) : '—', esc(x.periodicidad || ''), 'data-configurado') + prop + proc + saldo;
+  }
+
+  function tarjetaHtml(x) {
+    const c = x.credito, ab = F.abierto[c.id];
+    const listo = datosCompletos(x) && !esInformativo(c);
+    // «Activar» solo en créditos completos pendientes de activar; nunca en informativos.
+    // Suspender, Reactivar y Terminar, igual que antes.
+    const trans = { activo: [['suspendido', 'Suspender'], ['terminado', 'Terminar']], suspendido: [['activo', 'Reactivar'], ['terminado', 'Terminar']],
+      incompleto: listo ? [['activo', 'Activar'], ['terminado', 'Terminar']] : [['terminado', 'Terminar']] }[c.estado] || [];
+    const clase = esInformativo(c) ? 'informativo' : c.estado === 'incompleto' ? 'pendiente' : c.estado;
+    return `<article class="cred-card ${clase}${ab ? ' abierta' : ''}" data-cred="${esc(c.id)}" data-tipo="${esc(c.tipo)}" data-estado="${esc(c.estado)}">
+      <header class="cred-card-h">
+        <div><b class="cred-nombre">${esc(etiqueta(c))}</b>
+          <div class="cred-info">${x.empresa ? esc(x.empresa) + (x.registro_patronal ? ' · RP ' + esc(x.registro_patronal) : '') : 'Sin relación laboral'} · Vigencia ${esc(fecha(c.fecha_inicio))} – ${c.fecha_fin ? esc(fecha(c.fecha_fin)) : 'indefinida'}</div>
+          ${c.origen === 'conversion_no_fonacot' ? '<div class="cred-info">Convertido del campo «No. FONACOT»</div>' : ''}
+          ${c.tipo === 'pension' && c.pension_beneficiario ? `<div class="cred-info">Beneficiario: ${esc(c.pension_beneficiario)}</div>` : ''}</div>
+        <span class="cred-est ${esc(clase)}">${esc(estadoTxt(x, listo))}</span>
+      </header>
+      <div class="cred-metricas">${metricasHtml(x)}</div>
+      ${avisoTxt(x, listo)}
+      <div class="cred-acciones">
+        ${trans.filter(([e]) => e === 'activo' && c.estado === 'incompleto').map(([e, t]) => `<button type="button" class="cred-sec cred-activar" data-cred-estado="${esc(c.id)}" data-a="${e}">${t}</button>`).join('')}
+        ${c.estado !== 'terminado' ? `<button type="button" class="cred-sec" data-cred-editar="${esc(c.id)}">Editar</button>` : ''}
+        ${trans.filter(([e]) => !(e === 'activo' && c.estado === 'incompleto')).map(([e, t]) => `<button type="button" class="cred-sec" data-cred-estado="${esc(c.id)}" data-a="${e}">${t}</button>`).join('')}
+        <button type="button" class="cred-sec" data-cred-hist="${esc(c.id)}">${ab === 'hist' ? 'Ocultar historia' : 'Historia'}</button>
+      </div>
+      ${ab && ab.startsWith('estado:') ? `<div class="cred-mini cred-hist" data-mini="${esc(c.id)}">
+        <b>${esc(trans.find(t => t[0] === ab.slice(7))?.[1] || '')}</b>
+        <label>Fecha efectiva <input type="date" data-est-fecha value="${hoy()}"></label>
+        <input type="text" data-est-motivo placeholder="Motivo (obligatorio)" maxlength="300" style="min-width:220px">
+        <button type="button" class="cred-sec" data-est-ok="${esc(c.id)}" data-a="${esc(ab.slice(7))}">Confirmar</button>
+        <button type="button" class="cred-sec" data-est-no>Cancelar</button></div>` : ''}
+      ${ab === 'hist' ? `<div class="cred-hist">
+        <b>Historia</b><ul style="margin:6px 0 8px 18px;padding:0">${(x.historia || []).map(h => `<li>${esc(fechaHora(h.creado_en))} · <b>${esc(EVENTOS[h.evento] || h.evento)}</b>${h.fecha_efectiva ? ' (efectiva ' + esc(fecha(h.fecha_efectiva)) + ')' : ''}${h.motivo ? ' — ' + esc(h.motivo) : ''} · ${esc(h.nombre || '')}</li>`).join('')}</ul>
+        ${(x.movimientos || []).length ? `<b>Movimientos de saldo</b><ul style="margin:6px 0 0 18px;padding:0">${x.movimientos.map(m => `<li>Periodo ${esc(m.periodo)} · descuento ${esc(dinero(m.importe))}: ${esc(dinero(m.saldo_anterior))} → ${esc(dinero(m.saldo_nuevo))}</li>`).join('')}</ul>` : ''}</div>` : ''}
+    </article>`;
   }
 
   function pintarFicha() {
     const box = $('cred-ficha'); if (!box) return;
     if (F.error) { box.innerHTML = `<div class="cred"><div class="cred-msg err">${esc(limpiar(F.error))}</div></div>`; return; }
-    const filas = F.creditos.map(x => {
-      const c = x.credito, ab = F.abierto[c.id];
-      const listo = datosCompletos(x);
-      // «Activar» solo aparece cuando los datos están completos.
-      const trans = { activo: [['suspendido', 'Suspender'], ['terminado', 'Terminar']], suspendido: [['activo', 'Reactivar'], ['terminado', 'Terminar']],
-        incompleto: listo ? [['activo', 'Activar'], ['terminado', 'Terminar']] : [['terminado', 'Terminar']] }[c.estado] || [];
-      return `<tr data-cred="${esc(c.id)}" data-tipo="${esc(c.tipo)}" data-estado="${esc(c.estado)}">
-        <td><b>${esc(etiqueta(c))}</b>${c.origen === 'conversion_no_fonacot' ? '<div class="cred-info">Convertido del campo «No. FONACOT»</div>' : ''}${c.tipo === 'pension' && c.pension_beneficiario ? `<div class="cred-info">Beneficiario: ${esc(c.pension_beneficiario)}</div>` : ''}</td>
-        <td>${x.empresa ? esc(x.empresa) + (x.registro_patronal ? `<div class="cred-info">RP ${esc(x.registro_patronal)}</div>` : '') : '<span class="cred-info">Sin relación laboral</span>'}</td>
-        <td><span class="cred-est ${esc(c.estado)}">${esc(listo ? 'Completo · falta activar' : ESTADOS[c.estado])}</span></td>
-        <td>${esc(fecha(c.fecha_inicio))} – ${c.fecha_fin ? esc(fecha(c.fecha_fin)) : 'indefinida'}</td>
-        <td>${descuentoTxt(x)}</td>
-        <td class="n" data-saldo>${x.saldo != null ? esc(dinero(x.saldo)) + `<div class="cred-info">de ${esc(dinero(c.monto_total))}</div>` : '—'}</td>
-        <td>${c.estado !== 'terminado' ? `<button type="button" class="cred-sec" data-cred-editar="${esc(c.id)}">Editar</button>` : ''}
-          ${trans.map(([e, t]) => `<button type="button" class="cred-sec" data-cred-estado="${esc(c.id)}" data-a="${e}">${t}</button>`).join('')}
-          <button type="button" class="cred-sec" data-cred-hist="${esc(c.id)}">${ab === 'hist' ? 'Ocultar historia' : 'Historia'}</button></td></tr>
-        ${ab && ab.startsWith('estado:') ? `<tr class="cred-hist"><td colspan="7"><div class="cred-mini" data-mini="${esc(c.id)}">
-          <b>${esc(trans.find(t => t[0] === ab.slice(7))?.[1] || '')}</b>
-          <label>Fecha efectiva <input type="date" data-est-fecha value="${hoy()}"></label>
-          <input type="text" data-est-motivo placeholder="Motivo (obligatorio)" maxlength="300" style="min-width:220px">
-          <button type="button" class="cred-sec" data-est-ok="${esc(c.id)}" data-a="${esc(ab.slice(7))}">Confirmar</button>
-          <button type="button" class="cred-sec" data-est-no>Cancelar</button></div></td></tr>` : ''}
-        ${ab === 'hist' ? `<tr class="cred-hist"><td colspan="7">
-          <b>Historia</b><ul style="margin:6px 0 8px 18px;padding:0">${(x.historia || []).map(h => `<li>${esc(fechaHora(h.creado_en))} · <b>${esc(EVENTOS[h.evento] || h.evento)}</b>${h.fecha_efectiva ? ' (efectiva ' + esc(fecha(h.fecha_efectiva)) + ')' : ''}${h.motivo ? ' — ' + esc(h.motivo) : ''} · ${esc(h.nombre || '')}</li>`).join('')}</ul>
-          ${(x.movimientos || []).length ? `<b>Movimientos de saldo</b><ul style="margin:6px 0 0 18px;padding:0">${x.movimientos.map(m => `<li>Periodo ${esc(m.periodo)} · descuento ${esc(dinero(m.importe))}: ${esc(dinero(m.saldo_anterior))} → ${esc(dinero(m.saldo_nuevo))}</li>`).join('')}</ul>` : ''}</td></tr>` : ''}`;
-    }).join('');
+    const vivos = F.creditos.filter(x => x.credito.estado !== 'terminado');
+    const term = F.creditos.filter(x => x.credito.estado === 'terminado');
+    // El grupo de terminados se abre si el usuario lo abrió o si tiene una historia abierta.
+    const termAbierto = F.termAbierto || term.some(x => F.abierto[x.credito.id]);
     box.innerHTML = `<div class="cred">
       <p class="cred-intro">Registrar un crédito no es descontarlo. <b>INFONAVIT</b> y las <b>pensiones porcentuales</b> quedan como datos para NOI y no generan descuentos. Los demás proponen un descuento por periodo que Nómina decide en <b>Incidencias → Revisión</b>; el saldo de préstamos y anticipos baja solo al procesar el periodo.</p>
       <div class="cred-msg" id="cred-msg"></div>
-      ${F.creditos.length ? `<div class="cred-wrap"><table id="cred-lista"><thead><tr><th>Crédito</th><th>Relación laboral</th><th>Estado</th><th>Vigencia</th><th>Descuento por periodo</th><th class="n">Saldo</th><th></th></tr></thead><tbody>${filas}</tbody></table></div>`
+      ${F.creditos.length ? `<div id="cred-lista" class="cred-lista">
+          ${vivos.length ? `<div class="cred-cards">${vivos.map(tarjetaHtml).join('')}</div>` : ''}
+          ${term.length ? `<details class="cred-term" id="cred-terminados"${termAbierto ? ' open' : ''}><summary>Terminados (${term.length})</summary>
+            <div class="cred-cards">${term.map(tarjetaHtml).join('')}</div></details>` : ''}
+        </div>`
         : '<p class="hint" id="cred-lista-vacia">Sin créditos ni descuentos registrados.</p>'}
       ${F.editando ? formHtml() : `<button type="button" class="primary" id="cred-nuevo" style="margin-top:12px">Registrar crédito o descuento</button>`}
     </div>`;
+    const dt = $('cred-terminados'); if (dt) dt.addEventListener('toggle', () => { F.termAbierto = dt.open; });
     bindFicha();
   }
 

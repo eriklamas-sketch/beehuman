@@ -1,0 +1,45 @@
+== T1 Un crédito (ADELA) ==
+OK    T1 Una tarjeta, estado real «incompleto» en data-estado  [1]
+OK    T1 Etiqueta «Completo · falta activar»  [Completo · falta activar]
+OK    T1 Acciones: Activar (primero), Editar, Terminar, Historia  [['Activar', 'Editar', 'Terminar', 'Historia']]
+OK    T1 Aviso de datos completos, avisa que pedirá fecha y motivo
+OK    T1 Importe configurado $250.00 Semanal  [IMPORTE CONFIGURADO $250.00 Semanal]
+OK    T1 Propuesto: «Sin propuesta aún» (no inventa importe)  [DESCUENTO PROPUESTO Sin propuesta aún Se propone al activarlo]
+OK    T1 Procesado: «—»  [PROCESADO — Sin descuentos procesados]
+OK    T1 Sin saldo: FONACOT sin monto total no muestra saldo
+== A Acciones ==
+OK    A Historia se despliega dentro de la tarjeta
+OK    A Editar abre el mismo formulario (con motivo del cambio)
+OK    A Al pintar la ficha solo se LEE cred_descuentos; ninguna escritura  [[]]
+OK    A Activar pide fecha efectiva y motivo
+OK    A Confirmar llama a cred_cambiar_estado, como antes
+OK    A Activado: estado activo, sin repetir «Activar»  [['Editar', 'Suspender', 'Terminar', 'Historia']]
+OK    A La base registra el cambio (misma regla de activación)
+== T3 Tres créditos (BENITO) ==
+OK    T3 Tres tarjetas  [3]
+OK    T3 INFONAVIT: «Informativo NOI · Sin descuento en BeeHuman», sin Activar  [Informativo NOI · Sin descuento en BeeHuman]
+OK    T3 INFONAVIT: muestra sus datos para NOI y «No genera»; ningún importe de descuento
+OK    T3 FONACOT activo: sin Activar; Editar, Suspender, Terminar, Historia  [['Editar', 'Suspender', 'Terminar', 'Historia']]
+OK    T3 FONACOT: propuesto $250.00 «Por decidir» del periodo abierto  [DESCUENTO PROPUESTO $250.00 Por decidir · 09/11/2026 – 15/11/2026]
+OK    T3 FONACOT: procesado $250.00 del periodo cerrado  [PROCESADO $250.00 Periodo 02/11/2026 – 08/11/2026]
+OK    T3 FONACOT sin monto total: sin saldo
+OK    T3 Préstamo: propuesto = importe final decidido ($450.00, Modificado)  [DESCUENTO PROPUESTO $450.00 Modificado · 09/11/2026 – 15/11/2026]
+OK    T3 Préstamo: procesado $500.00  [PROCESADO $500.00 Periodo 02/11/2026 – 08/11/2026]
+OK    T3 Préstamo: saldo pendiente $9,500.00 de $10,000.00 (de la base)  [SALDO PENDIENTE $9,500.00 de $10,000.00]
+== T5 Cinco créditos (CESAR) ==
+OK    T5 Cinco créditos: 4 visibles y el terminado plegado  [5 / 4]
+OK    T5 «Terminados (1)» al final, plegado
+OK    T5 Sin scroll interno en la lista
+OK    T5 Dos periodos abiertos: muestra el más reciente y «+1 periodo abierto»  [DESCUENTO PROPUESTO $300.00 Aceptado · 16/11/2026 – 22/11/2026 · +1 periodo abierto]
+OK    T5 Línea descartada en periodo procesado: no cuenta como procesado («—»)  [PROCESADO — Sin descuentos procesados]
+OK    T5 Suspendido: Editar, Reactivar, Terminar, Historia  [['Editar', 'Reactivar', 'Terminar', 'Historia']]
+OK    T5 Suspendido con monto total: muestra saldo  [SALDO PENDIENTE $4,000.00 de $4,000.00]
+OK    T5 FONACOT incompleto con faltantes: dice qué falta y no ofrece Activar  [Faltan datos: captura el descuento por periodo y su periodicidad (retención de la cédula, sin prorratear). Sin descuento hasta completarlo.]
+OK    T5 INFONAVIT por porcentaje: informativo, sin descuentos
+OK    T5 Al desplegar: el terminado solo ofrece Historia  [['Historia']]
+OK    T5 La historia del terminado se ve y el grupo sigue abierto al repintar
+OK    Celular (390 px): ninguna tarjeta se sale de la pantalla  [0]
+OK    Sin errores de JavaScript  [[]]
+OK    Todas las peticiones atendidas por el traductor local  [[]]
+
+RESULTADO: 39 de 39 OK

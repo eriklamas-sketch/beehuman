@@ -1,0 +1,32 @@
+== S1 Tablero ==
+OK    S1 Lista a cada coordinador con su gente aunque no haya abierto su hoja  [PERSONA CA:2:sin_abrir:0 | PERSONA CB:1:sin_abrir:0]
+OK    S1 Refleja el envío (versión 1)  [PERSONA CA:2:enviada:1 | PERSONA CB:1:sin_abrir:0]
+OK    S1 coordA: no puede ver el tablero  [ERROR:  BeeHuman: sin permiso.]
+OK    S1 consulta: no puede ver el tablero  [ERROR:  BeeHuman: sin permiso.]
+== S2/S3 Decisiones ==
+OK    S3 Una línea «sin importe» no se decide  [ERROR:  BeeHuman: esta línea no lleva importe que decidir.]
+OK    S3 No se aceptan importes negativos  [ERROR:  BeeHuman: el importe no puede ser negativo.]
+OK    S3 El coordinador no decide importes  [ERROR:  BeeHuman: sin permiso.]
+OK    S2 «Aceptar sugeridos» acepta solo los pendientes con sugerencia (no toca modificado ni sin importe)  [2: X-CAP=sin_importe,X-DESC=aceptado,X-HE=aceptado,Y-HE=modificado]
+OK    S2 El coordinador no puede aceptar sugeridos  [ERROR:  BeeHuman: sin permiso.]
+== S4 Recálculo ==
+OK    S4 Recalcular respeta lo aceptado (sugerido igual) y lo modificado  [X-CAP=sin_importe:-,X-DESC=aceptado:50.00,X-HE=aceptado:400.00,Y-HE=modificado:999.00]
+OK    S4 Si el sugerido cambia (cambió el sueldo), lo aceptado vuelve a «por decidir»  [pendiente:-:500.00]
+OK    S4 Lo modificado se respeta aunque cambie el sugerido
+== S3 Versión vigente y estado de la hoja ==
+OK    S3 Hoja devuelta: no se deciden importes  [ERROR:  BeeHuman: solo se deciden importes de la versión vigente de una hoja enviada.]
+OK    S3 Hoja devuelta: tampoco «aceptar sugeridos»  [ERROR:  BeeHuman: solo se deciden importes de la versión vigente de una hoja enviada.]
+OK    S3 Un importe de la versión anterior ya no se decide  [ERROR:  BeeHuman: solo se deciden importes de la versión vigente de una hoja enviada.]
+OK    S2 La versión vigente sí se decide
+== S5 Procesar solo con la prenómina completa ==
+OK    S5 Dice exactamente qué falta (hoja sin abrir, responsable de Nómina)  [hoja: PERSONA CB: no ha abierto su hoja | firma: Designa al responsable de Nómina (Incidencias → Configuración): su firma es obligatoria para procesar]
+OK    S5 No permite procesar mientras falte algo  [ERROR:  BeeHuman: no se puede procesar; faltan 2 pendiente(s): PERSONA CB: no ha abierto su hoja; Designa al responsable de Nómina (Incidenc]
+OK    S5 Lista importes por decidir y cada firma faltante (Nómina y RH designados)  [importe: PERSONA Z · Horas extra: importe por decidir — hoja de PERSONA CB | firma: PERSONA CA: falta la firma de Nómina (versión 2) | firma: PERSONA CA: falta la firma de RH (versión 2) | firma: PERS]
+OK    S5 Con firmas de RH pendientes: sigue sin procesar  [ERROR:  BeeHuman: no se puede procesar; faltan 2 pendiente(s): PERSONA CA: falta la firma de RH (versión 2); PERSONA CB: falta la firma de R]
+OK    S5 Completo: ya no falta nada
+OK    S5 Ahora sí se procesa
+OK    S5 coordA: no consulta los faltantes  [ERROR:  BeeHuman: sin permiso.]
+OK    S5 consulta: no consulta los faltantes  [ERROR:  BeeHuman: sin permiso.]
+OK    S3 Periodo procesado: los importes quedan cerrados  [ERROR:  BeeHuman: solo se deciden importes de la versión vigente de una hoja enviada.]
+
+RESULTADO: 25 de 25 verificaciones OK

@@ -1,0 +1,22 @@
+B1.1 · Evidencia de reversión (base local, 12-nov-2026)
+Huella antes de B1.1 (B1):
+col|524|a2d6f1b4634974e7908b539a8757863d
+con|276|41095bc4446eda30e1fc10a34fe1c99a
+fn|90|de1cbb7054e5fe5b7fec6d18e8eadd77
+trg|79|a5a8ff547ec3e74d33dff4e9f30ec895
+pol|79|4840d85e38a648df9215ff59350b846a
+acl|52|1d7a626bcaaaedc53cf0c534d2da4cbb
+cmt|20|c3e8fe5cc5b9bf6efc614b0a03a48898
+
+Huella con B1.1:
+col|544|4842f7ac88a0b2ce08ab1870135131a2
+con|283|016bd9e33bd1e73d9eb4298ae6de03ff
+fn|94|781746f45c54f019d5300ee968ee8694
+trg|82|70aa262e14968ebdf05c094244fa1c74
+pol|80|9351bf22dfd396e429d9d301fea35beb
+acl|54|3516a7f12ea8afe1332ee233908a0523
+cmt|24|a7631ddbd7b2b137efb11e3dc41b195b
+
+Aplicar → revertir: IDÉNTICA a antes de B1.1
+Revertir → reaplicar: IDÉNTICA a la primera aplicación
+Con datos de B1.1 (bitácora, líneas por asignar…) la reversión se niega: hay datos de B1.1 (bitácora, líneas por asignar, horas sencillas, esquema preferido, umbral vacío o factor doble distinto de 2)

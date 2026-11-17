@@ -1,0 +1,39 @@
+== C1 Convertido: incompleto y la ficha dice qué falta ==
+OK    C1 Con una sola relación: nace incompleto y ligado a su relación
+OK    C1 La ficha indica lo primero que falta (fecha de inicio)  [captura la fecha de inicio del crédito.]
+OK    C1 Con dos relaciones: sin relación; la ficha pide elegirla  [elige la relación laboral (empresa) del crédito.]
+OK    C1 El dato solo se calcula para incompletos
+== C2 Guardar los datos requeridos (sin importe total) ==
+OK    C2 Parcial (sin retención): sigue incompleto y ahora pide la retención por periodo  [captura el descuento por periodo y su periodicidad (retención de la cédula, sin prorratear).]
+OK    C2 Con los datos completos el estado NO cambia solo (activar es explícito)
+OK    C2 … y la ficha lo reporta como «completo, falta activar» (sin faltantes)
+OK    C2 Importe total vacío (opcional); retención $250
+OK    C2 Historia: conversión y los dos cambios con motivo
+== C3 Incompleto: no propone descuentos ni genera pendientes ==
+OK    C3 Sin líneas de descuento para los incompletos
+OK    C3 Aparecen como informativos
+OK    C3 Sin pendientes de descuento
+== C4 Activar ==
+OK    C4 Con datos incompletos: «Activar» se rechaza con el faltante  [ERROR:  BeeHuman: elige la relación laboral (empresa) del crédito.]
+OK    C4 … y sigue incompleto
+OK    C4 Activar exige motivo  [ERROR:  BeeHuman: escribe el motivo; queda en la historia.]
+OK    C4 Con datos completos: se activa
+OK    C4 Historia «activación» con fecha efectiva y motivo  [activacion|2026-11-16|Cédula FONACOT recibida]
+OK    C4 Ya activo: sin aviso de faltantes
+== C5 Activo: propone su retención por decidir; importe total opcional ==
+OK    C5 Propone $250 «por decidir»  [(250.0, 'pendiente')]
+OK    C5 Sin importe total: no controla saldo (sigue siendo opcional)
+OK    C5 Su descuento aparece como pendiente de decidir
+== C6 Permisos ==
+OK    C6 cred_falta_para_activar es interna (no expuesta a la aplicación)
+OK    C6 Coordinador no consulta créditos  [ERROR:  BeeHuman: sin permiso.]
+== S Sin «Salud» en la ficha ni en el alta; el dato existente se conserva ==
+OK    S  (control) Se identificó el objeto que envía el alta
+OK    S  (control) Se identificó el objeto que envía la ficha
+OK    S  Ficha: sin la sección «Salud» ni el campo «Restricciones de salud»
+OK    S  Alta: sin «Salud», sin el campo y sin la mención en el subtítulo de la tarjeta
+OK    S  La ficha no envía restricciones_salud al guardar
+OK    S  El alta no envía restricciones_salud
+OK    S  La columna restricciones_salud sigue existiendo en la base
+
+RESULTADO: 30 de 30 verificaciones OK

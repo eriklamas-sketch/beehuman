@@ -74,6 +74,12 @@ insert into public.personal_registros_pago (tenant_id, personal_id, clasificacio
  ('{T}','{P['P4']}','0f000000-0000-4000-8000-000000000001','0e000000-0000-4000-8000-000000000030',20000,'neto',30,'2025-01-01'),
  ('{T}','{P['P5']}','0f000000-0000-4000-8000-000000000001','0e000000-0000-4000-8000-000000000030',20000,'neto',30,'2025-01-01');
 """
+# B2: cada persona tiene su relación laboral con la empresa del periodo y sus esquemas enlazados a ella.
+REL = {k: f'0a300000-0000-4000-8000-0000000000{i:02d}' for i, k in enumerate(P, 1)}
+for k, (co, ar, baja) in personas.items():
+    seed += (f"insert into public.relaciones_laborales (id, tenant_id, personal_id, empresa_id, fecha_ingreso, estado, fecha_baja, causa_baja) values "
+             f"('{REL[k]}','{T}','{P[k]}','{E}','2025-01-01',{repr('baja') if baja else repr('vigente')},{repr(baja) if baja else 'null'},{repr('2') if baja else 'null'});\n")
+seed += "update public.personal_registros_pago r set relacion_laboral_id = rl.id from public.relaciones_laborales rl where rl.personal_id = r.personal_id and r.tenant_id = '%s';\n" % T
 o, e = sql(seed, replica=True)
 if e: print(e); sys.exit(1)
 # Carga inicial equivalente a la de la migración (los datos se crearon después de migrar)
@@ -194,29 +200,33 @@ falla_con(f"insert into public.inc_cantidades (tenant_id, hoja_id, hoja_raiz_id,
 # =====================================================================
 print('\n== Cálculo (Nómina) ==')
 def imp(pk, ck, ver=V2):
-    return val(f"select coalesce(sugerido::text,'null')||'/'||origen from public.inc_importes where version_id='{ver}' and personal_id='{P[pk]}' and concepto_id='{K[ck]}'", 'nomina')
+    # B2: un importe puede tener varias líneas (una por esquema); aquí se suman y se listan los orígenes.
+    return val(f"select coalesce(sum(sugerido)::text,'null')||'/'||string_agg(distinct origen, ',') from public.inc_importes where version_id='{ver}' and personal_id='{P[pk]}' and concepto_id='{K[ck]}' and origen <> 'descartado'", 'nomina')
 ok(imp('P1', 'HE') == '2250.00/pendiente', 'C2/C15: 12 h extra con $20,000/30 → $2,250.00 (9 dobles + 3 triples, sin redondeo intermedio)', imp('P1', 'HE'))
 ok(imp('P4', 'HE') == '666.67/pendiente', 'Corrección recalculada: 4 h extra de P4 → $666.67', imp('P4', 'HE'))
 ok(imp('P4', 'HE', V1) == '333.33/pendiente', 'C1: en la versión 1, 2 h extra → $333.33', imp('P4', 'HE', V1))
 ok(imp('P1', 'DOM') == '166.67/pendiente', 'C7: domingo al 25 % de $666.67 → $166.67', imp('P1', 'DOM'))
-ok(imp('P2', 'DOMT') == '700.00/aceptado', 'C8: domingo con tarifa del área B → $700 (sustituye la prima)', imp('P2', 'DOMT'))
-ok(imp('P3', 'DOMT') == '600.00/aceptado', 'C9: domingo con tarifa general → $600', imp('P3', 'DOMT'))
-ok(imp('P3', 'HT') == '950.00/aceptado', 'C6: tarifa propia 19 × $50 → $950', imp('P3', 'HT'))
+# B1.1: P2 tiene dos esquemas vigentes y el concepto no tiene preferido: la línea por tarifa queda «por asignar»
+ok(imp('P2', 'DOMT') == '700.00/por_asignar', 'C8: domingo con tarifa del área B → $700 (sustituye la prima); por asignar esquema (B1.1)', imp('P2', 'DOMT'))
+# B1.1a: la línea por tarifa con esquema automático nace por decidir (antes, aceptada)
+ok(imp('P3', 'DOMT') == '600.00/pendiente', 'C9: domingo con tarifa general → $600, por decidir (B1.1a)', imp('P3', 'DOMT'))
+ok(imp('P3', 'HT') == '950.00/pendiente', 'C6: tarifa propia 19 × $50 → $950, por decidir (B1.1a)', imp('P3', 'HT'))
 ok(imp('PNOI', 'HE') == 'null/sin_sueldo', 'C10: sin esquema de pago → sin importe, no se inventa sueldo', imp('PNOI', 'HE'))
 ok(imp('P4', 'BSI') == 'null/sin_importe', 'B4: concepto sin importe → sin monto', imp('P4', 'BSI'))
 ok(imp('P1', 'DESC') == '150.00/pendiente', 'Descuento operativo: queda pendiente de decisión de Nómina', imp('P1', 'DESC'))
 base = val(f"select base_calculo from public.inc_importes where version_id='{V2}' and personal_id='{P['P1']}' and concepto_id='{K['HE']}'", 'nomina')
 ok(base == 'mixto', 'B8: el importe registra la base usada (mixto por defecto)', base)
 # Bases: P2 tiene 24,000 brutos/30 + 1,400 netos/7 → mixto 1000, bruto 800, neto 200 diarios
-for b, esperado in [('mixto', '1000.000'), ('bruto', '800.000'), ('neto', '200.000')]:
-    v = val(f"select round(public.inc_sueldo_diario('{P['P2']}','{PER}','{b}'),3)")
-    ok(v == esperado, f'B5–B7: sueldo diario base {b}', v)
+# B2: ya no hay un sueldo diario único; cada esquema da su propio sueldo diario y se conserva separado.
+for b, esperado in [('mixto', 'bruto 800.000 | neto 200.000'), ('bruto', 'bruto 800.000'), ('neto', 'neto 200.000')]:
+    v = val(f"select string_agg(modalidad||' '||round(sueldo_diario,3), ' | ' order by modalidad) from public.inc_esquemas_dia('{P['P2']}','{E}','{d(0)}','{b}')")
+    ok(v == esperado, f'B5–B7: esquemas que pagan con base {b} (bruto y neto separados)', v)
 val(f"select public.inc_capturar_sueldo_manual('{PER}','{P['PNOI']}',400)", 'nomina')
 ok(imp('PNOI', 'HE') == '300.00/pendiente', 'Sueldo manual capturado por Nómina: 3 h × 400/8 × 2 → $300', imp('PNOI', 'HE'))
 iid = val(f"select id from public.inc_importes where version_id='{V2}' and personal_id='{P['P1']}' and concepto_id='{K['HE']}'", 'nomina')
 val(f"select public.inc_decidir_importe('{iid}', null)", 'nomina')
 ok(val(f"select final||'/'||origen from public.inc_importes where id='{iid}'", 'nomina') == '2250.00/aceptado', 'C11: Nómina acepta la sugerencia')
-val(f"select public.inc_decidir_importe('{iid}', 2200)", 'nomina')
+val(f"select public.inc_decidir_importe('{iid}', 2200, 'B1.1: motivo obligatorio')", 'nomina')
 ok(val(f"select final||'/'||sugerido||'/'||origen from public.inc_importes where id='{iid}'", 'nomina') == '2200.00/2250.00/modificado', 'C12: Nómina modifica; se conservan sugerido y final')
 val(f"select public.inc_capturar_sueldo_manual('{PER}','{P['PNOI']}',400)", 'nomina')
 ok(val(f"select final||'/'||origen from public.inc_importes where id='{iid}'", 'nomina') == '2200.00/modificado', 'Un recálculo no pisa el importe modificado por Nómina')
@@ -229,7 +239,7 @@ for rol in ['coordA', 'consulta']:
     ok(val("select count(*) from public.personal where sd is not null or sueldo_bruto is not null or sdi_imss is not null or true", rol) == '0', f'{rol}: 0 renglones de personal (sd, sueldo_bruto, sdi_imss)')
     ok(val("select count(*) from public.inc_importes", rol) == '0', f'{rol}: 0 importes de la Ola 1')
     ok(val("select count(*) from public.inc_sueldos_manuales", rol) == '0', f'{rol}: 0 sueldos manuales')
-    falla_con(f"select public.inc_sueldo_diario('{P['P1']}','{PER}','mixto')", rol, 'permission denied', f'{rol}: no puede ejecutar el cálculo de sueldo diario')
+    falla_con(f"select * from public.inc_esquemas_dia('{P['P1']}','{E}','{d(0)}','mixto')", rol, 'permission denied', f'{rol}: no puede ejecutar el sueldo diario por esquema')
     falla_con(f"select public.inc_calcular_version('{V2}')", rol, 'permission denied', f'{rol}: no puede ejecutar el cálculo de importes')
     datos = val(f"select count(*) from public.inc_versiones v where v.datos::text ~ '(sueldo|sugerido|importe\":)'", rol)
     ok(datos == '0', f'{rol}: las versiones que puede leer no contienen sueldos ni importes')
@@ -241,7 +251,7 @@ for rol in ['coordA', 'consulta']:
 fn = val("""select string_agg(p.proname, ',' order by p.proname) from pg_proc p
             where p.pronamespace='public'::regnamespace
               and (pg_get_function_result(p.oid) ~* '(sueldo|sd |importe|monto)' )""")
-ok(fn in ('', 'inc_sueldo_diario'), 'Funciones cuyo resultado expone sueldos o importes: solo la interna inc_sueldo_diario', fn)
+ok(fn in ('', 'inc_esquemas_dia'), 'Funciones cuyo resultado expone sueldos o importes: solo la interna inc_esquemas_dia', fn)
 ok(val("select count(*) from public.equipo_coordinador()", 'coordA') != '' , 'equipo_coordinador sigue funcionando (sin columnas de sueldo)')
 
 # =====================================================================
@@ -259,6 +269,19 @@ ok(val("select count(*) from public.inc_cantidades", 'consulta') != '0', 'Consul
 # =====================================================================
 print('\n== Procesado y complementos ==')
 val(f"select public.inc_enviar_hoja('{HB}')", 'coordB')
+# B1: solo se procesa una prenómina completa (importes decididos y firmas requeridas)
+falla_con(f"select public.inc_marcar_procesado('{PER}')", 'nomina', 'no se puede procesar', 'B1: procesar con importes por decidir y sin firmas: rechazado')
+# B1.1: Nómina asigna el esquema de las líneas por asignar (el primero que ofrece BeeHuman)
+for x in (val(f"select string_agg(distinct linea_id::text||'/'||(select registro_pago_id from public.inc_esquemas_asignables(i.version_id) a where a.linea_id = i.id limit 1), ',') from public.inc_importes i join public.inc_versiones v on v.id=i.version_id join public.inc_hojas h on h.id=v.hoja_id and v.numero=h.version_actual cross join lateral (select i.id as linea_id) z where h.periodo_id='{PER}' and i.origen = 'por_asignar'", 'nomina') or '').split(','):
+    if x: val(f"select public.inc_asignar_esquema('{x.split('/')[0]}','{x.split('/')[1]}')", 'nomina')
+pend = val(f"select string_agg(i.id::text||'/'||coalesce(i.sugerido::text,''), ',') from public.inc_importes i join public.inc_versiones v on v.id=i.version_id join public.inc_hojas h on h.id=v.hoja_id and v.numero=h.version_actual where h.periodo_id='{PER}' and i.origen in ('pendiente','sin_sueldo')", 'nomina')
+for x in (pend.split(',') if pend else []):
+    iid, sug = x.split('/'); val(f"select public.inc_decidir_importe('{iid}', {'null' if sug else "100, 'B1.1: motivo obligatorio'"})", 'nomina')
+for hh in (HA, HB):
+    for area, quien in (('nomina', 'nomina'), ('rh', 'rh')):
+        if val(f"select count(*) from public.inc_eventos e join public.inc_hojas h on h.id=e.hoja_id join public.inc_versiones v on v.id=e.version_id and v.numero=h.version_actual where e.hoja_id='{hh}' and e.tipo='firma_{area}'") == '0':
+            val(f"select public.inc_firmar_hoja('{hh}','{area}')", quien)
+ok(val(f"select count(*) from public.inc_faltantes_procesar('{PER}')", 'nomina') == '0', 'B1: con todo decidido y firmado ya no falta nada')
 m1 = val(f"select public.inc_marcar_procesado('{PER}')", 'nomina')
 m2 = val(f"select public.inc_marcar_procesado('{PER}')", 'nomina')
 ok('procesado' in m1 and 'Ya estaba procesado' in m2 and val(f"select count(*) from public.inc_eventos where periodo_id='{PER}' and tipo='procesado'") == '1',

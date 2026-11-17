@@ -1,0 +1,67 @@
+== A Cálculo ==
+OK    A1 HE del sueldo, 1 h: 1 × 83.33 × 2 = 166.67 (valor por hora 83.33, IMSS bruto)  [bruto:166.67:pendiente vh=83.3333]
+OK    A2 HE del sueldo, 14 h en un día: 9 dobles + 5 triples = 2,750.00  [bruto:2750.0:pendiente]
+OK    A3 Umbral semanal acumulado entre días: lunes 6 + martes 8 = 9 dobles + 5 triples = 2,750.00  [bruto:2750.0:pendiente d=9.0 t=5.0]
+OK    A3b El umbral se reinicia cada semana: 6 h y 8 h en semanas distintas = 14 dobles = 2,333.33  [bruto:2333.33:pendiente]
+OK    A3c El umbral es de la persona en la semana: 6 h HE-S (1,000.00) + 5 h HE-T → 3 dobles + 2 triples (600.00)  [bruto:1000.0:pendiente | bruto:600.0:pendiente]
+OK    A4 HE tarifa $50, 1 h: 1 × 50 × 2 = 100.00  [bruto:100.0:pendiente]
+OK    A5 HE tarifa $50, 14 h: 9 × 50 × 2 + 5 × 50 × 3 = 1,650.00  [bruto:1650.0:pendiente]
+OK    B1 Un solo esquema vigente: se asigna automáticamente (IMSS) y el importe nace por decidir (B1.1a)  [True pendiente unico]
+OK    A6 Horas sencillas tarifa: 1 h = 50.00 y 14 h = 700.00 (sin dobles ni triples)  [bruto:50.0:pendiente | bruto:700.0:pendiente]
+OK    A7 Horas sencillas del sueldo: 2 × 83.33 = 166.67 (antes 2 × 666.67)  [bruto:166.67:pendiente]
+OK    A8 Dos esquemas: IMSS bruto 2 × 100 × 2 = 400.00 y EFECTIVO neto 2 × 12.50 × 2 = 50.00, separadas  [bruto:400.0:pendiente; neto:50.0:pendiente]
+OK    A9 Empresa B sin triples (umbral vacío), tarifa $60, 14 h: 14 × 60 × 2 = 1,680.00  [bruto:1680.0:pendiente]
+OK    A10 La configuración de la Empresa B no altera la Empresa A: 1,650.00  [bruto:1650.0:pendiente]
+OK    A11 Esquema sin enlazar a la relación: «Sin sueldo» con motivo (como B2)  [None:None:sin_sueldo]
+OK    B1.1a Ninguna línea nace aceptada: las 7 de tarifa con esquema automático (A3c, A4, A5, A6 ×2, A9, A10) llegan por decidir  [aceptadas sin decisión=0, tarifa con esquema por decidir=7]
+== B Esquema de pago ==
+OK    B2 Dos esquemas sin preferido: 200.00 calculado, «por asignar», sin esquema ni modalidad  [None:200.0:por_asignar La persona tiene 2 esquemas de pago vigentes; Nómina elige]
+OK    B6 Preferido EFECTIVO y tiene exactamente uno vigente: se asigna EFECTIVO  [neto:200.0:pendiente]
+OK    B7 Preferido EFECTIVO y no lo tiene: por asignar (no se usa IMSS por suposición)  [None:200.0:por_asignar]
+OK    B8 Sin esquemas: por asignar con aviso  [La persona no tiene esquemas de pago vigentes en esta empresa en esas fechas]
+OK    B7b Preferido EFECTIVO que aún no está vigente ese día (inicia el jueves): por asignar  [None:200.0:por_asignar]
+OK    B7b … y la semana siguiente, ya vigente, se asigna EFECTIVO  [neto:200.0:pendiente]
+OK    C3 Opciones para asignar: solo los esquemas vigentes de esa persona (no el vencido)
+OK    B4 Rechaza un esquema de otra persona  [ERROR:  BeeHuman: ese esquema no es de esta persona en esta empresa o no está vigente en las fechas de la línea.]
+OK    B4 Rechaza un esquema no vigente en esas fechas  [ERROR:  BeeHuman: ese esquema no es de esta persona en esta empresa o no está vigente en las fechas de la línea.]
+OK    B4 Rechaza un esquema de otra empresa  [ERROR:  BeeHuman: ese esquema no es de esta persona en esta empresa o no está vigente en las fechas de la línea.]
+OK    B2 Una línea por asignar no se acepta sin esquema  [ERROR:  BeeHuman: asigna primero el esquema de pago de esta línea.]
+OK    B3 Nómina asigna EFECTIVO: neto, por decidir, con quién asignó  [neto:200.0:pendiente]
+OK    B3 La asignación queda en la bitácora
+OK    B5 Recalcular conserva la asignación manual (sigue EFECTIVO)  [neto:200.0:pendiente]
+OK    B5 … y si Nómina ya la aceptó, sigue aceptada después de recalcular
+OK    B9 El detalle dice persona, concepto y hoja  [PERSONA P1 · Horas extra efectivo: esquema de pago por asignar — hoja de PERSONA CA | PERSONA P4 · Horas extra tarifa: esquema de pago por asignar — hoja de PERSONA CA | PERSONA P5]
+OK    B9 No se procesa con líneas por asignar  [ERROR:  BeeHuman: no se puede procesar; faltan 4 pendiente(s): PERSONA P1 · Horas extra efectivo: esquema de pago por asignar — hoja de PERSONA CA; PE]
+OK    B5b Si el esquema asignado deja de ser vigente ya no se usa: la línea asignada queda descartada y se aplica la regla (aquí IMSS, único vigente)  [bruto:200.0:pendiente / descartado]
+== C Revisión (servidor): motivo y ajustes ==
+OK    C4 Modificar sin motivo no se permite  [ERROR:  BeeHuman: escribe el motivo del ajuste; queda en la bitácora.]
+OK    C5 Sugerido intacto (1,650), final 1,620 y dos ajustes con anterior, nuevo, motivo y usuario  [1650.00:1620.00:modificado / 1650.00>1600.00:Se pagan 13 h, no 14:true | 1600.00>1620.00:Ajuste acordado con el coordinador:true]
+OK    C5 Ni el dueño de la base cambia un importe sin registro en la bitácora  [ERROR:  BeeHuman: un ajuste de importe requiere su registro en la bitácora con motivo.]
+== D Histórico y protección ==
+OK    D1 Versión enviada con $50 × 2: al recalcular sigue en 1,650.00  [bruto:1650.0:pendiente]
+OK    D2 Periodo nuevo usa $70 y × 2.5: 9 × 70 × 2.5 + 5 × 70 × 3 = 2,625.00  [bruto:2625.0:pendiente]
+OK    D3 Periodo completo: se procesa
+OK    D3 Procesado: cambiar el sueldo y capturar sueldo manual no altera sus importes
+OK    D3 El recálculo directo en el servidor (dueño de la base) se rechaza  [ERROR:  BeeHuman: el periodo ya se procesó; sus importes no se recalculan.]
+OK    D3 Un UPDATE directo del dueño de la base sobre importes procesados se rechaza  [ERROR:  BeeHuman: el periodo ya se procesó; sus importes no se modifican ni se recalculan.]
+OK    D3 Tampoco se insertan importes en una hoja procesada  [ERROR:  BeeHuman: el periodo ya se procesó; sus importes no se modifican ni se recalculan.]
+OK    D3 Nómina no decide importes de un periodo procesado  [ERROR:  BeeHuman: solo se deciden importes de la versión vigente de una hoja enviada.]
+OK    D4 Bitácora: UPDATE del dueño de la base se rechaza  [ERROR:  BeeHuman: inc_importes_ajustes es un registro histórico y no se puede update .]
+OK    D4 Bitácora: DELETE del dueño de la base se rechaza  [ERROR:  BeeHuman: inc_importes_ajustes es un registro histórico y no se puede delete .]
+OK    D4 Bitácora: TRUNCATE del dueño de la base se rechaza  [ERROR:  BeeHuman: inc_importes_ajustes es un registro histórico y no se puede truncate .]
+OK    D4 Nadie inserta en la bitácora fuera de las funciones  [ERROR:  permission denied for table inc_importes_ajustes]
+== E Permisos ==
+OK    E1 El Administrador deja el umbral vacío (sin triples)
+OK    E2 Nómina lee la configuración pero no la cambia
+OK    E2 Nómina no crea conceptos  [ERROR:  new row violates row-level security policy for table "inc_conceptos"]
+OK    E3 coordA: no ve la bitácora
+OK    E3 coordA: no asigna esquemas  [ERROR:  BeeHuman: sin permiso.]
+OK    E3 coordA: no ve los esquemas asignables  [ERROR:  BeeHuman: sin permiso.]
+OK    E3 consulta: no ve la bitácora
+OK    E3 consulta: no asigna esquemas  [ERROR:  BeeHuman: sin permiso.]
+OK    E3 consulta: no ve los esquemas asignables  [ERROR:  BeeHuman: sin permiso.]
+OK    E4 Otra organización: no ve la bitácora
+OK    E4 Otra organización: no asigna esquemas  [ERROR:  BeeHuman: importe no encontrado.]
+OK    E4 Otra organización: no modifica importes  [ERROR:  BeeHuman: importe no encontrado.]
+
+RESULTADO: 60 de 60 verificaciones OK

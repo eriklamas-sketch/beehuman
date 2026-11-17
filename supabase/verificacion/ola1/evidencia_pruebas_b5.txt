@@ -1,0 +1,119 @@
+== R Registro ==
+OK    R1 FONACOT sin retención por periodo: se rechaza (sin prorrateo)  [ERROR:  BeeHuman: captura el descuento por periodo y su periodicidad (retención de la cédula, sin prorratear).]
+OK    R1 INFONAVIT sin tipo de descuento ni valor: se rechaza  [ERROR:  BeeHuman: INFONAVIT requiere número de crédito, tipo de descuento y valor (se registra para NOI; no genera descuento).]
+OK    R1 INFONAVIT no admite importe por periodo (el cálculo es B6)  [ERROR:  BeeHuman: INFONAVIT se registra para NOI y no genera descuento en BeeHuman todavía; no captures importe por periodo ni monto.]
+OK    R1 Calculables: FONACOT, préstamo, anticipo, otro y pensión fija; informativos: INFONAVIT y pensión porcentual
+OK    R2 Relación de otra persona: se rechaza  [ERROR:  BeeHuman: la relación laboral no es de esta persona o está anulada.]
+OK    R2 Sin relación laboral (y no incompleto): se rechaza  [ERROR:  BeeHuman: elige la relación laboral (empresa) del crédito.]
+OK    R2 Periodicidad de otra organización: se rechaza  [ERROR:  BeeHuman: periodicidad fuera de tu organización.]
+OK    R3 Editar sin motivo: se rechaza  [ERROR:  BeeHuman: escribe el motivo del cambio; queda en la historia.]
+OK    R3 La historia guarda alta y cambios con antes, después y motivo  [alta:->300.00: | cambio:300.00>350.00:Nueva cédula FONACOT | cambio:350.00>300.00:Corrección de captura]
+OK    R3 Historia: UPDATE del dueño de la base se rechaza  [ERROR:  BeeHuman: cred_historia es un registro histórico y no se puede update .]
+OK    R3 Historia: DELETE del dueño de la base se rechaza  [ERROR:  BeeHuman: cred_historia es un registro histórico y no se puede delete .]
+OK    R3 Historia: TRUNCATE del dueño de la base se rechaza  [ERROR:  BeeHuman: cred_historia es un registro histórico y no se puede truncate .]
+OK    R3 Un crédito no se borra (se termina)  [ERROR:  BeeHuman: cred_creditos es un registro histórico y no se puede delete .]
+== P Propuesta por periodo ==
+OK    P1 FONACOT $300 semanal en periodo semanal de su empresa: 1 línea de $300 por decidir  [(300.0, 'pendiente')]
+OK    P1 Préstamo $1,500 y pensión fija $400 por decidir
+OK    P2 Periodo quincenal de la misma empresa: no se propone (periodicidad distinta) y hay aviso  [0]
+OK    P2/P3 Periodo de la empresa B: ningún crédito ligado a la empresa A se propone ahí  [[]]
+OK    P3 Persona con relaciones en A y B, crédito ligado a A: una sola línea, solo en A (C1, C2)
+OK    P4 Sincronizar varias veces no duplica: una línea por crédito y periodo
+OK    P4 Ni el dueño de la base inserta un segundo descuento del mismo crédito y periodo  [ERROR:  duplicate key value violates unique constraint "cred_descuentos_periodo_id_credito]
+OK    P5 INFONAVIT y pensión del 20 %: 0 líneas; aparecen como informativos (C3)  [[('infonavit', 'INF-9'), ('pension', 'OF-77'), ('fonacot', 'FON-123')]]
+OK    P6 Relación dada de baja antes del periodo: no se propone y avisa «relación terminada»  [[{'tipo': 'anticipo', 'aviso': 'La relación laboral del crédito terminó; confirma si el crédito debe terminarse', 'persona': 'PERSONA PB', 'referencia': 'AN-1'}]]
+OK    P7 FONACOT incompleto convertido: informativo, sin línea ni pendiente
+OK    P6 Crédito suspendido: su línea se descarta (no se borra)
+OK    P6 Al reactivarlo vuelve a proponerse por decidir
+== N Conversión no_fonacot ==
+OK    N1 Con una sola relación vigente: FONACOT incompleto, ligado, sin importe  [5a100000-0000-4000-8000-000000000908|incompleto|FON-123|conversion_no_fonacot|-]
+OK    N1 Sin relación vigente: incompleto y sin relación (no se adivina)  [sin relación|incompleto]
+OK    N1 El campo original se conserva y la conversión queda en la historia (trazabilidad)
+OK    N2 Activar el incompleto sin completar sus datos (fecha, retención): se rechaza  [ERROR:  BeeHuman: captura la fecha de inicio del crédito.]
+OK    N2 … y sigue incompleto
+OK    N2 Completado y activado por Nómina: ya propone $250
+== D Decisiones ==
+OK    D1 Modificar sin motivo: se rechaza  [ERROR:  BeeHuman: escribe el motivo del ajuste; queda en la bitácora.]
+OK    D1 Modificar con motivo queda en la bitácora
+OK    D1 Ni el dueño de la base cambia un descuento sin bitácora  [ERROR:  BeeHuman: un ajuste de descuento requiere su registro en la bitácora con motivo.]
+OK    D1 No se modifica por encima del saldo  [ERROR:  BeeHuman: el descuento no puede exceder el saldo disponible del crédito ($10,000.00: saldo $10,000.00 menos $0.00 comprometidos en otros perio]
+OK    D2 Faltantes nombran persona, tipo y referencia de los descuentos por decidir  [PERSONA PD · Caja de ahorro: descuento por decidir | PERSONA PF · FONACOT F-1: descuento por decidir | PERSONA PN · FONACOT FON-123: descuento por decidir | PER]
+OK    D2 No se procesa con descuentos por decidir  [ERROR:  BeeHuman: no se puede procesar; faltan 5 pendiente(s): PERSONA PD · Caja de ahorro: descuento por decidir; PERSONA PF · FONACOT F-1: descuento]
+OK    S3 Antes de procesar el saldo no cambia ($10,000)
+OK    D4 Sincronizar después de aceptar con el mismo sugerido: sigue aceptado  [aceptados=5]
+== S Saldo y procesado ==
+OK    S5 Préstamo $2,000 con dos periodos abiertos: el segundo propone solo $500 (saldo proyectado)  [500.0]
+OK    S7 Error a mitad del procesado: se rechaza  [ERROR:  falla simulada]
+OK    S7 … y no queda nada a medias: periodo abierto, sin movimientos
+OK    S1 Se procesa el periodo con todo decidido
+OK    S6 El saldo baja por el final modificado ($1,200), no por el sugerido: $10,000 → $8,800  [8800.0]
+OK    S1 Préstamo de $2,000: tras $1,500 queda $500
+OK    S1 FONACOT sin monto total: no genera movimientos de saldo
+OK    S2 Procesar otra vez: «ya estaba procesado»
+OK    S2 … y el saldo solo bajó una vez ($8,800, 1 movimiento)
+OK    S2 Un segundo movimiento del mismo crédito y periodo se rechaza (índice único), aun del dueño de la base  [ERROR:  duplicate key value violates unique constraint "cred_movimientos_credito_id_period]
+OK    S2 Movimientos: UPDATE se rechaza  [ERROR:  BeeHuman: cred_movimientos es un registro histórico y no se puede update]
+OK    S2 Movimientos: DELETE se rechaza  [ERROR:  BeeHuman: cred_movimientos es un registro histórico y no se puede delete]
+OK    D3 Periodo procesado: no se decide  [ERROR:  BeeHuman: el periodo ya se procesó; sus descuentos no se modifican.]
+OK    D3 Periodo procesado: ni el dueño de la base modifica sus descuentos  [ERROR:  BeeHuman: el periodo ya se procesó; sus descuentos no se modifican ni se]
+OK    D3 Periodo procesado: la sincronización no recalcula nada
+OK    S5 Con saldo comprometido por completo en un periodo abierto anterior, el siguiente no propone
+OK    S4 Saldo $500 y descuento de $1,500: sugerido $500  [500.0]
+OK    S4 Se procesa
+OK    S4 Saldo $0: el préstamo se termina en la misma transacción, con su historia
+OK    S4 Un préstamo terminado no propone en periodos siguientes
+== S8 Modificar por encima del saldo proyectado (ejemplo de la revisión) ==
+OK    S8 Saldo $2,000: periodo A abierto con $1,500 comprometidos; B propone $500  [1500.0 / 500.0]
+OK    S8 La línea de B muestra saldo $2,000 y disponible $500  [saldo 2000.0 disponible 500.0]
+OK    S8 Nómina modifica B a $900: se rechaza (disponible $500)  [ERROR:  BeeHuman: el descuento no puede exceder el saldo disponible del crédito ($500.00: saldo $2,000.00 menos $1,500.00 comprometidos en otros perio]
+OK    S8 El mensaje explica: disponible $500 = saldo $2,000 − $1,500 comprometidos  [ERROR:  BeeHuman: el descuento no puede exceder el saldo disponible del crédito ($500.00: saldo $2,000.00 menos $1,500.00 comprometidos en otros periodos abiert]
+OK    S8 … y nada cambia: B sigue por decidir, sin bitácora
+OK    S8 Modificar B por debajo del disponible ($400): se permite
+== S9 Procesar primero el periodo anterior ==
+OK    S9 Se procesa A ($1,500): saldo $500
+OK    S9 B conserva su decisión ($400) y el disponible es el saldo real ($500)  [400.0 modificado 500.0]
+OK    S9 B no puede subir por encima del saldo real ($600 > $500)  [ERROR:  BeeHuman: el descuento no puede exceder el saldo disponible del crédito ($500.00: saldo $500.00 menos $0.00 comprometidos en otros periodos ab]
+OK    S9 Se procesa B ($500): saldo $0 y el anticipo se termina
+OK    S9 Total descontado $2,000 en 2 movimientos; el saldo nunca fue negativo  [2000.00|2|0.00]
+== S10 Procesar primero el periodo posterior ==
+OK    S10 Saldo $2,000: A propone $1,500 y B $500  [1500.0 / 500.0]
+OK    S10 B no puede tomar lo que A tiene comprometido ($1,500 > $500)  [ERROR:  BeeHuman: el descuento no puede exceder el saldo disponible del crédito ($500.00: saldo $2,000.00 menos $1,500.00 comprometidos en otros perio]
+OK    S10 Se procesa primero B ($500): saldo $1,500
+OK    S10 A no necesita ajustarse: su propuesta ($1,500) sigue cabiendo en el saldo real ($1,500)  [1500.0 disp 1500.0]
+OK    S10 Se procesa A ($1,500): saldo $0 y el anticipo se termina
+OK    S10 Total descontado $2,000; nunca negativo  [2000.00|2|0.00]
+== S11 Modificar descuentos en ambos periodos ==
+OK    S11 Saldo $2,000, $1,000 por periodo: A $1,000 y B $1,000
+OK    S11 A modificado a $1,200: la propuesta de B se recalcula a $800, por decidir  [800.0 pendiente]
+OK    S11 B a $900 se rechaza (disponible $800)  [ERROR:  BeeHuman: el descuento no puede exceder el saldo disponible del crédito ($800.00: saldo $2,000.00 menos $1,200.00 comprometidos en otros perio]
+OK    S11 A a $1,400 se rechaza: B ya decidió $700 (disponible de A $1,300)  [ERROR:  BeeHuman: el descuento no puede exceder el saldo disponible del crédito ($1,300.00: saldo $2,000.00 menos $700.00 comprometidos en otros perio]
+OK    S11 Lo decidido en ambos periodos ($1,300 + $700) no excede el saldo ($2,000)
+OK    S11 Faltantes: ninguna línea del crédito excede el disponible  [ninguna]
+OK    S11 Se procesan ambos (en orden inverso): saldo $0 y terminado
+OK    S11 Total descontado $2,000; nunca negativo  [2000.00|2|0.00]
+== S12 Dos operaciones concurrentes sobre el mismo crédito ==
+OK    S12 Saldo $2,000: A $1,000 y B $1,000 (por separado, cada decisión cabe)
+OK    S12 Sesión 1 (modifica A a $1,500, retiene la transacción 2 s): confirma sin error
+OK    S12 Sesión 2 (acepta B $1,000) espera el bloqueo del crédito hasta que la sesión 1 confirma  [2.0 s]
+OK    S12 … y al continuar ve lo comprometido por la sesión 1: se rechaza (disponible $500)  [ERROR:  BeeHuman: el descuento no puede exceder el saldo disponible del crédito ($500.00: saldo $2,000.00 menos $1,500.00 comprometidos en otros perio]
+OK    S12 Lo decidido nunca excede el saldo: solo $1,500 de A
+OK    S12 B se recalcula a $500, por decidir  [500.0 pendiente]
+OK    S12 Al revés: B acepta $500 primero; A a $1,800 espera y se rechaza (disponible $1,500)  [2.1 s · ERROR:  BeeHuman: el descuento no puede exceder el saldo disponible del crédito ($1,500.00: saldo $2,000.00 me]
+OK    S12 Total decidido $2,000 = saldo
+== E Permisos ==
+OK    E1 coord: SELECT directo a las 5 tablas cred_* devuelve 0 filas  [0,0,0,0,0]
+OK    E1 coord: las 6 funciones responden «sin permiso»
+OK    E1 coord: no inserta directo  [ERROR:  permission denied for table cred_creditos]
+OK    E1 consulta: SELECT directo a las 5 tablas cred_* devuelve 0 filas  [0,0,0,0,0]
+OK    E1 consulta: las 6 funciones responden «sin permiso»
+OK    E1 consulta: no inserta directo  [ERROR:  permission denied for table cred_creditos]
+OK    E1 Funciones internas no expuestas a la aplicación  [select public.cred_saldo_actual(null)]
+OK    E1 Funciones internas no expuestas a la aplicación  [select public.cred_sincronizar_periodo('2287b]
+OK    E1 cred_disponible (interna) no expuesta a la aplicación
+OK    E3 Ni Nómina escribe directo en las tablas (solo por funciones)  [ERROR:  permission denied for table cred_creditos]
+OK    E2 Otra organización: no ve créditos
+OK    E2 Otra organización: no modifica créditos  [ERROR:  BeeHuman: crédito no encontrado.]
+OK    E2 Otra organización: no decide descuentos  [ERROR:  BeeHuman: descuento no encontrado.]
+OK    E3 Administrador ve los créditos de la persona
+
+RESULTADO: 106 de 106 verificaciones OK

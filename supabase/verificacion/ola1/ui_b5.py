@@ -111,7 +111,7 @@ def abrir_ficha(pg, nombre):
     pg.click(f'#tabla-personal a:has-text("{nombre}")'); espera(pg, 1500)
     pg.click('[data-detail-tab="prestaciones"]'); espera(pg, 900)
 def fila_cred(pg, ref):
-    return pg.evaluate("ref => { const tr = [...document.querySelectorAll('#cred-lista tr[data-cred]')].find(t => t.innerText.includes(ref)); return tr ? {id: tr.dataset.cred, estado: tr.dataset.estado, txt: tr.innerText.replace(/\\s+/g,' ').trim()} : null; }", ref)
+    return pg.evaluate("ref => { const tr = [...document.querySelectorAll('#cred-lista [data-cred]')].find(t => t.innerText.includes(ref)); return tr ? {id: tr.dataset.cred, estado: tr.dataset.estado, txt: tr.innerText.replace(/\\s+/g,' ').trim()} : null; }", ref)
 
 with sync_playwright() as p:
     b = p.chromium.launch()

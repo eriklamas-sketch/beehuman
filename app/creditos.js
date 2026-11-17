@@ -80,11 +80,20 @@
 
   const relTxt = r => `${nombreEmpresa(r.empresa_id)}${r.estado !== 'vigente' || r.fecha_baja ? ' (baja ' + fecha(r.fecha_baja) + ')' : ''}${r.fecha_ingreso ? ' · desde ' + fecha(r.fecha_ingreso) : ''}`;
 
+  // true solo si la base respondió explícitamente que no falta nada (null); undefined u otro valor ≠ completo.
+  const datosCompletos = x => x.credito.estado === 'incompleto' && Object.prototype.hasOwnProperty.call(x, 'falta_para_activar') && x.falta_para_activar === null;
+
   function descuentoTxt(x) {
     const c = x.credito;
     if (c.tipo === 'infonavit') return `<span class="cred-info">Informativo para NOI: ${esc(INF_TIPOS[c.infonavit_tipo] || '')} ${esc(c.infonavit_valor ?? '')}</span>`;
     if (c.tipo === 'pension' && c.pension_forma === 'porcentaje') return `<span class="cred-info">Informativo: ${esc(c.pension_valor)} % (se calcula con el neto)</span>`;
-    if (c.estado === 'incompleto') return '<span class="cred-info">Incompleto: sin descuento hasta completarlo</span>';
+    // Incompleto: la base dice qué falta (misma validación que «Activar»). Solo un null EXPLÍCITO
+    // significa «datos completos»; si el dato no llega (undefined), no se asume completo.
+    if (c.estado === 'incompleto') {
+      if (datosCompletos(x)) return `${esc(dinero(c.importe_periodo))} <span class="cred-info">${esc(x.periodicidad || '')}</span><div class="cred-info" data-cred-listo>Datos completos: pulsa «Activar» para que empiece a proponer descuentos.</div>`;
+      if (typeof x.falta_para_activar === 'string' && x.falta_para_activar) return `<span class="cred-info" data-cred-falta>Faltan datos: ${esc(x.falta_para_activar)} Sin descuento hasta completarlo.</span>`;
+      return '<span class="cred-info" data-cred-sin-dato>Incompleto: no se pudo comprobar si los datos están completos. Vuelve a abrir la ficha.</span>';
+    }
     return `${esc(dinero(c.importe_periodo))} <span class="cred-info">${esc(x.periodicidad || '')}</span>`;
   }
 
@@ -93,11 +102,14 @@
     if (F.error) { box.innerHTML = `<div class="cred"><div class="cred-msg err">${esc(limpiar(F.error))}</div></div>`; return; }
     const filas = F.creditos.map(x => {
       const c = x.credito, ab = F.abierto[c.id];
-      const trans = { activo: [['suspendido', 'Suspender'], ['terminado', 'Terminar']], suspendido: [['activo', 'Reactivar'], ['terminado', 'Terminar']], incompleto: [['activo', 'Activar'], ['terminado', 'Terminar']] }[c.estado] || [];
+      const listo = datosCompletos(x);
+      // «Activar» solo aparece cuando los datos están completos.
+      const trans = { activo: [['suspendido', 'Suspender'], ['terminado', 'Terminar']], suspendido: [['activo', 'Reactivar'], ['terminado', 'Terminar']],
+        incompleto: listo ? [['activo', 'Activar'], ['terminado', 'Terminar']] : [['terminado', 'Terminar']] }[c.estado] || [];
       return `<tr data-cred="${esc(c.id)}" data-tipo="${esc(c.tipo)}" data-estado="${esc(c.estado)}">
         <td><b>${esc(etiqueta(c))}</b>${c.origen === 'conversion_no_fonacot' ? '<div class="cred-info">Convertido del campo «No. FONACOT»</div>' : ''}${c.tipo === 'pension' && c.pension_beneficiario ? `<div class="cred-info">Beneficiario: ${esc(c.pension_beneficiario)}</div>` : ''}</td>
         <td>${x.empresa ? esc(x.empresa) + (x.registro_patronal ? `<div class="cred-info">RP ${esc(x.registro_patronal)}</div>` : '') : '<span class="cred-info">Sin relación laboral</span>'}</td>
-        <td><span class="cred-est ${esc(c.estado)}">${esc(ESTADOS[c.estado])}</span></td>
+        <td><span class="cred-est ${esc(c.estado)}">${esc(listo ? 'Completo · falta activar' : ESTADOS[c.estado])}</span></td>
         <td>${esc(fecha(c.fecha_inicio))} – ${c.fecha_fin ? esc(fecha(c.fecha_fin)) : 'indefinida'}</td>
         <td>${descuentoTxt(x)}</td>
         <td class="n" data-saldo>${x.saldo != null ? esc(dinero(x.saldo)) + `<div class="cred-info">de ${esc(dinero(c.monto_total))}</div>` : '—'}</td>
@@ -203,7 +215,14 @@
       const r = await sb.rpc('cred_guardar', { p_id: c.id || null, p_datos: d, p_motivo: motivo });
       bg.disabled = false;
       if (r.error) return msgF('err', limpiar(r.error));
-      F.editando = null; await cargarFicha(); pintarFicha(); msgF('ok', c.id ? 'Cambio guardado en la historia.' : 'Crédito registrado.');
+      F.editando = null; await cargarFicha(); pintarFicha();
+      const tras = c.id ? F.creditos.find(y => y.credito.id === c.id) : null;
+      msgF('ok', !c.id ? 'Crédito registrado.'
+        : tras && tras.credito.estado === 'incompleto'
+          ? (datosCompletos(tras) ? 'Cambio guardado en la historia. Los datos ya están completos: pulsa «Activar» para que empiece a proponer descuentos.'
+             : typeof tras.falta_para_activar === 'string' && tras.falta_para_activar ? `Cambio guardado en la historia. Aún faltan datos: ${tras.falta_para_activar}`
+             : 'Cambio guardado en la historia.')
+          : 'Cambio guardado en la historia.');
     });
     box.querySelectorAll('[data-cred-editar]').forEach(b => b.addEventListener('click', () => {
       const x = F.creditos.find(y => y.credito.id === b.dataset.credEditar);

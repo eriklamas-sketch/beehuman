@@ -1,0 +1,12 @@
+B5 · FONACOT completo: evidencia de reversión (base local, 17-11-2026)
+Huella antes (hasta Mis hojas D1-D3): db335e5bf28d7aa1ede0d3754a9d2b89
+Huella con la corrección: c456d3d4901567c67843d8fa6b17c785
+cred_falta_para_activar existe: 1
+Aplicar dos veces: se niega (BeeHuman: esta corrección ya está aplicada)
+Aplicar → revertir: IDÉNTICA a antes
+Revertir dos veces: se niega (BeeHuman: la corrección no está aplicada (falta respaldo)
+Revertir → reaplicar: IDÉNTICA a la primera aplicación
+
+beehuman-pruebas (sflvpgkmtaxzogpgetxn), 17-11-2026 13:49 · ensayo en UNA transacción (begin; reversión; rollback;) aprobado por Erik:
+Dentro: cred_creditos_persona = original 78ccbcb91badacc82358dea39c1fe8fc · cred_falta_para_activar: 0 · respaldo.b5_fonacot_completo_20261117: no existe
+Tras ROLLBACK: migración 20261117194308 registrada · cred_creditos_persona 4f7d9f621bda2c5f1d770d67426a1d89 · cred_falta_para_activar: 1 · respaldo presente · BEH-000077 3d929a1c358af5649e39dcc1881a442f incompleto · créditos fc1dead1ff6b58dcdf4ef66c30442241 (sin cambios)

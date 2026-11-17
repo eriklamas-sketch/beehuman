@@ -1,0 +1,14 @@
+== H Guardado real de la ficha: restricciones_salud se conserva ==
+OK    H2/H3 La pantalla envió el guardado de la ficha (PATCH personal de ADELA)  [33 campos]
+OK    H4 El otro campo modificado (teléfono de emergencia) quedó guardado en la base  [5546002350 · aviso: Cambios guardados.]
+OK    H3 La petición de la ficha no incluye restricciones_salud
+OK    H4 restricciones_salud conserva EXACTAMENTE el valor original después de guardar  ['ALERGIA SINTETICA A LA PENICILINA · NO CARGAR MAS DE 10 KG']
+OK    H2 La ficha no muestra la sección «Salud» ni el campo «Restricciones de salud»
+OK    Sin errores de JavaScript  [[]]
+OK    Todas las peticiones de la pantalla fueron atendidas por el traductor local
+== Control: copia de index.html cuya ficha enviara restricciones_salud vacío ==
+OK    Control: se localizó el punto exacto del objeto que envía la ficha
+OK    Control: la copia mutante sí guardó y sí envió restricciones_salud
+OK    Control: con la mutación la prueba DETECTA la pérdida del dato (H4 fallaría)  ['']
+
+RESULTADO: 10 de 10 OK

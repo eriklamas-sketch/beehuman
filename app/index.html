@@ -746,7 +746,7 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
 #panel-alta #form-alta>section.alta-card:nth-of-type(2)>.alta-card-title::after{content:"Empresa, registro patronal, proyecto, coordinador, jefe y clasificación organizacional."}
 #panel-alta #form-alta>section.alta-card:nth-of-type(3)>.alta-card-title::after{content:"Jornada, descansos y vigencia del contrato."}
 #panel-alta #form-alta>section.alta-card:nth-of-type(6)>.alta-card-title::after{content:"A quién avisar en caso de emergencia."}
-#panel-alta #form-alta>section.alta-card:nth-of-type(5)>.alta-card-title::after{content:"FONACOT y restricciones de salud."}
+#panel-alta #form-alta>section.alta-card:nth-of-type(5)>.alta-card-title::after{content:"Créditos y descuentos de la persona."}
 #panel-alta #form-alta>section.alta-card:nth-of-type(4)>.alta-card-title::after{content:"Los esquemas de pago se capturan después, en el expediente."}
 #panel-alta #form-alta>#btn-alta{order:7}
 #panel-alta #form-alta>.toast{order:8}
@@ -775,7 +775,7 @@ body,#app-content :is(h1,h2,h3,b,strong,small,em,button,input,select,textarea,td
 #panel-alta #form-alta div:has(>#f-emerg-nombre){display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
 #panel-alta #form-alta div:has(>#f-emerg-nombre)>label{grid-column:1/-1;margin:0}
 #panel-alta #form-alta div:has(>#f-emerg-nombre)>input{margin:0!important}
-#panel-alta #form-alta section>.grid:has(#f-emerg-nombre),#panel-alta #form-alta section>.grid:has(#f-restricciones){grid-template-columns:1fr}
+#panel-alta #form-alta section>.grid:has(#f-emerg-nombre){grid-template-columns:1fr}
 /* Compensación: nota informativa */
 #panel-alta #form-alta>section.alta-card:nth-of-type(4)>p.hint{margin:0;padding:12px 14px;background:var(--v21-fondo);border:1px solid var(--v21-borde-2);border-radius:9px;font-size:12.5px}
 /* Botón final */
@@ -1331,10 +1331,6 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
           <div><label>No. FONACOT</label><input id="f-fonacot" type="text"></div>
         </div>
         <p class="hint" id="f-creditos-aviso" style="display:none">Los créditos (INFONAVIT, FONACOT, préstamos, pensiones y otros descuentos) se registran en la ficha de la persona, sección «Prestaciones y créditos», una vez dada de alta.</p>
-        <h4 class="alta-subtitle">Salud</h4>
-        <div class="grid">
-          <div><label>Restricciones de salud</label><textarea id="f-restricciones"></textarea></div>
-        </div>
         </section>
 
         <section class="alta-card">
@@ -1872,10 +1868,6 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
         <div><label>No. FONACOT</label><input id="d-fonacot"></div>
       </div>
       <div id="cred-ficha"></div>
-      <h3>Salud</h3>
-      <div class="grid">
-        <div><label>Restricciones de salud</label><textarea id="d-restricciones"></textarea></div>
-      </div>
       </section><section class="detail-section" data-detail-section="contacto">
       <h3>Contacto y emergencia</h3>
       <div class="grid">
@@ -3516,7 +3508,7 @@ document.getElementById('form-alta').addEventListener('submit', async function(e
     subcontratacion: document.getElementById('f-subcontratacion').checked,
     // B5: con el módulo de créditos, «No. FONACOT» ya no se captura aquí.
     ...(OLA1_ACTIVA ? {} : { no_fonacot: document.getElementById('f-fonacot').value.trim() }),
-    restricciones_salud: document.getElementById('f-restricciones').value.trim(),
+    // El alta ya no captura «Restricciones de salud»: el campo no se envía.
     contacto_emergencia_nombre: document.getElementById('f-emerg-nombre').value.trim(),
     contacto_emergencia_telefono: document.getElementById('f-emerg-telefono').value.trim(),
     contacto_emergencia_parentesco: document.getElementById('f-emerg-parentesco').value.trim(),
@@ -3768,7 +3760,6 @@ async function abrirDetalle(id, seccionInicial = 'personal'){
   document.getElementById('d-fechabaja').value = p.fecha_baja||'';
   document.getElementById('d-comentariobaja').value = p.comentario_baja||'';
   document.getElementById('d-fonacot').value = p.no_fonacot||'';
-  document.getElementById('d-restricciones').value = p.restricciones_salud||'';
   document.getElementById('d-emerg-nombre').value = p.contacto_emergencia_nombre||'';
   document.getElementById('d-emerg-telefono').value = p.contacto_emergencia_telefono||'';
   document.getElementById('d-emerg-parentesco').value = p.contacto_emergencia_parentesco||'';
@@ -4706,7 +4697,7 @@ async function guardarDetalleUnaVez(){
     comentario_baja: document.getElementById('d-comentariobaja').value.trim() || null,
     // B5: con el módulo de créditos, el campo anterior no se edita ni se sobrescribe (se conserva).
     ...(OLA1_ACTIVA ? {} : { no_fonacot: document.getElementById('d-fonacot').value.trim() }),
-    restricciones_salud: document.getElementById('d-restricciones').value.trim(),
+    // La ficha ya no muestra «Restricciones de salud»: no se envía, así el valor guardado se conserva.
     contacto_emergencia_nombre: document.getElementById('d-emerg-nombre').value.trim(),
     contacto_emergencia_telefono: document.getElementById('d-emerg-telefono').value.trim(),
     contacto_emergencia_parentesco: document.getElementById('d-emerg-parentesco').value.trim(),

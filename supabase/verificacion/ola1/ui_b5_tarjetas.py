@@ -10,7 +10,8 @@ Cambio de presentación: no cambia reglas, estados, permisos ni la base. Casos:
      Historia se despliega; la ficha solo LEE cred_descuentos (sin escrituras al pintar).
   Sin errores de JavaScript, sin desborde horizontal en celular (390 px), capturas en <carpeta>.
 Base: Postgres local bhui (Ola 1 + semilla_ui + resto de migraciones). Las peticiones /rest/v1 las atiende
-rest_local.py como el usuario (mismas RLS); no es PostgREST real.
+rest_local.py como el usuario (mismas RLS); no es PostgREST real. Datos: semilla_creditos.py.
+Con la agrupación (17-nov), T5 abre los grupos antes de revisar las tarjetas.
 Uso: SUPABASE_JS=<supabase.js umd> python3 ui_b5_tarjetas.py <index.html> <carpeta_capturas>"""
 import sys, os, json, time, base64
 from urllib.parse import urlparse, parse_qsl
@@ -22,61 +23,13 @@ HTML, OUT = sys.argv[1], sys.argv[2]; os.makedirs(OUT, exist_ok=True)
 SUPABASE_JS = os.environ['SUPABASE_JS']
 REF = 'sflvpgkmtaxzogpgetxn'
 U = {'admin': '0b000000-0000-4000-8000-000000000001', 'nomina': '0b000000-0000-4000-8000-000000000002'}
-RL.U.update(U)
-T = '0a000000-0000-4000-8000-000000000001'; E1 = '0c000000-0000-4000-8000-000000000001'; SEM = '0e000000-0000-4000-8000-000000000007'
-P = {'ADELA': '0a100000-0000-4000-8000-000000000011', 'BENITO': '0a100000-0000-4000-8000-000000000012', 'CESAR': '0a100000-0000-4000-8000-000000000013'}
-NOMBRE = {'ADELA': 'ADELA PALACIOS GALVAN', 'BENITO': 'BENITO ZAVALA GALINDO', 'CESAR': 'CESAR DELGADILLO HINOJOSA'}
+import semilla_creditos as SC
+from semilla_creditos import sql, P, NOMBRE
+_S = SC.montar()
+A1, B_INF, B_FON, B_PRE = _S['A1'], _S['B_INF'], _S['B_FON'], _S['B_PRE']
+C_INF, C_FON, C_SUS, C_INC, C_TER = _S['C_INF'], _S['C_FON'], _S['C_SUS'], _S['C_INC'], _S['C_TER']
 CORS = {'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*',
         'access-control-expose-headers': 'content-range, content-profile'}
-
-def sql(q, quien=None, replica=False):
-    c = RL.conectar(); cur = c.cursor()
-    try:
-        if replica: cur.execute('set local session_replication_role = replica')
-        if quien:
-            cur.execute("select set_config('request.jwt.claims', %s, true)", (json.dumps({'sub': U[quien], 'role': 'authenticated'}),))
-            cur.execute('set local role authenticated')
-        cur.execute(q); r = cur.fetchone() if cur.description else None; c.commit(); return r[0] if r else None
-    finally: c.close()
-lit = lambda d: "'" + json.dumps(d).replace("'", "''") + "'::jsonb"
-rel = {k: sql(f"select id from public.relaciones_laborales where personal_id = '{v}' and estado = 'vigente'") for k, v in P.items()}
-def credito(quien_p, d):
-    d = dict(d, personal_id=P[quien_p], relacion_laboral_id=rel[quien_p], fecha_inicio=d.get('fecha_inicio', '2026-11-01'))
-    return sql(f"select public.cred_guardar(null, {lit(d)})", 'nomina')
-
-# ---------------- datos ficticios ----------------
-sql(f"update public.inc_parametros set responsable_nomina_user = '{U['nomina']}' where empresa_id = '{E1}'", replica=True)
-PER_PROC = sql(f"select public.inc_crear_periodo('{E1}','{SEM}','2026-11-02','2026-11-08')", 'nomina')
-PER_AB1 = sql(f"select public.inc_crear_periodo('{E1}','{SEM}','2026-11-09','2026-11-15')", 'nomina')
-PER_AB2 = sql(f"select public.inc_crear_periodo('{E1}','{SEM}','2026-11-16','2026-11-22')", 'nomina')
-FON = lambda ref, imp: {'tipo': 'fonacot', 'referencia': ref, 'periodicidad_id': SEM, 'importe_periodo': imp}
-# 1 crédito: ADELA, FONACOT completo convertido, pendiente de activar
-A1 = credito('ADELA', FON('FON-UNO-01', 250))
-sql(f"update public.cred_creditos set estado = 'incompleto', origen = 'conversion_no_fonacot' where id = '{A1}'", replica=True)
-# 3 créditos: BENITO
-B_INF = credito('BENITO', {'tipo': 'infonavit', 'referencia': 'INF-9921', 'infonavit_tipo': 'cuota_fija', 'infonavit_valor': 1200, 'infonavit_fecha_aviso': '2026-10-15'})
-B_FON = credito('BENITO', FON('FON-B-02', 250))
-B_PRE = credito('BENITO', {'tipo': 'prestamo', 'referencia': 'PRE-04', 'periodicidad_id': SEM, 'importe_periodo': 500, 'monto_total': 10000})
-# 5 créditos: CESAR
-C_INF = credito('CESAR', {'tipo': 'infonavit', 'referencia': 'INF-5550', 'infonavit_tipo': 'porcentaje', 'infonavit_valor': 20})
-C_FON = credito('CESAR', FON('FON-C-01', 300))
-C_SUS = credito('CESAR', {'tipo': 'prestamo', 'referencia': 'PRE-SUS', 'periodicidad_id': SEM, 'importe_periodo': 400, 'monto_total': 4000})
-C_INC = credito('CESAR', FON('FON-C-INC', 180))
-C_TER = credito('CESAR', {'tipo': 'anticipo', 'referencia': 'ANT-OLD', 'periodicidad_id': SEM, 'importe_periodo': 1000, 'monto_total': 1000})
-sql(f"select public.cred_cambiar_estado('{C_SUS}', 'suspendido', '2026-11-12', 'Acuerdo con el trabajador')", 'nomina')
-sql(f"select public.cred_cambiar_estado('{C_TER}', 'terminado', '2026-11-05', 'Liquidado en efectivo')", 'nomina')
-sql(f"update public.cred_creditos set estado = 'incompleto', origen = 'conversion_no_fonacot', importe_periodo = null where id = '{C_INC}'", replica=True)
-def linea(cred, per, quien_p, sug, fin, origen):
-    return sql(f"""insert into public.cred_descuentos (tenant_id, periodo_id, credito_id, personal_id, relacion_laboral_id, sugerido, final, origen)
-                   values ('{T}', '{per}', '{cred}', '{P[quien_p]}', '{rel[quien_p]}', {sug}, {fin if fin is not None else 'null'}, '{origen}') returning id""")
-linea(B_FON, PER_PROC, 'BENITO', 250, 250, 'aceptado'); linea(B_FON, PER_AB1, 'BENITO', 250, None, 'pendiente')
-LP = linea(B_PRE, PER_PROC, 'BENITO', 500, 500, 'aceptado'); linea(B_PRE, PER_AB1, 'BENITO', 500, 450, 'modificado')
-sql(f"""insert into public.cred_movimientos (tenant_id, credito_id, periodo_id, descuento_id, importe, saldo_anterior, saldo_nuevo)
-        values ('{T}', '{B_PRE}', '{PER_PROC}', '{LP}', 500, 10000, 9500) returning id""")
-linea(C_FON, PER_AB1, 'CESAR', 300, None, 'pendiente'); linea(C_FON, PER_AB2, 'CESAR', 300, 300, 'aceptado')
-linea(C_FON, PER_PROC, 'CESAR', 300, None, 'descartado')   # descartada: no debe contarse como procesada
-# El periodo se marca procesado después de registrar sus líneas (como ocurre al procesar).
-sql(f"update public.inc_periodos set procesado_en = '2026-11-10 12:00-06', procesado_por = '{U['nomina']}' where id = '{PER_PROC}'", replica=True)
 
 # ---------------- navegador ----------------
 peticiones = []
@@ -201,9 +154,13 @@ with sync_playwright() as p:
     abrir_ficha(pg, 'CESAR'); ts = tarjetas(pg)
     pg.locator('#cred-ficha').screenshot(path=f'{OUT}/T5_cinco_creditos.png')
     vis = [t for t in ts if t['visible']]
-    ok(len(ts) == 5 and len(vis) == 4, 'T5 Cinco créditos: 4 visibles y el terminado plegado', f'{len(ts)} / {len(vis)}')
-    ok(pg.is_visible('#cred-terminados') and 'Terminados (1)' in pg.inner_text('#cred-terminados summary') and not pg.evaluate("document.querySelector('#cred-terminados').open"),
-       'T5 «Terminados (1)» al final, plegado')
+    ok(len(ts) == 5 and {t['id'] for t in vis} == {C_FON, C_INC}, 'T5 Cinco créditos (4 vigentes): al entrar solo se abre el grupo con algo por completar o activar (FONACOT)', f'{len(ts)} / {len(vis)}')
+    TER = 'details[data-grupo="terminados"]'
+    ok(pg.is_visible(TER) and '1 registro' in pg.inner_text(TER + ' > summary') and not pg.evaluate(f"document.querySelector('{TER}').open"),
+       'T5 «Terminados» al final, plegado')
+    pg.evaluate("() => document.querySelectorAll('#cred-lista details.cred-grupo:not([data-grupo=terminados])').forEach(d => { d.open = true; })"); pg.wait_for_timeout(200)
+    ts = tarjetas(pg)
+    ok(len([t for t in ts if t['visible']]) == 4, 'T5 Al abrir los grupos se ven las 4 tarjetas vigentes')
     ok(pg.evaluate("() => { const l = document.querySelector('#cred-lista'); const s = getComputedStyle(l); return s.overflowY !== 'auto' && s.overflowY !== 'scroll' && !l.querySelector('.cred-cards[style*=overflow]'); }"), 'T5 Sin scroll interno en la lista')
     f2, sus, inc, inf5 = por(ts, C_FON), por(ts, C_SUS), por(ts, C_INC), por(ts, C_INF)
     ok(f2 and '$300.00' in plano(f2['propuesto']) and '16/11/2026' in plano(f2['propuesto']) and '+1 periodo abierto' in plano(f2['propuesto']), 'T5 Dos periodos abiertos: muestra el más reciente y «+1 periodo abierto»', plano(f2 and f2['propuesto']))
@@ -212,12 +169,12 @@ with sync_playwright() as p:
     ok(sus and '$4,000.00' in plano(sus['saldo']), 'T5 Suspendido con monto total: muestra saldo', plano(sus and sus['saldo']))
     ok(inc and 'Incompleto · faltan datos' in inc['chip'] and 'Activar' not in inc['acciones'] and inc['falta'], 'T5 FONACOT incompleto con faltantes: dice qué falta y no ofrece Activar', plano(inc and inc['falta']))
     ok(inf5 and 'Informativo NOI' in inf5['chip'] and 'Porcentaje del SBC' in inf5['txt'] and inf5['propuesto'] is None, 'T5 INFONAVIT por porcentaje: informativo, sin descuentos')
-    pg.click('#cred-terminados summary'); pg.wait_for_timeout(300)
+    pg.click(TER + ' > summary'); pg.wait_for_timeout(300)
     ter = por(tarjetas(pg), C_TER)
     pg.locator('#cred-ficha').screenshot(path=f'{OUT}/T5_terminados_abiertos.png')
     ok(ter and ter['visible'] and ter['acciones'] == ['Historia'] and 'Terminado' in ter['chip'], 'T5 Al desplegar: el terminado solo ofrece Historia', ter and str(ter['acciones']))
     pg.click(f'[data-cred-hist="{C_TER}"]'); pg.wait_for_timeout(400)
-    ok(pg.evaluate("document.querySelector('#cred-terminados').open") and 'Liquidado en efectivo' in pg.inner_text(f'#cred-lista [data-cred="{C_TER}"]'),
+    ok(pg.evaluate(f"document.querySelector('{TER}').open") and 'Liquidado en efectivo' in pg.inner_text(f'#cred-lista [data-cred="{C_TER}"]'),
        'T5 La historia del terminado se ve y el grupo sigue abierto al repintar')
     errores_escritorio = list(pg.errores)
     ctx.close()

@@ -27,8 +27,9 @@ OK    T3 Préstamo: propuesto = importe final decidido ($450.00, Modificado)  [D
 OK    T3 Préstamo: procesado $500.00  [PROCESADO $500.00 Periodo 02/11/2026 – 08/11/2026]
 OK    T3 Préstamo: saldo pendiente $9,500.00 de $10,000.00 (de la base)  [SALDO PENDIENTE $9,500.00 de $10,000.00]
 == T5 Cinco créditos (CESAR) ==
-OK    T5 Cinco créditos: 4 visibles y el terminado plegado  [5 / 4]
-OK    T5 «Terminados (1)» al final, plegado
+OK    T5 Cinco créditos (4 vigentes): al entrar solo se abre el grupo con algo por completar o activar (FONACOT)  [5 / 2]
+OK    T5 «Terminados» al final, plegado
+OK    T5 Al abrir los grupos se ven las 4 tarjetas vigentes
 OK    T5 Sin scroll interno en la lista
 OK    T5 Dos periodos abiertos: muestra el más reciente y «+1 periodo abierto»  [DESCUENTO PROPUESTO $300.00 Aceptado · 16/11/2026 – 22/11/2026 · +1 periodo abierto]
 OK    T5 Línea descartada en periodo procesado: no cuenta como procesado («—»)  [PROCESADO — Sin descuentos procesados]
@@ -42,4 +43,4 @@ OK    Celular (390 px): ninguna tarjeta se sale de la pantalla  [0]
 OK    Sin errores de JavaScript  [[]]
 OK    Todas las peticiones atendidas por el traductor local  [[]]
 
-RESULTADO: 39 de 39 OK
+RESULTADO: 40 de 40 OK

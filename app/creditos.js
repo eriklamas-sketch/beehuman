@@ -73,6 +73,50 @@
 .cred .cred-hist{background:#FAFBFC;border-radius:10px;padding:8px 10px;font-size:12.5px}
 .cred details.cred-term>summary{cursor:pointer;font:600 12.5px Inter,sans-serif;color:#45506A;padding:6px 2px}
 .cred details.cred-term>.cred-cards{margin-top:8px}
+.cred .cred-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.cred .cred-resumen{display:flex;flex-wrap:wrap;gap:6px}
+.cred .cred-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid #DCE2EC;background:#fff;color:#45506A;border-radius:999px;padding:5px 11px;font:500 12.5px Inter,sans-serif;cursor:pointer}
+.cred .cred-chip b{font-weight:700;color:#1D2A44}
+.cred .cred-chip.on{background:#1D2A44;border-color:#1D2A44;color:#fff}.cred .cred-chip.on b{color:#F2B51D}
+.cred .cred-chip.pendiente:not(.on){border-color:#F0D27A;background:#FFF8E2}
+.cred .cred-nuevo{margin:0;white-space:nowrap}
+.cred .cred-buscar{width:100%;box-sizing:border-box;margin:0 0 12px;padding:9px 12px;border:1px solid #DCE2EC;border-radius:10px;font-size:13px}
+.cred .cred-lista{gap:10px}
+.cred details.cred-grupo{border:1px solid #E5E9F1;border-radius:14px;background:#fff;overflow:hidden}
+.cred details.cred-grupo[open]{background:#FBFCFD}
+.cred details.cred-grupo.term{background:#F6F7F9}
+.cred details.cred-grupo>summary{list-style:none;display:grid;grid-template-columns:auto auto auto 1fr auto auto;align-items:center;gap:10px;padding:12px 16px;cursor:pointer}
+.cred details.cred-grupo>summary::-webkit-details-marker{display:none}
+.cred .cred-g-ic{color:#1D2A44;display:flex}
+.cred .cred-g-n{font:700 14.5px Montserrat,sans-serif;color:#1D2A44;white-space:nowrap}
+.cred .cred-g-cnt{font-size:11.5px;font-weight:600;color:#45506A;background:#EEF1F6;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.cred .cred-g-chips{display:flex;gap:5px;flex-wrap:wrap}
+.cred .cred-g-res{display:flex;gap:18px;justify-content:flex-end;flex-wrap:wrap}
+.cred .cred-g-m{display:flex;flex-direction:column;align-items:flex-end;min-width:0}
+.cred .cred-g-m b{font-size:14.5px;color:#1D2A44}
+.cred .cred-g-flecha{width:9px;height:9px;border-right:2px solid #45506A;border-bottom:2px solid #45506A;transform:rotate(45deg);margin:0 4px 4px}
+.cred details.cred-grupo[open] .cred-g-flecha{transform:rotate(-135deg);margin-top:6px}
+.cred .cred-g-cuerpo{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}
+.cred .cred-g-cuerpo .cred-cards{grid-template-columns:1fr;gap:8px}
+.cred .cred-mas{align-self:flex-start}
+.cred .cred-nota{margin-top:14px;font-size:12px}
+@media (max-width:640px){
+  .cred details.cred-grupo>summary{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:11px 12px}
+  .cred .cred-g-n{white-space:normal;font-size:14px}
+  .cred .cred-g-flecha{margin-left:auto;order:1}
+  .cred .cred-g-chips,.cred .cred-g-res{order:2;flex-basis:100%}
+  .cred .cred-g-chips:empty{display:none}
+  .cred .cred-g-res{justify-content:flex-start;gap:14px}
+  .cred .cred-g-m{align-items:flex-start}
+  .cred .cred-m-n.sec{display:none}
+  .cred .cred-card-h{flex-wrap:nowrap}.cred .cred-card-h .cred-est{white-space:normal;text-align:right;max-width:46%}
+  .cred .cred-acciones{gap:3px}.cred .cred-acciones .cred-sec{font-size:12px;margin:0}
+  .cred .cred-card{padding:11px 12px}
+  .cred .cred-acciones .cred-sec{padding:5px 9px}
+  .cred .cred-nuevo{width:100%}
+  .cred .cred-metricas{grid-template-columns:1fr 1fr}
+  .cred .cred-g-cuerpo{padding:0 8px 10px}
+}
 @media (max-width:640px){.cred .cred-grid{grid-template-columns:1fr}}`;
     document.head.appendChild(st);
   }
@@ -86,7 +130,7 @@
     const box = $('cred-ficha');
     if (!box) return;
     if (!puede()) { box.innerHTML = ''; return; }
-    F.personal = personalId; F.editando = null; F.abierto = {}; F.termAbierto = false;
+    F.personal = personalId; F.editando = null; F.abierto = {}; F.grupos = {}; F.verTodo = {}; F.filtro = ''; F.buscar = '';
     box.innerHTML = '<p class="hint">Cargando créditos…</p>';
     await cargarFicha(); pintarFicha();
   };
@@ -97,7 +141,7 @@
       sb.from('relaciones_laborales').select('id, empresa_id, registro_patronal_id, estado, fecha_ingreso, fecha_baja').eq('personal_id', F.personal),
       sb.from('periodicidades').select('id, nombre').order('nombre'),
       // Solo lectura: descuentos ya registrados por periodo (propuesto y procesado). No calcula nada.
-      sb.from('cred_descuentos').select('credito_id, sugerido, final, origen, periodo:inc_periodos(inicio, fin, procesado_en)').eq('personal_id', F.personal)
+      sb.from('cred_descuentos').select('credito_id, periodo_id, sugerido, final, origen, periodo:inc_periodos(inicio, fin, procesado_en)').eq('personal_id', F.personal)
     ]);
     F.error = c.error; F.creditos = c.data || [];
     F.lineasError = !!d.error; F.lineas = d.error ? [] : (d.data || []);
@@ -140,7 +184,8 @@
     return '<div class="cred-aviso" data-cred-sin-dato>Incompleto: no se pudo comprobar si los datos están completos. Vuelve a abrir la ficha.</div>';
   }
 
-  const metrica = (titulo, valor, nota, attr) => `<div class="cred-m"${attr ? ' ' + attr : ''}><span class="cred-m-t">${titulo}</span><b>${valor}</b>${nota ? `<span class="cred-m-n">${nota}</span>` : ''}</div>`;
+  // sec = nota secundaria (explicación); en celular se oculta para compactar. Importes, estados, vigencia y acciones no.
+  const metrica = (titulo, valor, nota, attr, sec) => `<div class="cred-m"${attr ? ' ' + attr : ''}><span class="cred-m-t">${titulo}</span><b>${valor}</b>${nota ? `<span class="cred-m-n${sec ? ' sec' : ''}">${nota}</span>` : ''}</div>`;
 
   function metricasHtml(x) {
     const c = x.credito;
@@ -149,16 +194,16 @@
         ? metrica('Tipo de descuento (NOI)', esc(INF_TIPOS[c.infonavit_tipo] || '—'), '') + metrica('Valor', esc(c.infonavit_valor == null ? '—' : c.infonavit_tipo === 'cuota_fija' ? dinero(c.infonavit_valor) : c.infonavit_tipo === 'porcentaje' ? c.infonavit_valor + ' %' : c.infonavit_valor), '')
           + metrica('Aviso de retención', esc(fecha(c.infonavit_fecha_aviso)), '')
         : metrica('Porcentaje (NOI)', esc((c.pension_valor ?? '—') + ' %'), 'Se calcula con el neto');
-      return datos + metrica('Descuento en BeeHuman', 'No genera', 'Informativo');
+      return datos + metrica('Descuento en BeeHuman', 'No genera', 'Informativo', '', true);
     }
     const { propuesta, otrasAbiertas, procesada } = lineasDe(c);
     const prop = F.lineasError ? metrica('Descuento propuesto', '—', 'No se pudo consultar', 'data-propuesto')
       : propuesta ? metrica('Descuento propuesto', esc(dinero(propuesta.final != null ? propuesta.final : propuesta.sugerido)),
           `${esc(ORIGEN_LINEA[propuesta.origen] || '')} · ${esc(perTxt(propuesta.periodo))}${otrasAbiertas ? ` · +${otrasAbiertas} periodo${otrasAbiertas === 1 ? '' : 's'} abierto${otrasAbiertas === 1 ? '' : 's'}` : ''}`, 'data-propuesto')
-      : metrica('Descuento propuesto', 'Sin propuesta aún', c.estado === 'incompleto' ? 'Se propone al activarlo' : c.estado === 'activo' ? 'Aparece al abrir la revisión del periodo' : '', 'data-propuesto');
+      : metrica('Descuento propuesto', 'Sin propuesta aún', c.estado === 'incompleto' ? 'Se propone al activarlo' : c.estado === 'activo' ? 'Aparece al abrir la revisión del periodo' : '', 'data-propuesto', true);
     const proc = F.lineasError ? metrica('Procesado', '—', 'No se pudo consultar', 'data-procesado')
       : procesada ? metrica('Procesado', esc(dinero(procesada.final)), 'Periodo ' + esc(perTxt(procesada.periodo)), 'data-procesado')
-      : metrica('Procesado', '—', 'Sin descuentos procesados', 'data-procesado');
+      : metrica('Procesado', '—', 'Sin descuentos procesados', 'data-procesado', true);
     const saldo = x.saldo != null ? metrica('Saldo pendiente', esc(dinero(x.saldo)), 'de ' + esc(dinero(c.monto_total)), 'data-saldo') : '';
     return metrica('Importe configurado', c.importe_periodo != null ? esc(dinero(c.importe_periodo)) : '—', esc(x.periodicidad || ''), 'data-configurado') + prop + proc + saldo;
   }
@@ -171,7 +216,8 @@
     const trans = { activo: [['suspendido', 'Suspender'], ['terminado', 'Terminar']], suspendido: [['activo', 'Reactivar'], ['terminado', 'Terminar']],
       incompleto: listo ? [['activo', 'Activar'], ['terminado', 'Terminar']] : [['terminado', 'Terminar']] }[c.estado] || [];
     const clase = esInformativo(c) ? 'informativo' : c.estado === 'incompleto' ? 'pendiente' : c.estado;
-    return `<article class="cred-card ${clase}${ab ? ' abierta' : ''}" data-cred="${esc(c.id)}" data-tipo="${esc(c.tipo)}" data-estado="${esc(c.estado)}">
+    const editando = !!(F.editando && F.editando.credito && F.editando.credito.id === c.id);
+    return `<article class="cred-card ${clase}${ab || editando ? ' abierta' : ''}" data-cred="${esc(c.id)}" data-tipo="${esc(c.tipo)}" data-estado="${esc(c.estado)}">
       <header class="cred-card-h">
         <div><b class="cred-nombre">${esc(etiqueta(c))}</b>
           <div class="cred-info">${x.empresa ? esc(x.empresa) + (x.registro_patronal ? ' · RP ' + esc(x.registro_patronal) : '') : 'Sin relación laboral'} · Vigencia ${esc(fecha(c.fecha_inicio))} – ${c.fecha_fin ? esc(fecha(c.fecha_fin)) : 'indefinida'}</div>
@@ -196,28 +242,145 @@
       ${ab === 'hist' ? `<div class="cred-hist">
         <b>Historia</b><ul style="margin:6px 0 8px 18px;padding:0">${(x.historia || []).map(h => `<li>${esc(fechaHora(h.creado_en))} · <b>${esc(EVENTOS[h.evento] || h.evento)}</b>${h.fecha_efectiva ? ' (efectiva ' + esc(fecha(h.fecha_efectiva)) + ')' : ''}${h.motivo ? ' — ' + esc(h.motivo) : ''} · ${esc(h.nombre || '')}</li>`).join('')}</ul>
         ${(x.movimientos || []).length ? `<b>Movimientos de saldo</b><ul style="margin:6px 0 0 18px;padding:0">${x.movimientos.map(m => `<li>Periodo ${esc(m.periodo)} · descuento ${esc(dinero(m.importe))}: ${esc(dinero(m.saldo_anterior))} → ${esc(dinero(m.saldo_nuevo))}</li>`).join('')}</ul>` : ''}</div>` : ''}
+      ${editando ? formHtml() : ''}
     </article>`;
+  }
+
+  // ---- Agrupación contraíble (prototipo) ----
+  const GRUPOS = [
+    { k: 'prestamos', n: 'Préstamos y anticipos', tipos: ['prestamo', 'anticipo'], ic: '<path d="M3 12h4l3 3h4a2 2 0 0 0 0-4h-3M3 19h11l6-5-2-2-4 3"/><circle cx="16" cy="6" r="3"/>' },
+    { k: 'fonacot', n: 'FONACOT', tipos: ['fonacot'], ic: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>' },
+    { k: 'infonavit', n: 'INFONAVIT y pensiones', tipos: ['infonavit', 'pension'], ic: '<path d="M4 11l8-6 8 6v8H4z"/><path d="M10 19v-5h4v5"/>' },
+    { k: 'otros', n: 'Otros descuentos', tipos: ['otro'], ic: '<path d="M4 4h7l9 9-7 7-9-9z"/><circle cx="8.5" cy="8.5" r="1.5"/>' },
+  ];
+  const icono = d => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const IC_TERM = '<path d="M5 21V4h11l-2 4 2 4H5"/>';
+  const POR_GRUPO = 6;   // tarjetas visibles por grupo antes de «Mostrar N más»
+  const UMBRAL_BUSCAR = 10;
+
+  // Clasificación para el resumen y los filtros (cada crédito en una sola clase).
+  function clase(x) {
+    const c = x.credito;
+    if (c.estado === 'terminado') return 'terminado';
+    if (esInformativo(c)) return 'informativo';
+    if (c.estado === 'incompleto') return 'pendiente';
+    return c.estado === 'suspendido' ? 'suspendido' : 'activo';
+  }
+  // «Por completar o activar»: SOLO créditos en estado incompleto (les faltan datos o están completos y falta
+  // activarlos). No incluye descuentos «por decidir»: esos se deciden en Incidencias → Revisión.
+  const CLASES = [['activo', 'activo', 'activos'], ['pendiente', 'por completar o activar', 'por completar o activar'], ['suspendido', 'suspendido', 'suspendidos'], ['informativo', 'informativo NOI', 'informativos NOI'], ['terminado', 'terminado', 'terminados']];
+
+  // Resumen económico de un grupo: solo cantidades comparables.
+  // Saldo: suma de saldos (no tiene periodicidad). Propuesto / procesado: solo si todas las
+  // líneas son del MISMO periodo; si hay varios periodos, se dice cuántos, sin sumar.
+  function resumenGrupo(lista) {
+    const partes = [];
+    const conSaldo = lista.filter(x => x.saldo != null);
+    if (conSaldo.length) partes.push(['Saldo pendiente', dinero(conSaldo.reduce((s, x) => s + Number(x.saldo), 0)), conSaldo.length < lista.length ? `${conSaldo.length} de ${lista.length} con saldo` : '']);
+    const desc = lista.filter(x => !esInformativo(x.credito));
+    if (!desc.length) return lista.length ? [['', 'Informativo NOI · Sin descuento en BeeHuman', '']] : [];
+    // Se suma solo si TODAS las líneas son del mismo periodo y los créditos tienen la misma periodicidad.
+    const comp = (titulo, sel, monto) => {
+      const ls = desc.map(x => ({ x, l: sel(lineasDe(x.credito)) })).filter(o => o.l);
+      if (!ls.length) return;
+      const pers = new Set(ls.map(o => o.l.periodo_id || (o.l.periodo.inicio + '|' + o.l.periodo.fin)));
+      const perio = new Set(ls.map(o => o.x.credito.periodicidad_id || ''));
+      if (pers.size === 1 && perio.size === 1) partes.unshift([titulo + ' · ' + perTxt(ls[0].l.periodo), dinero(ls.reduce((s, o) => s + Number(monto(o.l)), 0)), ls.length > 1 ? `${ls.length} créditos` : '']);
+      else partes.unshift([titulo, pers.size > 1 ? `${pers.size} periodos` : 'Periodicidades distintas', 'Sin sumar: ver cada crédito']);
+    };
+    comp('Procesado', r => r.procesada, l => l.final);
+    comp('Propuesto', r => r.propuesta, l => (l.final != null ? l.final : l.sugerido));
+    return partes;
+  }
+
+  function chipsGrupo(lista) {
+    const n = {}; lista.forEach(x => { const c = x.credito, k = esInformativo(c) && c.estado !== 'terminado' ? 'info' : c.estado === 'incompleto' ? (datosCompletos(x) && !esInformativo(c) ? 'listo' : 'falta') : c.estado; n[k] = (n[k] || 0) + 1; });
+    return [['listo', 'por activar', 'por activar', 'pendiente'], ['falta', 'incompleto', 'incompletos', 'pendiente'], ['suspendido', 'suspendido', 'suspendidos', 'suspendido'], ['info', 'informativo NOI', 'informativos NOI', 'informativo']]
+      .filter(([k]) => n[k]).map(([k, t1, tn, cl]) => `<span class="cred-est ${cl}">${n[k]} ${n[k] === 1 ? t1 : tn}</span>`).join('');
+  }
+
+  function grupoHtml(g, lista, abierto, esTerm) {
+    const vis = F.verTodo[g.k] ? lista : lista.slice(0, POR_GRUPO);
+    const res = esTerm ? [] : resumenGrupo(lista);
+    return `<details class="cred-grupo${esTerm ? ' term' : ''}" data-grupo="${g.k}"${abierto ? ' open' : ''}>
+      <summary>
+        <span class="cred-g-ic">${icono(g.ic)}</span>
+        <span class="cred-g-n">${esc(g.n)}</span>
+        <span class="cred-g-cnt">${lista.length} registro${lista.length === 1 ? '' : 's'}</span>
+        <span class="cred-g-chips">${esTerm ? '' : chipsGrupo(lista)}</span>
+        <span class="cred-g-res">${res.map(([t, v, n]) => `<span class="cred-g-m">${t ? `<span class="cred-m-t">${esc(t)}</span>` : ''}<b>${esc(v)}</b>${n ? `<span class="cred-m-n">${esc(n)}</span>` : ''}</span>`).join('')}</span>
+        <span class="cred-g-flecha" aria-hidden="true"></span>
+      </summary>
+      <div class="cred-g-cuerpo">
+        <div class="cred-cards">${vis.map(tarjetaHtml).join('')}</div>
+        ${lista.length > vis.length ? `<button type="button" class="cred-sec cred-mas" data-ver-todo="${g.k}">Mostrar ${lista.length - vis.length} más</button>` : ''}
+      </div>
+    </details>`;
+  }
+
+  function contenedorScroll(el) {
+    for (let e = el.parentElement; e; e = e.parentElement) {
+      const o = getComputedStyle(e).overflowY;
+      if ((o === 'auto' || o === 'scroll') && e.scrollHeight > e.clientHeight) return e;
+    }
+    return document.scrollingElement || document.documentElement;
   }
 
   function pintarFicha() {
     const box = $('cred-ficha'); if (!box) return;
     if (F.error) { box.innerHTML = `<div class="cred"><div class="cred-msg err">${esc(limpiar(F.error))}</div></div>`; return; }
-    const vivos = F.creditos.filter(x => x.credito.estado !== 'terminado');
-    const term = F.creditos.filter(x => x.credito.estado === 'terminado');
-    // El grupo de terminados se abre si el usuario lo abrió o si tiene una historia abierta.
-    const termAbierto = F.termAbierto || term.some(x => F.abierto[x.credito.id]);
+    // Conserva la posición del usuario al repintar.
+    // Conserva la posición: guarda un elemento visible de referencia (tarjeta o grupo) y, tras repintar,
+    // lo devuelve al mismo lugar de la pantalla.
+    const sc = contenedorScroll(box); const y = sc.scrollTop;
+    sc.style.overflowAnchor = 'none';   // durante el repintado, la posición la repone esta función
+    const ancla = (() => {
+      const lim = sc === document.scrollingElement || sc === document.documentElement ? 0 : sc.getBoundingClientRect().top;
+      const el = [...box.querySelectorAll('#cred-lista [data-cred], #cred-lista details.cred-grupo')].find(e => e.getClientRects().length && e.getBoundingClientRect().bottom > lim + 1);
+      return el ? { sel: el.dataset.cred ? `[data-cred="${el.dataset.cred}"]` : `details[data-grupo="${el.dataset.grupo}"]`, top: el.getBoundingClientRect().top } : null;
+    })();
+    const todos = F.creditos, cuenta = {};
+    todos.forEach(x => { const k = clase(x); cuenta[k] = (cuenta[k] || 0) + 1; });
+    const q = (F.buscar || '').trim().toLowerCase();
+    const pasa = x => (!F.filtro || clase(x) === F.filtro) && (!q || (etiqueta(x.credito) + ' ' + (x.empresa || '')).toLowerCase().includes(q));
+    const visibles = todos.filter(pasa);
+    const vivos = visibles.filter(x => x.credito.estado !== 'terminado'), term = visibles.filter(x => x.credito.estado === 'terminado');
+    const pocos = todos.filter(x => x.credito.estado !== 'terminado').length <= 3;
+    const grupos = GRUPOS.map(g => ({ g, lista: vivos.filter(x => g.tipos.includes(x.credito.tipo)) })).filter(o => o.lista.length);
+    // Apertura inicial: con 3 o menos créditos vivos, todo abierto; si no, solo grupos con algo por atender.
+    // Con filtro o búsqueda activos, se abre todo lo que coincide.
+    const editandoId = F.editando && F.editando.credito && F.editando.credito.id;
+    const abrir = o => o.lista.some(x => x.credito.id === editandoId) || (F.grupos[o.g.k] != null ? F.grupos[o.g.k] : (pocos || !!F.filtro || !!q || o.lista.some(x => x.credito.estado === 'incompleto') || o.lista.some(x => F.abierto[x.credito.id])));
+    const termAbierto = F.grupos.terminados != null ? F.grupos.terminados : (F.filtro === 'terminado' || term.some(x => F.abierto[x.credito.id]));
     box.innerHTML = `<div class="cred">
-      <p class="cred-intro">Registrar un crédito no es descontarlo. <b>INFONAVIT</b> y las <b>pensiones porcentuales</b> quedan como datos para NOI y no generan descuentos. Los demás proponen un descuento por periodo que Nómina decide en <b>Incidencias → Revisión</b>; el saldo de préstamos y anticipos baja solo al procesar el periodo.</p>
+      <div class="cred-top">
+        <div class="cred-resumen" role="group" aria-label="Filtrar créditos">
+          <button type="button" class="cred-chip${!F.filtro ? ' on' : ''}" data-filtro=""><b>${todos.length}</b> registros</button>
+          ${CLASES.filter(([k]) => cuenta[k]).map(([k, t1, tn]) => `<button type="button" class="cred-chip ${k}${F.filtro === k ? ' on' : ''}" data-filtro="${k}"><b>${cuenta[k]}</b> ${cuenta[k] === 1 ? t1 : tn}</button>`).join('')}
+        </div>
+        ${F.editando ? '' : '<button type="button" class="primary cred-nuevo" id="cred-nuevo">+ Registrar crédito o descuento</button>'}
+      </div>
+      ${todos.length >= UMBRAL_BUSCAR ? `<input type="search" id="cred-buscar" class="cred-buscar" placeholder="Buscar por tipo, referencia o empresa" value="${esc(F.buscar || '')}">` : ''}
       <div class="cred-msg" id="cred-msg"></div>
-      ${F.creditos.length ? `<div id="cred-lista" class="cred-lista">
-          ${vivos.length ? `<div class="cred-cards">${vivos.map(tarjetaHtml).join('')}</div>` : ''}
-          ${term.length ? `<details class="cred-term" id="cred-terminados"${termAbierto ? ' open' : ''}><summary>Terminados (${term.length})</summary>
-            <div class="cred-cards">${term.map(tarjetaHtml).join('')}</div></details>` : ''}
-        </div>`
-        : '<p class="hint" id="cred-lista-vacia">Sin créditos ni descuentos registrados.</p>'}
-      ${F.editando ? formHtml() : `<button type="button" class="primary" id="cred-nuevo" style="margin-top:12px">Registrar crédito o descuento</button>`}
+      ${F.editando && !(F.editando.credito && F.editando.credito.id) ? formHtml() : ''}
+      ${todos.length ? `<div id="cred-lista" class="cred-lista">
+          ${grupos.map(o => grupoHtml(o.g, o.lista, abrir(o), false)).join('')}
+          ${term.length ? grupoHtml({ k: 'terminados', n: 'Terminados', ic: IC_TERM }, term, termAbierto, true) : ''}
+          ${!visibles.length ? '<p class="hint">Ningún crédito coincide con el filtro.</p>' : ''}
+        </div>
+        <p class="cred-intro cred-nota">Registrar un crédito no es descontarlo. INFONAVIT y las pensiones porcentuales son informativos para NOI. Los demás proponen un descuento por periodo que Nómina decide en Incidencias → Revisión; el saldo baja solo al procesar el periodo.</p>`
+        : '<p class="hint" id="cred-lista-vacia">Sin créditos ni descuentos registrados. Registrar un crédito no es descontarlo.</p>'}
     </div>`;
-    const dt = $('cred-terminados'); if (dt) dt.addEventListener('toggle', () => { F.termAbierto = dt.open; });
+    box.querySelectorAll('details.cred-grupo').forEach(d => d.addEventListener('toggle', () => { F.grupos[d.dataset.grupo] = d.open; }));
+    box.querySelectorAll('[data-filtro]').forEach(b => b.addEventListener('click', () => { F.filtro = b.dataset.filtro || ''; F.grupos = {}; pintarFicha(); }));
+    box.querySelectorAll('[data-ver-todo]').forEach(b => b.addEventListener('click', () => { F.verTodo[b.dataset.verTodo] = true; pintarFicha(); }));
+    const bq = $('cred-buscar'); if (bq) bq.addEventListener('input', () => { F.buscar = bq.value; F.grupos = {}; const pos = bq.selectionStart; pintarFicha(); const n = $('cred-buscar'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } });
+    const reponer = () => {
+      sc.scrollTop = y;
+      const el = ancla && box.querySelector('#cred-lista ' + ancla.sel);
+      if (el && el.getClientRects().length) sc.scrollTop += el.getBoundingClientRect().top - ancla.top;
+    };
+    reponer(); requestAnimationFrame(() => { reponer(); sc.style.overflowAnchor = ''; });
     bindFicha();
   }
 
@@ -312,7 +475,8 @@
     box.querySelectorAll('[data-cred-editar]').forEach(b => b.addEventListener('click', () => {
       const x = F.creditos.find(y => y.credito.id === b.dataset.credEditar);
       F.editando = { credito: x.credito, tipo: x.credito.tipo, pension_forma: x.credito.pension_forma, movs: (x.movimientos || []).length };
-      pintarFicha(); const f = $('cred-form'); if (f) f.scrollIntoView({ block: 'nearest' });
+      // El formulario se abre dentro de la tarjeta; solo se desplaza si quedó fuera de la pantalla.
+      pintarFicha(); const f = $('cred-form'); if (f && f.getBoundingClientRect().top > window.innerHeight - 80) f.scrollIntoView({ block: 'nearest' });
     }));
     box.querySelectorAll('[data-cred-hist]').forEach(b => b.addEventListener('click', () => { const id = b.dataset.credHist; F.abierto = { [id]: F.abierto[id] === 'hist' ? null : 'hist' }; pintarFicha(); }));
     box.querySelectorAll('[data-cred-estado]').forEach(b => b.addEventListener('click', () => { F.abierto = { [b.dataset.credEstado]: 'estado:' + b.dataset.a }; pintarFicha(); }));

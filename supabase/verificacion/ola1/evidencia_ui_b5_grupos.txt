@@ -1,0 +1,42 @@
+== G1 Apertura ==
+OK    G1 3 créditos vigentes: todos los grupos abiertos y sin categorías vacías  [{'prestamos': True, 'fonacot': True, 'infonavit': True}]
+OK    G1 14 vigentes + 2 terminados: cinco grupos, en orden  [prestamos,fonacot,infonavit,otros,terminados]
+OK    G1 Orden: Préstamos y anticipos, FONACOT, INFONAVIT y pensiones, Otros, Terminados
+OK    G1 Con más de 3: solo se abre el grupo con algo por completar o activar (FONACOT)  [{'prestamos': False, 'fonacot': True, 'infonavit': False, 'otros': False, 'terminados': False}]
+OK    G1 Terminados plegado (2)
+OK    G1 Encabezado FONACOT: «1 por activar» y «1 incompleto»  [FONACOT 3 registros 1 por activar 1 incompleto PROPUESTO · 09/11/2026 – 15/11/2026 $280.00]
+OK    G1 Encabezado Préstamos y anticipos: 7 registros, «1 suspendido»  [Préstamos y anticipos 7 registros 1 suspendido PROPUESTO 2 periodos Sin sumar: ver cada crédito SALDO PENDIENTE $24,800.00]
+OK    G1 Encabezado INFONAVIT y pensiones: «2 informativos NOI»  [INFONAVIT y pensiones 2 registros 2 informativos NOI Informativo NOI · Sin descuento en BeeHuman]
+== G2 Resumen y filtros ==
+OK    G2 Conteos del resumen  [{'': '16 registros', 'activo': '9 activos', 'pendiente': '2 por completar o activar', 'suspendido': '1 suspendido', 'informativo': '2 informativos NOI', 'terminado': '2 terminados'}]
+OK    G2 «Por completar o activar» = solo créditos incompletos; NO incluye los 7 descuentos por decidir de Revisión
+OK    G2 Filtro «por completar o activar»: solo los 2 incompletos, en su grupo abierto  [2]
+OK    G2 Filtro «terminados»: se abre ese grupo
+OK    G2 «16 registros» quita el filtro
+== G3 Búsqueda y «Mostrar más» ==
+OK    G3 Con 16 registros aparece el buscador
+OK    G3 Buscar «caja»: solo la caja de ahorro; el cursor sigue en el buscador
+OK    G3 Préstamos (7): muestra 6 y «Mostrar 1 más»  [6]
+OK    G3 «Mostrar más» muestra los 7
+== G4 Resumen económico ==
+OK    G4 Saldo pendiente del grupo = suma de saldos de la base ($24,800.00)  [Préstamos y anticipos 7 registros 1 suspendido PROPUESTO 2 periodos Sin sumar: ver cada crédito SALDO PENDIENTE $24,800.00]
+OK    G4 Préstamos con propuestas en 2 periodos: no suma el propuesto
+OK    G4 FONACOT: una sola propuesta del periodo → la muestra con su periodo  [FONACOT 3 registros 1 por activar 1 incompleto PROPUESTO · 09/11/2026 – 15/11/2026 $280.00]
+OK    G4 Otros: mismo periodo pero periodicidad semanal y mensual → no suma  [Otros descuentos 2 registros PROPUESTO Periodicidades distintas Sin sumar: ver cada crédito]
+OK    G4 INFONAVIT y pensiones (solo informativos): «Informativo NOI · Sin descuento en BeeHuman», ningún importe  [INFONAVIT y pensiones 2 registros 2 informativos NOI Informativo NOI · Sin descuento en BeeHuman]
+== G5 Posición ==
+OK    G5 Abrir un grupo no mueve la vista  [0 px]
+OK    G5 Cerrarlo tampoco  [0 px]
+OK    G5 Historia: la tarjeta no se mueve al repintar  [0 px]
+OK    G5 Editar: el formulario se abre dentro de la tarjeta, sin saltar al inicio  [0 px]
+OK    G5 Cancelar: se regresa a la misma tarjeta  [0 px]
+OK    G5 Guardar: el grupo sigue abierto y la tarjeta en su lugar  [30 px]
+== G6 Celular ==
+OK    G6 Notas secundarias ocultas en celular
+OK    G6 Importes, estado y vigencia visibles
+OK    G6 Acciones visibles y en una sola fila  [{'sec': True, 'importes': True, 'estado': True, 'vigencia': True, 'filas_acciones': 1, 'n_acciones': 4, 'desborde': 0}]
+OK    G6 Nada se sale de la pantalla (390 px)  [0]
+OK    Sin errores de JavaScript  [[]]
+OK    Todas las peticiones atendidas por el traductor local  [[]]
+
+RESULTADO: 34 de 34 OK

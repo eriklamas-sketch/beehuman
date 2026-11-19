@@ -26,6 +26,8 @@
   if (!document.getElementById('cred-css')) {
     const st = document.createElement('style'); st.id = 'cred-css';
     st.textContent = `
+.cred{container-type:inline-size}
+.cred .cred-g-chips .cred-est,.cred .cred-g-cnt{white-space:nowrap}
 .cred-h3{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}
 #cred-saldo-total{display:inline-flex;align-items:baseline;gap:8px;flex-wrap:wrap;font:500 12.5px Inter,sans-serif;text-transform:none;letter-spacing:0;color:#45506A;background:#F4F6FA;border:1px solid #E2E7F0;border-radius:12px;padding:6px 12px}
 #cred-saldo-total b{font:700 16px Montserrat,sans-serif;color:#1D2A44}
@@ -104,13 +106,20 @@
 .cred .cred-g-cuerpo .cred-cards{grid-template-columns:1fr;gap:8px}
 .cred .cred-mas{align-self:flex-start}
 .cred .cred-nota{margin-top:14px;font-size:12px}
+/* Modal angosto (≈690 px): los importes del encabezado bajan a un renglón propio, uno junto al otro. */
+@container (max-width:820px){
+  .cred details.cred-grupo>summary{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+  .cred .cred-g-flecha{margin-left:auto;order:1}
+  .cred .cred-g-res{order:2;flex-basis:100%;flex-wrap:nowrap;justify-content:flex-start;gap:32px;padding-left:30px}
+  .cred .cred-g-m{align-items:flex-start}
+}
 @media (max-width:640px){
   .cred details.cred-grupo>summary{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:11px 12px}
   .cred .cred-g-n{white-space:normal;font-size:14px}
   .cred .cred-g-flecha{margin-left:auto;order:1}
   .cred .cred-g-chips,.cred .cred-g-res{order:2;flex-basis:100%}
   .cred .cred-g-chips:empty{display:none}
-  .cred .cred-g-res{justify-content:flex-start;gap:14px}
+  .cred .cred-g-res{justify-content:flex-start;gap:14px;flex-wrap:wrap;padding-left:0}
   .cred .cred-g-m{align-items:flex-start}
   .cred .cred-m-n.sec{display:none}
   .cred .cred-card-h{flex-wrap:nowrap}.cred .cred-card-h .cred-est{white-space:normal;text-align:right;max-width:46%}

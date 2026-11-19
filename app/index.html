@@ -1113,6 +1113,97 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
   .comparativo-fila{grid-template-columns:24px minmax(0,1fr) auto;grid-template-areas:"pos nombre valor" "barra barra barra";row-gap:6px}
   .comparativo-pos{grid-area:pos}.comparativo-nombre{grid-area:nombre}.comparativo-valor{grid-area:valor}.comparativo-barra{grid-area:barra}
 }
+/* @@V22_INICIO ===========================================================
+   BeeHuman V2.2 · reajuste visual (solo presentación, 19-nov-2026).
+   Capa única al final: tokens de densidad y patrones comunes; primer avance
+   aplicado a la estructura global y al módulo Personal. No cambia estructura,
+   datos, consultas, permisos ni comportamiento. */
+:root{
+  --v22-fila:44px;            /* alto objetivo de una fila de tabla */
+  --v22-control:36px;         /* alto de campos y botones secundarios */
+  --v22-esp-1:4px;--v22-esp-2:8px;--v22-esp-3:12px;--v22-esp-4:16px;--v22-esp-5:24px;
+  --v22-texto-tabla:13px;--v22-texto-meta:12px;
+  --v22-sb:278px;             /* ancho del menú lateral (sigue los cortes existentes) */
+}
+@media(max-width:1250px){:root{--v22-sb:240px}}
+@media(max-width:900px){:root{--v22-sb:82px}}
+
+/* Global · el menú lateral llega hasta el final aunque la página sea más larga que la pantalla */
+@media(min-width:601px){
+  .app-layout{background:linear-gradient(90deg,var(--v21-superficie) 0 calc(var(--v22-sb) - 1px),var(--v21-borde) calc(var(--v22-sb) - 1px) var(--v22-sb),var(--v21-fondo) var(--v22-sb))}
+}
+/* Global · franja de vista previa: identifica el entorno sin competir con el contenido */
+body>div[style*="#b91c1c"]{font:500 clamp(10px,2.6vw,11.5px)/1.6 Inter,system-ui,sans-serif!important;padding:2px 8px!important;letter-spacing:0;background:#FDECEC!important;color:#9B1C1C!important;border-bottom:1px solid #F3C9C9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Global · mensaje de estado: discreto */
+#conn-status.ok{padding:5px 12px;font-size:12px;margin-bottom:var(--v22-esp-3)}
+
+/* Patrón · controles compactos (filtros y acciones secundarias) */
+#panel-lista .filters input,#panel-lista .filters select{height:var(--v22-control);min-height:var(--v22-control);padding:0 10px;font-size:13px}
+
+/* ---- Personal ---- */
+#panel-lista>.card{padding:20px 22px}
+#panel-lista>.card>h2{margin-bottom:2px}
+#panel-lista>.card>p.hint{margin:0 0 var(--v22-esp-3);font-size:12.5px}
+/* Indicadores: misma información, menos altura */
+#panel-lista .kpis-personal{gap:var(--v22-esp-3);margin-bottom:var(--v22-esp-2)}
+#panel-lista .kpi-personal{padding:12px 16px!important;min-height:0!important}
+#panel-lista .kpi-personal .kpi-valor,#panel-lista .kpi-personal strong,#panel-lista .kpi-personal b{font-size:24px!important;line-height:1.15!important}
+#panel-lista .kpi-nota{font-size:11.5px;line-height:1.45;margin:0 0 var(--v22-esp-3);color:var(--v21-texto-3)}
+/* Filtros: una rejilla compacta; la búsqueda ocupa el doble */
+#panel-lista .filters{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--v22-esp-2);padding:var(--v22-esp-3)!important;margin-bottom:var(--v22-esp-2)}
+#panel-lista .filters #buscar-personal{grid-column:span 2}
+#panel-lista .filtros-aplicados{padding:6px 10px!important;margin-bottom:var(--v22-esp-2)}
+/* Conteo y exportaciones en una barra; las exportaciones son acciones secundarias */
+#panel-lista .lista-barra{margin:var(--v22-esp-2) 0;gap:var(--v22-esp-2)}
+#panel-lista .lista-exportar{gap:6px}
+#panel-lista .lista-exportar button{height:32px;padding:0 12px!important;font:600 12.5px Inter,sans-serif!important;background:var(--v21-superficie)!important;color:var(--v21-navy)!important;border:1px solid var(--v21-borde)!important;border-radius:9px!important;box-shadow:none!important}
+#panel-lista .lista-exportar button:hover:not(:disabled){background:var(--v21-hover)!important}
+/* Tabla: filas más bajas y legibles */
+#panel-lista table{font-size:var(--v22-texto-tabla)}
+#panel-lista thead th{padding:9px 10px!important;font-size:11.5px!important;white-space:nowrap}
+#panel-lista tbody td{padding:7px 10px!important;vertical-align:middle;line-height:1.35}
+#panel-lista tbody td.col-nombre a{font-weight:500!important;font-size:13.5px!important;letter-spacing:0}
+#panel-lista tbody td select{height:30px;min-height:30px;padding:0 26px 0 8px;font-size:12.5px;min-width:150px}
+#panel-lista tbody .pill{font-size:11px;padding:2px 8px}
+/* Esquemas de pago: cada esquema en un renglón (clasificación ← → importe) y el total, discreto pero visible */
+#panel-lista .esq-linea{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:190px}
+#panel-lista .esq-linea+.esq-linea{margin-top:3px}
+#panel-lista .esq-monto{font-variant-numeric:tabular-nums;font-weight:600}
+#panel-lista .esq-total{display:flex;justify-content:flex-end;margin-top:3px;padding-top:3px;border-top:1px dashed var(--v21-borde)}
+#panel-lista .esq-total b{font-size:12px;font-weight:600;color:var(--v21-texto-2);font-variant-numeric:tabular-nums}
+#panel-lista .paginador{margin-top:var(--v22-esp-3)}
+/* Personal · Empresa, Proyecto, Puesto y Coordinador como información secundaria (sin truncar) */
+#panel-lista table td.col-sec{font-size:12px;font-weight:400;color:var(--v21-texto-2);line-height:1.3}
+#panel-lista table td.col-id{font-size:12px}
+/* Personal · tabla en anchos reducidos: se conserva cada columna y se desplaza lateralmente.
+   La columna Nombre queda fija a la izquierda; las sombras en los bordes y el aviso indican que hay más columnas. */
+@media(max-width:900px){
+  #panel-lista .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+    background:linear-gradient(90deg,#fff 30%,rgba(255,255,255,0)) left/36px 100% no-repeat local,
+               linear-gradient(270deg,#fff 30%,rgba(255,255,255,0)) right/36px 100% no-repeat local,
+               radial-gradient(farthest-side at 0 50%,rgba(22,38,74,.18),transparent) left/12px 100% no-repeat scroll,
+               radial-gradient(farthest-side at 100% 50%,rgba(22,38,74,.18),transparent) right/12px 100% no-repeat scroll}
+  #panel-lista .table-wrap>table{min-width:940px;background:transparent}
+  #panel-lista .table-wrap tbody tr,#panel-lista .table-wrap tbody td{background:transparent}
+  #panel-lista table td.col-sec,#panel-lista table td.col-id{white-space:nowrap}
+  /* Nombre fijo y angosto (hasta dos renglones), para que el resto de la tabla tenga espacio al desplazarse */
+  #panel-lista table th:nth-child(2),#panel-lista table td.col-nombre{position:sticky;left:0;z-index:2;background:#fff!important;box-shadow:6px 0 8px -6px rgba(22,38,74,.25);width:132px;min-width:132px!important;max-width:132px}
+  #panel-lista table td.col-nombre a{white-space:normal;font-size:12.5px!important;line-height:1.25;display:block}
+  #panel-lista .lista-barra{flex-wrap:wrap}
+  #panel-lista .lista-barra::after{content:'Desliza la tabla hacia los lados para ver todas las columnas →';flex-basis:100%;order:3;font-size:11.5px;color:var(--v21-texto-3)}
+}
+/* Personal · filtros y exportaciones en anchos reducidos: dos filtros por renglón; exportaciones en una fila */
+@media(max-width:600px){
+  #panel-lista>.card{padding:16px 14px}
+  #panel-lista .filters{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:10px!important;gap:6px}
+  #panel-lista .filters #buscar-personal{grid-column:1/-1}
+  #panel-lista .filters select{font-size:12.5px;padding:0 24px 0 8px}
+  #panel-lista .lista-exportar{display:flex;flex-wrap:wrap;width:100%}
+  #panel-lista .lista-exportar button{height:30px;font-size:12px!important;padding:0 10px!important;flex:1 1 auto}
+  #panel-lista .filtros-aplicados{flex-wrap:wrap}
+}
+/* @@V22_FIN ============================================================ */
+
 </style>
 </head>
 <body>

@@ -1202,6 +1202,125 @@ body>div[style*="#b91c1c"]{font:500 clamp(10px,2.6vw,11.5px)/1.6 Inter,system-ui
   #panel-lista .lista-exportar button{height:30px;font-size:12px!important;padding:0 10px!important;flex:1 1 auto}
   #panel-lista .filtros-aplicados{flex-wrap:wrap}
 }
+/* ---- Resumen ---- */
+/* Indicadores principales: siempre visibles, compactos */
+#panel-resumen .dashboard-metrics{gap:14px;margin-bottom:12px}
+#panel-resumen .dashboard-metrics .metric-card{padding:14px 16px!important}
+#panel-resumen .dashboard-metrics .metric-card small{margin-bottom:4px;font-size:11.5px}
+#panel-resumen .dashboard-metrics .metric-card b{font-size:28px}
+#panel-resumen .dashboard-metrics .metric-card em{margin-top:4px;font-size:12px}
+/* Acciones rápidas: una fila de botones (mismas acciones) */
+#panel-resumen .res-acciones{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+#panel-resumen .res-acciones .quick-action{width:auto;margin:0;padding:7px 12px;gap:8px;border:1px solid var(--v21-borde);background:var(--v21-superficie);font-size:12.5px}
+#panel-resumen .res-acciones .quick-action:hover{background:var(--v21-hover)}
+#panel-resumen .res-acciones .quick-action.quick-primary{background:var(--v21-amarillo);border-color:var(--v21-amarillo)}
+#panel-resumen .res-acciones .quick-action>b{display:none}
+/* Secciones contraíbles: mismo patrón que Prestaciones y créditos */
+#panel-resumen .res-secciones{display:flex;flex-direction:column;gap:10px}
+#panel-resumen .res-grupo{margin:12px 0 0;font:600 11.5px Inter,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--v21-texto-3)}
+#panel-resumen details.res-sec{border:1px solid var(--v21-borde);border-radius:14px;background:var(--v21-superficie);overflow:hidden;box-shadow:var(--v21-sombra)}
+#panel-resumen details.res-sec>summary{list-style:none;display:grid;grid-template-columns:minmax(170px,auto) 1fr auto;align-items:center;gap:12px;padding:13px 18px;cursor:pointer}
+#panel-resumen details.res-sec>summary::-webkit-details-marker{display:none}
+#panel-resumen details.res-sec>summary:hover{background:#FAFBFD}
+#panel-resumen details.res-sec>summary:focus-visible{outline:3px solid rgba(46,107,216,.25);outline-offset:-3px}
+#panel-resumen .res-n{font:600 15px Inter,sans-serif;color:var(--v21-navy);white-space:nowrap}
+#panel-resumen .res-h{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;min-width:0}
+#panel-resumen .res-chip{font-size:12px;color:var(--v21-texto-2);background:var(--v21-fondo);border:1px solid var(--v21-borde-2);border-radius:999px;padding:3px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#panel-resumen .res-chip.cero{color:var(--v21-texto-3);background:transparent}
+#panel-resumen .res-chip.total{color:#9B1C1C;background:#FDECEC;border-color:#F3C9C9;font-weight:600}
+#panel-resumen .res-chip.alerta{color:#9B1C1C;background:#FFF;border-color:#F3C9C9;font-weight:600}
+#panel-resumen .res-chip.ok{color:#1F6B3A;background:#ECF7EF;border-color:#CDE8D5;font-weight:600}
+#panel-resumen .res-chip.importe b{color:var(--v21-navy);font-weight:600}
+#panel-resumen .res-tenue{font-size:12px;color:var(--v21-texto-3)}
+#panel-resumen .res-flecha{width:9px;height:9px;border-right:2px solid var(--v21-texto-2);border-bottom:2px solid var(--v21-texto-2);transform:rotate(45deg);margin:0 4px 4px}
+#panel-resumen details.res-sec[open]>summary .res-flecha{transform:rotate(-135deg);margin-top:6px}
+#panel-resumen details.res-sec[open]>summary{border-bottom:1px solid var(--v21-borde-2)}
+#panel-resumen details.res-alerta{border-color:#F1CFCF}
+#panel-resumen details.res-alerta>summary .res-n::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#D64545;margin-right:8px;vertical-align:1px}
+#panel-resumen .res-cuerpo{padding:14px 18px 18px;display:flex;flex-direction:column;gap:18px}
+#panel-resumen .res-cuerpo>.hint{margin:0;font-size:12px;color:var(--v21-texto-3)}
+#panel-resumen .res-bloque h4,#panel-resumen .res-alertas h4{margin:0 0 2px;font:600 13.5px Inter,sans-serif;color:var(--v21-navy)}
+#panel-resumen .res-alertas h4 small{font-weight:400;color:var(--v21-texto-3)}
+#panel-resumen .res-bloque>.hint{margin:0 0 10px;font-size:12px;color:var(--v21-texto-3)}
+#panel-resumen .res-bloque-cabeza{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+#panel-resumen .res-bloque-cabeza .hint{margin:0;font-size:12px;color:var(--v21-texto-3)}
+#panel-resumen .res-bloque-cabeza .seccion-control{color:var(--v21-navy)}
+#panel-resumen .res-bloque .comparativo-cuerpo,#panel-resumen .comparativo-card>.seccion-cuerpo{padding:0}
+@media(min-width:901px){#panel-resumen .comparativo-card .seccion-cuerpo{grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:18px}}
+#panel-resumen #resumen-revisar,#panel-resumen #resumen-antiguedad{display:flex;flex-direction:column;gap:12px}
+#panel-resumen #resumen-revisar a,#panel-resumen #resumen-antiguedad a{color:var(--v21-azul)!important;font-weight:500}
+#panel-resumen .res-pend-tabla td{vertical-align:top}
+#panel-resumen .res-motivo{display:inline-block;margin:0 6px 4px 0;padding:2px 8px;border-radius:999px;background:#FDF2F2;color:#8B2323;font-size:11.5px}
+/* Cifras: tarjetas compactas */
+#panel-resumen .summary-grid,#panel-resumen .res-motivos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0}
+#panel-resumen .stat{padding:10px 14px!important;border-radius:10px;background:var(--v21-fondo)!important;border:1px solid var(--v21-borde-2)!important;box-shadow:none!important;min-height:0!important}
+#panel-resumen .stat .num{font-size:22px!important;line-height:1.15;font-weight:600;font-variant-numeric:tabular-nums}
+#panel-resumen .stat .lbl{font-size:12px!important;margin-top:2px;line-height:1.35}
+#panel-resumen .res-motivos .stat:not(.cero){background:#FEF7F7!important;border-color:#F3D6D6!important}
+#panel-resumen .res-motivos .stat.cero .num{color:var(--v21-texto-3)}
+/* Tablas dentro de las secciones */
+#panel-resumen .res-cuerpo .table-wrap{border:1px solid var(--v21-borde-2);border-radius:10px}
+#panel-resumen .res-cuerpo table{font-size:13px;font-variant-numeric:tabular-nums}
+#panel-resumen .res-cuerpo thead th{background:var(--v21-fondo);color:var(--v21-texto-2);font-weight:600;font-size:11.5px;padding:8px 12px}
+#panel-resumen .res-cuerpo tbody td{padding:8px 12px;border-bottom:1px solid var(--v21-borde-2)}
+#panel-resumen .res-cuerpo tbody tr:last-child td{border-bottom:0}
+/* Comparativo: detalle más ligero */
+#panel-resumen .comparativo-detalle{padding:14px}
+#panel-resumen .comparativo-detalle-cabeza{margin-bottom:10px}
+#panel-resumen .comparativo-lugar{width:38px;height:38px;border-radius:10px;font-size:14px}
+#panel-resumen .comparativo-cifras{gap:8px;margin-bottom:10px}
+#panel-resumen .comparativo-cifras div{padding:8px 10px}
+#panel-resumen .comparativo-cifras b{font-size:19px}
+#panel-resumen .comparativo-notas{font-size:12px}
+#panel-resumen .comparativo-fila{padding:7px 10px!important}
+#panel-resumen .comparativo-fila{box-sizing:border-box}
+#panel-resumen .res-cuerpo .empty{padding:6px 0;text-align:left;font-size:12.5px;color:var(--v21-texto-3);background:none;border:0}
+/* Rol Consulta: igual que antes, sin cifras ni importes de compensación por persona */
+body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resumen .res-bloque-grupos{display:none!important}
+/* Anchos reducidos: tablas con desplazamiento lateral y sombras; el resumen del encabezado baja bajo el título */
+@media(max-width:900px){
+  #panel-resumen .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+    background:linear-gradient(90deg,#fff 30%,rgba(255,255,255,0)) left/36px 100% no-repeat local,
+               linear-gradient(270deg,#fff 30%,rgba(255,255,255,0)) right/36px 100% no-repeat local,
+               radial-gradient(farthest-side at 0 50%,rgba(22,38,74,.18),transparent) left/12px 100% no-repeat scroll,
+               radial-gradient(farthest-side at 100% 50%,rgba(22,38,74,.18),transparent) right/12px 100% no-repeat scroll}
+  #panel-resumen .table-wrap table{background:transparent}
+  #panel-resumen .table-wrap tbody tr,#panel-resumen .table-wrap tbody td{background:transparent!important}
+  #panel-resumen .table-wrap th,#panel-resumen .table-wrap td{white-space:nowrap!important}
+  #panel-resumen .res-pend-tabla td:last-child{white-space:normal!important;min-width:220px}
+  #panel-resumen details.res-sec>summary{grid-template-columns:1fr auto;row-gap:8px}
+  #panel-resumen .res-h{grid-column:1/-1;grid-row:2;justify-content:flex-start}
+}
+@media(max-width:600px){
+  #panel-resumen .dashboard-hero-compacta{flex-wrap:wrap;row-gap:8px;padding-bottom:8px!important}
+  #panel-resumen .hero-compacta-texto .dashboard-greeting{white-space:nowrap}
+  #panel-resumen .dashboard-metrics{gap:8px;margin-bottom:10px}
+  #panel-resumen .dashboard-metrics .metric-card{flex-direction:row!important;align-items:center!important;gap:12px!important;padding:10px 14px!important}
+  #panel-resumen .dashboard-metrics .metric-icon{position:static!important;flex:none}
+  #panel-resumen .dashboard-metrics .metric-card>span:nth-child(2){display:grid!important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t n" "s n";column-gap:12px;align-items:center}
+  #panel-resumen .dashboard-metrics .metric-card small{grid-area:t;margin:0}
+  #panel-resumen .dashboard-metrics .metric-card em{grid-area:s;margin-top:2px}
+  #panel-resumen .dashboard-metrics .metric-card b{grid-area:n;font-size:26px!important}
+  #panel-resumen .res-acciones{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+  #panel-resumen .res-acciones .quick-action{justify-content:flex-start;padding:8px 10px;font-size:12px}
+  #panel-resumen details.res-sec>summary{padding:12px 14px}
+  #panel-resumen .res-cuerpo{padding:12px 14px 14px;gap:14px}
+  #panel-resumen .summary-grid,#panel-resumen .res-motivos{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  #panel-resumen .summary-grid>.stat:last-child:nth-child(odd),#panel-resumen .res-motivos>.stat:last-child:nth-child(odd){grid-column:1/-1}
+  #panel-resumen .stat{padding:8px 12px!important}
+  #panel-resumen .stat .num{font-size:20px!important}
+  #panel-resumen .comparativo-detalle{padding:12px}
+  #panel-resumen .seccion-control{width:100%}
+  #panel-resumen .res-chip{font-size:11.5px;padding:2px 8px}
+  /* Pendientes: en celular, cada persona en un renglón con sus motivos debajo (sin desplazamiento lateral) */
+  #panel-resumen .res-pend-tabla,#panel-resumen .res-pend-tabla tbody{display:block;min-width:0}
+  #panel-resumen .res-pend-tabla thead tr{display:flex}
+  #panel-resumen .res-pend-tabla thead th:last-child{display:none}
+  #panel-resumen .res-pend-tabla thead th{flex:1}
+  #panel-resumen .res-pend-tabla tbody tr{display:flex;flex-direction:column;gap:4px;padding:8px 12px;border-bottom:1px solid var(--v21-borde-2)}
+  #panel-resumen .res-pend-tabla tbody tr:last-child{border-bottom:0}
+  #panel-resumen .res-pend-tabla tbody td{padding:0!important;border:0!important;white-space:normal!important;min-width:0!important}
+}
 /* @@V22_FIN ============================================================ */
 
 </style>
@@ -1516,54 +1635,80 @@ body>div[style*="#b91c1c"]{font:500 clamp(10px,2.6vw,11.5px)/1.6 Inter,system-ui
       <button class="metric-card" type="button" onclick="cambiarPestana('empresas')"><span class="metric-icon">▦</span><span><b id="dash-empresas">—</b><small>Empresas</small><em>Organizaciones registradas</em></span><span class="metric-arrow">›</span></button>
       <button class="metric-card metric-red" type="button" onclick="cambiarPestana('lista')"><span class="metric-icon">♧</span><span><b id="dash-pendientes">—</b><small>Pendientes</small><em id="dash-pendientes-sub">Revisión de información</em></span><span class="metric-arrow">›</span></button>
     </div>
-    <div class="card resumen-seccion seccion-neutra comparativo-card" id="comparativo-empresas-card">
-      <div class="seccion-cabeza"><h2>Participación de personal por empresa</h2><p class="hint">Personas vigentes (sin Baja) de cada empresa y su porcentaje del total. Elige una empresa para ver su lugar y su diferencia frente a las demás.</p></div>
-      <div class="seccion-cuerpo"><div id="comparativo-empresas"><div class="empty">Cargando…</div></div></div>
+    <!-- @@V22_RESUMEN · secciones contraíbles (Dirección y RR.HH. son agrupaciones visuales, no permisos) -->
+    <div class="res-acciones" aria-label="Acciones rápidas">
+      <button type="button" class="quick-action quick-primary" onclick="cambiarPestana('alta')"><span>＋</span>Alta de personal <b>›</b></button>
+      <button type="button" class="quick-action" onclick="cambiarPestana('lista')"><span>▤</span>Consultar personal <b>›</b></button>
+      <button type="button" class="quick-action" onclick="cambiarPestana('empresas')"><span>▦</span>Empresas <b>›</b></button>
+      <button type="button" class="quick-action" onclick="mostrarAyudaBeeHuman()"><span>▦</span>Herramientas <b>›</b></button>
     </div>
-    <div class="dashboard-columns">
-      <div class="card dashboard-recent">
-        <div class="section-heading"><div><h2>Personal reciente</h2><p class="hint">Últimas personas registradas o actualizadas en la plataforma.</p></div><button type="button" class="light-button" onclick="cambiarPestana('lista')">Ver todo <span>→</span></button></div>
-        <div class="table-wrap"><table class="recent-table"><thead><tr><th>Nombre</th><th>Empresa</th><th>Puesto</th><th>Estatus</th></tr></thead><tbody id="dashboard-personal-reciente"><tr><td colspan="4" class="empty">Cargando información…</td></tr></tbody></table></div>
-      </div>
-      <aside class="dashboard-actions">
-        <div class="card quick-card"><h2>Acciones rápidas</h2>
-          <button type="button" class="quick-action quick-primary" onclick="cambiarPestana('alta')"><span>＋</span>Alta de personal <b>›</b></button>
-          <button type="button" class="quick-action" onclick="cambiarPestana('lista')"><span>▤</span>Consultar personal <b>›</b></button>
-          <button type="button" class="quick-action" onclick="cambiarPestana('empresas')"><span>▦</span>Empresas <b>›</b></button>
-          <button type="button" class="quick-action" onclick="mostrarAyudaBeeHuman()"><span>▦</span>Herramientas <b>›</b></button>
+    <div class="res-secciones" id="resumen-secciones">
+      <details class="res-sec res-alerta" data-sec="pendientes" id="res-sec-pendientes">
+        <summary><span class="res-n">Pendientes y riesgos</span><span class="res-h" id="res-h-pendientes"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
+        <div class="res-cuerpo">
+          <p class="hint">Pendientes: personas vigentes con datos exigidos incompletos, contrato vencido o que vence en 30 días o menos, o sin esquema de pago activo. Cada persona cuenta una sola vez, aunque tenga varios motivos.</p>
+          <div id="resumen-revisar"></div>
         </div>
-        <div class="plan-card"><span class="plan-crown">♛</span><div><small>BeeHuman</small><b>Administración de personal</b><p>Información organizada para tomar mejores decisiones.</p></div></div>
-      </aside>
-    </div>
-    <div class="card dashboard-analytics resumen-seccion seccion-marca">
-      <div class="seccion-cabeza"><h2>Vista general</h2><p class="hint">Indicadores operativos de tu organización.</p></div>
-      <div class="seccion-cuerpo"><div class="summary-grid" id="resumen-personal"></div></div>
-    </div>
-    <div class="card resumen-seccion seccion-oscura">
-      <div class="seccion-cabeza"><h2>Compensación</h2><p class="hint">Esquemas de pago activos de las personas que no están en Baja.</p></div>
-      <div class="seccion-cuerpo"><div class="summary-grid" id="resumen-compensacion"></div></div>
-    </div>
-    <div class="card resumen-seccion seccion-neutra">
-      <div class="seccion-cabeza"><h2>Esquemas por modalidad, periodicidad y días del periodo</h2><p class="hint">Los importes solo se suman entre esquemas con la misma modalidad, la misma periodicidad y los mismos días del periodo. No hay total general: no son importes comparables entre sí.</p></div>
-      <div class="seccion-cuerpo"><div id="resumen-grupos"></div></div>
-    </div>
-    <div class="card resumen-seccion seccion-azul">
-      <div class="seccion-cabeza seccion-cabeza-control">
-        <div><h2>Desglose</h2><p class="hint">Personas agrupadas por la dimensión que elijas.</p></div>
-        <label class="seccion-control" for="resumen-dimension"><span>Agrupar por</span>
+      </details>
+      <h3 class="res-grupo">Dirección</h3>
+      <details class="res-sec" data-sec="distribucion" id="res-sec-distribucion">
+        <summary><span class="res-n">Distribución del personal</span><span class="res-h" id="res-h-distribucion"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
+        <div class="res-cuerpo">
+          <div class="res-bloque comparativo-card" id="comparativo-empresas-card">
+            <h4>Participación de personal por empresa</h4>
+            <p class="hint">Personas vigentes (sin Baja) de cada empresa y su porcentaje del total. Elige una empresa para ver su lugar y su diferencia frente a las demás.</p>
+            <div class="seccion-cuerpo"><div id="comparativo-empresas"><div class="empty">Cargando…</div></div></div>
+          </div>
+          <div class="res-bloque">
+            <h4>Vista general</h4>
+            <div class="summary-grid" id="resumen-personal"></div>
+          </div>
+        </div>
+      </details>
+      <h3 class="res-grupo">Dirección y Recursos Humanos</h3>
+      <details class="res-sec" data-sec="compensacion" id="res-sec-compensacion">
+        <summary><span class="res-n">Compensación</span><span class="res-h" id="res-h-compensacion"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
+        <div class="res-cuerpo">
+          <div class="res-bloque res-bloque-comp">
+            <h4>Esquemas de pago</h4>
+            <p class="hint">Esquemas de pago activos de las personas que no están en Baja.</p>
+            <div class="summary-grid" id="resumen-compensacion"></div>
+          </div>
+          <div class="res-bloque res-bloque-grupos">
+            <h4>Esquemas por modalidad, periodicidad y días del periodo</h4>
+            <p class="hint">Los importes solo se suman entre esquemas con la misma modalidad, la misma periodicidad y los mismos días del periodo. No hay total general: no son importes comparables entre sí.</p>
+            <div id="resumen-grupos"></div>
+          </div>
+          <div class="res-bloque">
+            <div class="res-bloque-cabeza">
+              <div><h4>Desglose</h4><p class="hint">Personas agrupadas por la dimensión que elijas.</p></div>
+              <label class="seccion-control" for="resumen-dimension"><span>Agrupar por</span>
           <select id="resumen-dimension">
             <option value="clasificacion">Por clasificación</option>
             <option value="proyecto">Por proyecto</option>
             <option value="coordinador">Por coordinador</option>
             <option value="registro_patronal">Por registro patronal</option>
           </select>
-        </label>
-      </div>
-      <div class="seccion-cuerpo"><div id="resumen-desglose"></div></div>
-    </div>
-    <div class="card resumen-seccion seccion-alerta">
-      <div class="seccion-cabeza"><h2>Para revisar</h2><p class="hint">Situaciones que conviene corregir en el expediente.</p></div>
-      <div class="seccion-cuerpo"><div id="resumen-revisar"></div></div>
+              </label>
+            </div>
+            <div id="resumen-desglose"></div>
+          </div>
+        </div>
+      </details>
+      <h3 class="res-grupo">Recursos Humanos</h3>
+      <details class="res-sec" data-sec="antiguedad" id="res-sec-antiguedad">
+        <summary><span class="res-n">Antigüedad y aniversarios</span><span class="res-h" id="res-h-antiguedad"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
+        <div class="res-cuerpo">
+          <div id="resumen-antiguedad"></div>
+        </div>
+      </details>
+      <details class="res-sec" data-sec="reciente" id="res-sec-reciente">
+        <summary><span class="res-n">Personal reciente</span><span class="res-h" id="res-h-reciente"><span class="res-tenue">Últimos 5 registros en la plataforma</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
+        <div class="res-cuerpo">
+          <div class="res-bloque-cabeza"><p class="hint">Últimas personas registradas o actualizadas en la plataforma. No son altas laborales.</p><button type="button" class="light-button" onclick="cambiarPestana('lista')">Ver todo <span>→</span></button></div>
+          <div class="table-wrap"><table class="recent-table"><thead><tr><th>Nombre</th><th>Empresa</th><th>Puesto</th><th>Estatus</th></tr></thead><tbody id="dashboard-personal-reciente"><tr><td colspan="4" class="empty">Cargando información…</td></tr></tbody></table></div>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -2404,6 +2549,21 @@ function datosExigidosFaltantes(p){
     esquemas.some(r => { const c = porId.get(r.clasificacion_id); return !!(c && c[bandera]); }) &&
     !String(p[campo] == null ? '' : p[campo]).trim()).map(x => x[2]);
 }
+// Resumen · Pendientes: la tarjeta y el detalle salen de esta misma función, así coinciden siempre.
+// Personas únicas con al menos uno de los tres motivos (no la suma de motivos).
+const MOTIVOS_PENDIENTE = [
+  ['requisitos', 'datos exigidos', 'Datos exigidos incompletos'],
+  ['contrato', 'contratos en alerta', 'Contrato vencido o que vence en 30 días o menos'],
+  ['sin_esquema', 'sin esquema', 'Sin esquema de pago activo']
+];
+function pendientesResumen(){
+  const limite = sumarDias(fechaLocalHoy(), DIAS_AVISO_CONTRATO);
+  const vigentes = personal.filter(p => !personaEnBaja(p));
+  const por = {};
+  MOTIVOS_PENDIENTE.forEach(([k]) => { por[k] = vigentes.filter(p => tienePendiente(p, k, limite)); });
+  const ids = new Set(); Object.values(por).forEach(arr => arr.forEach(p => ids.add(p.id)));
+  return { personas: vigentes.filter(p => ids.has(p.id)), por, limite };
+}
 // Pendientes de RH: solo aplican a personas que no están en Baja.
 function tienePendiente(p, tipo, limiteContrato){
   if (personaEnBaja(p)) return false;
@@ -2853,7 +3013,7 @@ function renderResumenAgregado(){
   const ids = ['resumen-personal','resumen-compensacion','resumen-grupos','resumen-desglose','resumen-revisar'];
   if (resumenAgregadoEstado !== 'ok') {
     const msg = `<div class="empty">${resumenAgregadoEstado === 'error' ? 'No se pudo cargar el resumen. Recarga la página.' : 'Cargando…'}</div>`;
-    ids.forEach(id => { document.getElementById(id).innerHTML = msg; });
+    ids.concat('resumen-antiguedad').forEach(id => { document.getElementById(id).innerHTML = msg; });
     return;
   }
   const r = resumenAgregado, k = r.k;
@@ -2862,6 +3022,8 @@ function renderResumenAgregado(){
     stat(r.personal.baja, 'Personas en Baja') +
     stat(r.personal.empresas, 'Empresas con personal vigente') +
     stat(r.personal.proyectos, 'Proyectos con personal vigente');
+  const encConsulta = { consulta: true, nVigentes: r.personal.vigentes, enBaja: r.personal.baja, empresasConPersonal: r.personal.empresas, proyectos: r.personal.proyectos, compensacion: r.compensacion, grupos: r.grupos || [] };
+  document.getElementById('resumen-antiguedad').innerHTML = '<div class="empty">Los aniversarios por persona están disponibles para los roles Administrador y Nómina.</div>';
   // V2.0 M2: para Consulta el servidor ya no manda compensación ni grupos.
   const dimSel = document.getElementById('resumen-dimension');
   if (!r.compensacion) {
@@ -2874,6 +3036,7 @@ function renderResumenAgregado(){
       <tbody>${filasP.map(f => `<tr><td>${escapeHtml(f.nombre)}</td><td>${f.personas}</td></tr>`).join('')}</tbody>
     </table></div>` : '<div class="empty">Sin datos en tu ámbito.</div>';
     document.getElementById('resumen-revisar').innerHTML = '<div class="empty">Los pendientes por persona están disponibles para los roles Administrador y Nómina.</div>';
+    encabezadosResumen(encConsulta);
     return;
   }
   document.getElementById('resumen-compensacion').innerHTML =
@@ -2906,6 +3069,7 @@ function renderResumenAgregado(){
     </tr>`).join('')}</tbody>
   </table></div>` : '<div class="empty">Sin datos.</div>';
   document.getElementById('resumen-revisar').innerHTML = '<div class="empty">Los pendientes por persona están disponibles para los roles Administrador y Nómina.</div>';
+  encabezadosResumen(encConsulta);
 }
 
 function renderResumen(){
@@ -2928,6 +3092,8 @@ function renderResumen(){
   if (registrosPagoGlobalEstado !== 'ok') {
     const msg = `<div class="empty">${registrosPagoGlobalEstado === 'error' ? 'No se pudieron cargar los esquemas de pago. Recarga la página.' : 'Cargando…'}</div>`;
     contComp.innerHTML = msg; contGrupos.innerHTML = msg; contDesglose.innerHTML = msg; contRevisar.innerHTML = msg;
+    document.getElementById('resumen-antiguedad').innerHTML = msg;
+    encabezadosResumen({ cargando: registrosPagoGlobalEstado !== 'error', error: registrosPagoGlobalEstado === 'error', vigentes, enBaja });
     return;
   }
 
@@ -2982,35 +3148,89 @@ function renderResumen(){
   </table></div>` : '<div class="empty">Sin datos.</div>';
   }
 
-  // --- Para revisar
+  // --- Pendientes y riesgos
   const bajaConEsquemas = personal.filter(p => personaEnBaja(p) && esquemasActivosDe(p.id).length);
   const MAX = 20;
   const lista = arr => arr.slice(0, MAX).map(enlacePersonaHTML).join(', ') + (arr.length > MAX ? ` y ${arr.length - MAX} más` : '');
-  const avisos = [];
-  if (bajaConEsquemas.length) {
-    const n = bajaConEsquemas.reduce((s, p) => s + esquemasActivosDe(p.id).length, 0);
-    avisos.push(`<div class="breakdown-row"><span><b>${n}</b> esquema(s) activo(s) en <b>${bajaConEsquemas.length}</b> persona(s) con estatus Baja. No cuentan en Compensación; ciérralos desde su expediente: ${lista(bajaConEsquemas)}</span></div>`);
-  }
-  if (sinEsquema.length) {
-    avisos.push(`<div class="breakdown-row"><span><b>${sinEsquema.length}</b> persona(s) vigente(s) sin ningún esquema de pago activo: ${lista(sinEsquema)}</span></div>`);
-  }
-  // Aniversarios: aviso para revisar el SBC (no genera movimientos).
+  const pend = pendientesResumen();
+  const fechaCorta = iso => String(iso).slice(0, 10).split('-').reverse().join('/');
+  const motivosDe = p => MOTIVOS_PENDIENTE.filter(([k]) => pend.por[k].includes(p)).map(([k, , largo]) =>
+    k === 'requisitos' ? `${largo}: ${datosExigidosFaltantes(p).join(', ')}`
+    : k === 'contrato' ? `${String(p.fecha_vencimiento_contrato).slice(0, 10) < fechaLocalHoy() ? 'Contrato vencido' : 'Contrato vence'} el ${fechaCorta(p.fecha_vencimiento_contrato)}`
+    : largo);
+  const MAX_FILAS = 50;
+  const partes = [];
+  partes.push(`<div class="res-motivos">${MOTIVOS_PENDIENTE.map(([k, , largo]) => `<div class="stat${pend.por[k].length ? '' : ' cero'}"><div class="num">${pend.por[k].length}</div><div class="lbl">${escapeHtml(largo)}</div></div>`).join('')}</div>`);
+  if (!requisitosEvaluables()) partes.push('<p class="hint">Datos exigidos: no se pudieron evaluar porque no cargaron las clasificaciones.</p>');
+  partes.push(pend.personas.length ? `<div class="table-wrap"><table class="res-pend-tabla"><thead><tr><th>Persona (${pend.personas.length})</th><th>Motivos</th></tr></thead><tbody>
+    ${pend.personas.slice(0, MAX_FILAS).map(p => `<tr><td>${enlacePersonaHTML(p)}</td><td>${motivosDe(p).map(m => `<span class="res-motivo">${escapeHtml(m)}</span>`).join('')}</td></tr>`).join('')}
+    </tbody></table></div>${pend.personas.length > MAX_FILAS ? `<p class="hint">Se muestran ${MAX_FILAS} de ${pend.personas.length}. Consulta el resto en Personal con el filtro de pendientes.</p>` : ''}`
+    : '<div class="empty">Sin pendientes.</div>');
+  const n = bajaConEsquemas.reduce((s, p) => s + esquemasActivosDe(p.id).length, 0);
+  partes.push(`<div class="res-alertas"><h4>Alertas adicionales <small>(no cuentan en Pendientes)</small></h4>${bajaConEsquemas.length
+    ? `<div class="breakdown-row"><span><b>${n}</b> esquema(s) activo(s) en <b>${bajaConEsquemas.length}</b> persona(s) con estatus Baja. No cuentan en Compensación; ciérralos desde su expediente: ${lista(bajaConEsquemas)}</span></div>`
+    : '<div class="empty">Ninguna persona en Baja con esquema activo.</div>'}</div>`);
+  contRevisar.innerHTML = partes.join('');
+
+  // --- Antigüedad y aniversarios: aviso para revisar el SBC (no genera movimientos).
   const hoyISO = fechaLocalHoy();
   const aniversarios = [], sinFecha = [];
   vigentes.forEach(p => { const a = aniversarioDe(p, hoyISO); if (!a) return; if (a.estado === 'sin_fecha') sinFecha.push(p); else aniversarios.push({ p, a }); });
   aniversarios.sort((x, y) => x.a.fecha.localeCompare(y.a.fecha) || String(x.p.nombre_completo).localeCompare(String(y.p.nombre_completo), 'es'));
-  if (aniversarios.length) {
-    const fechaCorta = iso => iso.split('-').reverse().join('/');
-    avisos.push(`<div class="aniversarios-bloque"><div class="breakdown-row"><span><b>${aniversarios.length}</b> aniversario(s) laboral(es) en los últimos ${ANIVERSARIO_DIAS_DESPUES} días o los próximos ${ANIVERSARIO_DIAS_ANTES}. Revisa si cambia el factor de integración y, si corresponde, prepara la modificación de salario ante el IMSS. El aniversario no siempre implica una modificación.</span></div>
+  const ant = [];
+  ant.push(aniversarios.length ? `<div class="aniversarios-bloque"><div class="breakdown-row"><span><b>${aniversarios.length}</b> aniversario(s) laboral(es) en los últimos ${ANIVERSARIO_DIAS_DESPUES} días o los próximos ${ANIVERSARIO_DIAS_ANTES}. Revisa si cambia el factor de integración y, si corresponde, prepara la modificación de salario ante el IMSS. El aniversario no siempre implica una modificación.</span></div>
       <div class="table-wrap"><table class="aniversarios-tabla"><thead><tr><th>Persona</th><th>Empresa</th><th>Aniversario</th><th>Años</th><th>Cuándo</th><th>Fecha base</th></tr></thead><tbody>
       ${aniversarios.map(({ p, a }) => `<tr class="aniv-${a.estado}"><td>${enlacePersonaHTML(p)}</td><td>${escapeHtml(empresaNombre(p.empresa_id))}</td><td>${escapeHtml(fechaCorta(a.fecha))}</td><td>${a.anios}</td><td><span class="pill aniv-pill">${escapeHtml(textoAniversario(a))}</span></td><td>${escapeHtml(a.fuente)} · ${escapeHtml(fechaCorta(a.base))}</td></tr>`).join('')}
-      </tbody></table></div></div>`);
-  }
-  if (sinFecha.length) {
-    avisos.push(`<div class="breakdown-row"><span><b>${sinFecha.length}</b> persona(s) vigente(s) sin fecha de antigüedad, alta IMSS ni ingreso: no se puede calcular su aniversario. ${lista(sinFecha)}</span></div>`);
-  }
-  contRevisar.innerHTML = avisos.join('') || '<div class="empty">Nada pendiente de revisar.</div>';
+      </tbody></table></div></div>`
+    : `<div class="empty">Sin aniversarios laborales en los últimos ${ANIVERSARIO_DIAS_DESPUES} días ni en los próximos ${ANIVERSARIO_DIAS_ANTES}.</div>`);
+  if (sinFecha.length) ant.push(`<div class="breakdown-row"><span><b>${sinFecha.length}</b> persona(s) vigente(s) sin fecha de antigüedad, alta IMSS ni ingreso: no se puede calcular su aniversario. ${lista(sinFecha)}</span></div>`);
+  document.getElementById('resumen-antiguedad').innerHTML = ant.join('');
+
+  encabezadosResumen({ vigentes, enBaja, pend, bajaConEsquemas, esquemas, grupos, aniversarios: aniversarios.length, sinFecha: sinFecha.length });
 }
+
+// Encabezados de las secciones contraíbles de Resumen: el resumen queda visible aunque la sección esté cerrada.
+// Importes: solo se muestra uno si existe un único grupo comparable (misma modalidad, periodicidad y días).
+const resumenSecTocada = {};
+function encabezadosResumen(d){
+  const poner = (k, html) => { const el = document.getElementById('res-h-' + k); if (el) el.innerHTML = html; };
+  const chip = (txt, cl) => `<span class="res-chip${cl ? ' ' + cl : ''}">${txt}</span>`;
+  const nf = n => Number(n).toLocaleString('es-MX');
+  const pl = (n, uno, varios) => `${nf(n)} ${n === 1 ? uno : varios}`;
+  const tenue = t => `<span class="res-tenue">${escapeHtml(t)}</span>`;
+  const empresasConPersonal = d.empresasConPersonal != null ? d.empresasConPersonal : new Set(d.vigentes.map(p => p.empresa_id).filter(Boolean)).size;
+  const proyectos = d.proyectos != null ? d.proyectos : new Set(d.vigentes.map(p => p.proyecto_id).filter(Boolean)).size;
+  const nVig = d.nVigentes != null ? d.nVigentes : d.vigentes.length;
+  poner('distribucion', [chip(pl(nVig, 'vigente', 'vigentes')), chip(pl(d.enBaja, 'en Baja', 'en Baja'), d.enBaja ? '' : 'cero'),
+    chip(`${nf(empresasConPersonal)} de ${pl(empresas.length, 'empresa', 'empresas')} con personal`), chip(pl(proyectos, 'proyecto', 'proyectos') + ' con personal')].join(''));
+  if (d.consulta) {
+    poner('pendientes', tenue('Disponible para los roles Administrador y Nómina'));
+    poner('antiguedad', tenue('Disponible para los roles Administrador y Nómina'));
+    poner('compensacion', d.compensacion
+      ? [chip(pl(d.compensacion.esquemas, 'esquema activo', 'esquemas activos')), d.grupos.length > 1 ? chip(`${d.grupos.length} grupos de importe · no sumables`) : ''].join('')
+      : tenue('Personas por proyecto, coordinador o registro patronal'));
+    return;
+  }
+  if (d.cargando || d.error) {
+    const t = tenue(d.error ? 'No se pudieron cargar los esquemas de pago' : 'Cargando…');
+    ['pendientes', 'compensacion', 'antiguedad'].forEach(k => poner(k, t));
+    return;
+  }
+  const np = d.pend.personas.length;
+  poner('pendientes', (np ? chip(pl(np, 'persona', 'personas'), 'total') : chip('Sin pendientes', 'ok'))
+    + MOTIVOS_PENDIENTE.map(([k, corto]) => chip(`${nf(d.pend.por[k].length)} ${corto}`, d.pend.por[k].length ? '' : 'cero')).join('')
+    + chip(`${nf(d.bajaConEsquemas.length)} en Baja con esquema activo`, d.bajaConEsquemas.length ? 'alerta' : 'cero'));
+  const g = d.grupos;
+  poner('compensacion', chip(pl(d.esquemas.length, 'esquema activo', 'esquemas activos'))
+    + (g.length === 1 ? chip(`${escapeHtml(etiquetaGrupoImporte(g[0]))}: <b>${escapeHtml(money(g[0].centavos / 100))}</b> por periodo`, 'importe')
+      : g.length > 1 ? chip(`${g.length} grupos de importe · no sumables`) : ''));
+  poner('antiguedad', chip(pl(d.aniversarios, 'aniversario', 'aniversarios') + ' en ±30 días', d.aniversarios ? '' : 'cero')
+    + chip(`${nf(d.sinFecha)} sin fecha de antigüedad`, d.sinFecha ? '' : 'cero'));
+  // Pendientes se abre solo si hay algo, mientras el usuario no la haya abierto o cerrado él mismo.
+  const det = document.getElementById('res-sec-pendientes');
+  if (det && !resumenSecTocada.pendientes) det.open = np > 0 || d.bajaConEsquemas.length > 0;
+}
+document.querySelectorAll('#resumen-secciones details.res-sec > summary').forEach(s => s.addEventListener('click', () => { resumenSecTocada[s.parentElement.dataset.sec] = true; }));
 document.getElementById('resumen-dimension').addEventListener('change', renderResumen);
 
 // Desglose por registro patronal (solo Administrador y Nómina), con DOS conteos:
@@ -3133,7 +3353,7 @@ function actualizarDashboard(){
   const empresasUnicas=empresas.length;
   const sinEsquema=registrosPagoGlobalEstado==='ok' ? vigentes.filter(p=>!esquemasActivosDe(p.id).length).length : null;
   const contratos=vigentes.filter(p=>p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0,10)<=sumarDias(fechaLocalHoy(),DIAS_AVISO_CONTRATO)).length;
-  const pendientes=vigentes.filter(p => (requisitosEvaluables() && datosExigidosFaltantes(p).length) || (p.fecha_vencimiento_contrato && String(p.fecha_vencimiento_contrato).slice(0,10)<=sumarDias(fechaLocalHoy(),DIAS_AVISO_CONTRATO)) || (sinEsquema!==null && !esquemasActivosDe(p.id).length)).length;
+  const pendientes=pendientesResumen().personas.length;
   const poner=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   poner('dash-personas',vigentes.length.toLocaleString('es-MX'));
   poner('dash-personas-sub',total-vigentes.length ? (total-vigentes.length)+' en baja' : 'Personal vigente');

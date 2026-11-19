@@ -31,6 +31,16 @@ OK    G5 Historia: la tarjeta no se mueve al repintar  [0 px]
 OK    G5 Editar: el formulario se abre dentro de la tarjeta, sin saltar al inicio  [0 px]
 OK    G5 Cancelar: se regresa a la misma tarjeta  [0 px]
 OK    G5 Guardar: el grupo sigue abierto y la tarjeta en su lugar  [30 px]
+== G7 Saldo total de préstamos ==
+OK    G7 DIANA: total = saldo de la base de préstamos y anticipos no terminados ($24,800.00)  [Saldo total de préstamos $24,800.00 6 préstamos activos · 1 suspendido]
+OK    G7 DIANA: referencia «6 préstamos activos · 1 suspendido» (terminados excluidos)  [Saldo total de préstamos $24,800.00 6 préstamos activos · 1 suspendido]
+OK    G7 El préstamo terminado con saldo ($1,000.00) no se suma
+OK    G7 Va en el renglón del título y antes de las etiquetas de registros
+OK    G7 Con un filtro activo, el total no cambia
+OK    G7 ADELA (solo FONACOT): $0.00 · «Sin préstamos vigentes»  [Saldo total de préstamos $0.00 Sin préstamos vigentes]
+OK    G7 BENITO (préstamo activo; INFONAVIT y FONACOT excluidos): $9,500.00 · «1 préstamo activo»  [Saldo total de préstamos $9,500.00 1 préstamo activo]
+OK    G7 CESAR (préstamo suspendido incluido; anticipo terminado excluido): $4,000.00 · «1 suspendido»  [Saldo total de préstamos $4,000.00 1 suspendido]
+OK    G7 EDGAR (sin créditos): $0.00 · «Sin préstamos vigentes»  [Saldo total de préstamos $0.00 Sin préstamos vigentes]
 == G6 Celular ==
 OK    G6 Notas secundarias ocultas en celular
 OK    G6 Importes, estado y vigencia visibles
@@ -39,4 +49,4 @@ OK    G6 Nada se sale de la pantalla (390 px)  [0]
 OK    Sin errores de JavaScript  [[]]
 OK    Todas las peticiones atendidas por el traductor local  [[]]
 
-RESULTADO: 34 de 34 OK
+RESULTADO: 43 de 43 OK

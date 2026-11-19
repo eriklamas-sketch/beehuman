@@ -26,6 +26,10 @@
   if (!document.getElementById('cred-css')) {
     const st = document.createElement('style'); st.id = 'cred-css';
     st.textContent = `
+.cred-h3{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}
+#cred-saldo-total{display:inline-flex;align-items:baseline;gap:8px;flex-wrap:wrap;font:500 12.5px Inter,sans-serif;text-transform:none;letter-spacing:0;color:#45506A;background:#F4F6FA;border:1px solid #E2E7F0;border-radius:12px;padding:6px 12px}
+#cred-saldo-total b{font:700 16px Montserrat,sans-serif;color:#1D2A44}
+#cred-saldo-total .cred-st-n{font-size:11.5px;color:#6B7385}
 .cred .cred-intro{margin:0 0 12px;color:#45506A;font-size:13px;line-height:1.5}
 .cred table{width:100%;border-collapse:collapse;font-size:13px}
 .cred th{font:600 11px Montserrat,sans-serif;text-transform:uppercase;letter-spacing:.04em;color:#6B7385;text-align:left;padding:8px 10px;border-bottom:1px solid #E5E9F1;background:#F8FAFC}
@@ -129,8 +133,9 @@
   window.credFicha = async function (personalId) {
     const box = $('cred-ficha');
     if (!box) return;
-    if (!puede()) { box.innerHTML = ''; return; }
+    if (!puede()) { pintarSaldoPrestamos(box, false); box.innerHTML = ''; return; }
     F.personal = personalId; F.editando = null; F.abierto = {}; F.grupos = {}; F.verTodo = {}; F.filtro = ''; F.buscar = '';
+    pintarSaldoPrestamos(box, false);   // no mostrar el total de la persona anterior mientras carga
     box.innerHTML = '<p class="hint">Cargando créditos…</p>';
     await cargarFicha(); pintarFicha();
   };
@@ -326,9 +331,32 @@
     return document.scrollingElement || document.documentElement;
   }
 
+  // Saldo total de préstamos (encabezado de la sección, a la derecha del título).
+  // Solo LEE el saldo que entrega la base (cred_saldo_actual) de préstamos y anticipos no terminados,
+  // incluidos los suspendidos. No usa importes configurados ni propuestos. Sin préstamos: $0.00.
+  function saldoPrestamos(creditos) {
+    const vivos = (creditos || []).filter(x => ['prestamo', 'anticipo'].includes(x.credito.tipo) && x.credito.estado !== 'terminado');
+    const n = e => vivos.filter(x => x.credito.estado === e).length;
+    return { total: vivos.reduce((s, x) => s + (x.saldo != null ? Number(x.saldo) : 0), 0), activos: n('activo'), suspendidos: n('suspendido'), incompletos: n('incompleto'), vivos: vivos.length };
+  }
+  function pintarSaldoPrestamos(box, mostrar) {
+    const sec = box.closest('section'); const h = sec && sec.querySelector(':scope > h3');
+    if (!h) return;
+    let el = h.querySelector('#cred-saldo-total');
+    if (!mostrar) { if (el) el.remove(); h.classList.remove('cred-h3'); return; }
+    h.classList.add('cred-h3');
+    if (!el) { el = document.createElement('span'); el.id = 'cred-saldo-total'; h.appendChild(el); }
+    const r = saldoPrestamos(F.creditos);
+    const det = r.vivos ? [[r.activos, 'préstamo activo', 'préstamos activos'], [r.suspendidos, 'suspendido', 'suspendidos'], [r.incompletos, 'incompleto', 'incompletos']]
+      .filter(([k]) => k).map(([k, a, b]) => `${k} ${k === 1 ? a : b}`).join(' · ') : 'Sin préstamos vigentes';
+    el.dataset.total = r.total.toFixed(2);
+    el.innerHTML = `<span class="cred-st-t">Saldo total de préstamos</span><b>${esc(dinero(r.total))}</b><span class="cred-st-n">${esc(det)}</span>`;
+  }
+
   function pintarFicha() {
     const box = $('cred-ficha'); if (!box) return;
-    if (F.error) { box.innerHTML = `<div class="cred"><div class="cred-msg err">${esc(limpiar(F.error))}</div></div>`; return; }
+    if (F.error) { pintarSaldoPrestamos(box, false); box.innerHTML = `<div class="cred"><div class="cred-msg err">${esc(limpiar(F.error))}</div></div>`; return; }
+    pintarSaldoPrestamos(box, true);
     // Conserva la posición del usuario al repintar.
     // Conserva la posición: guarda un elemento visible de referencia (tarjeta o grupo) y, tras repintar,
     // lo devuelve al mismo lugar de la pantalla.

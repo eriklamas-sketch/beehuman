@@ -9,6 +9,9 @@ Cambio de presentación: no cambia reglas, estados, permisos ni la base.
      periodicidad; si no, «Sin sumar».
   G5 Posición: abrir o cerrar grupos, Historia y Editar → Cancelar no mueven la vista; el formulario de edición se
      abre dentro de la tarjeta.
+  G7 Saldo total de préstamos (junto al título): suma el saldo de la base de préstamos y anticipos no terminados,
+     incluidos suspendidos; excluye terminados, FONACOT, INFONAVIT, pensiones y otros; $0.00 sin préstamos;
+     no cambia con filtros ni búsqueda; no muestra el total de otra persona.
   G6 Celular (390 px): notas secundarias ocultas; importes, estados, vigencia y acciones visibles; acciones en una
      fila; nada se sale de la pantalla. Sin errores de JavaScript.
 Base local bhui; peticiones atendidas por rest_local.py como el usuario (mismas RLS), no PostgREST real.
@@ -157,6 +160,34 @@ with sync_playwright() as p:
     d = mueve(pg, sel, lambda: (pg.click('#cred-guardar'), pg.wait_for_timeout(900)))
     ok(d < 40 and 'Cambio guardado' in pg.inner_text('#cred-msg') and pg.evaluate("document.querySelector('details[data-grupo=otros]').open"),
        'G5 Guardar: el grupo sigue abierto y la tarjeta en su lugar', f'{d:.0f} px')
+
+    print('== G7 Saldo total de préstamos ==')
+    NOMBRE['EDGAR'] = 'EDGAR MORALES PEÑA'; SC.P['EDGAR'] = '0a100000-0000-4000-8000-000000000015'
+    def esperado(q):
+        return float(sql(f"""select coalesce(sum(public.cred_saldo_actual(id)), 0) from public.cred_creditos
+                          where personal_id = '{SC.P[q]}' and tipo in ('prestamo','anticipo') and estado <> 'terminado'"""))
+    def indicador(pg):
+        return pg.evaluate("""() => { const el = document.getElementById('cred-saldo-total'); if (!el) return null;
+          const h = el.closest('h3'); const chips = document.querySelector('.cred-resumen');
+          return { total: el.dataset.total, txt: el.innerText.replace(/\\s+/g, ' '), en_titulo: !!h && h.textContent.includes('Prestaciones y créditos'),
+                   derecha: el.getBoundingClientRect().left > h.firstChild.parentElement.getBoundingClientRect().left + 150,
+                   antes_chips: !chips || el.getBoundingClientRect().bottom <= chips.getBoundingClientRect().top + 1 }; }""")
+    i = indicador(pg)   # DIANA sigue abierta
+    e = esperado('DIANA')
+    pg.locator('section[data-detail-section="prestaciones"]').screenshot(path=f'{OUT}/G7_saldo_total.png')
+    ok(i and float(i['total']) == e and f'${e:,.2f}' in i['txt'], f'G7 DIANA: total = saldo de la base de préstamos y anticipos no terminados (${e:,.2f})', i and i['txt'])
+    ok(i and '6 préstamos activos · 1 suspendido' in i['txt'], 'G7 DIANA: referencia «6 préstamos activos · 1 suspendido» (terminados excluidos)', i and i['txt'])
+    term = float(sql(f"select coalesce(sum(public.cred_saldo_actual(id)), 0) from public.cred_creditos where personal_id = '{SC.P['DIANA']}' and tipo in ('prestamo','anticipo') and estado = 'terminado'"))
+    ok(term > 0 and float(i['total']) == e, f'G7 El préstamo terminado con saldo (${term:,.2f}) no se suma')
+    ok(i and i['en_titulo'] and i['antes_chips'], 'G7 Va en el renglón del título y antes de las etiquetas de registros')
+    pg.click('[data-filtro="pendiente"]'); pg.wait_for_timeout(300)
+    ok(float(indicador(pg)['total']) == e, 'G7 Con un filtro activo, el total no cambia')
+    pg.click('[data-filtro=""]'); pg.wait_for_timeout(300); cerrar(pg)
+    for q, esp_txt, n in [('ADELA', 'Sin préstamos vigentes', 'solo FONACOT'), ('BENITO', '1 préstamo activo', 'préstamo activo; INFONAVIT y FONACOT excluidos'),
+                          ('CESAR', '1 suspendido', 'préstamo suspendido incluido; anticipo terminado excluido'), ('EDGAR', 'Sin préstamos vigentes', 'sin créditos')]:
+        abrir_ficha(pg, q); i = indicador(pg); e = esperado(q)
+        ok(i and float(i['total']) == e and f'${e:,.2f}' in i['txt'] and esp_txt in i['txt'], f'G7 {q} ({n}): ${e:,.2f} · «{esp_txt}»', i and i['txt'])
+        cerrar(pg)
     errores += pg.errores; ctx.close()
 
     print('== G6 Celular ==')

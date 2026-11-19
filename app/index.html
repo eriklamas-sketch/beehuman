@@ -1321,6 +1321,118 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
   #panel-resumen .res-pend-tabla tbody tr:last-child{border-bottom:0}
   #panel-resumen .res-pend-tabla tbody td{padding:0!important;border:0!important;white-space:normal!important;min-width:0!important}
 }
+/* ---- Resumen · vista Dirección (V2.2) ---- */
+#panel-resumen .dir-barra{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px}
+#panel-resumen .dir-corte{margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--v21-texto-3)}
+#panel-resumen .dir-selector{display:flex;gap:4px;padding:4px;background:var(--v21-superficie);border:1px solid var(--v21-borde);border-radius:12px}
+#panel-resumen .dir-selector button{border:0;background:transparent;padding:8px 18px;border-radius:9px;font:500 14px Inter,sans-serif;color:var(--v21-texto-2);cursor:pointer}
+#panel-resumen .dir-selector button[aria-selected="true"]{background:var(--v21-navy);color:#fff;font-weight:600}
+#panel-resumen .dir-selector button:focus-visible{outline:3px solid rgba(46,107,216,.3);outline-offset:1px}
+#panel-resumen #res-vista-direccion{display:flex;flex-direction:column;gap:14px}
+#panel-resumen #res-vista-direccion[hidden],#panel-resumen #res-vista-operacion[hidden]{display:none!important}
+#panel-resumen .dir-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+#panel-resumen .dir-kpi{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:18px 24px;border-radius:16px;background:var(--v21-superficie);border:1px solid var(--v21-borde)}
+#panel-resumen .dir-kpi-principal{background:var(--v21-navy);border-color:var(--v21-navy);color:#fff}
+#panel-resumen .dir-kpi-num{font:700 46px/1 Inter,sans-serif;font-variant-numeric:tabular-nums;color:inherit}
+#panel-resumen .dir-kpi-num small{font-size:18px;font-weight:600;color:var(--v21-azul)}
+#panel-resumen .dir-kpi-txt{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+#panel-resumen .dir-kpi-txt b{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--v21-texto-3)}
+#panel-resumen .dir-kpi-txt span{font-size:13.5px;color:var(--v21-texto-2)}
+#panel-resumen .dir-kpi-principal .dir-kpi-txt b{color:var(--v21-amarillo)}
+#panel-resumen .dir-kpi-principal .dir-kpi-txt span{color:#DCE3F2}
+#panel-resumen .dir-h2{margin:0;font:700 15px Inter,sans-serif;color:var(--v21-navy)}
+#panel-resumen .dir-bloque-plano{display:flex;flex-direction:column;gap:10px}
+#panel-resumen .dir-hallazgos{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+#panel-resumen .dir-hallazgo{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:14px;background:var(--v21-superficie);border:1px solid var(--v21-borde);color:var(--v21-navy)}
+#panel-resumen .dir-hallazgo:hover{border-color:#C9D5EE;background:#FAFBFE}
+#panel-resumen .dir-hallazgo:focus-visible{outline:3px solid rgba(46,107,216,.3)}
+#panel-resumen .dir-hallazgo b{font:700 22px Inter,sans-serif;font-variant-numeric:tabular-nums}
+#panel-resumen .dir-hallazgo span{font-size:13.5px;line-height:1.4}
+#panel-resumen .dir-hallazgo small{font-size:12px;color:var(--v21-texto-3)}
+#panel-resumen .dir-inconsistencias{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 16px;border-radius:14px;background:var(--v21-superficie);border:1px solid #F4D9D5}
+#panel-resumen .dir-inconsistencias[hidden]{display:none}
+#panel-resumen .dir-inc-t{display:flex;align-items:center;gap:8px;margin:0;font:700 14px Inter,sans-serif;color:var(--v21-navy)}
+#panel-resumen .dir-inc-t svg{color:#A12626}
+#panel-resumen .dir-inc-chip{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;background:#FDF5F4;font-size:13px;color:var(--v21-navy)}
+#panel-resumen .dir-inc-chip b{color:#A12626;font-size:14.5px}
+#panel-resumen .dir-inc-chip:hover{background:#FBE9E7}
+#panel-resumen .dir-inc-chip:focus-visible{outline:3px solid rgba(161,38,38,.25)}
+#panel-resumen .dir-inc-grupo{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;padding:4px 6px 4px 12px;border:1px dashed #E8B4AE;border-radius:999px;font-size:12.5px;color:var(--v21-texto-2)}
+#panel-resumen .dir-inc-grupo>span b{color:#A12626}
+#panel-resumen .dir-dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:14px}
+#panel-resumen .dir-card{display:flex;flex-direction:column;gap:12px;padding:18px 22px;border-radius:16px;background:var(--v21-superficie);border:1px solid var(--v21-borde);min-width:0}
+#panel-resumen .dir-card-cab{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px}
+#panel-resumen .dir-sub{font-size:12.5px;color:var(--v21-texto-3)}
+#panel-resumen .dir-sub a{font-weight:500;text-decoration:none;color:var(--v21-azul)}
+#panel-resumen .dir-barras{display:flex;flex-direction:column;gap:4px}
+#panel-resumen .dir-barra-fila{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(80px,160px) minmax(0,1fr) auto;align-items:center;gap:12px;padding:4px 6px;border-radius:8px}
+#panel-resumen .dir-barra-fila:hover:not([disabled]){background:var(--v21-hover)}
+#panel-resumen .dir-barra-fila:focus-visible{outline:3px solid rgba(46,107,216,.3)}
+#panel-resumen .dir-barra-fila[disabled]{cursor:default}
+#panel-resumen .dir-barra-n{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#panel-resumen .dir-barra-pista{height:12px;border-radius:6px;background:#EEF1F7;overflow:hidden}
+#panel-resumen .dir-barra-valor{display:block;height:100%;border-radius:6px;background:var(--v21-navy)}
+#panel-resumen .dir-barra-valor.tenue{background:#9AA6C2}
+#panel-resumen .dir-barra-valor.azul{background:var(--v21-azul)}
+#panel-resumen .dir-barra-v{font-size:12.5px;color:var(--v21-texto-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+#panel-resumen .dir-barra-v b{color:var(--v21-navy)}
+#panel-resumen .dir-nota{margin:0;font-size:12px;color:var(--v21-texto-3)}
+#panel-resumen .dir-sin-coord{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--v21-amarillo-suave);font-size:12.5px}
+#panel-resumen .dir-sin-coord b{font-size:14px}
+#panel-resumen .dir-sin-coord a{font-weight:500;text-decoration:none;color:var(--v21-azul)}
+#panel-resumen .dir-pendiente{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border:1px dashed #C9D1E1;border-radius:10px}
+#panel-resumen .dir-pendiente b{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--v21-texto-3)}
+#panel-resumen .dir-pendiente span{font-size:12.5px;color:var(--v21-texto-2)}
+#panel-resumen .dir-apilada{display:flex;gap:2px;height:22px;border-radius:7px;overflow:hidden}
+#panel-resumen .dir-apilada span{display:block;min-width:3px}
+#panel-resumen .dir-leyenda{display:flex;flex-wrap:wrap;gap:6px 24px}
+#panel-resumen .dir-leyenda>span{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0}
+#panel-resumen .dir-leyenda i{width:10px;height:10px;border-radius:3px;flex:none}
+#panel-resumen .dir-leyenda span span{min-width:0;overflow-wrap:anywhere}
+#panel-resumen .dir-leyenda b{font-variant-numeric:tabular-nums}
+#panel-resumen .dir-aviso{padding:10px 0;font-size:13px;color:var(--v21-texto-3)}
+/* Analítica de la plantilla (Operación) */
+#panel-resumen .dir-analitica{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:28px}
+#panel-resumen .dir-an-bloque{display:flex;flex-direction:column;gap:10px;min-width:0}
+#panel-resumen .dir-an-bloque h4{margin:0;font:600 13.5px Inter,sans-serif;color:var(--v21-navy)}
+#panel-resumen .dir-an-bloque .hint{margin:2px 0 0;font-size:12px;color:var(--v21-texto-3)}
+#panel-resumen .dir-an-cab{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 14px}
+#panel-resumen .dir-an-ley{display:flex;gap:14px;font-size:12.5px;color:var(--v21-texto-2)}
+#panel-resumen .dir-an-ley span{display:flex;align-items:center;gap:6px}
+#panel-resumen .dir-an-ley i{width:10px;height:10px;border-radius:3px}
+#panel-resumen .dir-an-ley i.h,#panel-resumen .dir-pir-izq i{background:var(--v21-azul)}
+#panel-resumen .dir-an-ley i.m,#panel-resumen .dir-pir-der i{background:#F2A33A}
+#panel-resumen .dir-pir{display:grid;grid-template-columns:36px minmax(0,1fr) 84px minmax(0,1fr) 36px;align-items:center;gap:8px;font-size:12.5px;font-variant-numeric:tabular-nums}
+#panel-resumen .dir-pir>span:first-child{text-align:right;color:var(--v21-texto-2)}
+#panel-resumen .dir-pir>span:last-child{color:var(--v21-texto-2)}
+#panel-resumen .dir-pir b{text-align:center;font-weight:600}
+#panel-resumen .dir-pir-izq,#panel-resumen .dir-pir-der{display:flex;height:16px}
+#panel-resumen .dir-pir-izq{justify-content:flex-end}
+#panel-resumen .dir-pir i{display:block;height:100%}
+#panel-resumen .dir-pir-izq i{border-radius:5px 0 0 5px}
+#panel-resumen .dir-pir-der i{border-radius:0 5px 5px 0}
+#panel-resumen .dir-col{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+#panel-resumen .dir-col>div{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+#panel-resumen .dir-col b{font-size:13.5px;font-variant-numeric:tabular-nums}
+#panel-resumen .dir-col i{display:block;width:100%;max-width:64px;border-radius:7px 7px 3px 3px;background:var(--v21-navy)}
+#panel-resumen .dir-col span{font-size:12px;color:var(--v21-texto-2)}
+@media(max-width:600px){
+  #panel-resumen .dir-barra{margin-bottom:10px}
+  #panel-resumen .dir-selector{width:100%}
+  #panel-resumen .dir-selector button{flex:1}
+  #panel-resumen .dir-kpi{padding:14px 16px;gap:12px}
+  #panel-resumen .dir-kpi-num{font-size:36px}
+  #panel-resumen .dir-hallazgos{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  #panel-resumen .dir-hallazgo{padding:12px}
+  #panel-resumen .dir-hallazgo b{font-size:18px}
+  #panel-resumen .dir-hallazgo span{font-size:12.5px}
+  #panel-resumen .dir-dos{grid-template-columns:1fr}
+  #panel-resumen .dir-card{padding:14px}
+  #panel-resumen .dir-barra-fila{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}
+  #panel-resumen .dir-barra-pista{grid-column:1/-1;grid-row:2}
+  #panel-resumen .dir-analitica{grid-template-columns:1fr}
+  #panel-resumen .dir-pir{grid-template-columns:30px minmax(0,1fr) 72px minmax(0,1fr) 30px}
+}
 /* @@V22_FIN ============================================================ */
 
 </style>
@@ -1631,6 +1743,43 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
       <div class="hero-compacta-texto"><span class="dashboard-greeting" id="saludo-usuario">Hola</span><span class="hero-compacta-sep" aria-hidden="true">·</span><span class="hero-compacta-sub">Tablero de tu organización</span></div>
       <div class="hero-company-brand" id="hero-company-brand" aria-label="Marca de la empresa activa"><img id="hero-company-logo" alt="Logo de la empresa activa"><div class="hero-company-fallback"><span class="hero-company-initial" id="hero-company-initial">E</span><span class="hero-company-copy" id="hero-company-copy">Logo de tu empresa</span></div></div>
     </section>
+    <!-- @@V22_DIRECCION · Resumen con dos vistas: Dirección (por defecto) y Operación (lo existente). No son permisos. -->
+    <div class="dir-barra">
+      <p class="dir-corte" id="dir-corte">Cargando…</p>
+      <div class="dir-selector" role="tablist" aria-label="Vista del resumen">
+        <button type="button" role="tab" id="dir-tab-direccion" aria-selected="true" aria-controls="res-vista-direccion" onclick="cambiarVistaResumen('direccion')">Dirección</button>
+        <button type="button" role="tab" id="dir-tab-operacion" aria-selected="false" aria-controls="res-vista-operacion" onclick="cambiarVistaResumen('operacion')">Operación</button>
+      </div>
+    </div>
+    <div id="res-vista-direccion" role="tabpanel" aria-labelledby="dir-tab-direccion">
+      <div class="dir-kpis">
+        <section class="dir-kpi dir-kpi-principal" aria-label="Plantilla activa" id="dir-plantilla"><span class="dir-kpi-num">—</span></section>
+        <section class="dir-kpi" aria-label="Antigüedad promedio" id="dir-antiguedad"><span class="dir-kpi-num">—</span></section>
+      </div>
+      <section class="dir-bloque-plano" aria-labelledby="dir-t-hallazgos">
+        <h2 id="dir-t-hallazgos" class="dir-h2">Lo que tus datos dicen</h2>
+        <div class="dir-hallazgos" id="dir-hallazgos"></div>
+      </section>
+      <section class="dir-inconsistencias" id="dir-inconsistencias" aria-labelledby="dir-t-inc"></section>
+      <div class="dir-dos">
+        <section class="dir-card" aria-labelledby="dir-t-empresas">
+          <div class="dir-card-cab"><h2 id="dir-t-empresas" class="dir-h2">¿Dónde está tu gente?</h2><span class="dir-sub">Personas vigentes por empresa</span></div>
+          <div id="dir-empresas"></div>
+        </section>
+        <section class="dir-card" aria-labelledby="dir-t-coord">
+          <div class="dir-card-cab"><h2 id="dir-t-coord" class="dir-h2">¿Quién coordina a tu gente?</h2><span class="dir-sub" id="dir-coord-sub"></span></div>
+          <div id="dir-coordinadores"></div>
+        </section>
+      </div>
+      <section class="dir-card" aria-labelledby="dir-t-pago">
+        <div class="dir-card-cab">
+          <div><h2 id="dir-t-pago" class="dir-h2">¿Cómo se le paga a tu gente?</h2><span class="dir-sub" id="dir-pago-sub">Personas vigentes según su combinación de esquemas de pago activos</span></div>
+          <div class="dir-pendiente"><b>Percepciones mensuales equivalentes</b><span>Pendiente de confirmar con Nómina</span></div>
+        </div>
+        <div id="dir-pagos"></div>
+      </section>
+    </div>
+    <div id="res-vista-operacion" role="tabpanel" aria-labelledby="dir-tab-operacion" hidden>
     <div class="dashboard-metrics">
       <button class="metric-card metric-green" type="button" onclick="cambiarPestana('lista')"><span class="metric-icon">♧</span><span><b id="dash-personas">—</b><small>Personas</small><em id="dash-personas-sub">Personal registrado</em></span><span class="metric-arrow">›</span></button>
       <button class="metric-card" type="button" onclick="cambiarPestana('empresas')"><span class="metric-icon">▦</span><span><b id="dash-empresas">—</b><small>Empresas</small><em>Organizaciones registradas</em></span><span class="metric-arrow">›</span></button>
@@ -1649,6 +1798,7 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
         <div class="res-cuerpo">
           <p class="hint">Pendientes: personas vigentes con datos exigidos incompletos, contrato vencido o que vence en 30 días o menos, o sin esquema de pago activo. Cada persona cuenta una sola vez, aunque tenga varios motivos.</p>
           <div id="resumen-revisar"></div>
+          <div id="resumen-por-confirmar"></div>
         </div>
       </details>
       <h3 class="res-grupo">Dirección</h3>
@@ -1710,6 +1860,11 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
           <div class="table-wrap"><table class="recent-table"><thead><tr><th>Nombre</th><th>Empresa</th><th>Puesto</th><th>Estatus</th></tr></thead><tbody id="dashboard-personal-reciente"><tr><td colspan="4" class="empty">Cargando información…</td></tr></tbody></table></div>
         </div>
       </details>
+      <details class="res-sec" data-sec="analitica" id="res-sec-analitica">
+        <summary><span class="res-n">Analítica de la plantilla</span><span class="res-h" id="res-h-analitica"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
+        <div class="res-cuerpo"><div id="resumen-analitica"></div></div>
+      </details>
+    </div>
     </div>
   </section>
 
@@ -2378,6 +2533,7 @@ async function cargarPersonal() {
   document.getElementById('lista-cargando').style.display='none';
   if (p.error) { setStatus('Error al cargar personal: '+traducirErrorSupabase(p.error),'err'); console.error(p.error); return; }
   personal = p.data||[];
+  corteDatos.personal = Date.now();
   if (esConsulta()) derivarCatalogosConsulta();
   renderTabla(); renderResumen(); actualizarDashboard();
   fillSelectPersonal(document.getElementById('f-coordinador-select'), null, 'Selecciona coordinador');
@@ -2389,6 +2545,8 @@ async function cargarPersonal() {
 // del Resumen. Se leen de v_personal_registros_pago, que respeta RLS. El
 // modelo anterior (combos y percepciones) ya no alimenta ningún indicador.
 // ---------------------------------------------------------------------
+// Fecha de corte del Resumen: momento real en que terminó cada carga (no una fecha fija).
+let corteDatos = { personal: null, esquemas: null, agregado: null };
 let registrosPagoActivos = [];
 let registrosPagoPorPersona = new Map();   // personal_id -> esquemas activos
 let registrosPagoGlobalEstado = 'cargando'; // 'cargando' | 'ok' | 'error'
@@ -2410,6 +2568,7 @@ async function cargarRegistrosPagoGlobal(){
       registrosPagoPorPersona.get(x.personal_id).push(x);
     });
     registrosPagoGlobalEstado = 'ok';
+    corteDatos.esquemas = Date.now();
   }
   renderTabla(); renderResumen(); actualizarDashboard(); actualizarDashboard();
 }
@@ -3003,7 +3162,7 @@ let resumenAgregadoEstado = 'cargando'; // 'cargando' | 'ok' | 'error'
 async function cargarResumenAgregado(){
   const { data, error } = await sb.rpc('resumen_agregado');
   if (error || !data) { console.error('No se pudo cargar el resumen:', error); resumenAgregadoEstado = 'error'; }
-  else { resumenAgregado = data; resumenAgregadoEstado = 'ok'; }
+  else { resumenAgregado = data; resumenAgregadoEstado = 'ok'; corteDatos.agregado = Date.now(); }
   renderResumen(); actualizarDashboard();
 }
 function importeAgregadoHTML(g, k){
@@ -3075,7 +3234,257 @@ function renderResumenAgregado(){
   encabezadosResumen(encConsulta);
 }
 
+// =====================================================================
+// Resumen · vista Dirección y Analítica de la plantilla (V2.2)
+// Solo usa lo que la pantalla ya cargó (personal y esquemas activos, con RLS
+// por tenant, rol y alcance). Sin consultas nuevas. Consulta: solo los
+// totales del resumen agregado del servidor.
+// =====================================================================
+let vistaResumen = 'direccion';
+function cambiarVistaResumen(v){
+  vistaResumen = v === 'operacion' ? 'operacion' : 'direccion';
+  document.getElementById('res-vista-direccion').hidden = vistaResumen !== 'direccion';
+  document.getElementById('res-vista-operacion').hidden = vistaResumen !== 'operacion';
+  document.getElementById('dir-tab-direccion').setAttribute('aria-selected', String(vistaResumen === 'direccion'));
+  document.getElementById('dir-tab-operacion').setAttribute('aria-selected', String(vistaResumen === 'operacion'));
+}
+// Abre una sección de Operación y la muestra en pantalla.
+function irAOperacion(sec, dimension){
+  cambiarVistaResumen('operacion');
+  if (dimension) { const sel = document.getElementById('resumen-dimension'); if (sel && sel.value !== dimension) { sel.value = dimension; sel.dispatchEvent(new Event('change')); } }
+  const d = document.getElementById('res-sec-' + sec);
+  if (d) { resumenSecTocada[sec] = true; d.open = true; setTimeout(() => d.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30); }
+}
+// Personal con filtros que ya existen en esa pantalla.
+function verPersonalFiltrado(filtros){
+  limpiarFiltrosPersonal();
+  Object.entries(filtros).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });
+  alCambiarFiltrosPersonal();
+  cambiarPestana('lista');
+}
+
+function textoCorte(){
+  let t = null;
+  if (esConsulta()) t = corteDatos.agregado;
+  else if (corteDatos.personal && (corteDatos.esquemas || registrosPagoGlobalEstado === 'error')) t = corteDatos.esquemas ? Math.min(corteDatos.personal, corteDatos.esquemas) : corteDatos.personal;
+  if (!t) return 'Cargando datos…';
+  const f = new Date(t);
+  return `Datos al ${f.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })} · ${f.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
+}
+
+// Esquemas por confirmar. Un par de esquemas activos de la misma persona vigente
+// se evalúa solo si comparte empresa, clasificación y periodicidad y sus vigencias
+// se traslapan (en ambos sentidos; fin vacío = vigencia abierta).
+//  · rp_adicional: los dos tienen registro patronal y son distintos.
+//  · duplicidad: mismo registro patronal, o uno o ambos vacíos.
+// Cuenta personas únicas; si una persona tiene los dos tipos, queda en rp_adicional.
+function vigenciasSeTraslapan(a, b){
+  const ai = fechaISOValida(a.fecha_inicio), af = fechaISOValida(a.fecha_fin);
+  const bi = fechaISOValida(b.fecha_inicio), bf = fechaISOValida(b.fecha_fin);
+  const terminaAntes = (fin, inicio) => !!(fin && inicio && fin < inicio);
+  return !terminaAntes(af, bi) && !terminaAntes(bf, ai);
+}
+function esquemasPorConfirmar(){
+  const res = new Map();
+  const mismo = (x, y) => String(x == null ? '' : x) === String(y == null ? '' : y);
+  personal.forEach(p => {
+    if (personaEnBaja(p)) return;
+    const es = esquemasActivosDe(p.id);
+    for (let i = 0; i < es.length; i++) for (let j = i + 1; j < es.length; j++) {
+      const a = es[i], b = es[j];
+      if (!mismo(a.empresa_id, b.empresa_id) || !mismo(a.clasificacion_id, b.clasificacion_id) || !mismo(a.periodicidad_id, b.periodicidad_id)) continue;
+      if (!vigenciasSeTraslapan(a, b)) continue;
+      const tipo = (a.registro_patronal_id && b.registro_patronal_id && !mismo(a.registro_patronal_id, b.registro_patronal_id)) ? 'rp_adicional' : 'duplicidad';
+      if (tipo === 'rp_adicional' || !res.has(p.id)) res.set(p.id, tipo);
+    }
+  });
+  return res;
+}
+
+// Años completos entre una fecha ISO y hoy.
+function aniosCumplidos(baseISO, hoyISO){
+  const [a1, m1, d1] = baseISO.split('-').map(Number), [a2, m2, d2] = hoyISO.split('-').map(Number);
+  return a2 - a1 - ((m2 < m1 || (m2 === m1 && d2 < d1)) ? 1 : 0);
+}
+// Fecha base de antigüedad: la misma que usan los aniversarios. Las fechas futuras no cuentan.
+function fechaBaseAntiguedad(p, hoyISO){
+  const f = ANIVERSARIO_FUENTES.map(([campo]) => fechaISOValida(p[campo])).find(Boolean);
+  return f && f <= hoyISO ? f : null;
+}
+
+function datosDireccion(){
+  const hoy = fechaLocalHoy();
+  const vig = personal.filter(p => !personaEnBaja(p));
+  const n = vig.length;
+  // Empresas
+  const porEmp = new Map();
+  vig.forEach(p => { const k = p.empresa_id ? String(p.empresa_id) : ''; porEmp.set(k, (porEmp.get(k) || 0) + 1); });
+  const emp = [...porEmp].map(([id, c]) => ({ id, nombre: id ? empresaNombre(id) : 'Sin empresa', n: c })).sort((x, y) => y.n - x.n || x.nombre.localeCompare(y.nombre, 'es'));
+  const conPersonal = emp.filter(e => e.id).length;
+  // Menor número de empresas que concentra al menos el 80% de la plantilla.
+  let acum = 0, topN = 0;
+  for (const e of emp) { if (!n || acum / n >= 0.8) break; acum += e.n; topN++; }
+  // Proyectos
+  const proyectos = new Set(vig.map(p => p.proyecto_id).filter(Boolean)).size;
+  // Coordinadores (misma clave que el filtro de Personal)
+  const porCoord = new Map();
+  vig.forEach(p => { const c = nombreCoordinador(p); if (!c) return; if (!porCoord.has(c)) porCoord.set(c, []); porCoord.get(c).push(p); });
+  const coords = [...porCoord].map(([nombre, ps]) => ({ nombre, n: ps.length, emp: new Set(ps.map(p => p.empresa_id).filter(Boolean)).size, proy: new Set(ps.map(p => p.proyecto_id).filter(Boolean)).size }))
+    .sort((x, y) => y.n - x.n || x.nombre.localeCompare(y.nombre, 'es'));
+  const sinCoord = vig.filter(p => !nombreCoordinador(p)).length;
+  const prom = (arr, k) => arr.length ? arr.reduce((s, x) => s + x[k], 0) / arr.length : 0;
+  // Antigüedad
+  const bases = vig.map(p => fechaBaseAntiguedad(p, hoy)).filter(Boolean);
+  const rangosAnt = [0, 0, 0, 0];
+  let sumaDias = 0;
+  bases.forEach(b => { const a = aniosCumplidos(b, hoy); rangosAnt[a < 1 ? 0 : a < 3 ? 1 : a < 5 ? 2 : 3]++; sumaDias += diasEntreISO(b, hoy); });
+  const antProm = bases.length ? sumaDias / bases.length / 365.25 : null;
+  // Edad y sexo (solo de los campos; sin inferir)
+  const conNac = vig.map(p => ({ p, f: fechaISOValida(p.fecha_nacimiento) })).filter(x => x.f && x.f <= hoy);
+  const edades = conNac.map(x => aniosCumplidos(x.f, hoy));
+  const edadProm = edades.length ? edades.reduce((s, a) => s + a, 0) / edades.length : null;
+  const BANDAS = [['55+', a => a >= 55], ['45–54', a => a >= 45 && a < 55], ['35–44', a => a >= 35 && a < 45], ['25–34', a => a >= 25 && a < 35], ['Menos de 25', a => a < 25]];
+  const piramide = BANDAS.map(([b, f]) => ({ b, h: 0, m: 0, f }));
+  let conSexoYEdad = 0, hombres = 0, mujeres = 0;
+  conNac.forEach(({ p, f }) => {
+    const s = String(p.sexo || '').trim().toUpperCase()[0];
+    if (s !== 'H' && s !== 'M') return;
+    const a = aniosCumplidos(f, hoy); const r = piramide.find(x => x.f(a));
+    conSexoYEdad++; if (s === 'H') { r.h++; hombres++; } else { r.m++; mujeres++; }
+  });
+  // Esquemas
+  const esquemasOk = registrosPagoGlobalEstado === 'ok';
+  const porConfirmar = esquemasOk ? esquemasPorConfirmar() : new Map();
+  const variosEsquemas = esquemasOk ? vig.filter(p => esquemasActivosDe(p.id).length > 1).length : null;
+  const combos = new Map(); let sinEsquema = 0;
+  if (esquemasOk) vig.forEach(p => {
+    if (porConfirmar.has(p.id)) return;
+    const es = esquemasActivosDe(p.id);
+    if (!es.length) { sinEsquema++; return; }
+    const nombres = [...new Set(es.map(x => x.clasificacion_nombre || 'Sin clasificación'))].sort((a, b) => a.localeCompare(b, 'es'));
+    const k = nombres.length === 1 ? 'Solo ' + nombres[0] : nombres.join(' + ');
+    combos.set(k, (combos.get(k) || 0) + 1);
+  });
+  const combosOrd = [...combos].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'));
+  const pagos = combosOrd.slice(0, 5).map(([nombre, c]) => ({ nombre, n: c, tipo: 'combo' }));
+  const otras = combosOrd.slice(5).reduce((s, [, c]) => s + c, 0);
+  if (otras) pagos.push({ nombre: 'Otras combinaciones', n: otras, tipo: 'otras' });
+  if (esquemasOk) {
+    pagos.push({ nombre: 'Sin esquema de pago', n: sinEsquema, tipo: 'sin' });
+    if (porConfirmar.size) pagos.push({ nombre: 'Por confirmar', n: porConfirmar.size, tipo: 'confirmar' });
+  }
+  const rpAdicional = [...porConfirmar].filter(([, t]) => t === 'rp_adicional').map(([id]) => id);
+  const duplicidad = [...porConfirmar].filter(([, t]) => t === 'duplicidad').map(([id]) => id);
+  const bajaConEsquema = esquemasOk ? personal.filter(p => personaEnBaja(p) && esquemasActivosDe(p.id).length).length : null;
+  return { n, enBaja: personal.length - n, emp, conPersonal, topN, acum, proyectos, coords, sinCoord,
+    coordEmpProm: prom(coords, 'emp'), coordProyProm: prom(coords, 'proy'),
+    bases: bases.length, rangosAnt, antProm, conNac: conNac.length, edadProm, piramide, conSexoYEdad, hombres, mujeres,
+    esquemasOk, variosEsquemas, pagos, porConfirmar, rpAdicional, duplicidad, bajaConEsquema };
+}
+
+function renderDireccion(){
+  const el = id => document.getElementById(id);
+  if (!el('res-vista-direccion')) return;
+  el('dir-corte').textContent = textoCorte();
+  const nf = v => Number(v).toLocaleString('es-MX');
+  const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '—';
+  const pl = (c, uno, varios) => `${nf(c)} ${c === 1 ? uno : varios}`;
+  const aviso = t => `<div class="dir-aviso">${escapeHtml(t)}</div>`;
+  const avisoRol = 'Disponible para los roles Administrador y Nómina.';
+
+  if (esConsulta()) {
+    const r = resumenAgregadoEstado === 'ok' ? resumenAgregado.personal : null;
+    el('dir-plantilla').innerHTML = r
+      ? `<span class="dir-kpi-num">${nf(r.vigentes)}</span><span class="dir-kpi-txt"><b>Plantilla activa</b><span>Personas vigentes en ${pl(r.empresas, 'empresa', 'empresas')} · ${pl(r.proyectos, 'proyecto', 'proyectos')} · ${pl(r.baja, 'baja registrada', 'bajas registradas')}</span></span>`
+      : `<span class="dir-kpi-num">—</span><span class="dir-kpi-txt"><b>Plantilla activa</b><span>${resumenAgregadoEstado === 'error' ? 'No se pudo cargar el resumen.' : 'Cargando…'}</span></span>`;
+    el('dir-antiguedad').innerHTML = `<span class="dir-kpi-txt"><b>Antigüedad promedio</b><span>${avisoRol}</span></span>`;
+    el('dir-hallazgos').innerHTML = aviso(avisoRol);
+    el('dir-inconsistencias').hidden = true;
+    ['dir-empresas', 'dir-coordinadores', 'dir-pagos'].forEach(id => { el(id).innerHTML = aviso(avisoRol); });
+    el('dir-coord-sub').textContent = '';
+    el('resumen-analitica').innerHTML = aviso(avisoRol);
+    el('res-h-analitica').innerHTML = `<span class="res-tenue">${avisoRol}</span>`;
+    el('resumen-por-confirmar').innerHTML = '';
+    return;
+  }
+  if (!corteDatos.personal) return; // aún sin datos: se queda «Cargando…»
+  const d = datosDireccion();
+
+  // Indicadores principales
+  el('dir-plantilla').innerHTML = `<span class="dir-kpi-num">${nf(d.n)}</span><span class="dir-kpi-txt"><b>Plantilla activa</b><span>Personas vigentes en ${nf(d.conPersonal)} de ${pl(empresas.length, 'empresa', 'empresas')} · ${pl(d.proyectos, 'proyecto', 'proyectos')} · ${pl(d.enBaja, 'baja registrada', 'bajas registradas')}</span></span>`;
+  const mas5 = d.rangosAnt[3];
+  el('dir-antiguedad').innerHTML = d.antProm == null
+    ? `<span class="dir-kpi-num">—</span><span class="dir-kpi-txt"><b>Antigüedad promedio</b><span>Sin fechas de antigüedad válidas</span></span>`
+    : `<span class="dir-kpi-num">${d.antProm.toFixed(1)}<small> años</small></span><span class="dir-kpi-txt"><b>Antigüedad promedio</b><span>Con ${nf(d.bases)} de ${nf(d.n)} personas (${pct(d.bases, d.n)}) · ${pct(mas5, d.bases)} lleva más de 5 años</span></span>`;
+
+  // Hallazgos (cada uno con su base)
+  const hall = [];
+  if (d.conPersonal > 1 && d.n) hall.push({ cifra: pct(d.acum, d.n), texto: `de tu plantilla está en ${d.topN} de tus ${pl(empresas.length, 'empresa', 'empresas')}.`, base: `${nf(d.acum)} de ${nf(d.n)} personas vigentes`, ir: "irAOperacion('distribucion')" });
+  if (d.coords.length) hall.push({ cifra: `${Math.round(d.coordEmpProm)} ${Math.round(d.coordEmpProm) === 1 ? 'empresa' : 'empresas'} y ${Math.round(d.coordProyProm)} ${Math.round(d.coordProyProm) === 1 ? 'proyecto' : 'proyectos'}`, texto: 'es lo que maneja, en promedio, cada coordinador.', base: `Promedio entre ${pl(d.coords.length, 'coordinador', 'coordinadores')}`, ir: "irAOperacion('compensacion','coordinador')" });
+  if (d.esquemasOk && d.n) hall.push({ cifra: pct(d.variosEsquemas, d.n), texto: 'de tu gente tiene más de un esquema de pago.', base: `${nf(d.variosEsquemas)} de ${nf(d.n)} personas vigentes`, ir: "irAOperacion('compensacion','clasificacion')" });
+  const razon = d.sinCoord ? d.n / d.sinCoord : 0, unoDeCada = razon >= 2 && Math.abs(razon - Math.round(razon)) < 0.15;
+  if (d.n) hall.push({ cifra: unoDeCada ? `1 de cada ${Math.round(razon)}` : pct(d.sinCoord, d.n), texto: unoDeCada ? 'personas no tiene coordinador asignado.' : 'de tu plantilla no tiene coordinador asignado.', base: `${nf(d.sinCoord)} de ${nf(d.n)} personas vigentes`, ir: "verPersonalFiltrado({'filtro-coordinador':'__sin__'})" });
+  el('dir-hallazgos').innerHTML = hall.length ? hall.map(h => `<button type="button" class="dir-hallazgo" onclick="${h.ir}"><b>${escapeHtml(h.cifra)}</b><span>${escapeHtml(h.texto)}</span><small>${escapeHtml(h.base)}</small></button>`).join('') : aviso('Sin personas vigentes para analizar.');
+
+  // Inconsistencias (no son indicadores de gestión)
+  const inc = el('dir-inconsistencias');
+  const partesInc = [];
+  if (d.esquemasOk && d.bajaConEsquema) partesInc.push(`<button type="button" class="dir-inc-chip" onclick="irAOperacion('pendientes')"><b>${nf(d.bajaConEsquema)}</b>${d.bajaConEsquema === 1 ? 'persona en Baja con esquema de pago activo' : 'personas en Baja con esquema de pago activo'}</button>`);
+  if (d.porConfirmar.size) partesInc.push(`<span class="dir-inc-grupo"><span><b>${nf(d.porConfirmar.size)}</b> ${d.porConfirmar.size === 1 ? 'persona' : 'personas'} por confirmar:</span>${d.rpAdicional.length ? `<button type="button" class="dir-inc-chip" onclick="irAOperacion('pendientes')"><b>${nf(d.rpAdicional.length)}</b>con registro patronal adicional</button>` : ''}${d.duplicidad.length ? `<button type="button" class="dir-inc-chip" onclick="irAOperacion('pendientes')"><b>${nf(d.duplicidad.length)}</b>con duplicidad de esquema</button>` : ''}</span>`);
+  inc.hidden = !d.esquemasOk || !partesInc.length;
+  inc.innerHTML = `<h2 id="dir-t-inc" class="dir-inc-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>Inconsistencias por revisar</h2>${partesInc.join('')}`;
+
+  // Empresas
+  const maxE = Math.max(1, ...d.emp.map(e => e.n));
+  el('dir-empresas').innerHTML = d.emp.length ? `<div class="dir-barras">${d.emp.map((e, i) => `<button type="button" class="dir-barra-fila" ${e.id ? `onclick="verPersonalFiltrado({'filtro-empresa':'${escapeHtml(e.id)}'})"` : 'disabled'} title="Ver personal de ${escapeHtml(e.nombre)}">
+      <span class="dir-barra-n">${escapeHtml(e.nombre)}</span><span class="dir-barra-pista"><span class="dir-barra-valor${i < d.topN ? '' : ' tenue'}" style="width:${(100 * e.n / maxE).toFixed(1)}%"></span></span><span class="dir-barra-v"><b>${nf(e.n)}</b> · ${(100 * e.n / d.n).toFixed(1)}%</span></button>`).join('')}</div>
+    ${empresas.length > d.conPersonal ? `<p class="dir-nota">${empresas.length - d.conPersonal === 1 ? 'Una empresa está registrada' : `${empresas.length - d.conPersonal} empresas están registradas`} sin personal vigente.</p>` : ''}`
+    : aviso('Sin personas vigentes.');
+
+  // Coordinadores
+  const TOP = 6, maxC = Math.max(1, ...d.coords.slice(0, TOP).map(c => c.n));
+  el('dir-coord-sub').innerHTML = d.coords.length ? `Los ${Math.min(TOP, d.coords.length)} equipos más grandes · <a href="#" onclick="irAOperacion('compensacion','coordinador');return false;">Ver ${d.coords.length === 1 ? 'el coordinador' : `los ${d.coords.length} coordinadores`} →</a>` : '';
+  el('dir-coordinadores').innerHTML = (d.coords.length ? `<div class="dir-barras">${d.coords.slice(0, TOP).map(c => `<button type="button" class="dir-barra-fila" onclick="verPersonalFiltrado({'filtro-coordinador':${escapeHtml(JSON.stringify(c.nombre))}})">
+      <span class="dir-barra-n" title="${escapeHtml(c.nombre)}">${escapeHtml(c.nombre)}</span><span class="dir-barra-pista"><span class="dir-barra-valor azul" style="width:${(100 * c.n / maxC).toFixed(1)}%"></span></span><span class="dir-barra-v"><b>${nf(c.n)}</b> ${c.n === 1 ? 'persona' : 'personas'} · ${pl(c.emp, 'empresa', 'empresas')}</span></button>`).join('')}</div>` : aviso('Ninguna persona vigente tiene coordinador asignado.'))
+    + (d.sinCoord ? `<div class="dir-sin-coord"><span><b>${nf(d.sinCoord)}</b> ${d.sinCoord === 1 ? 'persona' : 'personas'} (${pct(d.sinCoord, d.n)}) sin coordinador asignado</span><a href="#" onclick="verPersonalFiltrado({'filtro-coordinador':'__sin__'});return false;">Ver a ${d.sinCoord === 1 ? 'la persona' : `las ${nf(d.sinCoord)} personas`} →</a></div>` : '');
+
+  // Esquemas de pago: personas por combinación
+  const COLORES = ['#16264A', '#2F5FD0', '#FFC82C', '#B88300', '#7FA0E8'];
+  const color = (x, i) => x.tipo === 'combo' ? COLORES[i % COLORES.length] : x.tipo === 'otras' ? '#9AA6C2' : x.tipo === 'sin' ? '#D5DBE7' : '#E8B4AE';
+  if (registrosPagoGlobalEstado === 'error') el('dir-pagos').innerHTML = aviso('No se pudieron cargar los esquemas de pago.');
+  else if (!d.esquemasOk) el('dir-pagos').innerHTML = aviso('Cargando esquemas de pago…');
+  else {
+    el('dir-pago-sub').textContent = `${nf(d.n)} personas vigentes según su combinación de esquemas de pago activos`;
+    el('dir-pagos').innerHTML = `<div class="dir-apilada" role="img" aria-label="Personas por combinación de esquemas de pago">${d.pagos.filter(x => x.n).map((x, i) => `<span style="width:${(100 * x.n / d.n).toFixed(2)}%;background:${color(x, i)}" title="${escapeHtml(x.nombre)}: ${nf(x.n)}"></span>`).join('')}</div>
+      <div class="dir-leyenda">${d.pagos.map((x, i) => `<span><i style="background:${color(x, i)}"></i><span>${escapeHtml(x.nombre)}</span><b>${nf(x.n)}</b></span>`).join('')}</div>
+      ${d.porConfirmar.size ? `<p class="dir-nota">«Por confirmar» son las mismas ${pl(d.porConfirmar.size, 'persona', 'personas')} de Inconsistencias (${nf(d.rpAdicional.length)} con registro patronal adicional y ${nf(d.duplicidad.length)} con duplicidad de esquema). «Sin esquema» es una categoría aparte.</p>` : ''}`;
+  }
+
+  // Operación › Pendientes: detalle de los esquemas por confirmar (no cambia el contador de Pendientes)
+  const pc = el('resumen-por-confirmar');
+  if (d.esquemasOk && d.porConfirmar.size) {
+    const porId = new Map(personal.map(p => [p.id, p]));
+    const lista = ids => ids.map(id => porId.get(id)).filter(Boolean).sort((a, b) => String(a.nombre_completo).localeCompare(String(b.nombre_completo), 'es')).map(enlacePersonaHTML).join(', ');
+    pc.innerHTML = `<div class="res-alertas"><h4>Esquemas por confirmar <small>(no cuentan en Pendientes; se excluyen de los importes)</small></h4>
+      ${d.rpAdicional.length ? `<div class="breakdown-row"><span><b>${nf(d.rpAdicional.length)}</b> ${d.rpAdicional.length === 1 ? 'persona' : 'personas'} con registro patronal adicional por confirmar (dos esquemas activos de la misma clasificación, empresa y periodicidad, con registros patronales distintos): ${lista(d.rpAdicional)}</span></div>` : ''}
+      ${d.duplicidad.length ? `<div class="breakdown-row"><span><b>${nf(d.duplicidad.length)}</b> ${d.duplicidad.length === 1 ? 'persona' : 'personas'} con duplicidad de esquema por confirmar (mismo registro patronal o sin registro patronal): ${lista(d.duplicidad)}</span></div>` : ''}</div>`;
+  } else pc.innerHTML = '';
+
+  // Operación › Analítica de la plantilla
+  const maxP = Math.max(1, ...d.piramide.map(r => Math.max(r.h, r.m)));
+  const maxA = Math.max(1, ...d.rangosAnt);
+  el('res-h-analitica').innerHTML = [d.edadProm != null ? `<span class="res-chip">Edad promedio ${Math.round(d.edadProm)} años</span>` : '', d.bases ? `<span class="res-chip">${pct(mas5, d.bases)} con más de 5 años</span>` : ''].join('') || '<span class="res-tenue">Sin datos suficientes</span>';
+  el('resumen-analitica').innerHTML = `<div class="dir-analitica">
+    <div class="dir-an-bloque"><div class="dir-an-cab"><div><h4>Edad y sexo</h4><p class="hint">${nf(d.conSexoYEdad)} de ${nf(d.n)} con sexo y fecha de nacimiento (${pct(d.conSexoYEdad, d.n)})${d.edadProm != null ? ` · edad promedio ${Math.round(d.edadProm)} años, con ${nf(d.conNac)} de ${nf(d.n)}` : ''}</p></div>
+      <div class="dir-an-ley"><span><i class="h"></i>Hombres ${nf(d.hombres)}</span><span><i class="m"></i>Mujeres ${nf(d.mujeres)}</span></div></div>
+      ${d.piramide.map(r => `<div class="dir-pir"><span>${nf(r.h)}</span><span class="dir-pir-izq"><i style="width:${(100 * r.h / maxP).toFixed(1)}%"></i></span><b>${r.b}</b><span class="dir-pir-der"><i style="width:${(100 * r.m / maxP).toFixed(1)}%"></i></span><span>${nf(r.m)}</span></div>`).join('')}</div>
+    <div class="dir-an-bloque"><div><h4>Antigüedad por rangos</h4><p class="hint">${nf(d.bases)} de ${nf(d.n)} con fecha válida (${pct(d.bases, d.n)}); las fechas futuras no cuentan</p></div>
+      <div class="dir-col">${d.rangosAnt.map((c, i) => `<div><b>${nf(c)}</b><i style="height:${Math.max(4, Math.round(110 * c / maxA))}px;opacity:${[0.35, 0.55, 0.75, 1][i]}"></i><span>${['Menos de 1 año', '1 a 3 años', '3 a 5 años', 'Más de 5 años'][i]}</span></div>`).join('')}</div></div>
+  </div>`;
+}
+
 function renderResumen(){
+  try { renderDireccion(); } catch (e) { console.error('Vista Dirección:', e); }
   if (esConsulta()) return renderResumenAgregado();
   const vigentes = personal.filter(p => !personaEnBaja(p));
   const enBaja = personal.length - vigentes.length;

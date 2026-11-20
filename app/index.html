@@ -1506,6 +1506,14 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
   #panel-resumen .op-antig-sf tbody tr{grid-template-columns:1fr}
   #panel-resumen .op-antig-sf td:nth-child(2){color:var(--v21-texto-3);font-size:12px}
 }
+/* ---- Catálogos: acordeón de apertura individual (V2.2) ---- */
+#panel-catalogos>.card:not(.cat-abierta)>:not(h2){display:none!important}
+#panel-catalogos>.card:not(.cat-abierta)>h2{margin-bottom:0}
+#panel-catalogos .cat-toggle{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;cursor:pointer;font:inherit;color:inherit}
+#panel-catalogos .cat-toggle:focus-visible{outline:3px solid rgba(46,107,216,.3);outline-offset:4px;border-radius:6px}
+#panel-catalogos .cat-flecha{flex:none;width:9px;height:9px;border-right:2px solid var(--v21-texto-2);border-bottom:2px solid var(--v21-texto-2);transform:rotate(45deg);margin:0 4px 4px}
+#panel-catalogos .cat-abierta .cat-flecha{transform:rotate(-135deg);margin:6px 4px 0}
+#panel-catalogos .catnav-item[aria-current="true"]{background:var(--v21-hover);border-color:#C9D5EE}
 /* @@V22_FIN ============================================================ */
 
 </style>
@@ -1965,7 +1973,7 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
   <section class="panel" id="panel-idse"><div id="idse-raiz"></div></section>
   <section class="panel" id="panel-catalogos">
     <!-- @@V21_NAV_INICIO -->
-    <nav class="catnav" aria-label="Ir a un catálogo"><span class="catnav-titulo">Catálogos</span><span class="catnav-lista"><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos #card-proyectos').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Proyectos</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos #card-periodicidades').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Periodicidades</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos #card-clasificaciones').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Clasificaciones</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;areas&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Áreas</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;departamentos&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Departamentos</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;puestos&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Puestos</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;localidades&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Localidades</a><a href="#" class="catnav-item" onclick="document.querySelector('#panel-catalogos [data-catalogo=&quot;centros_costo&quot;].card').scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});return false;">Centros de costo</a></span></nav>
+    <nav class="catnav" aria-label="Ir a un catálogo"><span class="catnav-titulo">Catálogos</span><span class="catnav-lista"><a href="#" class="catnav-item" onclick="alternarAcordeonCatalogo(document.querySelector('#panel-catalogos #card-proyectos'), true);return false;">Proyectos</a><a href="#" class="catnav-item" onclick="alternarAcordeonCatalogo(document.querySelector('#panel-catalogos #card-periodicidades'), true);return false;">Periodicidades</a><a href="#" class="catnav-item" onclick="alternarAcordeonCatalogo(document.querySelector('#panel-catalogos #card-clasificaciones'), true);return false;">Clasificaciones</a><a href="#" class="catnav-item" onclick="alternarAcordeonCatalogo(document.querySelector('#panel-catalogos [data-catalogo=&quot;areas&quot;].card'), true);return false;">Áreas</a><a href="#" class="catnav-item" onclick="alternarAcordeonCatalogo(document.querySelector('#panel-catalogos [data-catalogo=&quot;departamentos&quot;].card'), true);return false;">Departamentos</a><a href="#" class="catnav-item" onclick="alternarAcordeonCatalogo(document.querySelector('#panel-catalogos [data-catalogo=&quot;puestos&quot;].card'), true);return false;">Puestos</a><a href="#" class="catnav-item" onclick="alternarAcordeonCatalogo(document.querySelector('#panel-catalogos [data-catalogo=&quot;localidades&quot;].card'), true);return false;">Localidades</a><a href="#" class="catnav-item" onclick="alternarAcordeonCatalogo(document.querySelector('#panel-catalogos [data-catalogo=&quot;centros_costo&quot;].card'), true);return false;">Centros de costo</a></span></nav>
     <!-- @@V21_NAV_FIN -->
     <div class="card" id="card-proyectos">
       <h2>Proyectos</h2>
@@ -3804,8 +3812,53 @@ function cambiarPestana(tab){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   const panel=document.getElementById('panel-'+tab);
   if(panel) panel.classList.add('active');
+  if (tab === 'catalogos' && typeof cerrarCatalogos === 'function') cerrarCatalogos();
   window.scrollTo({top:0,behavior:'smooth'});
 }
+// Catálogos: acordeón de apertura individual (solo presentación; no cambia formularios, tablas ni datos).
+// Todos inician contraídos; abrir uno cierra el anterior; volver a elegir el abierto lo contrae.
+function tarjetasCatalogo(){ return [...document.querySelectorAll('#panel-catalogos > .card')]; }
+function marcarCatalogo(card, abierto){
+  card.classList.toggle('cat-abierta', abierto);
+  const b = card.querySelector(':scope > h2 > .cat-toggle'); if (b) b.setAttribute('aria-expanded', String(abierto));
+  const pill = document.querySelector(`#panel-catalogos .catnav-item[data-cat-destino="${card.dataset.catId}"]`);
+  if (pill) pill.setAttribute('aria-current', abierto ? 'true' : 'false');
+}
+function cerrarCatalogos(){ tarjetasCatalogo().forEach(c => marcarCatalogo(c, false)); }
+function alternarAcordeonCatalogo(card){
+  if (!card) return;
+  const abrir = !card.classList.contains('cat-abierta');
+  tarjetasCatalogo().forEach(c => marcarCatalogo(c, abrir && c === card));
+  if (abrir) setTimeout(() => {
+    // Lleva el catálogo abierto al inicio de la pantalla, por debajo de las barras fijas que lo tapen (en celular, el menú superior).
+    const rc = card.getBoundingClientRect();
+    let tope = 0;
+    document.querySelectorAll('body *').forEach(e => {
+      const cs = getComputedStyle(e); if (cs.position !== 'sticky' && cs.position !== 'fixed') return;
+      const r = e.getBoundingClientRect(), fijo = parseFloat(cs.top);
+      if (isNaN(fijo) || !r.height) return;
+      const abajo = fijo + r.height; // dónde termina la barra cuando ya está pegada arriba
+      if (abajo < window.innerHeight * 0.5 && r.left < rc.right && r.right > rc.left) tope = Math.max(tope, abajo);
+    });
+    window.scrollTo({ top: Math.max(0, window.scrollY + rc.top - tope - 12), behavior: 'smooth' });
+  }, 20);
+}
+(function prepararAcordeonCatalogos(){
+  tarjetasCatalogo().forEach((card, i) => {
+    const h2 = card.querySelector(':scope > h2'); if (!h2 || h2.querySelector('.cat-toggle')) return;
+    card.dataset.catId = String(i);
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'cat-toggle'; b.setAttribute('aria-expanded', 'false');
+    b.innerHTML = `<span>${h2.innerHTML}</span><span class="cat-flecha" aria-hidden="true"></span>`;
+    h2.innerHTML = ''; h2.appendChild(b);
+    b.addEventListener('click', () => alternarAcordeonCatalogo(card));
+  });
+  document.querySelectorAll('#panel-catalogos .catnav-item').forEach(a => {
+    const m = (a.getAttribute('onclick') || '').match(/querySelector\('([^']+)'\)/);
+    const card = m && document.querySelector(m[1]); if (card) a.dataset.catDestino = card.dataset.catId;
+  });
+  cerrarCatalogos();
+})();
 function mostrarAyudaBeeHuman(){
   alert('BeeHuman organiza la información de tu personal, empresas, expedientes y catálogos. Algunas herramientas se habilitarán en próximas versiones.');
 }

@@ -3330,6 +3330,9 @@ function irAOperacion(sec, dimension){
 // Personal con filtros que ya existen en esa pantalla.
 function verPersonalFiltrado(filtros){
   limpiarFiltrosPersonal();
+  // Mismo universo que Dirección: vigentes = todo lo que no está en Baja (activos y suspendidos).
+  // Solo al llegar desde Dirección; entrar directo a Personal sigue mostrando «Activos».
+  document.getElementById('filtro-estatus').value = '__vigentes__';
   Object.entries(filtros).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });
   alCambiarFiltrosPersonal();
   cambiarPestana('lista');

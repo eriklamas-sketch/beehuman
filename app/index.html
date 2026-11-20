@@ -1433,6 +1433,79 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
   #panel-resumen .dir-analitica{grid-template-columns:1fr}
   #panel-resumen .dir-pir{grid-template-columns:30px minmax(0,1fr) 72px minmax(0,1fr) 30px}
 }
+/* ---- Resumen · Operación ajustada (V2.2) ---- */
+#panel-resumen .op-trabajo{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:0 0 14px}
+#panel-resumen .op-trabajo .dashboard-metrics{display:flex!important;flex:1 1 360px;margin:0!important}
+#panel-resumen .op-trabajo .metric-card:not(.metric-red){display:none!important}
+#panel-resumen .op-trabajo .metric-card.metric-red{flex:1;border-color:#F1CFCF}
+#panel-resumen .op-trabajo .res-acciones{margin:0;align-items:center}
+#panel-resumen .res-bloque:has(#resumen-personal){display:none}
+#panel-resumen .res-bloque-comp h4,#panel-resumen .res-bloque-comp>.hint,#panel-resumen .res-bloque-grupos h4{display:none}
+#panel-resumen .op-comp-linea p{margin:0;font-size:13px;color:var(--v21-texto-2)}
+#panel-resumen .op-comp-linea b{color:var(--v21-navy)}
+#panel-resumen .res-bloque-grupos{display:flex;flex-direction:column-reverse;gap:8px}
+#panel-resumen .res-bloque-grupos>.hint{margin:0!important}
+#panel-resumen .op-mods{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px}
+#panel-resumen .op-mod{border:1px solid var(--v21-borde-2);border-radius:10px;overflow:hidden}
+#panel-resumen .op-mod-t{padding:8px 12px;background:var(--v21-fondo);font:700 12.5px Inter,sans-serif;color:var(--v21-navy);border-bottom:1px solid var(--v21-borde-2)}
+#panel-resumen .op-mod table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+#panel-resumen .op-mod th{background:#fff!important;font-size:11.5px;font-weight:600;color:var(--v21-texto-3);text-align:left;padding:7px 12px}
+#panel-resumen .op-mod td{padding:7px 12px;border-top:1px solid var(--v21-borde-2)}
+#panel-resumen .op-mod .num,#panel-resumen .op-antig .num{text-align:right}
+#panel-resumen .op-dim{display:flex;flex-wrap:wrap;gap:4px;padding:3px;background:var(--v21-fondo);border-radius:10px}
+#panel-resumen .op-dim button{border:1px solid transparent;background:transparent;padding:6px 12px;border-radius:8px;font:500 12.5px Inter,sans-serif;color:var(--v21-texto-2);cursor:pointer}
+#panel-resumen .op-dim button[aria-pressed="true"]{background:#fff;border-color:var(--v21-borde);color:var(--v21-navy);font-weight:600}
+#panel-resumen .op-dim button:focus-visible{outline:3px solid rgba(46,107,216,.3)}
+#panel-resumen .op-dim-select{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap}
+#panel-resumen .op-antig-nota{margin:0;font-size:12.5px;color:var(--v21-texto-3)}
+#panel-resumen .op-antig-grupos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#panel-resumen .op-antig-g{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:12px;border:1px solid var(--v21-borde);background:var(--v21-fondo);color:var(--v21-navy)}
+#panel-resumen .op-antig-g[aria-pressed="true"]{border:2px solid var(--v21-azul);background:#F4F7FE;padding:11px 13px}
+#panel-resumen .op-antig-g:focus-visible{outline:3px solid rgba(46,107,216,.3)}
+#panel-resumen .op-antig-g b{font:700 22px Inter,sans-serif;font-variant-numeric:tabular-nums}
+#panel-resumen .op-antig-g span{font-size:13px}
+#panel-resumen .op-antig-g small{font-size:12px;color:var(--v21-texto-3)}
+#panel-resumen .aniv-pill.hoy{background:var(--v21-amarillo-suave);color:#6B4E00;font-weight:600}
+#panel-resumen .op-antig-mas{all:unset;cursor:pointer;font-size:13px;font-weight:500;color:var(--v21-azul)}
+#panel-resumen .op-antig-mas:focus-visible{outline:3px solid rgba(46,107,216,.3)}
+@media(max-width:600px){
+  #panel-resumen .op-trabajo .dashboard-metrics{flex-basis:100%}
+  #panel-resumen .op-trabajo .res-acciones{width:100%}
+  #panel-resumen .op-dim{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  #panel-resumen .op-antig-grupos{gap:6px}
+  #panel-resumen .op-antig-g{padding:10px}
+  #panel-resumen .op-antig-g[aria-pressed="true"]{padding:9px}
+  #panel-resumen .op-antig-g b{font-size:18px}
+  #panel-resumen .op-antig-g span{font-size:12px;line-height:1.25}
+  #panel-resumen .op-antig-g small{display:none}
+  /* Celular: cada fila en dos renglones, sin columnas cortadas ni desplazamiento lateral */
+  #panel-resumen .op-mod thead,#panel-resumen .op-antig thead{display:none}
+  #panel-resumen .op-antig-sf thead{display:none}
+  #panel-resumen .res-cuerpo .table-wrap:has(.op-antig){overflow:visible;background:none}
+  #panel-resumen .op-mod tbody tr,#panel-resumen .op-antig tbody tr{display:grid;column-gap:8px;row-gap:2px;padding:9px 12px;border-top:1px solid var(--v21-borde-2)}
+  #panel-resumen .op-mod tbody td,#panel-resumen .op-antig tbody td{padding:0!important;border:0!important;white-space:normal!important;min-width:0!important}
+  #panel-resumen .op-mod tbody tr{grid-template-columns:max-content max-content 1fr}
+  #panel-resumen .op-mod td:nth-child(1){grid-column:1;grid-row:1;font-weight:600}
+  #panel-resumen .op-mod td:nth-child(2){grid-column:2;grid-row:1;text-align:left;color:var(--v21-texto-2)}
+  #panel-resumen .op-mod td:nth-child(2)::after{content:" días"}
+  #panel-resumen .op-mod td:nth-child(3){grid-column:1;grid-row:2;text-align:left;color:var(--v21-texto-3);font-size:12px}
+  #panel-resumen .op-mod td:nth-child(3)::after{content:" esquemas"}
+  #panel-resumen .op-mod td:nth-child(4){grid-column:2;grid-row:2;text-align:left;color:var(--v21-texto-3);font-size:12px}
+  #panel-resumen .op-mod td:nth-child(4)::after{content:" personas"}
+  #panel-resumen .op-mod td:nth-child(5){grid-column:3;grid-row:1/3;align-self:center}
+  #panel-resumen .op-antig:not(.op-antig-sf) tbody tr{grid-template-columns:max-content minmax(0,1fr) auto}
+  #panel-resumen .op-antig:not(.op-antig-sf) td:nth-child(1){grid-column:1/3;grid-row:1}
+  #panel-resumen .op-antig:not(.op-antig-sf) td:nth-child(5){grid-column:3;grid-row:1;text-align:right}
+  #panel-resumen .op-antig:not(.op-antig-sf) td:nth-child(2){grid-column:1;grid-row:2;color:var(--v21-texto-3);font-size:12px}
+  #panel-resumen .op-antig:not(.op-antig-sf) td:nth-child(3){grid-column:2;grid-row:2;color:var(--v21-texto-3);font-size:12px}
+  #panel-resumen .op-antig:not(.op-antig-sf) td:nth-child(3)::before{content:"· "}
+  #panel-resumen .op-antig:not(.op-antig-sf) td:nth-child(4){grid-column:3;grid-row:2;text-align:right;color:var(--v21-texto-3);font-size:12px}
+  #panel-resumen .op-antig:not(.op-antig-sf) td:nth-child(4)::after{content:" años"}
+  #panel-resumen .op-antig:not(.op-antig-sf) td:nth-child(6){grid-column:1/4;grid-row:3;color:var(--v21-texto-3);font-size:11.5px}
+  #panel-resumen .op-antig:not(.op-antig-sf) td:nth-child(6)::before{content:"Fecha base: "}
+  #panel-resumen .op-antig-sf tbody tr{grid-template-columns:1fr}
+  #panel-resumen .op-antig-sf td:nth-child(2){color:var(--v21-texto-3);font-size:12px}
+}
 /* @@V22_FIN ============================================================ */
 
 </style>
@@ -1779,10 +1852,11 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
       </section>
     </div>
     <div id="res-vista-operacion" role="tabpanel" aria-labelledby="dir-tab-operacion" hidden>
+    <div class="op-trabajo">
     <div class="dashboard-metrics">
       <button class="metric-card metric-green" type="button" onclick="cambiarPestana('lista')"><span class="metric-icon">♧</span><span><b id="dash-personas">—</b><small>Personas</small><em id="dash-personas-sub">Personal registrado</em></span><span class="metric-arrow">›</span></button>
       <button class="metric-card" type="button" onclick="cambiarPestana('empresas')"><span class="metric-icon">▦</span><span><b id="dash-empresas">—</b><small>Empresas</small><em>Organizaciones registradas</em></span><span class="metric-arrow">›</span></button>
-      <button class="metric-card metric-red" type="button" onclick="cambiarPestana('lista')"><span class="metric-icon">♧</span><span><b id="dash-pendientes">—</b><small>Pendientes</small><em id="dash-pendientes-sub">Revisión de información</em></span><span class="metric-arrow">›</span></button>
+      <button class="metric-card metric-red" type="button" onclick="irAOperacion('pendientes')" aria-label="Ver pendientes"><span class="metric-icon">♧</span><span><b id="dash-pendientes">—</b><small>Pendientes</small><em id="dash-pendientes-sub">Revisión de información</em></span><span class="metric-arrow">›</span></button>
     </div>
     <!-- @@V22_RESUMEN · secciones contraíbles (Dirección y RR.HH. son agrupaciones visuales, no permisos) -->
     <div class="res-acciones" aria-label="Acciones rápidas">
@@ -1790,6 +1864,7 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
       <button type="button" class="quick-action" onclick="cambiarPestana('lista')"><span>▤</span>Consultar personal <b>›</b></button>
       <button type="button" class="quick-action" onclick="cambiarPestana('empresas')"><span>▦</span>Empresas <b>›</b></button>
       <button type="button" class="quick-action" onclick="mostrarAyudaBeeHuman()"><span>▦</span>Herramientas <b>›</b></button>
+    </div>
     </div>
     <div class="res-secciones" id="resumen-secciones">
       <details class="res-sec res-alerta" data-sec="pendientes" id="res-sec-pendientes">
@@ -1800,22 +1875,12 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
           <div id="resumen-por-confirmar"></div>
         </div>
       </details>
-      <h3 class="res-grupo">Dirección</h3>
-      <details class="res-sec" data-sec="distribucion" id="res-sec-distribucion">
-        <summary><span class="res-n">Distribución del personal</span><span class="res-h" id="res-h-distribucion"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
+      <details class="res-sec" data-sec="antiguedad" id="res-sec-antiguedad">
+        <summary><span class="res-n">Antigüedad y aniversarios</span><span class="res-h" id="res-h-antiguedad"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
         <div class="res-cuerpo">
-          <div class="res-bloque comparativo-card" id="comparativo-empresas-card">
-            <h4>Participación de personal por empresa</h4>
-            <p class="hint">Personas vigentes (sin Baja) de cada empresa y su porcentaje del total. Elige una empresa para ver su lugar y su diferencia frente a las demás.</p>
-            <div class="seccion-cuerpo"><div id="comparativo-empresas"><div class="empty">Cargando…</div></div></div>
-          </div>
-          <div class="res-bloque">
-            <h4>Vista general</h4>
-            <div class="summary-grid" id="resumen-personal"></div>
-          </div>
+          <div id="resumen-antiguedad"></div>
         </div>
       </details>
-      <h3 class="res-grupo">Dirección y Recursos Humanos</h3>
       <details class="res-sec" data-sec="compensacion" id="res-sec-compensacion">
         <summary><span class="res-n">Compensación</span><span class="res-h" id="res-h-compensacion"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
         <div class="res-cuerpo">
@@ -1832,7 +1897,10 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
           <div class="res-bloque">
             <div class="res-bloque-cabeza">
               <div><h4>Desglose</h4><p class="hint">Personas agrupadas por la dimensión que elijas.</p></div>
-              <label class="seccion-control" for="resumen-dimension"><span>Agrupar por</span>
+              <div class="op-dim" role="group" aria-label="Agrupar desglose">
+                <button type="button" data-dim="clasificacion" aria-pressed="true">Clasificación</button><button type="button" data-dim="proyecto" aria-pressed="false">Proyecto</button><button type="button" data-dim="coordinador" aria-pressed="false">Coordinador</button><button type="button" data-dim="registro_patronal" aria-pressed="false">Registro patronal</button>
+              </div>
+              <label class="seccion-control op-dim-select" for="resumen-dimension"><span>Agrupar por</span>
           <select id="resumen-dimension">
             <option value="clasificacion">Por clasificación</option>
             <option value="proyecto">Por proyecto</option>
@@ -1845,11 +1913,18 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
           </div>
         </div>
       </details>
-      <h3 class="res-grupo">Recursos Humanos</h3>
-      <details class="res-sec" data-sec="antiguedad" id="res-sec-antiguedad">
-        <summary><span class="res-n">Antigüedad y aniversarios</span><span class="res-h" id="res-h-antiguedad"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
+      <details class="res-sec" data-sec="distribucion" id="res-sec-distribucion">
+        <summary><span class="res-n">Distribución del personal</span><span class="res-h" id="res-h-distribucion"><span class="res-tenue">Cargando…</span></span><span class="res-flecha" aria-hidden="true"></span></summary>
         <div class="res-cuerpo">
-          <div id="resumen-antiguedad"></div>
+          <div class="res-bloque comparativo-card" id="comparativo-empresas-card">
+            <h4>Participación de personal por empresa</h4>
+            <p class="hint">Personas vigentes (sin Baja) de cada empresa y su porcentaje del total. Elige una empresa para ver su lugar y su diferencia frente a las demás.</p>
+            <div class="seccion-cuerpo"><div id="comparativo-empresas"><div class="empty">Cargando…</div></div></div>
+          </div>
+          <div class="res-bloque">
+            <h4>Vista general</h4>
+            <div class="summary-grid" id="resumen-personal"></div>
+          </div>
         </div>
       </details>
       <details class="res-sec" data-sec="reciente" id="res-sec-reciente">
@@ -3510,26 +3585,23 @@ function renderResumen(){
   const idsVigentes = new Set(vigentes.map(p => p.id));
   const esquemas = registrosPagoActivos.filter(r => idsVigentes.has(r.personal_id));
   const sinEsquema = vigentes.filter(p => !esquemasActivosDe(p.id).length);
-  contComp.innerHTML =
-    stat(esquemas.length, 'Esquemas activos') +
-    stat(esquemas.filter(r => r.modalidad_sueldo === 'bruto').length, 'Esquemas en bruto') +
-    stat(esquemas.filter(r => r.modalidad_sueldo === 'neto').length, 'Esquemas en neto') +
-    stat(new Set(esquemas.map(r => r.personal_id)).size, 'Personas con esquema') +
-    stat(sinEsquema.length, 'Personas vigentes sin esquema');
+  const nfmt = n => Number(n).toLocaleString('es-MX');
+  contComp.className = 'op-comp-linea';
+  contComp.innerHTML = `<p><b>${nfmt(esquemas.length)} esquemas activos</b> de ${nfmt(new Set(esquemas.map(r => r.personal_id)).size)} personas · ${nfmt(esquemas.filter(r => r.modalidad_sueldo === 'bruto').length)} en bruto · ${nfmt(esquemas.filter(r => r.modalidad_sueldo === 'neto').length)} en neto · ${nfmt(sinEsquema.length)} personas vigentes sin esquema</p>`;
 
   // --- Importes por grupo comparable
   const grupos = agruparImportesComparables(esquemas);
-  contGrupos.innerHTML = grupos.length ? `<div class="table-wrap"><table>
-    <thead><tr><th>Modalidad</th><th>Periodicidad</th><th>Días del periodo</th><th>Esquemas</th><th>Personas</th><th>Importe por periodo</th></tr></thead>
-    <tbody>${grupos.map(g => `<tr>
-      <td>${escapeHtml(etiquetaModalidad(g.modalidad))}</td>
+  // Un bloque por modalidad (Bruto, Neto…), sin totales entre bloques: cada fila es un grupo comparable.
+  const modalidades = [...new Set(grupos.map(g => g.modalidad))].sort((x, y) => (x === 'bruto' ? 0 : x === 'neto' ? 1 : 2) - (y === 'bruto' ? 0 : y === 'neto' ? 1 : 2));
+  contGrupos.innerHTML = grupos.length ? `<div class="op-mods">${modalidades.map(m => `<div class="op-mod"><div class="op-mod-t">${escapeHtml(etiquetaModalidad(m))}</div>
+    <table><thead><tr><th>Periodicidad</th><th class="num">Días</th><th class="num">Esquemas</th><th class="num">Personas</th><th class="num">Importe por periodo</th></tr></thead>
+    <tbody>${grupos.filter(g => g.modalidad === m).map(g => `<tr>
       <td>${escapeHtml(g.periodicidad)}</td>
-      <td>${escapeHtml(numeroDias(g.dias))}</td>
-      <td>${g.esquemas}</td>
-      <td>${g.personas.size}</td>
-      <td>${escapeHtml(money(g.centavos / 100))}</td>
-    </tr>`).join('')}</tbody>
-  </table></div>` : '<div class="empty">Sin esquemas de pago activos.</div>';
+      <td class="num">${escapeHtml(numeroDias(g.dias))}</td>
+      <td class="num">${g.esquemas}</td>
+      <td class="num">${g.personas.size}</td>
+      <td class="num"><b>${escapeHtml(money(g.centavos / 100))}</b></td>
+    </tr>`).join('')}</tbody></table></div>`).join('')}</div>` : '<div class="empty">Sin esquemas de pago activos.</div>';
 
   // --- Desglose por la dimensión elegida
   if (document.getElementById('resumen-dimension').value === 'registro_patronal') {
@@ -3586,16 +3658,36 @@ function renderResumen(){
   const aniversarios = [], sinFecha = [];
   vigentes.forEach(p => { const a = aniversarioDe(p, hoyISO); if (!a) return; if (a.estado === 'sin_fecha') sinFecha.push(p); else aniversarios.push({ p, a }); });
   aniversarios.sort((x, y) => x.a.fecha.localeCompare(y.a.fecha) || String(x.p.nombre_completo).localeCompare(String(y.p.nombre_completo), 'es'));
-  const ant = [];
-  ant.push(aniversarios.length ? `<div class="aniversarios-bloque"><div class="breakdown-row"><span><b>${aniversarios.length}</b> aniversario(s) laboral(es) en los últimos ${ANIVERSARIO_DIAS_DESPUES} días o los próximos ${ANIVERSARIO_DIAS_ANTES}. Revisa si cambia el factor de integración y, si corresponde, prepara la modificación de salario ante el IMSS. El aniversario no siempre implica una modificación.</span></div>
-      <div class="table-wrap"><table class="aniversarios-tabla"><thead><tr><th>Persona</th><th>Empresa</th><th>Aniversario</th><th>Años</th><th>Cuándo</th><th>Fecha base</th></tr></thead><tbody>
-      ${aniversarios.map(({ p, a }) => `<tr class="aniv-${a.estado}"><td>${enlacePersonaHTML(p)}</td><td>${escapeHtml(empresaNombre(p.empresa_id))}</td><td>${escapeHtml(fechaCorta(a.fecha))}</td><td>${a.anios}</td><td><span class="pill aniv-pill">${escapeHtml(textoAniversario(a))}</span></td><td>${escapeHtml(a.fuente)} · ${escapeHtml(fechaCorta(a.base))}</td></tr>`).join('')}
-      </tbody></table></div></div>`
-    : `<div class="empty">Sin aniversarios laborales en los últimos ${ANIVERSARIO_DIAS_DESPUES} días ni en los próximos ${ANIVERSARIO_DIAS_ANTES}.</div>`);
-  if (sinFecha.length) ant.push(`<div class="breakdown-row"><span><b>${sinFecha.length}</b> persona(s) vigente(s) sin fecha de antigüedad, alta IMSS ni ingreso: no se puede calcular su aniversario. ${lista(sinFecha)}</span></div>`);
-  document.getElementById('resumen-antiguedad').innerHTML = ant.join('');
+  // «Hoy» cuenta solo en próximos. Próximos: del más cercano al más lejano; recientes: del más reciente al más antiguo.
+  const proximos = aniversarios.filter(x => x.a.estado === 'proximo' || x.a.estado === 'hoy');
+  const recientes = aniversarios.filter(x => x.a.estado === 'cumplido').slice().reverse();
+  antiguedadDatos = { proximos, recientes, sinFecha: sinFecha.slice().sort((x, y) => String(x.nombre_completo).localeCompare(String(y.nombre_completo), 'es')) };
+  pintarAntiguedad();
 
-  encabezadosResumen({ vigentes, enBaja, pend, bajaConEsquemas, esquemas, grupos, aniversarios: aniversarios.length, sinFecha: sinFecha.length });
+  encabezadosResumen({ vigentes, enBaja, pend, bajaConEsquemas, esquemas, grupos, sinEsquema: sinEsquema.length, proximos: proximos.length, recientes: recientes.length, sinFecha: sinFecha.length });
+}
+
+// Operación › Antigüedad y aniversarios: selector de grupo y lista corta (aviso para revisar el SBC; no genera movimientos).
+let antiguedadDatos = null, antiguedadSel = null, antiguedadTodo = false;
+const ANTIG_VISIBLES = 10;
+function elegirAntiguedad(k){ antiguedadSel = antiguedadSel === k ? null : k; antiguedadTodo = false; pintarAntiguedad(); }
+function verTodaAntiguedad(){ antiguedadTodo = true; pintarAntiguedad(); }
+function pintarAntiguedad(){
+  const cont = document.getElementById('resumen-antiguedad'); if (!cont || !antiguedadDatos) return;
+  const d = antiguedadDatos, nf = n => Number(n).toLocaleString('es-MX');
+  const fechaCorta = iso => String(iso).slice(0, 10).split('-').reverse().join('/');
+  const GR = [['proximos', 'Próximos aniversarios', `Hoy y los próximos ${ANIVERSARIO_DIAS_ANTES} días`],
+              ['recientes', 'Aniversarios recientes', `Últimos ${ANIVERSARIO_DIAS_DESPUES} días, sin hoy`],
+              ['sinFecha', 'Sin fecha de antigüedad', 'No se puede calcular su aniversario']];
+  const lista = antiguedadSel ? d[antiguedadSel] : [];
+  const vis = antiguedadTodo ? lista : lista.slice(0, ANTIG_VISIBLES);
+  let tabla = '';
+  if (antiguedadSel === 'sinFecha') tabla = lista.length ? `<div class="table-wrap"><table class="op-antig op-antig-sf aniversarios-tabla"><thead><tr><th>Persona</th><th>Empresa</th></tr></thead><tbody>${vis.map(p => `<tr><td>${enlacePersonaHTML(p)}</td><td>${escapeHtml(empresaNombre(p.empresa_id))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Todas las personas vigentes tienen fecha de antigüedad, alta IMSS o ingreso.</div>';
+  else if (antiguedadSel) tabla = lista.length ? `<div class="table-wrap"><table class="op-antig aniversarios-tabla"><thead><tr><th>Persona</th><th>Empresa</th><th>Aniversario</th><th class="num">Años</th><th>Cuándo</th><th>Fecha base</th></tr></thead><tbody>${vis.map(({ p, a }) => `<tr class="aniv-${a.estado}"><td>${enlacePersonaHTML(p)}</td><td>${escapeHtml(empresaNombre(p.empresa_id))}</td><td>${escapeHtml(fechaCorta(a.fecha))}</td><td class="num">${a.anios}</td><td><span class="pill aniv-pill${a.estado === 'hoy' ? ' hoy' : ''}">${escapeHtml(textoAniversario(a))}</span></td><td>${escapeHtml(a.fuente)} · ${escapeHtml(fechaCorta(a.base))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Nadie en este grupo.</div>';
+  cont.innerHTML = `<p class="hint op-antig-nota">Aviso para revisar si cambia el factor de integración y, si corresponde, preparar la modificación de salario ante el IMSS. No genera movimientos.${antiguedadSel ? '' : ' Elige un grupo para ver la lista.'}</p>
+    <div class="op-antig-grupos" role="group" aria-label="Grupos de aniversarios">${GR.map(([k, t, s]) => `<button type="button" class="op-antig-g" aria-pressed="${antiguedadSel === k}" onclick="elegirAntiguedad('${k}')"><b>${nf(d[k].length)}</b><span>${t}</span><small>${s}</small></button>`).join('')}</div>
+    ${tabla}
+    ${antiguedadSel && lista.length > vis.length ? `<button type="button" class="op-antig-mas" onclick="verTodaAntiguedad()">Mostrar ${lista.length - vis.length === 1 ? 'la restante' : `las ${nf(lista.length - vis.length)} restantes`}</button>` : ''}`;
 }
 
 // Encabezados de las secciones contraíbles de Resumen: el resumen queda visible aunque la sección esté cerrada.
@@ -3610,8 +3702,18 @@ function encabezadosResumen(d){
   const empresasConPersonal = d.empresasConPersonal != null ? d.empresasConPersonal : new Set(d.vigentes.map(p => p.empresa_id).filter(Boolean)).size;
   const proyectos = d.proyectos != null ? d.proyectos : new Set(d.vigentes.map(p => p.proyecto_id).filter(Boolean)).size;
   const nVig = d.nVigentes != null ? d.nVigentes : d.vigentes.length;
-  poner('distribucion', [chip(pl(nVig, 'vigente', 'vigentes')), chip(pl(d.enBaja, 'en Baja', 'en Baja'), d.enBaja ? '' : 'cero'),
+  if (d.consulta) poner('distribucion', [chip(pl(nVig, 'vigente', 'vigentes')), chip(pl(d.enBaja, 'en Baja', 'en Baja'), d.enBaja ? '' : 'cero'),
     chip(`${nf(empresasConPersonal)} de ${pl(empresas.length, 'empresa', 'empresas')} con personal`), chip(pl(proyectos, 'proyecto', 'proyectos') + ' con personal')].join(''));
+  else {
+    // Comparativo, sin repetir totales generales (ya están en Dirección).
+    const porEmp = new Map(); d.vigentes.forEach(p => { if (p.empresa_id) porEmp.set(String(p.empresa_id), (porEmp.get(String(p.empresa_id)) || 0) + 1); });
+    const orden = [...porEmp].sort((a, b) => b[1] - a[1]);
+    const pc = n => (nVig ? (100 * n / nVig).toFixed(1) : '0.0') + '%';
+    const sinPers = empresas.filter(e => !porEmp.has(String(e.id))).length;
+    poner('distribucion', orden.length ? [chip(`Mayor: ${escapeHtml(empresaNombre(orden[0][0]))} · ${pc(orden[0][1])}`),
+      orden.length > 1 ? chip(`Menor con personal: ${escapeHtml(empresaNombre(orden[orden.length - 1][0]))} · ${pc(orden[orden.length - 1][1])}`) : '',
+      sinPers ? chip(`${pl(sinPers, 'empresa', 'empresas')} sin personal vigente`) : ''].join('') : tenue('Sin personas vigentes con empresa'));
+  }
   if (d.consulta) {
     poner('pendientes', tenue('Disponible para los roles Administrador y Nómina'));
     poner('antiguedad', tenue('Disponible para los roles Administrador y Nómina'));
@@ -3630,17 +3732,21 @@ function encabezadosResumen(d){
     + MOTIVOS_PENDIENTE.map(([k, corto]) => chip(`${nf(d.pend.por[k].length)} ${corto}`, d.pend.por[k].length ? '' : 'cero')).join('')
     + chip(`${nf(d.bajaConEsquemas.length)} en Baja con esquema activo`, d.bajaConEsquemas.length ? 'alerta' : 'cero'));
   const g = d.grupos;
-  poner('compensacion', chip(pl(d.esquemas.length, 'esquema activo', 'esquemas activos'))
-    + (g.length === 1 ? chip(`${escapeHtml(etiquetaGrupoImporte(g[0]))}: <b>${escapeHtml(money(g[0].centavos / 100))}</b> por periodo`, 'importe')
-      : g.length > 1 ? chip(`${g.length} grupos de importe · no sumables`) : ''));
-  poner('antiguedad', chip(pl(d.aniversarios, 'aniversario', 'aniversarios') + ' en ±30 días', d.aniversarios ? '' : 'cero')
-    + chip(`${nf(d.sinFecha)} sin fecha de antigüedad`, d.sinFecha ? '' : 'cero'));
+  const conEsq = new Set(d.esquemas.map(r => r.personal_id)).size;
+  poner('compensacion', chip(pl(conEsq, 'persona con esquema', 'personas con esquema')) + chip(`${nf(d.sinEsquema)} sin esquema`, d.sinEsquema ? '' : 'cero')
+    + chip(g.length === 1 ? '1 grupo de importe' : `${nf(g.length)} grupos de importe · no sumables`, g.length ? '' : 'cero'));
+  poner('antiguedad', chip(`${nf(d.proximos)} ${d.proximos === 1 ? 'próximo' : 'próximos'}`, d.proximos ? '' : 'cero') + chip(`${nf(d.recientes)} ${d.recientes === 1 ? 'reciente' : 'recientes'}`, d.recientes ? '' : 'cero')
+    + chip(`${nf(d.sinFecha)} sin fecha`, d.sinFecha ? '' : 'cero'));
   // Pendientes se abre solo si hay algo, mientras el usuario no la haya abierto o cerrado él mismo.
   const det = document.getElementById('res-sec-pendientes');
   if (det && !resumenSecTocada.pendientes) det.open = np > 0 || d.bajaConEsquemas.length > 0;
 }
 document.querySelectorAll('#resumen-secciones details.res-sec > summary').forEach(s => s.addEventListener('click', () => { resumenSecTocada[s.parentElement.dataset.sec] = true; }));
 document.getElementById('resumen-dimension').addEventListener('change', renderResumen);
+// Botones del desglose: solo cambian el selector existente (misma tabla y mismos cálculos).
+function sincronizarBotonesDimension(){ const v = document.getElementById('resumen-dimension').value; document.querySelectorAll('.op-dim [data-dim]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dim === v))); }
+document.querySelectorAll('.op-dim [data-dim]').forEach(b => b.addEventListener('click', () => { const sel = document.getElementById('resumen-dimension'); if (sel.value !== b.dataset.dim) { sel.value = b.dataset.dim; sel.dispatchEvent(new Event('change')); } }));
+document.getElementById('resumen-dimension').addEventListener('change', sincronizarBotonesDimension);
 
 // Desglose por registro patronal (solo Administrador y Nómina), con DOS conteos:
 //  · «RP de la ficha»: cada persona vigente cuenta una sola vez, en el RP de su expediente.

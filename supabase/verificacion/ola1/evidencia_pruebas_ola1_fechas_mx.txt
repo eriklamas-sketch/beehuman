@@ -1,0 +1,24 @@
+== Preparación de bases ==
+OK    +P1 Base en orden de producción armada (fase 1 → Ola 1 → … → B6, sin D2)  [huella_activada 92eb921458d84cb1610dea9bdb6cb35d]
+OK    +P2 Bases en orden de pruebas: con D2 (bh) y sin D2 (bhsin)
+== A · El defecto existe en el orden de producción ==
+OK    A1 Sin D2, en orden de producción quedan exactamente 2 objetos de Ola 1 con current_date  [inc_asignacion_desde_expediente, inc_parametros.inicio_historial]
+OK    A2 Sin D2, con la fecha de la sesión adelantada, parámetros y asignación toman la fecha de la sesión, no la de México  [{"inicio_historial": "2026-11-25", "asignacion_desde": "2026-11-25", "hoy_mx": "2026-11-24", "current_date_sesion": "2026-11-25"}]
+== B · D2 corrige el orden de producción ==
+OK    B1 D2 se aplica y corrige 2 objetos  [psql:/home/claude/beehuman/supabase/pendiente/20261124000100_ola1_fechas_hora_mexico.sql:97: NOTICE:  B-D2: 2 objeto(s) de Ola 1 pasaron a la fecha de México (0 = ya estaban corregidos).]
+OK    B2 Ya no queda current_date en funciones ni valores por omisión de public
+OK    B3 Con D2, parámetros y asignación toman la fecha de México aunque la sesión tenga otra fecha  [{"inicio_historial": "2026-11-24", "asignacion_desde": "2026-11-24", "hoy_mx": "2026-11-24", "current_date_sesion": "2026-11-25"}]
+OK    +B4 El original textual de los 2 objetos queda respaldado
+OK    B5 Permisos sin cambio: anon sigue sin acceso a la función y a la tabla
+OK    B6 Con D2, funciones y valores por omisión de Ola 1/fase B/B-a/B6 quedan idénticos en orden de producción y en orden de pruebas  [idénticos]
+== C · En el orden de pruebas D2 no cambia nada ==
+OK    C1 Base en orden de pruebas con D2 = sin D2 (misma huella de esquema)  [68406e2f9090]
+OK    C2 En orden de pruebas D2 no respalda nada (no había nada que corregir)
+OK    C3 Revertir en orden de pruebas: huella igual y sin tabla de respaldo
+== D · Reversión y reaplicación en orden de producción ==
+OK    D1 Revertir deja exactamente el estado anterior a D2
+OK    D2 Reaplicar da exactamente el mismo esquema
+OK    D3 Aplicar dos veces se rechaza
+OK    D4 La reversión se niega si la función se modificó después de D2
+
+RESULTADO: 17 de 17 verificaciones OK

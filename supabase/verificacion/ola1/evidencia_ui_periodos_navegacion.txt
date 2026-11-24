@@ -1,0 +1,101 @@
+B-c · Navegación «Periodos» → «Revisión» · 2026-11-24 08:43 · base local bhui con el caso de pruebas (caso_vista_previa_b_c.sql)
+Causa: la lista de «Periodos» (listarPeriodos) era solo informativa: sin acción por fila. Corrección: «Revisar» por fila → «Revisión» de ese periodo; listas en tarjetas en celular.
+
+Resumen:
+  ui_periodos_navegacion                    32 OK  0 FALLA
+  ui_periodos_navegacion (PostgREST real)   32 OK  0 FALLA
+  ui_b1_2 (PostgREST)                       25 OK  0 FALLA
+  ui_concentrado (PostgREST)                63 OK  0 FALLA
+  ui_ola1 (PostgREST)                       33 OK  0 FALLA
+  ui_b1 (PostgREST)                         46 OK  0 FALLA
+  ui_b1_1 (PostgREST)                       26 OK  0 FALLA
+  ui_mis_hojas (PostgREST)                  22 OK  0 FALLA
+  ui_b5_grupos                              43 OK  0 FALLA
+  ui_b5_tarjetas                            40 OK  0 FALLA
+  ui_concentrado_volumen                     5 OK  0 FALLA
+
+===== ui_periodos_navegacion (traductor)
+Caso: PV1 28/12/2026 preliminar/sin_firma · PV2 04/01/2027 listo/vigente · PV3 11/01/2027 preliminar/invalidada · PV4 18/01/2027 procesado/invalidada
+== N1 · «Periodos» con «Revisar» por fila ==
+OK    N1 Cada periodo de la empresa sintética tiene «Revisar» con el id de su propia fila  [4 filas]
+OK    N1 Todas las filas de «Periodos» tienen «Revisar»  [4]
+== N2 · «Periodos» → «Revisar» abre el periodo correcto ==
+OK    N2 Periodos → PV1: abre «Revisión» en su periodo (28/12/2026) con la firma de la base (sin_firma)  [EMPRESA SINTETICA BC VISTA PREVIA · 28/12/2026 – 03/01/2027 · sin_firma]
+OK    N2 Periodos → PV1: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N2 Periodos → PV2: abre «Revisión» en su periodo (04/01/2027) con la firma de la base (vigente)  [EMPRESA SINTETICA BC VISTA PREVIA · 04/01/2027 – 10/01/2027 · vigente]
+OK    N2 Periodos → PV2: su «Concentrado» es el del mismo periodo, estado listo  [Listo para procesar]
+OK    N2 Periodos → PV3: abre «Revisión» en su periodo (11/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 11/01/2027 – 17/01/2027 · invalidada]
+OK    N2 Periodos → PV3: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N2 Periodos → PV4: abre «Revisión» en su periodo (18/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 18/01/2027 – 24/01/2027 · invalidada]
+OK    N2 Periodos → PV4: su «Concentrado» es el del mismo periodo, estado procesado  [Procesado]
+== N3 · N4 · «Revisión» → «Revisar» y regreso ==
+OK    N3 Revisión → PV1: abre «Revisión» en su periodo (28/12/2026) con la firma de la base (sin_firma)  [EMPRESA SINTETICA BC VISTA PREVIA · 28/12/2026 – 03/01/2027 · sin_firma]
+OK    N3 Revisión → PV1: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N3 Revisión → PV2: abre «Revisión» en su periodo (04/01/2027) con la firma de la base (vigente)  [EMPRESA SINTETICA BC VISTA PREVIA · 04/01/2027 – 10/01/2027 · vigente]
+OK    N3 Revisión → PV2: su «Concentrado» es el del mismo periodo, estado listo  [Listo para procesar]
+OK    N3 Revisión → PV3: abre «Revisión» en su periodo (11/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 11/01/2027 – 17/01/2027 · invalidada]
+OK    N3 Revisión → PV3: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N3 Revisión → PV4: abre «Revisión» en su periodo (18/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 18/01/2027 – 24/01/2027 · invalidada]
+OK    N3 Revisión → PV4: su «Concentrado» es el del mismo periodo, estado procesado  [Procesado]
+OK    N4 «← Periodos» regresa a la lista de revisión
+== N5 · Administrador ==
+OK    N5 Administrador, Periodos → PV2: abre «Revisión» en su periodo (04/01/2027) con la firma de la base (vigente)  [EMPRESA SINTETICA BC VISTA PREVIA · 04/01/2027 – 10/01/2027 · vigente]
+OK    N5 Administrador, Periodos → PV2: su «Concentrado» es el del mismo periodo, estado listo  [Listo para procesar]
+== N6 · Coordinador y Consulta ==
+OK    N6 coord: sin pestaña «Periodos» ni «Revisar»
+OK    N6 consulta: sin pestaña «Periodos» ni «Revisar»
+== N7 · Celular ==
+OK    N7 Celular: «Revisar» visible y sin desplazamiento horizontal de la página  [[390, 390]]
+OK    N7 Celular, Periodos → PV2: abre «Revisión» en su periodo (04/01/2027) con la firma de la base (vigente)  [EMPRESA SINTETICA BC VISTA PREVIA · 04/01/2027 – 10/01/2027 · vigente]
+OK    N7 Celular, Periodos → PV2: su «Concentrado» es el del mismo periodo, estado listo  [Listo para procesar]
+OK    N7 Celular: lista de «Revisión» sin desplazamiento horizontal, con «Revisar» visible  [[390, 390]]
+OK    N7 Celular, Revisión → PV3: abre «Revisión» en su periodo (11/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 11/01/2027 – 17/01/2027 · invalidada]
+OK    N7 Celular, Revisión → PV3: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N8 Sin errores de JavaScript
+OK    RED Las 266 peticiones a la dirección de beehuman-pruebas se respondieron en local  [266]
+OK    RED Nada sale a internet
+
+RESULTADO: 32 de 32 verificaciones OK
+
+===== ui_periodos_navegacion (PostgREST real)
+Caso: PV1 28/12/2026 preliminar/sin_firma · PV2 04/01/2027 listo/vigente · PV3 11/01/2027 preliminar/invalidada · PV4 18/01/2027 procesado/invalidada
+== N1 · «Periodos» con «Revisar» por fila ==
+OK    N1 Cada periodo de la empresa sintética tiene «Revisar» con el id de su propia fila  [4 filas]
+OK    N1 Todas las filas de «Periodos» tienen «Revisar»  [4]
+== N2 · «Periodos» → «Revisar» abre el periodo correcto ==
+OK    N2 Periodos → PV1: abre «Revisión» en su periodo (28/12/2026) con la firma de la base (sin_firma)  [EMPRESA SINTETICA BC VISTA PREVIA · 28/12/2026 – 03/01/2027 · sin_firma]
+OK    N2 Periodos → PV1: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N2 Periodos → PV2: abre «Revisión» en su periodo (04/01/2027) con la firma de la base (vigente)  [EMPRESA SINTETICA BC VISTA PREVIA · 04/01/2027 – 10/01/2027 · vigente]
+OK    N2 Periodos → PV2: su «Concentrado» es el del mismo periodo, estado listo  [Listo para procesar]
+OK    N2 Periodos → PV3: abre «Revisión» en su periodo (11/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 11/01/2027 – 17/01/2027 · invalidada]
+OK    N2 Periodos → PV3: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N2 Periodos → PV4: abre «Revisión» en su periodo (18/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 18/01/2027 – 24/01/2027 · invalidada]
+OK    N2 Periodos → PV4: su «Concentrado» es el del mismo periodo, estado procesado  [Procesado]
+== N3 · N4 · «Revisión» → «Revisar» y regreso ==
+OK    N3 Revisión → PV1: abre «Revisión» en su periodo (28/12/2026) con la firma de la base (sin_firma)  [EMPRESA SINTETICA BC VISTA PREVIA · 28/12/2026 – 03/01/2027 · sin_firma]
+OK    N3 Revisión → PV1: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N3 Revisión → PV2: abre «Revisión» en su periodo (04/01/2027) con la firma de la base (vigente)  [EMPRESA SINTETICA BC VISTA PREVIA · 04/01/2027 – 10/01/2027 · vigente]
+OK    N3 Revisión → PV2: su «Concentrado» es el del mismo periodo, estado listo  [Listo para procesar]
+OK    N3 Revisión → PV3: abre «Revisión» en su periodo (11/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 11/01/2027 – 17/01/2027 · invalidada]
+OK    N3 Revisión → PV3: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N3 Revisión → PV4: abre «Revisión» en su periodo (18/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 18/01/2027 – 24/01/2027 · invalidada]
+OK    N3 Revisión → PV4: su «Concentrado» es el del mismo periodo, estado procesado  [Procesado]
+OK    N4 «← Periodos» regresa a la lista de revisión
+== N5 · Administrador ==
+OK    N5 Administrador, Periodos → PV2: abre «Revisión» en su periodo (04/01/2027) con la firma de la base (vigente)  [EMPRESA SINTETICA BC VISTA PREVIA · 04/01/2027 – 10/01/2027 · vigente]
+OK    N5 Administrador, Periodos → PV2: su «Concentrado» es el del mismo periodo, estado listo  [Listo para procesar]
+== N6 · Coordinador y Consulta ==
+OK    N6 coord: sin pestaña «Periodos» ni «Revisar»
+OK    N6 consulta: sin pestaña «Periodos» ni «Revisar»
+== N7 · Celular ==
+OK    N7 Celular: «Revisar» visible y sin desplazamiento horizontal de la página  [[390, 390]]
+OK    N7 Celular, Periodos → PV2: abre «Revisión» en su periodo (04/01/2027) con la firma de la base (vigente)  [EMPRESA SINTETICA BC VISTA PREVIA · 04/01/2027 – 10/01/2027 · vigente]
+OK    N7 Celular, Periodos → PV2: su «Concentrado» es el del mismo periodo, estado listo  [Listo para procesar]
+OK    N7 Celular: lista de «Revisión» sin desplazamiento horizontal, con «Revisar» visible  [[390, 390]]
+OK    N7 Celular, Revisión → PV3: abre «Revisión» en su periodo (11/01/2027) con la firma de la base (invalidada)  [EMPRESA SINTETICA BC VISTA PREVIA · 11/01/2027 – 17/01/2027 · invalidada]
+OK    N7 Celular, Revisión → PV3: su «Concentrado» es el del mismo periodo, estado preliminar  [Preliminar]
+OK    N8 Sin errores de JavaScript
+OK    RED Las 266 peticiones a la dirección de beehuman-pruebas se respondieron en local  [266]
+OK    RED Nada sale a internet
+
+RESULTADO: 32 de 32 verificaciones OK

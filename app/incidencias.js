@@ -247,10 +247,13 @@
     if (!data.length) { el.innerHTML = '<p class="hint">Todavía no hay periodos.</p>'; return; }
     const { data: hojas } = await sb.from('inc_hojas').select('periodo_id, estado, tipo');
     const porPer = new Map(); (hojas || []).filter(h => h.tipo === 'normal').forEach(h => { const a = porPer.get(h.periodo_id) || { env: 0, tot: 0 }; a.tot++; if (h.estado !== 'borrador') a.env++; porPer.set(h.periodo_id, a); });
-    el.innerHTML = `<table class="inc-lista"><thead><tr><th>Empresa</th><th>Periodo</th><th>Hojas enviadas</th><th>Estado</th></tr></thead><tbody>${data.map(p => {
+    el.innerHTML = `<table class="inc-lista inc-c-resp" id="inc-p-periodos"><thead><tr><th>Empresa</th><th>Periodo</th><th>Hojas enviadas</th><th>Estado</th><th></th></tr></thead><tbody>${data.map(p => {
       const a = porPer.get(p.id) || { env: 0, tot: 0 };
-      return `<tr><td>${esc(nombreEmpresa(p.empresa_id))}</td><td>${esc(fechaLarga(p.inicio))} – ${esc(fechaLarga(p.fin))}</td><td>${a.env} de ${a.tot} abiertas</td><td>${p.procesado_en ? '<span class="inc-estado procesada">Procesado</span>' : '<span class="inc-estado borrador">Abierto</span>'}</td></tr>`;
+      return `<tr data-periodo="${esc(p.id)}"><td data-l="Empresa">${esc(nombreEmpresa(p.empresa_id))}</td><td data-l="Periodo">${esc(fechaLarga(p.inicio))} – ${esc(fechaLarga(p.fin))}</td><td data-l="Hojas enviadas">${a.env} de ${a.tot} abiertas</td><td data-l="Estado">${p.procesado_en ? '<span class="inc-estado procesada">Procesado</span>' : '<span class="inc-estado borrador">Abierto</span>'}</td>
+        <td class="inc-c-acc"><button type="button" class="inc-sec" data-p-rev="${esc(p.id)}">Revisar</button></td></tr>`;
     }).join('')}</tbody></table>`;
+    // Cada fila abre su propio periodo en «Revisión» (antes la lista era solo informativa).
+    el.querySelectorAll('[data-p-rev]').forEach(b => b.addEventListener('click', () => { S.vista = 'revision'; S.hoja = null; S.rev = { periodoId: b.dataset.pRev }; abrir(); }));
   }
 
   // =====================================================================
@@ -791,12 +794,12 @@
       if (h.estado === 'devuelta') a.dev++;
       cuenta.set(h.periodo_id, a);
     });
-    el.innerHTML = `<table class="inc-lista" id="inc-r-periodos"><thead><tr><th>Empresa</th><th>Periodo</th><th>Hojas</th><th>Estado</th><th></th></tr></thead><tbody>${per.data.map(p => {
+    el.innerHTML = `<table class="inc-lista inc-c-resp" id="inc-r-periodos"><thead><tr><th>Empresa</th><th>Periodo</th><th>Hojas</th><th>Estado</th><th></th></tr></thead><tbody>${per.data.map(p => {
       const a = cuenta.get(p.id) || { env: 0, dev: 0 };
-      return `<tr><td>${esc(nombreEmpresa(p.empresa_id))}</td><td>${esc(fechaLarga(p.inicio))} – ${esc(fechaLarga(p.fin))}</td>
-        <td>${plural(a.env, 'enviada')}${a.dev ? ` <span class="inc-chip alerta">${plural(a.dev, 'devuelta')}</span>` : ''}</td>
-        <td>${p.procesado_en ? '<span class="inc-estado procesada">Procesado</span>' : '<span class="inc-estado borrador">Abierto</span>'}</td>
-        <td><button type="button" class="inc-sec" data-rev-per="${esc(p.id)}">Revisar</button></td></tr>`;
+      return `<tr><td data-l="Empresa">${esc(nombreEmpresa(p.empresa_id))}</td><td data-l="Periodo">${esc(fechaLarga(p.inicio))} – ${esc(fechaLarga(p.fin))}</td>
+        <td data-l="Hojas">${plural(a.env, 'enviada')}${a.dev ? ` <span class="inc-chip alerta">${plural(a.dev, 'devuelta')}</span>` : ''}</td>
+        <td data-l="Estado">${p.procesado_en ? '<span class="inc-estado procesada">Procesado</span>' : '<span class="inc-estado borrador">Abierto</span>'}</td>
+        <td class="inc-c-acc"><button type="button" class="inc-sec" data-rev-per="${esc(p.id)}">Revisar</button></td></tr>`;
     }).join('')}</tbody></table>`;
     el.querySelectorAll('[data-rev-per]').forEach(b => b.addEventListener('click', () => { S.rev = { periodoId: b.dataset.revPer }; vistaRevision(); }));
   }

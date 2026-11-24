@@ -1,0 +1,44 @@
+Regresión local B6 · 2026-11-24 10:20 · bases locales reconstruidas desde cero
+
+Base de datos (base bh con todas las migraciones, incluida B6):
+  pruebas_ola1                     92 OK 0 FALLA
+  pruebas_b2                       39 OK 0 FALLA
+  pruebas_b1                       25 OK 0 FALLA
+  pruebas_b1_1                     60 OK 0 FALLA
+  pruebas_b5                      106 OK 0 FALLA
+  pruebas_b5_fonacot               30 OK 0 FALLA
+  pruebas_mis_hojas                42 OK 0 FALLA
+  pruebas_sin_borrado_sin_where     3 OK 0 FALLA
+  pruebas_firma_periodo            70 OK 0 FALLA
+  pruebas_b3                       54 OK 0 FALLA
+  pruebas_b3_volumen                4 OK 0 FALLA
+  pruebas_bandeja_envios           60 OK 0 FALLA
+
+Pantallas con traductor rest_local.py:
+  ui_b1_2                          25 OK 0 FALLA
+  ui_b5_fonacot_salud              10 OK 0 FALLA
+  ui_b5_grupos                     43 OK 0 FALLA
+  ui_b5_tarjetas                   40 OK 0 FALLA
+  ui_concentrado                   63 OK 0 FALLA
+  ui_concentrado_volumen            5 OK 0 FALLA
+  ui_periodos_navegacion           32 OK 0 FALLA
+  ui_bandeja_envios                34 OK 0 FALLA
+
+Pantallas con PostgREST 12.2.12 local (127.0.0.1:3010, base bhui):
+  ui_ola1                          33 OK 0 FALLA
+  ui_b1                            46 OK 0 FALLA
+  ui_b1_1                          26 OK 0 FALLA
+  ui_mis_hojas                     22 OK 0 FALLA
+  ui_b5                            30 OK 1 FALLA
+  ui_bandeja_envios                34 OK 0 FALLA
+  ui_periodos_navegacion           32 OK 0 FALLA
+  ui_concentrado                   63 OK 0 FALLA
+  ui_b1_2                          25 OK 0 FALLA
+  ui_concentrado_volumen            5 OK 0 FALLA
+
+ui_b5 F2: falla previa a B6, no relacionada (creditos.js no cambió): la pantalla dice «Informativo NOI» y la prueba antigua
+espera «Informativo para NOI» (texto cambiado en B5 FONACOT, 17-nov). ui_b5 no estaba en la regresión de B-c; sus sucesoras ui_b5_tarjetas y ui_b5_grupos pasan.
+
+Ajuste de la carga inicial (Erik, 24-nov 10:32): complementos anteriores al procesamiento también se cierran al procesar.
+Tras el ajuste se volvieron a correr: pruebas_bandeja_envios 60/60 · pruebas_ola1 92/92 · pruebas_firma_periodo 70/70 ·
+pruebas_b3 54/54 · pruebas_mis_hojas 42/42 · ui_bandeja_envios con PostgREST 34/34.

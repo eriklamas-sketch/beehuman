@@ -1,0 +1,74 @@
+base b6ci lista (123 funciones en public)
+== A · Datos anteriores a B6 (base hasta B3) ==
+   procesado PA: Periodo marcado como procesado.
+OK    +A0 La migración B6 se aplica sobre la base hasta B3  [psql:/home/claude/beehuman/supabase/pendiente/20261124000000_b6_bandeja_envios.sql:203: NOTICE:  B6: 3 envíos (originales y complementos anteriores al procesamiento) de periodos procesados quedan atendidos de forma automática.]
+OK    A1 Original de periodo procesado (v1 y v2): atendido automático, motivo «Periodo procesado antes de activar B6», sin usuario  [automatica|Periodo procesado antes de activar B6|-|-]
+OK    +A1b En la bandeja la original aparece como atendida (automática)
+OK    A2 Complemento posterior al procesamiento: sin atención automática; aparece como nuevo  [nuevo]
+OK    A3 Complemento enviado antes de procesar: atendido automático con el mismo motivo, sin usuario  [automatica|Periodo procesado antes de activar B6|-|-]
+OK    A4 Envío de un periodo abierto: queda nuevo
+OK    +A5 La migración informa cuántos envíos atendió de forma automática  [psql:/home/claude/beehuman/supabase/pendiente/20261124000000_b6_bandeja_envios.sql:203: NOTICE:  B6: 3 envíos (originales y complementos anteriores al procesamiento) de periodos procesados quedan atendidos de forma automática.]
+OK    A6 La migración no crea ni cambia eventos
+== E · Estados: nuevo → en revisión → atendido ==
+OK    E1 Envío nuevo con empresa, periodo, coordinador, tipo, versión y fecha/hora  [{"estado": "nuevo", "tipo_evento": "envio", "version_numero": 1, "empresa": "EMPRESA A B6", "coordinador": "PERSONA CA B6"}]
+OK    E2 Indicador: importes por decidir antes de resolver  [1]
+OK    E3 Resolver los importes da «Importes resueltos» pero NO cambia el estado (sigue nuevo)
+OK    E4 Abrir lo deja «En revisión» y NO lo marca como atendido  [en_revision / atendida_en=None]
+OK    E5 El aviso sigue contando el envío abierto (pasa de nuevos a en revisión)  [{'total': 3, 'nuevos': 3, 'en_revision': 0} → {'total': 3, 'nuevos': 2, 'en_revision': 1}]
+OK    E6 Abrir otra vez (otro usuario) conserva la primera apertura
+OK    E7 Atender registra quién, cuándo y la nota (sin espacios sobrantes); la apertura queda  [nomina2.b6@beehuman.invalid · Revisado con el coordinador]
+OK    +E7b La atención queda a nombre de quien la hizo (usuario real)
+OK    E8 Atender descuenta del aviso  [{'total': 2, 'nuevos': 2, 'en_revision': 0}]
+OK    E9 Atender dos veces no cambia nada  [Ya estaba atendido por nomina2.b6@beehuman.invalid el 24/11/2026 10:33; no se registró de nuevo.]
+OK    E10 Se puede atender sin abrir; nota vacía queda vacía y la apertura no se inventa
+OK    E11 Nota de más de 500 caracteres se rechaza
+OK    E12 Un evento que no es envío no se abre ni se atiende
+== H · El seguimiento no se edita ni se borra ==
+OK    H1 Cambiar una atención registrada se rechaza (incluso el dueño de la base)
+OK    H2 Cambiar la apertura registrada se rechaza
+OK    H3 Borrar el seguimiento se rechaza
+OK    H4 No se puede crear seguimiento de un evento que no es envío
+== R · Devolución y reenvío ==
+OK    R1 Envío devuelto: cerrado como «devuelto», en espera de reenvío (no cuenta en el aviso)
+OK    R2 Un envío devuelto no se atiende (no hay nada que atender)
+OK    R3 El reenvío cierra la versión sustituida («reemplazado») y conserva su historial (apertura)  [reemplazado · abierta por nomina.b6@beehuman.invalid]
+OK    R4 La versión nueva aparece como nuevo envío (v2) y solo ella cuenta en el aviso  [{'total': 2, 'nuevos': 2, 'en_revision': 0} → {'total': 3, 'nuevos': 3, 'en_revision': 0}]
+OK    +R5 El seguimiento de la versión 1 sigue registrado
+OK    R6 La versión reemplazada ya no se atiende
+OK    +R7 Una versión ya atendida conserva su atención aunque después se devuelva
+== C · Complementos independientes y firmas/periodos intactos ==
+   procesado P3: Periodo marcado como procesado.
+OK    C1 Original abierta y luego procesada (ya con B6): se cierra por el procesamiento, sin atribuirlo a nadie  [cerrado_procesado]
+OK    +C1b El cierre por procesamiento no escribe una atención falsa
+OK    C2 Complemento posterior: su propio envío y su propio seguimiento, «nuevo»  [nuevo]
+OK    C3 Abrir el complemento lo pone en revisión; la original procesada no cambia
+OK    C4 Atender el complemento lo cierra
+OK    C5 Abrir y atender el complemento no cambia el periodo procesado (procesado, hojas, eventos, firma y huella idénticos)
+OK    C6 El periodo procesado no se reabre (misma fecha y usuario de procesado)  [2026-11-24 10:33:11.516181-06|]
+OK    C7 Firma vigente sigue vigente después de abrir y atender (misma huella, sin secciones cambiadas)  [vigente [] cb9abd2c9506]
+OK    C8 Después de abrir y atender, el periodo se procesa con la misma firma (no hubo que volver a firmar)
+OK    C9 Al procesar se cierran la original y el complemento enviado antes; el complemento posterior sigue pendiente
+== F · Filtros y ventana ==
+OK    F1 Filtro por empresa
+OK    F2 Ventana de atendidos: con 0 días se ocultan los atendidos y siguen todos los pendientes
+OK    F3 El aviso coincide con los pendientes de la bandeja  [{'total': 2, 'nuevos': 2, 'en_revision': 0}]
+OK    F4 Sin duplicados: un renglón por envío
+== S · Permisos y aislamiento ==
+OK    S1 coordA: no ve la bandeja ni el aviso, no abre ni atiende
+OK    S1 consulta: no ve la bandeja ni el aviso, no abre ni atiende
+OK    S2 Administrador ve lo mismo que Nómina
+OK    S3 anon: sin acceso a las funciones
+OK    S4 La tabla no se lee ni se escribe directamente (solo por las funciones)
+OK    S5 La función interna no está expuesta
+OK    S6 Otro tenant no ve envíos ajenos
+OK    S7 Otro tenant no abre ni atiende envíos ajenos
+OK    +S8 Tras los intentos rechazados el envío sigue nuevo
+OK    +S9 Y sin seguimiento escrito
+== V · Reversión y reaplicación ==
+OK    V1 La reversión deja el esquema idéntico al anterior a B6  [19d12875b90390a6564e19b70892cace]
+OK    +V2 Tras revertir, eventos y firmas siguen intactos
+OK    V3 Reaplicar da exactamente el mismo esquema  [psql:/home/claude/beehuman/supabase/pendiente/20261124000000_b6_bandeja_envios.sql:203: NOTICE:  B6: 7 envíos (originales y complementos anteriores al procesamiento) de periodos procesados quedan aten]
+OK    V4 Aplicar dos veces se rechaza sin cambios
+
+Huella de esquema: antes 19d12875b90390a6564e19b70892cace · con B6 68406e2f909063b8beb010b5b2998d1d
+RESULTADO: 60 de 60 verificaciones OK

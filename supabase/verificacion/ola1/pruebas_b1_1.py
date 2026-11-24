@@ -209,7 +209,7 @@ ok(l[0]['sug'] == 2625.00, 'D2 Periodo nuevo usa $70 y × 2.5: 9 × 70 × 2.5 + 
 val(f"update public.inc_conceptos set tarifa = 50 where id = '{K['HE-T']}'", 'admin')
 val(f"update public.inc_parametros set factor_doble = 2 where empresa_id = '{EA}'", 'admin')
 # D3: procesar el periodo 23 y comprobar que nada lo toca
-val(f"select public.inc_aceptar_sugeridos('{V23}')", 'nomina'); val(f"select public.inc_firmar_hoja('{H23}','nomina')", 'nomina')
+val(f"select public.inc_aceptar_sugeridos('{V23}')", 'nomina'); val(f"select public.inc_firmar_periodo('{PER23}', public.inc_firma_periodo_estado('{PER23}')->'huella_actual'->>'total')", 'nomina')
 ok(val(f"select public.inc_marcar_procesado('{PER23}')", 'nomina') == 'Periodo marcado como procesado.', 'D3 Periodo completo: se procesa')
 antes = val(f"select string_agg(id::text||sugerido||coalesce(final::text,'')||origen||detalle::text, '|' order by id) from public.inc_importes where version_id='{V23}'", 'nomina')
 val(f"update public.personal_registros_pago set sueldo = 99999 where id = '{RP['P1-IMSS']}'", replica=True)

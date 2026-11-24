@@ -1,0 +1,49 @@
+ui_b1_2 · 2026-11-23 18:55 · base local bhui · rest_local.py (modo por omisión)
+
+== U1 · Otro usuario de Nómina ==
+OK    U1 Otro usuario de Nómina: ve que falta la firma y que solo firma el responsable; sin botón  [Falta la firma de Nómina del periodo
+Solo el responsable designado de Nómina firma el periodo.]
+== U2 · Responsable con pendientes ==
+OK    U12 Hojas, con pendientes: sin botón de firma de Nómina; solo el estado y el acceso al concentrado  [Falta la firma de Nómina del periodo
+Revisar y firmar en «Concentrado»
+Nómina firma el periodo desde el concentrado, par]
+OK    +CONS-U1 Sin firma: el faltante se explica y «Marcar como procesado» está deshabilitado
+OK    U2 Con un importe por decidir: botón deshabilitado y la explicación (Concentrado)  [Falta la firma de Nómina del periodo
+Firmar el periodo como Nómina
+Primero resuelve los pendientes de hojas, importes y descuentos.]
+== U8 · Tablero ==
+OK    U8 Tablero: la columna de firmas es solo de RH  [Coordinador	Personas	Hoja	Firma RH (versión vigente)	Complementos | — RH]
+== U3 · Firmar ==
+OK    U12 Hojas, sin pendientes que bloqueen y siendo el responsable: tampoco hay botón de firma de Nómina
+OK    U12 El acceso «Revisar y firmar en Concentrado» abre la pestaña «Concentrado»
+OK    + Sin pendientes que bloqueen, el botón se habilita (la firma de RH no bloquea)
+OK    U3 El responsable firma: «✓ Firma de Nómina vigente» y deja de faltar; un evento en la base  [✓ Firma de Nómina vigente · nomina.uib12@beehuman.invalid · 23/11/2026, 06:53 p.m.
+Historial de firmas de Nómina (1)]
+OK    +CONS-U2 Mensaje de firma registrada; la firma muestra quién y cuándo  [Firma de Nómina del periodo registrada.]
+OK    U12 Hojas muestra la misma firma vigente, sin botón
+== U4 · Invalidación visible ==
+OK    U12 Hojas, firma invalidada: se ve el estado, sin botón «Volver a firmar»
+OK    U4 Cambio posterior: «ya no es vigente … Cambió: importes», botón «Volver a firmar» e historial «invalidada»  [La firma de nomina.uib12@beehuman.invalid · 23/11/2026, 06:53 p.m. ya no es vigente: el concentrado cambió después de firmar. Cambió: importes.
+Volver a firmar ]
+== U5 · Volver a firmar ==
+OK    U5 Volver a firmar: vigente; el historial muestra la anterior «reemplazada por una firma posterior»  [2]
+== U6 · Huella desactualizada ==
+OK    U6 Si el concentrado cambió mientras se revisaba, la firma se rechaza y no se registra  [el concentrado cambió mientras lo revisabas; vuelve a cargarlo antes de firmar.]
+== U7 · U9 · Hoja ==
+OK    U7 La hoja ya no ofrece «Firmar como Nómina» al responsable de Nómina  [RH: sin firma
+Firma anterior de Nómina por hoja: firma antigua por hoja · 23/11/2026, 06:53 p.m. (ya no autoriza el periodo)
+Nómina firma el]
+OK    U9 Una firma antigua de Nómina por hoja se ve como «ya no autoriza el periodo»
+OK    + RH (responsable designado) sí ve «Firmar como RH»
+== Procesar desde la pantalla (conservación) ==
+OK    +CONS-U3 Con firma vigente y RH firmado, el botón se habilita y el periodo se procesa  [Periodo marcado como procesado.]
+OK    +CONS-U4 Periodo procesado: se ve la firma vigente y su historial, sin botón de firmar
+== U10 · Celular ==
+OK    U10 Celular: el bloque de firma cabe, sin desplazamiento horizontal  [[27, 363, 390, 390]]
+OK    U11 Sin errores de JavaScript
+== Red: ninguna conexión fuera del equipo ==
+OK    RED Las 284 peticiones dirigidas a la dirección de beehuman-pruebas se respondieron en local (base bhui); ninguna salió  [284]
+OK    RED Ninguna petición ni websocket se dejó pasar a internet  [[]]
+OK    RED Lo que no se intercepta son solo archivos locales (file://)
+
+RESULTADO: 25 de 25 verificaciones OK

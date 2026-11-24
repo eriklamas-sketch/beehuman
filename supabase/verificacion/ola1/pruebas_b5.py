@@ -20,6 +20,8 @@ def ok(c, n, d=''):
     res.append((n, bool(c), d)); print(('OK    ' if c else 'FALLA ') + n + (f'  [{d}]' if d else ''))
 def falla_con(q, user, texto, n):
     out, err = sql(q, user); ok(err and texto.lower() in err.lower(), n, (err.split('\n')[0][:150] if err else 'NO FALLÓ'))
+# B-1 (20-nov): sin hojas enviadas, Nómina firma el periodo antes de procesar.
+firmar_periodo = lambda per: val(f"select public.inc_firmar_periodo('{per}', public.inc_firma_periodo_estado('{per}')->'huella_actual'->>'total')", 'nomina')   # opción B: con la huella revisada
 lit = lambda d: "'" + json.dumps(d).replace("'", "''") + "'::jsonb"
 
 T, T2 = '5a000000-0000-4000-8000-000000000001', '5a000000-0000-4000-8000-000000000002'
@@ -55,6 +57,7 @@ seed += f"""insert into public.usuarios_tenant (user_id, tenant_id, rol, persona
  ('{U['coord']}','{T}','coordinador','{P['CO']}'),('{U['consulta']}','{T}','consulta',null),('{U['nomina2']}','{T2}','nomina',null);
 insert into public.inc_parametros (empresa_id, tenant_id) values ('{EA}','{T}'),('{EB}','{T}');
 update public.inc_parametros set inicio_historial = '2025-01-01' where empresa_id in ('{EA}','{T}','{EB}');
+update public.inc_parametros set responsable_nomina_user = '{U['nomina']}' where empresa_id in ('{EA}','{EB}');  -- B-1: la firma de Nómina es obligatoria
 """
 o, e = sql(seed, replica=True)
 if e: print(e); sys.exit(1)
@@ -169,6 +172,7 @@ p1 = panel(W1)
 ok(linea(p1, CS)['sugerido'] == 500, 'S5 Préstamo $2,000 con dos periodos abiertos: el segundo propone solo $500 (saldo proyectado)', str(linea(p1, CS)['sugerido']))
 # S7: error a mitad del procesado -> nada a medias (se fuerza con un disparador temporal en movimientos)
 sql("create function public._b5_falla() returns trigger language plpgsql as $f$ begin raise exception 'falla simulada'; end $f$; create trigger _b5_falla before insert on public.cred_movimientos for each row execute function public._b5_falla()")
+firmar_periodo(W0)
 falla_con(f"select public.inc_marcar_procesado('{W0}')", 'nomina', 'falla simulada', 'S7 Error a mitad del procesado: se rechaza')
 ok(val(f"select coalesce(procesado_en::text,'abierto') from public.inc_periodos where id='{W0}'") == 'abierto' and val(f"select count(*) from public.cred_movimientos where periodo_id='{W0}'") == '0',
    'S7 … y no queda nada a medias: periodo abierto, sin movimientos')
@@ -198,6 +202,7 @@ p1 = panel(W1)
 ls = linea(p1, CS)
 ok(ls['sugerido'] == 500, 'S4 Saldo $500 y descuento de $1,500: sugerido $500', str(ls['sugerido']))
 val(f"select public.cred_aceptar_descuentos('{W1}')", 'nomina')
+firmar_periodo(W1)
 ok(val(f"select public.inc_marcar_procesado('{W1}')", 'nomina') == 'Periodo marcado como procesado.', 'S4 Se procesa')
 ok(saldo(CS) == 0 and val(f"select estado from public.cred_creditos where id='{CS}'") == 'terminado' and
    val(f"select count(*) from public.cred_historia where credito_id='{CS}' and evento='terminacion_saldo'") == '1',
@@ -211,6 +216,7 @@ def anticipo(ref, semana, importe, monto):
                     'importe_periodo': importe, 'monto_total': monto})
 def procesar(per):
     val(f"select public.cred_aceptar_descuentos('{per}')", 'nomina')
+    firmar_periodo(per)
     return val(f"select public.inc_marcar_procesado('{per}')", 'nomina')
 def movs(cred): return val(f"select coalesce(sum(importe),0)||'|'||count(*)||'|'||coalesce(min(saldo_nuevo),0) from public.cred_movimientos where credito_id='{cred}'")
 

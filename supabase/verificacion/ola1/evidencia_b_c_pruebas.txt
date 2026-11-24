@@ -1,0 +1,51 @@
+B-c · Evidencia en beehuman-pruebas (sflvpgkmtaxzogpgetxn · PostgreSQL 17.11) · 23/24-nov-2026 (hora MX 18:13–18:45)
+Autorización de Erik: 23-nov 18:16. Producción (vovyvvpwtjdlswerfjqb) no se tocó.
+
+1. PRECHECK (solo lectura, transacciones read only)
+   Identidad: PostgreSQL 17.11 (producción es 17.6) · no réplica · tenants solo sintéticos.
+   Migraciones: 29 · última 20261117194308 b5_fonacot_completo (md5 63703622…) · B-a ausente.
+   3 funciones que B-a reemplaza: idénticas a lo esperado (pg_get_functiondef 48b9277e… / 4cecc1f5… / 7f10fb6b…).
+   Huella de columnas inc_/cred_: af300a9c42e5ba5ce80f94285f87ab29 (igual a la base local sin B-a).
+
+2. RESPALDO DIRIGIDO
+   herramientas_prueba_bh/b_c/respaldo_dirigido_pruebas_20261123/ (3 funciones + permisos + SHA256SUMS), md5 = pruebas.
+
+3. ENSAYO EN PRUEBAS (begin; aplicar; medir; revertir; medir; error forzado → rollback)
+   ENSAYO_RESULTADO
+     1_antes     72cc12159e66df466f369dc85d07ee93|3   col=0 nuevas=0
+     2_aplicada  8c829404c82c738e00122f0504496f66|12  col=1 nuevas=9  internas=postgres,service_role  pantalla=authenticated,postgres,service_role
+     3_revertida 72cc12159e66df466f369dc85d07ee93|3   col=0 nuevas=0
+     3_defs      inc_faltantes_procesar=48b9277e… · inc_firmar_hoja=4cecc1f5… · inc_marcar_procesado=7f10fb6b… (permisos authenticated,postgres,service_role)
+   Idéntico a la base local en las tres etapas. Después: 29 migraciones, sin columna huella, 0 funciones nuevas, 0 transacciones colgadas.
+
+4. APLICACIÓN
+   apply_migration b3_concentrado_firma_periodo → versión 20261124002324.
+   md5 registrado 863c5e95b8e0127ee05c4647f25f7040 = cuerpo del archivo autorizado (SHA-256 0f13fc22…f3c951).
+   Huella de las 12 funciones 8c829404… (= local y = ensayo). Columna huella creada; 0 eventos con huella; 4 eventos existentes intactos.
+
+5. PRUEBAS DE FUNCIONES (pruebas_b_c_funciones.sql; una transacción con rollback; cuentas reales con rol authenticated + claims)
+   PRUEBAS_B_C 37/37 OK
+   S0 cuentas y tenants · S1 asignación automática
+   T01 preliminar con hoja sin enviar · T02 no firma con hoja sin enviar · T03 bloqueantes importes + FONACOT · T04 no firma con importes por decidir
+   T05 sin bloqueantes: faltan firma Nómina + firma RH · T06 misma instantánea · T07 sin_importe fuera de la huella · T08 huella desactualizada rechazada
+   T09 admin no responsable no firma · T10 0 firmas previas · T11 firma registrada · T12 vigente con huella guardada
+   T13 Nómina no firma por hoja · T14 Nómina no firma como RH · T15 RH firma su hoja → listo
+   T16 cambio → invalidada solo «importes» · T17 no procesa con firma invalidada · T18 vuelve a firmar
+   T19 procesa y guarda la huella firmada · T20 procesado no se vuelve a firmar · T21 procesado sin aviso · T21b cambio posterior → aviso «esquemas», no reabre
+   T22–T24 Coordinador: sin concentrado, sin estado, sin funciones internas · T25–T26 Consulta: sin concentrado, sin firma
+   T27 anon sin ejecución en las 9 · T28 authenticated solo en las 3 de pantalla
+   T29–T32 TENANT 7D6B: no ve el concentrado, ni el estado, no firma, ve 0 periodos/eventos/personas del piloto
+   T33 periodo B1.1 procesado antes de B-a: procesado/sin_firma, sin aviso · T34 5 periodos abiertos existentes responden y piden responsable de Nómina
+   Después: 0 empresas/personas/créditos sintéticos; 6 periodos y 4 eventos (sin cambios).
+
+6. RENDIMIENTO EN PRUEBAS (servidor, como administrador/nómina)
+   Periodos existentes: PILOTO A (97 personas) 96–184 ms · B5 85–90 ms · B1.1 4–5 ms.
+   500 personas sintéticas (transacción con rollback): concentrado 412/340/332 ms (≈0.9 MB) · estado de firma 185 ms · firmar 532 ms · concentrado tras firmar 327 ms.
+
+7. POSTGREST
+   Disparadores de recarga del esquema activos (pgrst_ddl_watch, pgrst_drop_watch).
+   Firmas expuestas = nombres que envía la pantalla: inc_concentrado_periodo(p_periodo), inc_firma_periodo_estado(p_periodo, p_huella default), inc_firmar_periodo(p_periodo, p_huella_revisada).
+   Llamadas HTTP reales a PostgREST: NO ejecutadas (este espacio no llega a beehuman-pruebas por red; descargar PostgREST no está autorizado).
+
+8. ESTADO FINAL
+   30 migraciones · última 20261124002324 b3_concentrado_firma_periodo (md5 863c5e95…) · 6 periodos · 4 eventos · 10 empresas · 521 personas · 22 créditos · 0 responsables RH · 0 transacciones colgadas.

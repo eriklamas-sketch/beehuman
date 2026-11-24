@@ -130,8 +130,11 @@ falla_con(f"select public.inc_enviar_hoja('{HV1}')", 'c2', 'no tienes personas a
 ok(val(f"select estado||' v'||version_actual||' '||(select count(*) from public.inc_versiones where hoja_id='{HV1}') from public.inc_hojas where id='{HV1}'") == 'borrador v0 0', '10 … y sigue en borrador, sin versiones')
 tb = val(f"select string_agg(coordinador||':'||personas||':'||estado, ',') from public.inc_tablero_periodo('{PC1}')", 'nomina')
 ok(tb == 'PERSONA C2 MH:0:borrador', '6  Nómina la sigue viendo en el tablero (0 personas, borrador)', tb)
+# B-1 (20-nov): la firma de Nómina del periodo es obligatoria aunque no haya hojas enviadas.
+val(f"update public.inc_parametros set responsable_nomina_user = '{U['nomina']}' where empresa_id = (select empresa_id from public.inc_periodos where id = '{PC1}')")
+val(f"select public.inc_firmar_periodo('{PC1}', public.inc_firma_periodo_estado('{PC1}')->'huella_actual'->>'total')", 'nomina')
 f1 = faltantes(PC1)
-ok(f1 == 'ninguno', '6  No aparece en faltantes', f1)
+ok(f1 == 'ninguno', '6  No aparece en faltantes (con la firma de Nómina del periodo, B-1)', f1)
 ok(val(f"select public.inc_marcar_procesado('{PC1}')", 'nomina') == 'Periodo marcado como procesado.', '6  El periodo se procesa')
 ok(val(f"select estado||' v'||version_actual from public.inc_hojas where id='{HV1}'") == 'borrador v0', '6  La hoja vacía se conserva tal cual (no se borra ni se altera)')
 

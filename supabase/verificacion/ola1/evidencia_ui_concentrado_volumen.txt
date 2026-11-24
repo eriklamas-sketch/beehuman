@@ -1,0 +1,9 @@
+ui_concentrado_volumen · 2026-11-23 18:38 · base local bhui (Postgres 16, puerto 55432, solo localhost) · rest_local.py, no PostgREST real
+
+OK    V1 Escritorio: 500 personas dibujadas en menos de 3 s  [0.31 s / 0.29 s / 0.32 s]
+OK    V2 Búsqueda, limpiar búsqueda y filtro responden en menos de 1 s  [buscar 0.10 s · limpiar 0.11 s · filtro 0.19 s]
+OK    V3 Abrir el detalle de una persona en menos de 1 s  [0.13 s]
+OK    V4 Celular: 500 tarjetas en menos de 3 s, sin desplazamiento horizontal  [0.35 s · [390, 390]]
+OK    V5 Sin errores de JavaScript
+
+RESULTADO: 5 de 5 verificaciones OK

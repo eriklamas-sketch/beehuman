@@ -1,0 +1,8 @@
+Semilla lista en 7.9 s
+Volumen: 505 personas, 5 hojas enviadas, 875 líneas de importe, 100 descuentos
+OK    C15 500 personas: mediana 0.25 s (< 3 s); primera llamada 0.25 s; respuesta de 1434 KB  [0.25, 0.25, 0.25, 0.25, 0.26, 0.26]
+OK    C15 Devuelve 505 personas, 5 hojas y 500 con incidencias  [505 / 5 / 500]
+OK    C15 Cuadran 500 celdas, 50 movimientos y 100 descuentos por decidir
+OK    C15b Opción B con 500 personas: faltantes 0.28 s y firma 0.40 s (< 3 s); firma vigente  [vigente]
+
+RESULTADO: 4 de 4 verificaciones OK

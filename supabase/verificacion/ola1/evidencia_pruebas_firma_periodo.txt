@@ -1,0 +1,85 @@
+== F · Reglas de firma ==
+OK    F1 Sin responsable de Nómina: faltante «Designa al responsable» y nadie firma  [Designa al responsable de Nómina (Incidencias → Configuración): su firma es obligatoria para procesar]
+OK    F2 Con responsable y sin firma: «Falta la firma de Nómina del periodo»  [Falta la firma de Nómina del periodo | PERSONA CA FB: falta la firma de RH (versión 1)]
+OK    F4 Con hojas enviadas: firma de Nómina del periodo y de RH por hoja; ya no la de Nómina por hoja  [Falta la firma de Nómina del periodo | PERSONA CA FB: falta la firma de RH (versión 1)]
+OK    F3 Firma sin pendientes: vigente; RH pendiente deja «preliminar» y al firmar RH queda «listo»  [PERSONA CA FB: falta la firma de RH (versión 1) → listo]
+OK    F5 Solo descuentos: pide la firma del periodo; con ella se procesa  [Falta la firma de Nómina del periodo → ninguno]
+OK    F6 Solo firma el responsable: Coordinador, Consulta, Administrador, otro Nómina, anon y la firma por hoja se rechazan  [{"coordA": "ERROR:  BeeHuman: solo el responsable designado de N\u00f3mina puede firmar el periodo.", "consulta": "ERROR:  BeeHuman: solo el responsable designado de N\u00f3mina pu]
+== Conservación de la cobertura de pruebas_b1_2 (20-nov) ==
+OK    +CONS1 Sin responsable de Nómina: no se procesa
+OK    +CONS2 Periodo sin hojas con RH designado: falta solo la firma de Nómina (RH no firma el periodo; con el descuento aceptado no falta nada más)  [Falta la firma de Nómina del periodo]
+OK    +CONS3 Sin firma: no se procesa y el saldo no baja (sin movimientos)  [ERROR:  BeeHuman: no se puede procesar; faltan 1 pendiente(s): Falta l · movimientos 0]
+OK    +CONS4 El evento de firma del periodo no lleva hoja ni versión y guarda la huella (v1, total y secciones); ya no falta nada  [true]
+OK    +CONS5 Las 6 funciones internas no se exponen a usuarios ni a anon  [[] · ERROR:  permission denied for function inc__concentrado_base]
+== P · Pendientes que bloquean ==
+OK    P1a B1 hoja sin enviar (borrador): bloquea la firma y se lista  [PERSONA CA FB: no ha enviado su hoja]
+OK    P1b B2 hoja devuelta sin reenviar: bloquea la firma y se lista  [PERSONA CA FB: su hoja está devuelta y no la ha reenviado]
+OK    P1c B3 complemento sin enviar: bloquea la firma y se lista  [PERSONA CA FB: tiene un complemento sin enviar]
+OK    P1d B4 importe por decidir: bloquea la firma y se lista  [PERSONA X FB · Horas extra: importe por decidir — hoja de PERSONA CA FB]
+OK    P1e B5 esquema de pago por asignar: bloquea la firma y se lista  [PERSONA X2 FB · Bono: esquema de pago por asignar — hoja de PERSONA CA FB]
+OK    P1f B6 descuento por decidir: bloquea la firma y se lista  [PERSONA X FB · Préstamo PR-X: descuento por decidir]
+OK    P1g B7 descuento sin revisar (sin sincronizar): bloquea la firma y se lista  [PERSONA X FB · Préstamo PR-X: descuento del periodo sin revisar (abre «Descuentos del periodo»)]
+OK    P1h B8 sin responsable de Nómina: está entre los bloqueantes y nadie firma  [Designa al responsable de Nómina (Incidencias → Configuración): su firma es obligatoria para procesar]
+OK    P1i Solo la firma de RH pendiente: Nómina sí firma y RH sigue como faltante para procesar  [PERSONA CA FB: falta la firma de RH (versión 1)]
+OK    P1j B6b descuento decidido que excede el saldo disponible: bloquea la firma y se lista  [PERSONA C2 FB · Préstamo PR-C2: el descuento ($300.00) excede el saldo disponible del crédito ($200.00)]
+OK    P2 Un periodo procesado no se firma
+== I · Cambios que invalidan (sección exacta) ==
+OK    I1 Modificar un importe → invalida; secciones exactamente ['importes']  [invalidada ['importes']]
+OK    I2 Asignar un esquema cambia la huella en «importes»; firmar con la huella previa se rechaza  [['importes'] / ERROR:  BeeHuman: el concentrado cambió mientras lo revisabas; vuelve a cargarlo]
+OK    I3 Capturar otro sueldo manual (recalcula) → invalida; secciones exactamente ['importes']  [invalidada ['importes']]
+OK    I4 Cambiar un descuento con hojas enviadas → invalida; secciones exactamente ['descuentos']  [invalidada ['descuentos']]
+OK    I5 Se envía la hoja de otro coordinador (sin capturas) → invalida; secciones exactamente ['hojas']  [invalidada ['hojas']]
+OK    I6 Se envía un complemento antes de procesar (1 h de capacitación) → invalida; secciones exactamente ['hojas', 'cantidades']  [invalidada ['hojas', 'cantidades']]
+OK    I7 Devolución y reenvío (solo cambia una observación, excluida) → invalida; secciones exactamente ['hojas']  [invalidada ['hojas']]
+OK    I8 Alta con fecha dentro del periodo → invalida; secciones exactamente ['personas', 'movimientos']  [invalidada ['personas', 'movimientos']]
+OK    I9 Baja con fecha dentro del periodo → invalida; secciones exactamente ['personas', 'movimientos']  [invalidada ['personas', 'movimientos']]
+OK    I10 Modificación salarial dentro del periodo → invalida; secciones exactamente ['esquemas', 'movimientos']  [invalidada ['esquemas', 'movimientos']]
+OK    I11 Cambio del esquema vigente (sin recalcular importes) → invalida; secciones exactamente ['esquemas']  [invalidada ['esquemas']]
+OK    I12 Corrección retroactiva del ingreso que cambia los días → invalida; secciones exactamente ['personas']  [invalidada ['personas']]
+OK    I13 Cambio del número interno → invalida; secciones exactamente ['personas']  [invalidada ['personas']]
+OK    I14 Código de día, directo (F → I y reenvío) → invalida; secciones exactamente ['hojas', 'dias']  [invalidada ['hojas', 'dias']]
+OK    I15 Cantidad sin importe, directa (capacitación 4 → 5 h) → invalida; secciones exactamente ['hojas', 'cantidades']  [invalidada ['hojas', 'cantidades']]
+OK    I15b Cantidad con importe (horas extra 2 → 3) → invalida; secciones exactamente ['hojas', 'cantidades', 'importes']  [invalidada ['hojas', 'cantidades', 'importes']]
+OK    I16 INFONAVIT: cambio de valor (900 → 950) → invalida; secciones exactamente ['informativos']  [invalidada ['informativos']]
+OK    I17 Pensión porcentual: 30 → 25 → invalida; secciones exactamente ['informativos']  [invalidada ['informativos']]
+OK    I18 Alta de un crédito INFONAVIT vigente para otra persona → invalida; secciones exactamente ['informativos']  [invalidada ['informativos']]
+== N · Cambios que NO invalidan ==
+OK    N1 Evento con fecha posterior al periodo → NO invalida  [vigente []]
+OK    N2 Corrección de nombre y número BEH → NO invalida  [vigente []]
+OK    N3 Cambio del proyecto de la ficha → NO invalida  [vigente []]
+OK    N4 RH firma después de Nómina → NO invalida  [vigente []]
+OK    N5 Volver a decidir el mismo monto en una línea ya modificada, con otro motivo → NO invalida  [modificado/555.00 → modificado/555.00 · vigente []]
+OK    N6 Ingreso corregido fuera del periodo (mismos días) → NO invalida  [vigente []]
+OK    N7 Reenvío sin ningún cambio: solo «hojas» (la huella no depende de los ids de línea) → invalida; secciones exactamente ['hojas']  [invalidada ['hojas']]
+OK    N8 Cambio de la referencia (folio) del INFONAVIT → NO invalida  [vigente []]
+== Identidad de las líneas de importe (sin colisiones) ==
+OK    +ID1 Ninguna colisión: cada línea vigente tiene una identidad lógica única  [77/77]
+OK    +ID2 Periodo con reenvío: la huella toma solo la versión vigente y conserva todas sus líneas (ninguna se colapsa)  [1 / 1 / 1]
+OK    +ID3 La llave única real es (versión, persona, concepto, COALESCE(relación), COALESCE(esquema)): un NULL cuenta como un valor  [COALESCE(relacion_laboral_id, '00000000-0000-0000-0000-000000000000'::uuid), COALESCE(registro_pago_id, '00000000-0000-0000-0000-000000000000'::uuid))]
+OK    +ID4 Esquema NULL: otra línea igual (misma relación, esquema NULL) la rechaza la base  [esquema=NULL · ERROR:  duplicate key value violates unique constraint "inc_importes_linea_uq"
+DETAIL:  Ke]
+OK    +ID6 Relación y esquema NULL a la vez: se admite una sola línea; la segunda la rechaza la base  [1ª: aceptada · 2ª: ERROR:  duplicate key value violates unique constraint "inc_importes_l]
+OK    +ID5 Esquema NULL con relaciones distintas: la base las admite y la huella las conserva como 3 líneas distintas (no colapsan)  [aceptada · 3 líneas X2/BONO]
+OK    +ID7 El valor que usa COALESCE (uuid cero) no existe como esquema ni relación real: un NULL no puede chocar con un id real  [0/0]
+== H · Determinismo e instantánea ==
+OK    H1 Dos cálculos seguidos dan la misma huella (SHA-256)  [92931ac1551770ec]
+OK    H2 Reescritura física (VACUUM FULL y actualizaciones sin cambio) no cambia la huella
+OK    H3 Números normalizados: 2.00 → 2 y 250.00 = 250; ningún decimal con ceros al final en el documento
+OK    H4 Instantánea: dentro de una consulta STABLE las dos huellas son iguales aunque otra sesión confirme un cambio a mitad  [['c672c61268dd1fc2cec684dd65787f75b3a5f7a03457737006a55a46e142e5fe', 'c672c61268dd1fc2cec684dd65787f75b3a5f7a03457737006a55a46e142e5fe'] → después 4662eb69c25c ]
+OK    H5 Control: con VOLATILE las dos huellas difieren (el cambio sí entró a mitad del cálculo)  [['4662eb69c25c1d8163ecdc3222388f81527bc059e33e666aae6991dc5fa55461', 'b99e1c054897545c3aaaee8003bd18d2a446efe37ab5b536783e3330023d411c']]
+== K · Concurrencia ==
+OK    K1 Huella revisada distinta de la actual: se rechaza  [ERROR:  BeeHuman: el concentrado cambió mientras lo revisabas; vuelve a cargarlo antes de ]
+OK    K2 Cambio confirmado después de firmar: la firma queda invalidada, sin error y conservada en el historial  [invalidada]
+OK    K3 Dos firmas simultáneas: se serializan y queda una sola firma vigente  [A=002"}
+Firma de Nómina del periodo registrada. B= periodo ya tiene la firma de Nómina vigente. ]
+OK    K4 Procesar con un cambio concurrente: se guarda la huella validada (= la firmada) y aparece el aviso «cambió después (esquemas)»  [True {'secciones': ['esquemas'], 'procesado_en': '2026-11-23T15:04:13.975385-06:00'} ]
+== R · Refirma, procesado y aviso posterior ==
+OK    R1 Volver a firmar tras invalidar: vigente; quedan las 2 firmas en el historial  [2]
+OK    R2 Procesar con la firma invalidada se rechaza y dice qué cambió  [ERROR:  BeeHuman: no se puede procesar; faltan 1 pendiente(s): La firma de Nómina de nomina.fb@beehuman.invalid del 23/11/2026 15:04 ya no es vigente:]
+OK    +R0 Justo después de procesar (y de volver a abrir descuentos) no hay aviso  [None]
+OK    R3 Corrección de historia laboral después de procesar: sigue procesado y avisa «cambió después de procesarse (personas)»  [{'secciones': ['personas'], 'procesado_en': '2026-11-23T15:04:18.370286-06:00'}]
+== D6 · Firma antigua de Nómina por hoja ==
+OK    D6 Una firma antigua de Nómina por hoja queda como historial y no autoriza el periodo
+
+Comprobaciones del diseño: 57 (57 distintas); de apoyo: 13
+RESULTADO: 70 de 70 verificaciones OK

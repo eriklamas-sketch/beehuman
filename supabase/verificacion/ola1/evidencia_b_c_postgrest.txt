@@ -1,0 +1,348 @@
+B-c · Pruebas con PostgREST REAL (v12.2.12, binario estático SHA-256 5de4092f…557d5) · 2026-11-23 18:55
+PostgREST local: 127.0.0.1:3010 → base local bhui (Postgres 16, solo localhost). Secreto JWT local de pruebas. Nunca Supabase.
+
+ui_ola1                     33 OK  0 FALLA
+ui_b1                       46 OK  0 FALLA
+ui_b1_1                     26 OK  0 FALLA
+ui_mis_hojas                22 OK  0 FALLA
+ui_b1_2                     25 OK  0 FALLA
+ui_concentrado              63 OK  0 FALLA
+ui_concentrado_volumen       5 OK  0 FALLA
+pruebas_http_rpc            10 OK  0 FALLA
+
+===== ui_ola1
+OK    Administrador ve «Incidencias» en el menú
+OK    Administrador agrega 4 conceptos con «Agregar rápido»  [HE,DOM,T,DESC]
+OK    Parámetros guardados (base: solo bruto)
+OK    Administrador se designa responsable de RH
+OK    Tarifa por área agregada (turno nocturno en ACABADOS: $900)
+OK    Administrador: sin errores de JavaScript  [[]]
+OK    Nómina ve la configuración (solo lectura, B1.1)
+OK    Periodo anterior al historial: la pantalla muestra el rechazo  [no hay historial de asignaciones antes del 2026-10-26; no se puede crear el peri]
+OK    El fin se calcula con los 7 días de la periodicidad semanal
+OK    Nómina crea el periodo 26-oct a 1-nov
+OK    Nómina: sin errores de JavaScript  [[]]
+OK    Consulta no ve «Incidencias»
+OK    Coordinador ve «Mi equipo» e «Incidencias»
+OK    La hoja trae precargadas las 6 personas del coordinador  [6]
+OK    Aviso visible: ADELA con más de 3 h extra al día  [1]
+OK    Proyecto por día: oculto con aviso (el coordinador no lee el catálogo de proyectos)
+OK    Guardar borrador  [Borrador guardado.]
+OK    Se guardaron 8 cantidades, 2 celdas (F y D) y 1 observación  [8/2/1]
+OK    Descuento con motivo y conformidad declarada (queda quién la declaró)
+OK    Coordinador ve importes de tarifa propia: CESAR 2 × $700; BENITO 1 × $900 (tarifa de su área)
+OK    Coordinador no ve importes calculados con sueldo
+OK    Borrar una cantidad en borrador la elimina (7 restantes)
+OK    El envío pide confirmación
+OK    Hoja enviada: versión 1
+OK    Hoja enviada: la cuadrícula queda de solo lectura
+OK    La observación general escrita antes de guardar viaja en la versión enviada
+OK    Importe calculado en el servidor (base bruto 20,000/30; 12 h → 9 dobles + 3 triples = $2,250.00)  [2250.00]
+OK    Abre el complemento
+OK    En el complemento, lo ya enviado aparece fijo y no editable  [3]
+OK    El complemento guarda solo lo omitido
+OK    Coordinador: sin errores de JavaScript  [[]]
+OK    El coordinador nunca escribió importes ni sueldos  [['POST /rest/v1/rpc/equipo_coordinador', 'POST /rest/v1/rpc/inc_empresas_visibles', 'POST /rest/v1/rpc/inc_abrir_hoja']]
+OK    Celular (390 px): la página no se desborda; la cuadrícula se desplaza dentro de su recuadro  [390]
+
+RESULTADO: 33 de 33 OK
+
+===== ui_b1
+OK    R1 admin: ve «Revisión»  [Revisión, Periodos, Configuración]
+OK    R1 nomina: ve «Revisión»  [Revisión, Periodos, Configuración]
+OK    R1 coord: no ve «Revisión»  [Mis hojas de incidencias
+
+Captura lo que no fue un día norma]
+OK    R1 consulta: no ve «Revisión»  [sin pestaña Incidencias]
+OK    R2 Lista de periodos con «Revisar»
+OK    R2 Tablero: un renglón por coordinador (uno enviado v1 y otro sin abrir)  [EDER LOPEZ RUIZ 2 Sin abrir — — | JOSE MANUEL LOPEZ PALMA 6 Enviada v1 · 23/11/2026, 06:48 p.m]
+OK    R2 Muestra quién falta por enviar  [Falta por enviar: EDER LOPEZ RUIZ]
+OK    R2 Personas por coordinador según la relación laboral (6 y 2)  [['02=2', '01=6']]
+OK    R3 Captura enviada en solo lectura (sin campos editables)  [campos=0]
+OK    R4 Una persona con dos esquemas: dos líneas (IMSS bruto $333.33 y EFECTIVO neto $50.00)  [HE Horas extra 2 horas $83.33 sueldo de IMSS ÷ 8 h 2 h × $83.33 × 2 Br | HE Horas extra 2 horas $12.50 sueldo de EFECTIVO ÷ 8 h 2 h × $12.50 × ]
+OK    R5 Totales por separado: Bruto $1,283.33 (incluye el turno por tarifa ligado a IMSS, B1.1) y Neto $50.00  [Bruto: $1,283.33 / Neto: $50.00]
+OK    R5 Ningún total suma bruto con neto ($633.33 no aparece)
+OK    R5 Cada línea dice si es Bruto o Neto
+OK    R6 Esquema sin relación: línea «Sin sueldo» con motivo  [HE Horas extra 2 horas — 2 h × valor por hora × 2 — Sin esquema enlazado sin registro patronal — Sin sueldo Sin esquema ]
+OK    R6 Aviso visible en los totales  [1 línea sin sueldo]
+OK    R6 La línea sin sueldo se resalta
+OK    R4 Concepto por tarifa: una línea ligada a su único esquema, por decidir (B1.1, B1.1a)  [T Turno nocturno 1 turnos — 1 × $700.00 Bruto IMSS sin registro patronal · único esquema v]
+OK    R7 Modificar un importe (250 → 300)  [HE Horas extra 2 horas $62.50 sueldo de IMSS ÷ 8 h 2 h × $62 final=300]
+OK    R7 Aceptar un importe sugerido
+OK    R7 Sueldo manual: la línea pasa a «Sueldo manual» con importe (2 h × 400/8 × 2)  [HE Horas extra 2 horas $50.00 sueldo manual 2 h × $50.00 × 2 Sueldo manual Sueldo manual sin registr]
+OK    R7 El recálculo no pisó el importe modificado por Nómina  [modificado final=300]
+OK    R7 El recálculo conserva lo aceptado
+OK    R8 Aceptar todos los sugeridos pendientes  [Aceptar los 3 sugeridos pendientes → 3 importes aceptados.]
+OK    R8 «Aceptar todos» no toca lo modificado
+OK    R9 Nómina (responsable de Nómina) no tiene botón de firma por hoja; la hoja indica que firma el periodo en «Concentrado»  [RH: sin firma
+Nómina firma el periodo completo en la pestaña «Concentrado» del periodo.]
+OK    R9 El responsable de RH ve solo el botón de RH
+OK    R9 Firma de RH registrada sobre la versión vigente  [✓ RH: rh@demo.invalid · 23/11/2026, 06:48 p.m.
+Nómina firma el periodo completo en la pestaña «Concentrado» del periodo.]
+OK    R9 El Administrador no designado no puede firmar  [✓ RH: rh@demo.invalid · 23/11/2026, 06:48 p.m.
+Nómina firma el periodo completo en la pestaña «Concentrado» del periodo.]
+OK    R10 Devolver sin motivo: no se permite  [Escribe el motivo de la devolución.]
+OK    R10 Hoja devuelta: estado «Devuelta» y sin decisiones de importe  [Devuelta]
+OK    R10 El tablero muestra la devolución y su motivo  [JOSE MANUEL LOPEZ PALMA
+Devuelta: Falta la hora extra de CESAR del jueves
+	6	Devuelta v1 · 23/11/202]
+OK    R10 Con una hoja devuelta no se puede procesar (lo dice y el botón está deshabilitado)  [Faltan 3 pendientes para procesar:
+EDER LOPEZ RUIZ: no ha abierto su hoja
+JOSE MANUEL LOPEZ PALMA: su hoja está devuelta y no la ha reenviad]
+OK    R11 Reenvío: versión 2 y firma de RH pendiente de nuevo (Nómina firma el periodo, no la hoja)  [JOSE MANUEL LOPEZ PALMA	6	Enviada v2 · 23/11/2026, 06:48 p.m.	— RH	—	Revisar]
+OK    R11 La versión 2 se decide de nuevo (las decisiones eran de la versión 1)
+OK    R11 La versión 2 trae su propio cálculo (HE de CESAR por esquema + turno por tarifa ligado a IMSS, B1.1)  [HE Horas extra 1 horas $50.00 sueldo de IMSS ÷ 8 h | T Turno nocturno 1 turnos — 1 × $700.00 Bruto IMSS]
+OK    R11 Antes de procesar dice exactamente qué falta (hoja sin abrir, importes, firmas) y no deja procesar  [Faltan 9 pendientes para procesar:
+EDER LOPEZ RUIZ: no ha abierto su hoja
+ADELA PALACIOS GALVAN · Horas extra: importe por decidir — hoja de JOSE MANUEL LOPEZ P]
+OK    R11 No existe confirmación ni otro botón que permita saltarse la regla (solo el acceso al concentrado)  [['Revisar y firmar en «Concentrado»', 'Marcar como procesado (deshabilitado)']]
+OK    R11 En «Hojas» no se firma como Nómina; hay acceso al concentrado
+OK    R11 Nómina firma el periodo en «Concentrado» (PostgREST real)  [Firma de Nómina del periodo
+✓ Firma de Nómina vigente · nomina@demo.invalid · 23/11/2026, 06:49 p.m.]
+OK    R11 Con todo completo, el botón se habilita  [Todo está completo: hojas enviadas, importes decididos y firmas registradas.]
+OK    R11 Periodo marcado como procesado  [Periodo marcado como procesado.]
+OK    R11 Hoja procesada: solo lectura
+OK    R12 Celular (390 px): la página no se desborda; las tablas se desplazan dentro de su recuadro  [390]
+OK    R12 Nómina: sin errores de JavaScript  [[]]
+OK    R12 El coordinador nunca pide importes, sueldos ni el tablero  [[]]
+OK    R12 Coordinador: sin errores de JavaScript  [[]]
+
+RESULTADO: 46 de 46 OK
+
+===== ui_b1_1
+OK    C6 El coordinador ve 14 horas extra de BENITO sin importe (el importe con dobles y triples lo decide Nómina)  [14]
+OK    Coordinador: sin errores de JavaScript  [[]]
+OK    C1 Columnas de la revisión  [Concepto | Cantidad | Valor por hora | Cálculo | Esquema de pago | Sugerido | Final | Estado | ]
+OK    C1 BENITO 14 h por tarifa (6 lunes + 8 martes): «9 h × $50.00 × 2 + 5 h × $50.00 × 3» = $1,650.00  [9 h × $50.00 × 2 + 5 h × $50.00 × 3]
+OK    C1 Valor por hora $50.00 (tarifa); ligado a su único esquema (IMSS bruto)  [$50.00 tarifa]
+OK    B1.1a La línea con esquema automático llega «Por decidir», con su botón Aceptar  [· único esquema vigente $1,650.00 Por decidir AceptarGuardar]
+OK    C2 Línea del sueldo: $12,000/30 ÷ 8 = $50.00 por hora (sueldo de IMSS) → 1 h × $50.00 × 2 = $100.00  [$50.00 sueldo de IMSS ÷ 8 h / 1 h × $50.00 × 2]
+OK    C3 ADELA (IMSS y EFECTIVO) sin preferido: $200.00 «Esquema por asignar», destacada  [HET Horas extra tarifa 2 horas $50.00 tarifa 2 h × $50.00 × 2 Tarifa Esquema por asignar La persona tiene 2 es]
+OK    C3 El selector ofrece solo sus esquemas vigentes (IMSS bruto y EFECTIVO neto)  [Elige el esquema… | IMSS · Bruto | EFECTIVO · Neto]
+OK    C3 Sin esquema no se decide el importe; aviso de líneas por asignar
+OK    C3 El tablero lo lista entre lo que falta y no deja procesar  [Faltan 5 pendientes para procesar:
+EDER LOPEZ RUIZ: no ha abierto su hoja
+ADELA PALACIOS GALVAN · Horas extra tarifa: esquema de pago por asignar — hoja de JOSE]
+OK    C3 Nómina asigna EFECTIVO: neto, por decidir, «asignado por Nómina»  [HET Horas extra tarifa 2 horas $50.00 tarifa 2 h × $50.00 × 2 Neto EFECTIVO sin registro patronal · asignado p]
+OK    C3 La asignación aparece en la bitácora  [Fecha	Persona	Concepto	Cambio	Motivo	Quién
+23/11/2026, 06:44 p.m.	ADELA PALACIOS GALVAN	HET	Esquema: por asignar → EFECT]
+OK    C4 Modificar sin motivo no se permite (la línea sigue por decidir)  [Escribe el motivo del ajuste: queda en la bitácora.]
+OK    C5 Sugerido $1,650.00 intacto, final 1,620 y «2 ajustes»  [HET Horas extra tarifa 14 horas $50.00 tarifa 9 h × $50.00 × 2 + 5 h × $50.00 × 3 Bruto IMSS sin registro patronal · úni]
+OK    C5 Bitácora con los dos ajustes: anterior, nuevo, motivo y quién  [23/11/2026, 06:44 p.m. BENITO ZAVALA GALINDO HET $1,600.00 → $1,620.00 Ajuste acordado nomina@demo.invalid | 23/11/2026, 06:44 p.m. BENITO ZAVALA GALINDO HET $1,650.00 → $1,600.00 Se pagan 13 h nomina@demo.invalid]
+OK    Nómina (revisión): sin errores de JavaScript  [[]]
+OK    E2 Nómina ve la configuración en solo lectura (sin guardar ni editar)
+OK    Celular: la revisión no desborda la página (la tabla se desplaza dentro de su caja)  [scrollWidth=390]
+OK    E1 Campo «Factor de horas dobles» (2)  [2]
+OK    E1 Umbral vacío (sin triples) y factor doble 2.5 guardados  [Parámetros guardados. Aplican a las hojas que se envíen desde ahora.]
+OK    E1 Con tarifa aparece «Esquema preferido» y la ayuda explica la asignación  [Horas × tarifa (sin dobles ni triples). El importe se liga al esquema preferido si la pers]
+OK    E1 Concepto de horas sencillas por tarifa con esquema preferido EFECTIVO
+OK    E1 La lista muestra valor y esquema preferido  [HS Horas sencillas Horas Tarifa propia $50.00 por hora EFECTIVO Activo Editar]
+OK    Administrador: sin errores de JavaScript  [[]]
+OK    C6 El coordinador nunca pidió importes, bitácora ni esquemas  [[]]
+
+RESULTADO: 26 de 26 OK
+
+===== ui_mis_hojas
+OK    M1 Columna Empresa con nombre en todas las filas  [['CONSTRUCTORA ALTIPLANO DEMO', 'EMPRESA HOJA VACIA UI']]
+OK    M1 Aparece su empresa y la de su hoja vacía
+OK    M1 No aparece el periodo de la empresa ajena (sin personas asignadas)
+OK    M1 La hoja vacía sin personas ofrece «Ver hoja» (no «Capturar»)  [Ver hoja]
+OK    M1 El periodo con personal sigue ofreciendo «Abrir hoja»
+OK    M2 Aviso «sin personas» con el nombre de la empresa  [No tienes personas asignadas en EMPRESA HOJA VACIA UI durante este periodo. Esta hoja no se envía y no bloquea el procesamiento del periodo.]
+OK    M2 Sin «Enviar», «Guardar», complemento ni observación general
+OK    M2 El encabezado de la hoja muestra la empresa
+OK    M2 La hoja vacía no cambió
+OK    M3 «Abrir hoja» en el periodo con personal crea su hoja  [‹ Mis hojas
+
+Hoja de incidencias
+
+CONSTRUCTORA ALTIPLANO DEMO · 02/11/2026 – 08/11/2026
+
+Borrador]
+OK    M3 Hoja normal: sin aviso y con «Enviar y cerrar»
+OK    Coordinador: sin errores de JavaScript  [[]]
+OK    M4 Tablero: la hoja vacía aparece marcada «sin personas · no bloquea»
+OK    M4 No aparece en «Falta por enviar»
+OK    M4 Opción B: antes de firmar, solo falta la firma de Nómina del periodo; la hoja vacía no se cuenta  [Falta 1 pendiente para procesar:
+Falta la firma de Nómina del periodo]
+OK    M4 Nómina firma el periodo en «Concentrado»  [Firma de Nómina del periodo
+✓ Firma de Nómina vigente · nomina@demo.invalid · 23/11/2026, 06:48 p.m.]
+OK    M4 Mensaje: no hay pendientes que bloqueen; las hojas sin personal no requieren envío  [No hay pendientes que bloqueen el procesamiento. Las hojas sin personal asignado y sin capturas no requieren envío.]
+OK    M4 Sin «0 de 1 hojas enviadas»; indica la hoja que no requiere envío  [1 hoja sin personal: no requiere envío]
+OK    M4 El periodo se procesa
+OK    M4 La hoja vacía se conserva sin cambios
+OK    Nómina: sin errores de JavaScript  [[]]
+OK    Coordinador: los nombres llegan de inc_empresas_visibles
+
+RESULTADO: 22 de 22 OK
+
+===== ui_b1_2
+== U1 · Otro usuario de Nómina ==
+OK    U1 Otro usuario de Nómina: ve que falta la firma y que solo firma el responsable; sin botón  [Falta la firma de Nómina del periodo
+Solo el responsable designado de Nómina firma el periodo.]
+== U2 · Responsable con pendientes ==
+OK    U12 Hojas, con pendientes: sin botón de firma de Nómina; solo el estado y el acceso al concentrado  [Falta la firma de Nómina del periodo
+Revisar y firmar en «Concentrado»
+Nómina firma el periodo desde el concentrado, par]
+OK    +CONS-U1 Sin firma: el faltante se explica y «Marcar como procesado» está deshabilitado
+OK    U2 Con un importe por decidir: botón deshabilitado y la explicación (Concentrado)  [Falta la firma de Nómina del periodo
+Firmar el periodo como Nómina
+Primero resuelve los pendientes de hojas, importes y descuentos.]
+== U8 · Tablero ==
+OK    U8 Tablero: la columna de firmas es solo de RH  [Coordinador	Personas	Hoja	Firma RH (versión vigente)	Complementos | — RH]
+== U3 · Firmar ==
+OK    U12 Hojas, sin pendientes que bloqueen y siendo el responsable: tampoco hay botón de firma de Nómina
+OK    U12 El acceso «Revisar y firmar en Concentrado» abre la pestaña «Concentrado»
+OK    + Sin pendientes que bloqueen, el botón se habilita (la firma de RH no bloquea)
+OK    U3 El responsable firma: «✓ Firma de Nómina vigente» y deja de faltar; un evento en la base  [✓ Firma de Nómina vigente · nomina.uib12@beehuman.invalid · 23/11/2026, 06:50 p.m.
+Historial de firmas de Nómina (1)]
+OK    +CONS-U2 Mensaje de firma registrada; la firma muestra quién y cuándo  [Firma de Nómina del periodo registrada.]
+OK    U12 Hojas muestra la misma firma vigente, sin botón
+== U4 · Invalidación visible ==
+OK    U12 Hojas, firma invalidada: se ve el estado, sin botón «Volver a firmar»
+OK    U4 Cambio posterior: «ya no es vigente … Cambió: importes», botón «Volver a firmar» e historial «invalidada»  [La firma de nomina.uib12@beehuman.invalid · 23/11/2026, 06:50 p.m. ya no es vigente: el concentrado cambió después de firmar. Cambió: importes.
+Volver a firmar ]
+== U5 · Volver a firmar ==
+OK    U5 Volver a firmar: vigente; el historial muestra la anterior «reemplazada por una firma posterior»  [2]
+== U6 · Huella desactualizada ==
+OK    U6 Si el concentrado cambió mientras se revisaba, la firma se rechaza y no se registra  [el concentrado cambió mientras lo revisabas; vuelve a cargarlo antes de firmar.]
+== U7 · U9 · Hoja ==
+OK    U7 La hoja ya no ofrece «Firmar como Nómina» al responsable de Nómina  [RH: sin firma
+Firma anterior de Nómina por hoja: firma antigua por hoja · 23/11/2026, 06:50 p.m. (ya no autoriza el periodo)
+Nómina firma el]
+OK    U9 Una firma antigua de Nómina por hoja se ve como «ya no autoriza el periodo»
+OK    + RH (responsable designado) sí ve «Firmar como RH»
+== Procesar desde la pantalla (conservación) ==
+OK    +CONS-U3 Con firma vigente y RH firmado, el botón se habilita y el periodo se procesa  [Periodo marcado como procesado.]
+OK    +CONS-U4 Periodo procesado: se ve la firma vigente y su historial, sin botón de firmar
+== U10 · Celular ==
+OK    U10 Celular: el bloque de firma cabe, sin desplazamiento horizontal  [[27, 363, 390, 390]]
+OK    U11 Sin errores de JavaScript
+== Red: ninguna conexión fuera del equipo ==
+OK    RED Las 284 peticiones dirigidas a la dirección de beehuman-pruebas se respondieron en local (base bhui); ninguna salió  [284]
+OK    RED Ninguna petición ni websocket se dejó pasar a internet  [[]]
+OK    RED Lo que no se intercepta son solo archivos locales (file://)
+
+RESULTADO: 25 de 25 verificaciones OK
+
+===== ui_concentrado
+== K1 · Abrir el concentrado ==
+OK    K1 La pestaña «Concentrado» abre el concentrado del periodo
+OK    K1 Estado «Preliminar», igual a la base  [preliminar / Preliminar]
+== K2 · Pendientes agrupados ==
+OK    K2 «Impiden firmar y procesar» = inc_faltantes_bloqueantes (misma lista, una por una, con repeticiones)  [5 vs 5]
+OK    K2 «Impiden solo procesar» = el resto de los faltantes (firmas), sin duplicar  [Falta la firma de Nómina del periodo | PERSONA CA CONC: falta la firma de RH (versión 1)]
+OK    K2 Ningún pendiente se pierde ni se duplica  [7 de 7]
+OK    K2 Dos líneas idénticas de la base (A1, dos esquemas) se agrupan «× 2» con su explicación  [PERSONA A1 CONC · Horas extra: importe por decidir — hoja de PERSONA CA CONC × 2 (una línea por esquema de pago)]
+OK    K2 Los bloqueantes explican el motivo (importe por decidir, descuento FONACOT de A3)
+== K3 · K4 · Firma bloqueada y hojas no incluidas ==
+OK    K3 Con bloqueantes: botón deshabilitado, «Falta la firma» y la explicación  [Firma de Nómina del periodo
+Falta la firma de Nómina del periodo
+Firmar el periodo como Nómina
+Primero resuelve los pend]
+OK    K4 Hojas no incluidas: se avisan con el coordinador (CB sin enviar)  [1 hoja no incluida en estas cifras (solo cuentan las enviadas):
+PERSONA CB CONC: no ha enviado su hoja]
+== K5 · Totales ==
+OK    K5 Personas y personas con incidencias = base  [7 / 3]
+OK    K5 Días por código = base (F 1, V 1)  [{"F": 1, "V": 1}]
+OK    K5 Sin importes decididos todavía: la pantalla no muestra ninguna cifra de importes (igual a la base)  [[]]
+OK    K5 Importes por decidir: se cuentan sin cifra y se aclara que no se suman  [3 importes por decidir (no se suman)]
+== K6 · Tabla por persona ==
+OK    K6 Una fila por persona de la base, sin repetir  [7]
+OK    K6 Incluye a quien no tuvo captura (A4)
+OK    K6 Alta a mitad del periodo (A3): ingreso con fecha y días vigentes de la base  [PERSONA A3 CONC UC-A3 · NOI NA3 · UC12345678 	PERSONA CA CONC	5 de 7 días vigentes	1 h	—	—	por decidir (1)	1 por decidir	Ingreso 02/12	Detalle]
+OK    K6 Identificación (BEH, número interno, registro patronal) y cantidades por concepto  [PERSONA A1 CONC UC-A1 · NOI NA1 · UC12345678 	PERSONA CA CONC	—	2 h	—	—	por decidir (2)	—	—	Detalle]
+OK    K6 Importes por decidir de la persona marcados, sin cifra  [2]
+== K7 · Filtros ==
+OK    K7 «Solo con incidencias» = personas con incidencias de la base  [3]
+OK    K7 «Con movimientos»: solo A3
+OK    K7 «Con pendientes por decidir» = base
+OK    K7 Búsqueda por número de empleado
+== K8 · Detalle ==
+OK    K8 Detalle de A1: importes por esquema (IMSS bruto y EFECTIVO neto por separado) y observación  [Cantidades 30/11/2026 · Horas extra: 2 h Importes por esquema Horas extra · IMSS Bruto · cantidad 2 · sugerido $250.00 · Por decidir · PERSONA CA CONC]
+OK    K8 Detalle de A3: el descuento FONACOT por decidir  [Cantidades 03/12/2026 · Horas extra: 1 h Importes por esquema Horas extra · IMSS Bruto · cantidad 1 · sugerido $100.00 ·]
+OK    K8 Detalle de A2: días con código y crédito informativo sin importe  [Días 01/12/2026 · Falta 02/12/2026 · Vacaciones Créditos informativos (sin importe) INFONAVIT INF-A2 · cuota_fija 900 Esquemas de pago IMSS ]
+== K10 · Otro usuario de Nómina ==
+OK    K10 Otro usuario de Nómina: ve el estado, sin botón
+== K9 · Avisos que no bloquean ==
+OK    K9 Las líneas sin importe se avisan, sin bloquear  [Avisos que no bloquean
+1 línea sin importe: solo cuenta la cantidad; no se decide ni se suma.]
+OK    K9 Sin bloqueantes en la base ni en pantalla
+== K11 · Firmar desde el concentrado ==
+OK    K11 Sin bloqueantes, el botón se habilita (la firma de RH no bloquea)
+OK    K11 Firma vigente; un evento; la huella firmada es la que mostraba la pantalla  [284f3bc62158ade4]
+OK    K11 Las 9 secciones de la huella, todas «Sin cambios desde la firma»  [{"hojas": "igual", "personas": "igual", "dias": "igual", "cantidades": "igual", "importes": "igual", "esquemas": "igual", "descuentos": "igual", "informativos": "igual", "movimientos": "igual"}]
+OK    K11 Mensaje de firma registrada  [Firma de Nómina del periodo registrada.]
+== K12 · Cambio después de firmar ==
+OK    K12 Firma «invalidada» y botón «Volver a firmar»
+OK    K12 Secciones marcadas = secciones_cambiadas de la base (importes); el panel se abre solo  [{"hojas": "igual", "personas": "igual", "dias": "igual", "cantidades": "igual", "importes": "cambio", "esquemas": "igual", "descuentos": "igual", "informativos": "igual", "movimientos": "igual"}]
+OK    K12 El historial identifica la firma invalidada y qué cambió
+== K21 · Desde «Hojas» no se firma como Nómina ==
+OK    K21 Hojas, responsable de Nómina, sin bloqueantes y firma invalidada: no hay botón para firmar; solo el estado y el acceso al concentrado
+OK    K21 El acceso lleva a «Concentrado», donde sí está la firma; no se registró ninguna firma al navegar
+OK    K21 Celular, pestaña «Hojas»: sin botón de firma de Nómina, el acceso al concentrado visible y sin desplazamiento horizontal  [[390, 390]]
+== K13 · Huella desactualizada ==
+OK    K13 Si cambió mientras se veía, la firma se rechaza y no se registra  [el concentrado cambió mientras lo revisabas; vuelve a cargarlo antes de firmar.]
+== K14 · Listo para procesar ==
+OK    K14 Sin pendientes: «Listo para procesar», igual a la base; la firma anterior queda «reemplazada»  [listo]
+== K5b · Totales con importes decididos ==
+OK    K5b Un total por concepto y modalidad, los mismos de la base (hay bruto y neto)  [['1bb60000-0000-4000-8000-000000000001:bruto', '1bb60000-0000-4000-8000-000000000001:neto', '1bb60000-0000-4000-8000-000000000002:bruto']]
+OK    K5b Cada cifra es la de la base  [{"1bb60000-0000-4000-8000-000000000001:neto": 50.0, "1bb60000-0000-4000-8000-000000000001:bruto": 572.0, "1bb60000-0000-4000-8000-000000000002:bruto": 500.0}]
+OK    K5b Ningún total mezcla modalidades (cada cifra lleva una sola); ya no hay importes por decidir
+== K17 · Sin firma de Nómina por hoja ==
+OK    K17 Las hojas muestran solo la firma de RH; no hay firma de Nómina por hoja  [['✓ RH', '✓ RH']]
+== K18 · Pestaña Hojas ==
+OK    K18 La pestaña «Hojas» muestra el tablero con la misma firma vigente y permite procesar
+== K15 · Procesado ==
+OK    K15 Procesado: sin pendientes ni botón; firma vigente visible; sin aviso de cambios  [procesado]
+== K16 · Cambio después de procesar ==
+OK    K16 Aviso de cambio después de procesar con las secciones de la base (movimientos)  [El concentrado cambió después de procesarse (procesado el 23/11/2026, 06:51 p.m.). Cambió: movimientos laborales. El periodo sigue procesado: BeeHuman no lo rea]
+OK    K16 El periodo NO se reabre: sigue procesado, misma fecha, sin botones
+OK    K16 La firma se muestra invalidada (movimientos), igual a la base, explicando que autorizó lo procesado y que no se vuelve a firmar  [Firma de Nómina del periodo
+La firma de nomina.uicc@beehuman.invalid · 23/11/2026, 06:51 p.m. autorizó lo que se procesó; después cambió: mo]
+OK    K16 La sección marcada como «Cambió después de procesar» es solo movimientos
+== K22 · El código solo firma desde el concentrado ==
+OK    K22 Una sola llamada a inc_firmar_periodo, conectada solo en el concentrado; la pestaña «Hojas» usa el bloque en modo solo estado
+OK    K22 La hoja solo construye el botón de firma de RH (inc_firmar_hoja); no existe botón de firma de Nómina por hoja
+== K23 · Periodo procesado con la regla anterior (antes de B-a) ==
+OK    K23 Hojas: periodo procesado con la regla anterior; sin «Falta la firma», sin alerta roja y sin botón  [Procesado con la regla anterior: Nómina firmaba cada hoja. Este periodo no lleva firma de periodo y no hay nada pendiente.
+Historial de firm]
+OK    K23 Concentrado: «Procesado con la regla anterior», sin alerta, sin pendientes y sin aviso de cambios  [Firma de Nómina del periodo
+Procesado con la regla anterior: Nómina firmaba cada hoja. Este periodo no lleva firma de periodo y no hay nada ]
+OK    K23 Las 9 secciones dicen «Procesado con la regla anterior (firma por hoja)», no «Sin firmar»  [{"hojas": "regla_anterior", "personas": "regla_anterior", "dias": "regla_anterior", "cantidades": "regla_anterior", "importes": "regla_anterior", "esquemas": "regla_anterior", "descuentos": "regla_anterior", "informativos": "regla_anterior", "movimientos": "regla_anterior"}]
+OK    K23 El historial muestra la firma por hoja como la regla con la que se procesó  [Historial de firmas de Nómina (1)
+nomina antigua por hoja · 23/11/2026, 06:51 p.m. — firma por hoja (regla anterior, con la que se procesó)]
+== K19 · Celular ==
+OK    K19 Celular: sin desplazamiento horizontal (página y tabla)  [[390, 390, 'none', 'block', [334, 334]]]
+OK    K19 Celular: cada persona se muestra como tarjeta (sin encabezados de tabla)  [['none', 'block']]
+OK    K19 Celular: aviso y estado de la firma visibles  [invalidada]
+OK    K20 Sin errores de JavaScript
+== Red: ninguna conexión fuera del equipo ==
+OK    RED Las 252 peticiones dirigidas a la dirección de beehuman-pruebas se respondieron en local (base bhui); ninguna salió  [252]
+OK    RED Ninguna petición ni websocket se dejó pasar a internet  [[]]
+OK    RED Lo que no se intercepta son solo archivos locales (file://)
+
+RESULTADO: 63 de 63 verificaciones OK
+
+===== ui_concentrado_volumen
+OK    V1 Escritorio: 500 personas dibujadas en menos de 3 s  [0.33 s / 0.34 s / 0.32 s]
+OK    V2 Búsqueda, limpiar búsqueda y filtro responden en menos de 1 s  [buscar 0.13 s · limpiar 0.12 s · filtro 0.23 s]
+OK    V3 Abrir el detalle de una persona en menos de 1 s  [0.15 s]
+OK    V4 Celular: 500 tarjetas en menos de 3 s, sin desplazamiento horizontal  [0.33 s · [390, 390]]
+OK    V5 Sin errores de JavaScript
+
+RESULTADO: 5 de 5 verificaciones OK
+
+===== pruebas_http_rpc
+OK    H1 Sin sesión (anon): el concentrado se rechaza  [401 {"code":"42501","details":null,"hint":null,"message":"permission denied for function inc_c]
+OK    H2 Token firmado con otro secreto: 401  [401 {"code":"PGRST301","details":null,"hint":null,"message":"JWSError JWSInvalidSignature"}]
+OK    H3 Nómina: 200, concentrado de 500 personas con huella SHA-256  [200 · 0.19 s · 0.89 MB · estado=preliminar]
+OK    H4 Coordinador: rechazado  [400 {"code":"P0001","details":null,"hint":null,"message":"BeeHuman: sin permiso."}]
+OK    H5 Función interna no expuesta a usuarios  [403 {"code":"42501","details":null,"hint":null,"message":"permission denied for function inc__]
+OK    H6 Firma con huella desactualizada: rechazada y no registrada  [400 {"code":"P0001","details":null,"hint":null,"message":"BeeHuman: el concentrado cambió mien]
+OK    H7 Firma con la huella revisada: 200 y un evento con esa huella  [200 "Firma de Nómina del periodo registrada."]
+OK    H8 Repetir la firma no la duplica  [200 "El periodo ya tiene la firma de Nómina vigente."]
+OK    H9 inc_firmar_hoja con área Nómina: rechazada  [400 {"code":"P0001","details":null,"hint":null,"message":"BeeHuman: Nómina firma el periodo co]
+OK    H10 Estado de la firma por HTTP: vigente con la misma huella  [200 vigente]
+
+RESULTADO: 10 de 10 verificaciones OK

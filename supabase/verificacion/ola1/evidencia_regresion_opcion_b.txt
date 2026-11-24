@@ -1,0 +1,17 @@
+Regresión con la opción B (20261123000000_b3_concentrado_firma_periodo), base local reconstruida desde cero, 23-nov-2026
+pruebas_ola1: 92 OK / 0 FALLA
+pruebas_b2: 39 OK / 0 FALLA
+pruebas_b1: 25 OK / 0 FALLA
+pruebas_b1_1: 60 OK / 0 FALLA
+pruebas_b5: 106 OK / 0 FALLA
+pruebas_b5_fonacot: 30 OK / 0 FALLA
+pruebas_mis_hojas: 42 OK / 0 FALLA
+pruebas_sin_borrado_sin_where: 3 OK / 0 FALLA
+pruebas_firma_periodo: 70 OK / 0 FALLA
+pruebas_b3: 54 OK / 0 FALLA
+pruebas_b3_volumen: 4 OK / 0 FALLA
+ui_b1_2: 17 OK / 0 FALLA
+ui_b5_grupos: 43 OK / 0 FALLA
+ui_b5_tarjetas: 40 OK / 0 FALLA
+Total: 625 OK / 0 FALLA
+Huella de esquema: previa (hasta 20261117) = a8f26bef19cc22bf713b438a2c71e890; con la migración = 19d12875b90390a6564e19b70892cace; tras revertir = a8f26bef…; tras reaplicar = 19d12875…; aplicar o revertir dos veces se rechaza con mensaje.

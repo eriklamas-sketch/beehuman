@@ -100,7 +100,44 @@
 #panel-incidencias .inc-subtot span{margin-right:12px;white-space:nowrap}
 #panel-incidencias .inc-panel{border:1px solid var(--v21-borde,#E5E9F1);border-radius:12px;padding:12px 14px;margin:12px 0;background:#FBFCFE}
 #panel-incidencias .inc-volver{background:none;border:0;color:var(--v21-navy,#16264A);font:600 13px Inter,sans-serif;cursor:pointer;padding:0;margin:0 0 8px}
+#panel-incidencias .inc-msg.aviso{display:block;background:#FFF4D6;color:#6B4500;border:1px solid #F3D58A}
+#panel-incidencias .inc-panel>summary{cursor:pointer;list-style-position:outside}
+#panel-incidencias .inc-c-secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
+#panel-incidencias .inc-c-sec{border:1px solid var(--v21-borde,#E5E9F1);border-radius:10px;padding:8px 10px;background:#fff;display:flex;flex-direction:column;gap:2px;font-size:12px;color:#45506A}
+#panel-incidencias .inc-c-sec b{font-size:13px;color:var(--v21-texto,#1C2840)}
+#panel-incidencias .inc-c-sec .inc-c-sec-est{font-weight:600;color:#6B7385}
+#panel-incidencias .inc-c-sec.ok .inc-c-sec-est{color:#1F6B33}
+#panel-incidencias .inc-c-sec.alerta{border-color:#F2C6C0;background:#FFF6F5}
+#panel-incidencias .inc-c-sec.alerta .inc-c-sec-est{color:#B42318}
+#panel-incidencias .inc-c-grupo{border-left:3px solid #C9D1E0;padding:4px 0 4px 10px;margin:10px 0;font-size:13px}
+#panel-incidencias .inc-c-grupo.alerta{border-left-color:#B42318}
+#panel-incidencias .inc-c-grupo.info{border-left-color:#22489E}
+#panel-incidencias .inc-c-grupo p{margin:2px 0}
+#panel-incidencias .inc-c-grupo ul,#panel-incidencias .inc-c-detbloque ul{margin:4px 0 0 18px;padding:0}
+#panel-incidencias .inc-c-filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 8px;font-size:13px}
+#panel-incidencias .inc-c-filtros input[type=search]{min-width:220px;margin:0}
+#panel-incidencias .inc-c-filtros select{margin:0;width:auto}
+#panel-incidencias .inc-c-filtros label{display:flex;gap:5px;align-items:center;color:#45506A}
+#panel-incidencias .inc-c-filtros label input{margin:0;width:auto}
+#panel-incidencias .inc-c-resp td small{display:block;color:var(--v21-texto-3,#8690A6);font-size:11px}
+#panel-incidencias .inc-c-resp td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+#panel-incidencias .inc-c-resp td.inc-c-vacia{color:#B8BFCC}
+#panel-incidencias .inc-c-resp td.inc-c-nombre{min-width:170px}
+#panel-incidencias tr.inc-c-det td{background:#FAFBFD}
+#panel-incidencias .inc-c-detalle{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;font-size:12px;color:#45506A}
+#panel-incidencias .inc-c-detbloque b{font-size:12px;color:var(--v21-texto,#1C2840)}
 @media (max-width:700px){
+  #panel-incidencias .inc-c-resp thead{display:none}
+  #panel-incidencias .inc-c-resp,#panel-incidencias .inc-c-resp tbody,#panel-incidencias .inc-c-resp tr,#panel-incidencias .inc-c-resp td{display:block;width:100%;box-sizing:border-box}
+  #panel-incidencias .inc-c-resp tr{border-top:2px solid #E5E9F1;padding:6px 0}
+  #panel-incidencias .inc-c-resp td{border:0;padding:3px 10px;display:flex;justify-content:space-between;gap:10px;text-align:right}
+  #panel-incidencias .inc-c-resp td::before{content:attr(data-l);font-size:11px;font-weight:600;color:#8690A6;text-align:left;flex:0 0 40%}
+  #panel-incidencias .inc-c-resp td.inc-c-vacia{display:none}
+  #panel-incidencias .inc-c-resp td.inc-c-nombre{display:block;text-align:left}
+  #panel-incidencias .inc-c-resp td.inc-c-nombre::before,#panel-incidencias .inc-c-resp td.inc-c-acc::before,#panel-incidencias tr.inc-c-det td::before{content:none}
+  #panel-incidencias .inc-c-resp td.inc-c-acc{justify-content:flex-end}
+  #panel-incidencias tr.inc-c-det td{display:block;text-align:left}
+  #panel-incidencias .inc-c-filtros input[type=search]{min-width:0;width:100%}
   #panel-incidencias .inc-tabla th.inc-col-persona,#panel-incidencias .inc-tabla td.inc-col-persona{min-width:128px;max-width:140px}
   #panel-incidencias .inc-tabla td.inc-col-persona b{font-size:12px}
   #panel-incidencias .inc-tabla-wrap{max-height:none}
@@ -729,6 +766,7 @@
 
   async function vistaRevision() {
     if (S.rev.hojaId) return revHoja();
+    if (S.rev.periodoId && S.rev.vista === 'concentrado') return revConcentrado();
     if (S.rev.periodoId) return revPeriodo();
     return revPeriodos();
   }
@@ -763,6 +801,60 @@
     el.querySelectorAll('[data-rev-per]').forEach(b => b.addEventListener('click', () => { S.rev = { periodoId: b.dataset.revPer }; vistaRevision(); }));
   }
 
+  const SECCION_HUELLA = { hojas: 'hojas', personas: 'personas y relaciones', dias: 'días', cantidades: 'cantidades', importes: 'importes',
+    esquemas: 'esquemas de pago', descuentos: 'descuentos', informativos: 'informativos (INFONAVIT y pensión)', movimientos: 'movimientos laborales' };
+
+  // Bloque de la firma única de Nómina del periodo (opción B). Lo usan el tablero y el concentrado; solo pinta
+  // el estado que devuelve la base (inc_firma_periodo_estado o el campo «firma» de inc_concentrado_periodo).
+  function htmlFirmaPeriodo(o) {
+    const firmaEst = o.firmaEst, firmasHist = o.hist || [];
+    if (!firmaEst) return o.error ? `<div class="inc-msg err" style="display:block">Firma de Nómina: ${esc(limpiarError(o.error))}</div>` : '';
+    const f = firmaEst.firma, est = firmaEst.estado, cuando = f ? `${esc(f.nombre || '')} · ${esc(fechaHora(f.creado_en))}` : '';
+    const sec = (firmaEst.secciones_cambiadas || []).map(x => SECCION_HUELLA[x] || x).join(', ');
+    const estado = est === 'vigente' ? `<span class="inc-chip ok" data-firma-estado="vigente">✓ Firma de Nómina vigente · ${cuando}</span>`
+      : est === 'invalidada' && o.procesado ? `<span class="inc-chip alerta" data-firma-estado="invalidada" data-firma-procesado>La firma de ${cuando} autorizó lo que se procesó; después cambió: ${esc(sec)}. El periodo ya está procesado: no se vuelve a firmar.</span>`
+      : est === 'invalidada' ? `<span class="inc-chip alerta" data-firma-estado="invalidada">La firma de ${cuando} ya no es vigente: el concentrado cambió después de firmar. Cambió: ${esc(sec)}.</span>`
+      : est === 'definicion_anterior' ? `<span class="inc-chip alerta" data-firma-estado="definicion_anterior">La firma de ${cuando} se hizo con una definición anterior; vuelve a firmar el periodo.</span>`
+      // Procesado sin firma de periodo: solo puede venir de antes de la opción B (hoy procesar exige la firma vigente).
+      : o.procesado ? `<span class="inc-chip" data-firma-estado="sin_firma" data-firma-regla-anterior>Procesado con la regla anterior: Nómina firmaba cada hoja. Este periodo no lleva firma de periodo y no hay nada pendiente.</span>`
+      : `<span class="inc-chip alerta" data-firma-estado="sin_firma">Falta la firma de Nómina del periodo</span>`;
+    let accion = '';
+    if (!o.procesado && est !== 'vigente' && o.soloEstado) {
+      // Pestaña «Hojas»: solo informa. La firma de Nómina se inicia exclusivamente desde «Concentrado».
+      accion = `<button type="button" class="inc-sec" id="inc-r-ir-conc">Revisar y firmar en «Concentrado»</button><span class="inc-nota">Nómina firma el periodo desde el concentrado, para firmar exactamente lo que revisa.</span>`;
+    } else if (!o.procesado && est !== 'vigente') {
+      if (!o.resp) accion = '<span class="inc-nota">Designa al responsable de Nómina para poder firmar.</span>';
+      else if (o.resp !== S.usuarioId) accion = '<span class="inc-nota">Solo el responsable designado de Nómina firma el periodo.</span>';
+      else if (o.bloquean) accion = `<button type="button" class="inc-sec" id="inc-r-firmar-per" disabled>${est === 'sin_firma' ? 'Firmar el periodo como Nómina' : 'Volver a firmar el periodo'}</button><span class="inc-nota">Primero resuelve los pendientes de hojas, importes y descuentos.</span>`;
+      else accion = `<button type="button" class="inc-sec" id="inc-r-firmar-per">${est === 'sin_firma' ? 'Firmar el periodo como Nómina' : 'Volver a firmar el periodo'}</button><span class="inc-nota">Tu firma autoriza el concentrado completo del periodo; cualquier cambio posterior la invalida.</span>`;
+    }
+    const primera = firmasHist.findIndex(x => !x.hoja_id);
+    const hist = firmasHist.map((e, i) => `<li data-firma-hist="${e.hoja_id ? 'hoja' : (i === primera ? est : 'reemplazada')}">${esc(e.nombre || '')} · ${esc(fechaHora(e.creado_en))} — ${
+      e.hoja_id ? (o.procesado && est === 'sin_firma' ? 'firma por hoja (regla anterior, con la que se procesó)' : 'firma anterior por hoja; ya no autoriza el periodo')
+      : i === primera ? ({ vigente: 'vigente', invalidada: 'invalidada (cambió: ' + esc(sec) + ')', definicion_anterior: 'definición anterior' }[est] || est)
+      : 'reemplazada por una firma posterior'}</li>`).join('');
+    return `<div id="inc-r-firma-per"><div class="inc-chips">${estado}${accion}</div>${hist ? `<details id="inc-r-firmas-hist"><summary class="inc-nota">Historial de firmas de Nómina (${firmasHist.length})</summary><ul style="margin:6px 0 0 18px;padding:0">${hist}</ul></details>` : ''}</div>`;
+  }
+  // Se envía la huella del concentrado que se tenía a la vista: si cambió mientras se revisaba, la base rechaza la firma.
+  function conectarFirmaPeriodo(periodoId, huella, recargar) {
+    const bfp = $('inc-r-firmar-per');
+    if (bfp) bfp.addEventListener('click', async () => {
+      bfp.disabled = true;
+      const { data, error } = await sb.rpc('inc_firmar_periodo', { p_periodo: periodoId, p_huella_revisada: huella });
+      if (error) { await recargar(); return msg('inc-r-msg', 'err', limpiarError(error)); }
+      await recargar(); msg('inc-r-msg', 'ok', data || 'Firma de Nómina del periodo registrada.');
+    });
+  }
+  // Pestañas del periodo: «Hojas» (tablero) y «Concentrado» (B-b).
+  const pestanasPeriodo = activa => `<div class="inc-seg" id="inc-r-pestanas" role="tablist">
+      <button type="button" role="tab" data-r-pest="hojas" class="${activa === 'hojas' ? 'activo' : ''}">Hojas</button>
+      <button type="button" role="tab" data-r-pest="concentrado" class="${activa === 'concentrado' ? 'activo' : ''}">Concentrado</button></div>`;
+  function conectarPestanas(periodoId) {
+    document.querySelectorAll('#inc-r-pestanas [data-r-pest]').forEach(b => b.addEventListener('click', () => {
+      S.rev = b.dataset.rPest === 'concentrado' ? { periodoId, vista: 'concentrado' } : { periodoId }; vistaRevision();
+    }));
+  }
+
   // ---------- 2. Tablero del periodo ----------
   async function revPeriodo() {
     const cont = $('inc-vista');
@@ -777,6 +869,16 @@
     ]);
     if (pe.error || tb.error) { cont.innerHTML = `<div class="card">${errHtml(pe.error || tb.error)}</div>`; return; }
     const p = pe.data, filas = tb.data || [];
+    // Opción B (23-nov): una sola firma de Nómina por periodo, validada contra la huella actual del concentrado.
+    const [prmP, fEst, fHist] = await Promise.all([
+      sb.from('inc_parametros').select('responsable_nomina_user').eq('empresa_id', p.empresa_id).maybeSingle(),
+      sb.rpc('inc_firma_periodo_estado', { p_periodo: p.id }),
+      sb.from('inc_eventos').select('id, hoja_id, version_id, nombre, creado_en').eq('periodo_id', p.id).eq('tipo', 'firma_nomina')
+        .order('creado_en', { ascending: false })
+    ]);
+    const respNomina = prmP.data ? prmP.data.responsable_nomina_user : null;
+    const firmaEst = fEst.error ? null : fEst.data;
+    const firmasHist = fHist.data || [];
     const faltan = p.procesado_en ? [] : (fl.error ? [{ tipo: 'error', detalle: limpiarError(fl.error) }] : (fl.data || []));
     // D2: una hoja en borrador sin personas que la base no cuenta como faltante
     // (sin capturas ni observaciones) se muestra, pero no bloquea.
@@ -786,38 +888,46 @@
     const sinEnviar = filas.filter(f => ['sin_abrir', 'borrador'].includes(f.estado) && !noBloquea(f));
     const noRequieren = filas.filter(noBloquea).length, requeridas = filas.length - noRequieren;
     const dev = filas.filter(f => f.estado === 'devuelta');
+    // Pendientes que bloquean la firma de Nómina: hojas, importes, descuentos y la falta de responsable (las firmas de RH no).
+    const bloqueanFirma = faltan.filter(f => f.tipo !== 'firma' || String(f.detalle).startsWith('Designa al responsable de Nómina'));
+    const bloqueFirmaPeriodo = () => htmlFirmaPeriodo({ firmaEst, error: fEst.error, hist: firmasHist, procesado: !!p.procesado_en, resp: respNomina, bloquean: bloqueanFirma.length, soloEstado: true });
     cont.innerHTML = `<div class="card">
       <button type="button" class="inc-volver" id="inc-r-volver">← Periodos</button>
       <div class="inc-cab"><div><h2>${esc(nombreEmpresa(p.empresa_id))} · ${esc(fechaLarga(p.inicio))} – ${esc(fechaLarga(p.fin))}</h2>
         <p class="hint">Una fila por coordinador con personal de esta empresa (relación laboral vigente) en el periodo.</p></div>
         <div>${p.procesado_en ? '<span class="inc-estado procesada">Procesado</span>' : '<span class="inc-estado borrador">Abierto</span>'}</div></div>
+      ${pestanasPeriodo('hojas')}
       <div class="inc-chips" id="inc-r-resumen">
         ${requeridas ? `<span class="inc-chip ${env === requeridas ? 'ok' : ''}">${env} de ${plural(requeridas, 'hoja')} enviadas</span>` : ''}
         ${noRequieren ? `<span class="inc-chip" id="inc-r-no-requieren">${plural(noRequieren, 'hoja')} sin personal: no requiere${noRequieren === 1 ? '' : 'n'} envío</span>` : ''}
         ${sinEnviar.length ? `<span class="inc-chip alerta" id="inc-r-faltan">Falta${sinEnviar.length === 1 ? '' : 'n'} por enviar: ${esc(sinEnviar.map(f => f.coordinador).join(', '))}</span>` : ''}
         ${dev.length ? `<span class="inc-chip alerta">${plural(dev.length, 'devuelta')} sin reenviar</span>` : ''}
       </div>
-      ${filas.length ? `<div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista" id="inc-r-tablero"><thead><tr><th>Coordinador</th><th>Personas</th><th>Hoja</th><th>Firmas (versión vigente)</th><th>Complementos</th><th></th></tr></thead><tbody>${filas.map(f => `<tr data-coord="${esc(f.coordinador_id)}" data-estado="${esc(f.estado)}">
+      ${filas.length ? `<div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista" id="inc-r-tablero"><thead><tr><th>Coordinador</th><th>Personas</th><th>Hoja</th><th>Firma RH (versión vigente)</th><th>Complementos</th><th></th></tr></thead><tbody>${filas.map(f => `<tr data-coord="${esc(f.coordinador_id)}" data-estado="${esc(f.estado)}">
         <td><b>${esc(f.coordinador)}</b>${f.estado === 'devuelta' && f.ultimo_motivo ? `<span class="inc-motivo">Devuelta: ${esc(f.ultimo_motivo)}</span>` : ''}</td>
         <td>${f.personas}</td>
         <td><span class="inc-estado ${esc(f.estado)}">${esc(ESTADO_TAB[f.estado] || f.estado)}</span>${noBloquea(f) ? ' <span class="inc-nota" data-no-bloquea>sin personas · no bloquea</span>' : ''}${f.version_actual ? ` <span class="inc-nota">v${f.version_actual}${f.enviada_en ? ' · ' + esc(fechaHora(f.enviada_en)) : ''}</span>` : ''}</td>
-        <td>${f.version_actual ? `${f.firma_nomina ? '✓' : '—'} Nómina · ${f.firma_rh ? '✓' : '—'} RH` : '—'}</td>
+        <td>${f.version_actual ? `${f.firma_rh ? '✓' : '—'} RH` : '—'}</td>
         <td>${f.complementos || '—'}</td>
         <td>${f.version_actual ? `<button type="button" class="inc-sec" data-rev-hoja="${esc(f.hoja_id)}">Revisar</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`
         : '<p class="hint">Ningún coordinador tiene personal con relación laboral en esta empresa durante el periodo.</p>'}
       <div id="inc-r-cred">${cred && cred.error ? `<div class="inc-msg err" style="display:block">Descuentos de créditos: ${esc(limpiarError(cred.error))}</div>` : ''}</div>
       <div class="inc-msg" id="inc-r-msg"></div>
-      ${p.procesado_en ? `<p class="inc-nota">Procesado el ${esc(fechaHora(p.procesado_en))}. Lo que llegue después entra como complemento.</p>`
+      ${p.procesado_en ? `<p class="inc-nota">Procesado el ${esc(fechaHora(p.procesado_en))}. Lo que llegue después entra como complemento.</p>${bloqueFirmaPeriodo()}`
         : `<div class="inc-panel" id="inc-r-proc-panel"><b>Marcar el periodo como procesado</b>
         <p class="hint">Solo se procesa una prenómina completa: todas las hojas enviadas, todos los importes y descuentos aceptados o modificados y las firmas requeridas.</p>
+        ${bloqueFirmaPeriodo()}
         ${faltan.length ? `<div class="inc-msg err" style="display:block" id="inc-r-faltantes"><b>Falta${faltan.length === 1 ? '' : 'n'} ${faltan.length} pendiente${faltan.length === 1 ? '' : 's'} para procesar:</b><ul style="margin:6px 0 0 18px;padding:0">${faltan.map(f => `<li data-tipo="${esc(f.tipo)}">${esc(f.detalle)}</li>`).join('')}</ul></div>`
           : noRequieren ? '<div class="inc-msg ok" style="display:block" id="inc-r-faltantes">No hay pendientes que bloqueen el procesamiento. Las hojas sin personal asignado y sin capturas no requieren envío.</div>'
           : '<div class="inc-msg ok" style="display:block" id="inc-r-faltantes">Todo está completo: hojas enviadas, importes decididos y firmas registradas.</div>'}
         <div class="inc-acciones"><button type="button" class="primary" id="inc-r-proc" ${faltan.length ? 'disabled' : ''}>Marcar como procesado</button></div></div>`}
     </div>`;
     $('inc-r-volver').addEventListener('click', () => { S.rev = {}; vistaRevision(); });
+    conectarPestanas(p.id);
     if (cred && cred.data && window.credPanelPeriodo) window.credPanelPeriodo($('inc-r-cred'), Object.assign({ periodo_id: p.id }, cred.data), revPeriodo);
     cont.querySelectorAll('[data-rev-hoja]').forEach(b => b.addEventListener('click', () => { S.rev = { periodoId: p.id, hojaId: b.dataset.revHoja }; vistaRevision(); }));
+    // Desde «Hojas» no se firma: el botón lleva al concentrado.
+    if ($('inc-r-ir-conc')) $('inc-r-ir-conc').addEventListener('click', () => { S.rev = { periodoId: p.id, vista: 'concentrado' }; vistaRevision(); });
     const bp = $('inc-r-proc');
     if (bp) bp.addEventListener('click', async () => {
       bp.disabled = true;
@@ -825,6 +935,208 @@
       if (error) { await revPeriodo(); return msg('inc-r-msg', 'err', limpiarError(error)); }
       await revPeriodo(); msg('inc-r-msg', 'ok', data || 'Periodo marcado como procesado.');
     });
+  }
+
+  // ---------- 2b. Concentrado del periodo (B-b) ----------
+  // Pinta lo que devuelve inc_concentrado_periodo: datos, estado, faltantes, huella y firma salen de una sola
+  // instantánea de la base. La pantalla no recalcula estados ni importes; solo los agrupa para leerlos.
+  const SECCIONES_ORDEN = ['hojas', 'personas', 'dias', 'cantidades', 'importes', 'esquemas', 'descuentos', 'informativos', 'movimientos'];
+  const TIPO_MOV = { ingreso: 'Ingreso', reingreso: 'Reingreso', baja: 'Baja', modificacion_salario: 'Mod. salario' };
+  const TIPO_CRED = { infonavit: 'INFONAVIT', fonacot: 'FONACOT', prestamo: 'Préstamo', anticipo: 'Anticipo', pension: 'Pensión alimenticia', otro: 'Otro descuento' };
+  const UNIDAD = { horas: 'h', turnos: 'turnos', dias: 'días', importe: '$' };
+  const ESTADO_CONC = { preliminar: ['Preliminar', 'borrador', 'Hay pendientes: las cifras pueden cambiar.'], listo: ['Listo para procesar', 'enviada', 'Sin pendientes: el concentrado está completo.'],
+    procesado: ['Procesado', 'procesada', ''] };
+  const mayus = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const cant = (n, c) => `${fmtN(n)}${c && UNIDAD[c.unidad] && c.unidad !== 'importe' ? ' ' + UNIDAD[c.unidad] : ''}`;
+  // Pendientes que bloquean la firma (misma regla que inc_faltantes_bloqueantes): hojas, importes, descuentos y falta de responsable.
+  const bloqueaFirma = f => f.tipo !== 'firma' || String(f.detalle).startsWith('Designa al responsable de Nómina');
+
+  async function revConcentrado() {
+    const cont = $('inc-vista'), periodoId = S.rev.periodoId;
+    cont.innerHTML = '<div class="card"><p class="hint">Armando el concentrado del periodo…</p></div>';
+    // Igual que el tablero: antes se sincronizan los descuentos de créditos del periodo (B5).
+    const cred = window.credPanelPeriodo ? await sb.rpc('cred_descuentos_periodo', { p_periodo: periodoId }) : null;
+    const cc = await sb.rpc('inc_concentrado_periodo', { p_periodo: periodoId });
+    if (cc.error) { cont.innerHTML = `<div class="card"><button type="button" class="inc-volver" id="inc-r-volver">← Periodos</button>${errHtml(cc.error)}</div>`;
+      $('inc-r-volver').addEventListener('click', () => { S.rev = {}; vistaRevision(); }); return; }
+    const C = cc.data, pe = C.periodo;
+    const [prm, hist, tb] = await Promise.all([
+      sb.from('inc_parametros').select('responsable_nomina_user').eq('empresa_id', pe.empresa_id).maybeSingle(),
+      sb.from('inc_eventos').select('id, hoja_id, version_id, nombre, creado_en').eq('periodo_id', pe.id).eq('tipo', 'firma_nomina').order('creado_en', { ascending: false }),
+      sb.rpc('inc_tablero_periodo', { p_periodo: pe.id })
+    ]);
+    const procesado = C.estado === 'procesado';
+    const faltan = C.faltantes || [];
+    const bloquean = faltan.filter(bloqueaFirma), soloProcesar = faltan.filter(f => !bloqueaFirma(f));
+    const conceptos = C.conceptos || [], kById = new Map(conceptos.map(k => [k.id, k]));
+    const personas = C.personas || [], hojas = C.hojas || [];
+    const rh = new Map(((tb && tb.data) || []).map(f => [f.hoja_id, f.firma_rh]));
+    const firma = C.firma, post = C.avisos && C.avisos.cambio_posterior_procesado;
+    const sinImporte = personas.reduce((a, x) => a + (x.importes || []).filter(i => i.estado === 'sin_importe').length, 0);
+    const T = C.totales || {};
+
+    // --- Resumen de cada sección de la huella (lo que cubre la firma) ---
+    const suma = o => Object.values(o || {}).reduce((a, n) => a + Number(n || 0), 0);
+    const cuenta = k => personas.reduce((a, x) => a + (x[k] || []).length, 0);
+    const resumenSec = {
+      hojas: plural(hojas.filter(h => !h.posterior).length, 'hoja incluida', 'hojas incluidas'),
+      personas: `${plural(T.personas || 0, 'persona')} · ${T.con_incidencias || 0} con incidencias`,
+      dias: plural(suma(T.dias), 'día con código', 'días con código'),
+      cantidades: plural(cuenta('cantidades_detalle'), 'línea capturada', 'líneas capturadas'),
+      importes: `${plural(personas.reduce((a, x) => a + (x.importes || []).filter(i => i.estado === 'decidido').length, 0), 'decidido', 'decididos')} · ${T.importes_por_decidir || 0} por decidir`,
+      esquemas: plural(cuenta('esquemas'), 'esquema de pago', 'esquemas de pago'),
+      descuentos: `${plural(cuenta('descuentos'), 'descuento')} · ${T.descuentos_por_decidir || 0} por decidir`,
+      informativos: plural(T.informativos || 0, 'crédito informativo', 'créditos informativos'),
+      movimientos: plural(suma(T.movimientos), 'movimiento')
+    };
+    const cambFirma = new Set(firma && firma.estado === 'invalidada' ? firma.secciones_cambiadas || [] : []);
+    const cambPost = new Set(post ? post.secciones || [] : []);
+    const estSec = s => cambPost.has(s) ? ['post', 'Cambió después de procesar', 'alerta']
+      : (!firma || firma.estado === 'sin_firma') && procesado ? ['regla_anterior', 'Procesado con la regla anterior (firma por hoja)', '']
+      : !firma || firma.estado === 'sin_firma' ? ['sin_firma', 'Sin firmar', '']
+      : firma.estado === 'definicion_anterior' ? ['definicion_anterior', 'Firma con definición anterior', 'alerta']
+      : cambFirma.has(s) ? ['cambio', 'Cambió después de firmar', 'alerta'] : ['igual', 'Sin cambios desde la firma', 'ok'];
+    const abrirSec = cambFirma.size > 0 || cambPost.size > 0;
+    const htmlSecciones = `<details class="inc-panel" id="inc-c-secciones"${abrirSec ? ' open' : ''}><summary><b>Qué cubre la firma</b> <span class="inc-nota">· 9 secciones del concentrado${abrirSec ? ' · hay cambios' : ''}</span></summary>
+      <div class="inc-c-secs">${SECCIONES_ORDEN.map(s => { const [k, t, c] = estSec(s); return `<div class="inc-c-sec ${c}" data-seccion="${s}" data-sec-estado="${k}"><b>${esc(mayus(SECCION_HUELLA[s]))}</b><span>${esc(resumenSec[s])}</span><span class="inc-c-sec-est">${esc(t)}</span></div>`; }).join('')}</div></details>`;
+
+    // --- Pendientes: bloqueantes, solo para procesar, y avisos que no bloquean ---
+    // La base puede repetir el mismo texto (p. ej. un importe por decidir en dos esquemas de la misma persona): se agrupa con su número.
+    const lista = (arr, attr) => { const g = new Map(); arr.forEach(f => { const k = f.tipo + '\u0001' + f.detalle; if (!g.has(k)) g.set(k, { tipo: f.tipo, detalle: f.detalle, n: 0 }); g.get(k).n++; });
+      return `<ul>${[...g.values()].map(f => `<li data-tipo="${esc(f.tipo)}" data-detalle="${esc(f.detalle)}" data-n="${f.n}" ${attr}>${esc(f.detalle)}${f.n > 1 ? ` <b>× ${f.n}</b>${f.tipo === 'importe' ? ' <span class="inc-nota">(una línea por esquema de pago)</span>' : ''}` : ''}</li>`).join('')}</ul>`; };
+    const avisos = [];
+    if (sinImporte) avisos.push(`<li data-aviso="sin_importe">${plural(sinImporte, 'línea', 'líneas')} sin importe: solo cuenta la cantidad; no se decide ni se suma.</li>`);
+    if (C.avisos && C.avisos.personas_sin_relacion) avisos.push(`<li data-aviso="sin_relacion">${plural(C.avisos.personas_sin_relacion, 'persona')} con captura pero sin relación laboral en el periodo.</li>`);
+    if (C.avisos && C.avisos.complementos_posteriores) avisos.push(`<li data-aviso="complementos_posteriores">${plural(C.avisos.complementos_posteriores, 'complemento posterior', 'complementos posteriores')} al procesamiento: se muestran aparte y no suman al periodo.</li>`);
+    const htmlPendientes = procesado ? '' : `<div class="inc-panel" id="inc-c-pendientes"><b>Pendientes</b>
+      ${bloquean.length ? `<div class="inc-c-grupo alerta" id="inc-c-bloquean"><b>Impiden firmar y procesar (${bloquean.length})</b><p class="inc-nota">Nómina no puede firmar el periodo mientras existan.</p>${lista(bloquean, 'data-bloquea="firma"')}</div>` : ''}
+      ${soloProcesar.length ? `<div class="inc-c-grupo" id="inc-c-solo-procesar"><b>Impiden solo procesar (${soloProcesar.length})</b><p class="inc-nota">Se resuelven con las firmas: RH firma cada hoja y Nómina firma el periodo.</p>${lista(soloProcesar, 'data-bloquea="procesar"')}</div>` : ''}
+      ${!faltan.length ? '<div class="inc-msg ok" style="display:block" id="inc-c-sin-pendientes">Sin pendientes: el periodo se puede marcar como procesado en la pestaña «Hojas».</div>' : ''}
+      ${avisos.length ? `<div class="inc-c-grupo info" id="inc-c-avisos"><b>Avisos que no bloquean</b><ul>${avisos.join('')}</ul></div>` : ''}</div>`;
+
+    // --- Aviso de cambios después de procesar: informa, no reabre ---
+    const htmlPost = post ? `<div class="inc-msg aviso" style="display:block" id="inc-c-post" data-secciones="${esc((post.secciones || []).join(','))}">
+      <b>El concentrado cambió después de procesarse</b> (procesado el ${esc(fechaHora(post.procesado_en))}). Cambió: ${esc((post.secciones || []).map(s => SECCION_HUELLA[s] || s).join(', '))}.
+      <br>El periodo sigue procesado: BeeHuman no lo reabre. Revisa si hay que reflejar estos cambios en NOI.</div>` : '';
+
+    // --- Hojas incluidas ---
+    const htmlHojas = `<details class="inc-panel" id="inc-c-hojas"><summary><b>Hojas incluidas (${hojas.length})</b>${(C.avisos.hojas_no_incluidas || []).length ? ` <span class="inc-chip alerta">${plural(C.avisos.hojas_no_incluidas.length, 'hoja no incluida', 'hojas no incluidas')}</span>` : ''}</summary>
+      ${hojas.length ? `<div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista inc-c-resp"><thead><tr><th>Coordinador</th><th>Hoja</th><th>Versión</th><th>Enviada</th><th>Firma RH</th></tr></thead><tbody>${hojas.map(h => `<tr data-hoja="${esc(h.hoja_id)}"${h.posterior ? ' data-posterior' : ''}>
+        <td data-l="Coordinador"><b>${esc(h.coordinador)}</b></td>
+        <td data-l="Hoja">${h.tipo === 'complemento' ? 'Complemento' : 'Normal'}${h.posterior ? ' <span class="inc-aviso">posterior al procesamiento</span>' : ''}</td>
+        <td data-l="Versión">v${esc(h.version)}</td><td data-l="Enviada">${h.enviada_en ? esc(fechaHora(h.enviada_en)) : '—'}</td>
+        <td data-l="Firma RH">${rh.has(h.hoja_id) ? (rh.get(h.hoja_id) ? '✓ RH' : '— RH') : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Ninguna hoja enviada todavía.</p>'}
+      </details>`;
+    const noIncl = C.avisos.hojas_no_incluidas || [];
+    const htmlNoIncl = noIncl.length ? `<div class="inc-msg aviso" style="display:block" id="inc-c-no-incluidas"><b>${plural(noIncl.length, 'hoja no incluida', 'hojas no incluidas')} en estas cifras</b> (solo cuentan las enviadas):<ul style="margin:4px 0 0 18px;padding:0">${noIncl.map(h => `<li>${esc(h)}</li>`).join('')}</ul></div>` : '';
+
+    // --- Totales (nunca se mezcla bruto con neto) ---
+    const chips = (arr) => arr.filter(Boolean).join('');
+    const impTot = T.importes || {};
+    const htmlTotales = `<div class="inc-panel" id="inc-c-totales"><b>Totales del periodo</b>
+      <div class="inc-chips">${chips([
+        `<span class="inc-chip">${plural(T.personas || 0, 'persona')}</span>`, `<span class="inc-chip">${T.con_incidencias || 0} con incidencias</span>`,
+        ...Object.entries(T.dias || {}).map(([c, n]) => `<span class="inc-chip inc-cod-${esc(c)}" data-tot-dia="${esc(c)}">${esc(NOMBRE_CODIGO[c] || c)}: ${n}</span>`)])}</div>
+      ${Object.keys(T.cantidades || {}).length ? `<div class="inc-chips">${Object.entries(T.cantidades).map(([cid, n]) => { const k = kById.get(cid); return `<span class="inc-chip" data-tot-cant="${esc(cid)}">${esc(k ? k.nombre : cid)}: ${esc(cant(n, k))}</span>`; }).join('')}</div>` : ''}
+      ${Object.keys(impTot).length || T.importes_por_decidir ? `<div class="inc-chips" id="inc-c-tot-imp">${Object.entries(impTot).map(([cid, mods]) => { const k = kById.get(cid);
+          return Object.entries(mods).map(([m, t]) => `<span class="inc-chip" data-tot-imp="${esc(cid)}:${esc(m)}">${esc(k ? k.nombre : cid)} · <span class="inc-mod ${esc(m)}">${esc(MODALIDAD[m] || 'Sin modalidad')}</span> ${esc(dinero(t))}</span>`).join(''); }).join('')}
+        ${T.importes_por_decidir ? `<span class="inc-chip alerta" data-tot-imp-pend>${plural(T.importes_por_decidir, 'importe')} por decidir (no se suma${T.importes_por_decidir === 1 ? '' : 'n'})</span>` : ''}</div>` : ''}
+      ${Object.keys(T.descuentos || {}).length || T.descuentos_por_decidir ? `<div class="inc-chips">${Object.entries(T.descuentos || {}).map(([t, n]) => `<span class="inc-chip" data-tot-desc="${esc(t)}">Descuento ${esc(TIPO_CRED[t] || t)}: ${esc(dinero(n))}</span>`).join('')}
+        ${T.descuentos_por_decidir ? `<span class="inc-chip alerta">${plural(T.descuentos_por_decidir, 'descuento')} por decidir</span>` : ''}</div>` : ''}
+      ${T.informativos || Object.keys(T.movimientos || {}).length ? `<div class="inc-chips">${T.informativos ? `<span class="inc-chip">${plural(T.informativos, 'crédito informativo', 'créditos informativos')} (sin importe)</span>` : ''}
+        ${Object.entries(T.movimientos || {}).map(([t, n]) => `<span class="inc-chip" data-tot-mov="${esc(t)}">${esc(TIPO_MOV[t] || t)}: ${n}</span>`).join('')}</div>` : ''}
+      <p class="inc-nota">Importes estimados por BeeHuman, separados por esquema de pago (bruto, neto o manual); no son recibos de nómina.</p></div>`;
+
+    // --- Tabla por persona ---
+    const coordinadores = [...new Set(personas.flatMap(x => x.coordinadores || []))].sort();
+    const F = S.conc && S.conc.periodoId === pe.id ? S.conc : (S.conc = { periodoId: pe.id, q: '', coord: '', inc: false, pend: false, mov: false, abiertas: new Set() });
+    const filaPersona = x => {
+      const dias = Object.entries(x.dias || {}).map(([c, n]) => `<span class="inc-aviso inc-cod-${esc(c)}">${esc(c)} ${n}</span>`).join(' ');
+      const vig = x.alta || x.baja ? `<span class="inc-nota">${x.dias_vigentes} de ${pe.dias} días vigentes</span>` : '';
+      const imp = Object.entries(x.importes_decididos || {}).map(([cid, mods]) => Object.entries(mods).map(([m, t]) =>
+        `<div>${esc((kById.get(cid) || {}).abreviatura || '')} <span class="inc-mod ${esc(m)}">${esc(MODALIDAD[m] || 'Sin modalidad')}</span> ${esc(dinero(t))}</div>`).join('')).join('');
+      const desc = (x.descuentos || []).length ? `${Number(x.descuentos_decididos) ? esc(dinero(x.descuentos_decididos)) : ''}${x.descuentos_por_decidir ? ` <span class="inc-dec pendiente">${x.descuentos_por_decidir} por decidir</span>` : ''}` : '';
+      const movs = (x.movimientos || []).map(m => `<span class="inc-aviso" data-mov="${esc(m.tipo)}">${esc(TIPO_MOV[m.tipo] || m.tipo)} ${esc(fechaLarga(m.fecha).slice(0, 5))}</span>`).join(' ');
+      const celda = (l, v, cls = '') => `<td data-l="${esc(l)}" class="${[cls, v ? '' : 'inc-c-vacia'].filter(Boolean).join(' ')}">${v || '—'}</td>`;
+      return `<tr class="inc-c-fila" data-persona="${esc(x.personal_id)}">
+        <td class="inc-c-nombre" data-l="Persona"><b>${esc(x.nombre_completo)}</b><small>${esc([x.empleado_id, x.numero_interno ? 'NOI ' + x.numero_interno : '', x.registro_patronal].filter(Boolean).join(' · '))}</small>
+          ${x.sin_relacion ? '<span class="inc-chip alerta">Sin relación laboral</span>' : ''}</td>
+        ${celda('Coordinador · proyecto', esc([(x.coordinadores || []).join(', '), x.proyecto].filter(Boolean).join(' · ')))}
+        ${celda('Días', [dias, vig].filter(Boolean).join(' '))}
+        ${conceptos.map(k => celda(k.nombre, x.cantidades && x.cantidades[k.id] != null ? esc(cant(x.cantidades[k.id], k)) : '', 'n')).join('')}
+        ${celda('Importes decididos', imp + (x.importes_por_decidir ? `<span class="inc-dec pendiente" data-por-decidir="${x.importes_por_decidir}">por decidir (${x.importes_por_decidir})</span>` : ''))}
+        ${celda('Descuentos', desc)}
+        ${celda('Movimientos', movs)}
+        <td class="inc-c-acc"><button type="button" class="inc-sec" data-c-det="${esc(x.personal_id)}" aria-expanded="${F.abiertas.has(x.personal_id)}">${F.abiertas.has(x.personal_id) ? 'Ocultar' : 'Detalle'}</button></td></tr>
+        ${F.abiertas.has(x.personal_id) ? `<tr class="inc-c-det" data-detalle="${esc(x.personal_id)}"><td colspan="${7 + conceptos.length}">${detallePersona(x)}</td></tr>` : ''}`;
+    };
+    const detallePersona = x => {
+      const post_ = o => o.posterior ? ' <span class="inc-aviso">posterior</span>' : '';
+      const bloque = (t, arr, fn) => arr && arr.length ? `<div class="inc-c-detbloque"><b>${t}</b><ul>${arr.map(fn).join('')}</ul></div>` : '';
+      return `<div class="inc-c-detalle">
+        ${bloque('Días', x.celdas, c => `<li>${esc(fechaLarga(c.fecha))} · ${c.codigo ? esc(NOMBRE_CODIGO[c.codigo] || c.codigo) : 'Sin código'}${c.proyecto || c.centro_costo ? ' · ' + esc(c.proyecto || c.centro_costo) : ''}${post_(c)}</li>`)}
+        ${bloque('Cantidades', x.cantidades_detalle, q => { const k = kById.get(q.concepto_id); return `<li>${esc(fechaLarga(q.fecha))} · ${esc(k ? k.nombre : '')}: ${esc(cant(q.cantidad, k))}${q.tipo_linea && q.tipo_linea !== 'captura' ? ' (' + esc(q.tipo_linea) + ')' : ''}${post_(q)}</li>`; })}
+        ${bloque('Importes por esquema', x.importes, i => { const k = kById.get(i.concepto_id); return `<li data-imp-estado="${esc(i.estado)}">${esc(k ? k.nombre : '')} · ${esc(i.clasificacion || 'Sin esquema')} <span class="inc-mod ${esc(i.modalidad || 'tarifa')}">${esc(MODALIDAD[i.modalidad] || 'Sin modalidad')}</span>
+          · cantidad ${esc(fmtN(i.cantidad))}${i.sugerido != null ? ' · sugerido ' + esc(dinero(i.sugerido)) : ''} · <span class="inc-dec ${esc(i.origen)}">${esc(DECISION[i.origen] || i.origen)}</span>${i.final != null ? ' ' + esc(dinero(i.final)) : ''}
+          <span class="inc-nota">· ${esc(i.coordinador || '')} v${esc(i.version)}${i.complemento ? ' (complemento)' : ''}</span>${post_(i)}</li>`; })}
+        ${bloque('Descuentos de créditos', x.descuentos, d => `<li>${esc(d.etiqueta || TIPO_CRED[d.tipo] || d.tipo)} · <span class="inc-dec ${esc(d.origen)}">${esc(DECISION[d.origen] || d.origen)}</span> ${d.final != null ? esc(dinero(d.final)) : '(sugerido ' + esc(dinero(d.sugerido)) + ')'}</li>`)}
+        ${bloque('Créditos informativos (sin importe)', x.informativos, c => `<li>${esc(c.etiqueta || TIPO_CRED[c.tipo] || c.tipo)}${c.infonavit_tipo ? ' · ' + esc(c.infonavit_tipo) + ' ' + esc(fmtN(c.infonavit_valor)) : ''}${c.pension_forma ? ' · ' + esc(c.pension_forma) + ' ' + esc(fmtN(c.pension_valor)) : ''}</li>`)}
+        ${bloque('Esquemas de pago', x.esquemas, e => `<li>${esc(e.clasificacion || '')} · <span class="inc-mod ${esc(e.modalidad || 'tarifa')}">${esc(MODALIDAD[e.modalidad] || 'Sin modalidad')}</span> ${esc(dinero(e.sueldo))} por ${esc(fmtN(e.dias_periodo))} días${e.activo ? '' : ' · inactivo'}</li>`)}
+        ${bloque('Movimientos laborales', x.movimientos, m => `<li>${esc(TIPO_MOV[m.tipo] || m.tipo)} · ${esc(fechaLarga(m.fecha))}${m.causa ? ' · ' + esc(m.causa) : ''}</li>`)}
+        ${bloque('Observaciones', x.observaciones, o => `<li>${esc(o.texto)} <span class="inc-nota">· ${esc(o.coordinador || '')}</span></li>`)}
+        ${bloque('Hojas de origen', x.origen, h => `<li>${esc(h.coordinador)} · ${h.tipo === 'complemento' ? 'complemento' : 'hoja'} v${esc(h.version)}${post_(h)}</li>`)}
+      </div>`;
+    };
+    const filtrar = () => personas.filter(x => {
+      const q = F.q.trim().toLowerCase();
+      if (q && ![x.nombre_completo, x.empleado_id, x.numero_interno].some(v => String(v || '').toLowerCase().includes(q))) return false;
+      if (F.coord && !(x.coordinadores || []).includes(F.coord)) return false;
+      if (F.inc && !x.con_incidencias) return false;
+      if (F.pend && !(x.importes_por_decidir || x.descuentos_por_decidir)) return false;
+      if (F.mov && !(x.movimientos || []).length) return false;
+      return true;
+    });
+    const pintarTabla = () => {
+      const filas = filtrar(), el = $('inc-c-tabla-cont'); if (!el) return;
+      $('inc-c-cuenta').textContent = `${filas.length} de ${plural(personas.length, 'persona')}`;
+      el.innerHTML = filas.length ? `<div class="inc-tabla-wrap" style="max-height:none"><table class="inc-lista inc-c-resp" id="inc-c-tabla"><thead><tr><th>Persona</th><th>Coordinador · proyecto</th><th>Días</th>${conceptos.map(k => `<th class="n" title="${esc(k.nombre)}">${esc(k.abreviatura)}</th>`).join('')}<th>Importes decididos</th><th>Descuentos</th><th>Movimientos</th><th></th></tr></thead>
+        <tbody>${filas.map(filaPersona).join('')}</tbody></table></div>` : '<p class="hint" id="inc-c-vacio">Ninguna persona coincide con los filtros.</p>';
+      el.querySelectorAll('[data-c-det]').forEach(b => b.addEventListener('click', () => { const id = b.dataset.cDet; F.abiertas.has(id) ? F.abiertas.delete(id) : F.abiertas.add(id); pintarTabla(); }));
+    };
+    const est = ESTADO_CONC[C.estado] || [C.estado, '', ''];
+    cont.innerHTML = `<div class="card" id="inc-c">
+      <button type="button" class="inc-volver" id="inc-r-volver">← Periodos</button>
+      <div class="inc-cab"><div><h2>${esc(pe.empresa || nombreEmpresa(pe.empresa_id))} · ${esc(fechaLarga(pe.inicio))} – ${esc(fechaLarga(pe.fin))}</h2>
+        <p class="hint">Concentrado por persona: solo cuentan las hojas enviadas, en su versión vigente.${est[2] ? ' ' + esc(est[2]) : ''}</p></div>
+        <div><span class="inc-estado ${est[1]}" id="inc-c-estado" data-estado="${esc(C.estado)}">${esc(est[0])}</span></div></div>
+      ${pestanasPeriodo('concentrado')}
+      ${cred && cred.error ? `<div class="inc-msg err" style="display:block">Descuentos de créditos: ${esc(limpiarError(cred.error))}</div>` : ''}
+      ${htmlPost}
+      ${htmlNoIncl}
+      <div class="inc-msg" id="inc-r-msg"></div>
+      <div class="inc-panel" id="inc-c-firma"><b>Firma de Nómina del periodo</b>
+        ${htmlFirmaPeriodo({ firmaEst: firma, hist: hist.data || [], procesado, resp: prm.data ? prm.data.responsable_nomina_user : null, bloquean: bloquean.length })}
+        ${hist.error ? `<p class="inc-nota">No se pudo leer el historial de firmas: ${esc(limpiarError(hist.error))}</p>` : ''}</div>
+      ${htmlPendientes}
+      ${htmlSecciones}
+      ${htmlTotales}
+      ${htmlHojas}
+      <div class="inc-c-filtros" id="inc-c-filtros">
+        <input type="search" id="inc-c-q" placeholder="Buscar por nombre o número" value="${esc(F.q)}" aria-label="Buscar persona">
+        ${coordinadores.length > 1 ? `<select id="inc-c-coord" aria-label="Coordinador"><option value="">Todos los coordinadores</option>${coordinadores.map(c => `<option${c === F.coord ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>` : ''}
+        <label><input type="checkbox" id="inc-c-f-inc"${F.inc ? ' checked' : ''}> Solo con incidencias</label>
+        <label><input type="checkbox" id="inc-c-f-pend"${F.pend ? ' checked' : ''}> Con pendientes por decidir</label>
+        <label><input type="checkbox" id="inc-c-f-mov"${F.mov ? ' checked' : ''}> Con movimientos</label>
+        <span class="inc-nota" id="inc-c-cuenta"></span></div>
+      <div id="inc-c-tabla-cont"></div>
+    </div>`;
+    $('inc-r-volver').addEventListener('click', () => { S.rev = {}; vistaRevision(); });
+    conectarPestanas(pe.id);
+    conectarFirmaPeriodo(pe.id, C.huella && C.huella.total, revConcentrado);
+    $('inc-c-q').addEventListener('input', e => { F.q = e.target.value; pintarTabla(); });
+    if ($('inc-c-coord')) $('inc-c-coord').addEventListener('change', e => { F.coord = e.target.value; pintarTabla(); });
+    [['inc-c-f-inc', 'inc'], ['inc-c-f-pend', 'pend'], ['inc-c-f-mov', 'mov']].forEach(([id, k]) => $(id).addEventListener('change', e => { F[k] = e.target.checked; pintarTabla(); }));
+    pintarTabla();
   }
 
   // ---------- 3. Hoja enviada: captura e importes ----------
@@ -1026,7 +1338,7 @@
       ${h.estado === 'devuelta' && devs[0] ? `<div class="inc-msg err" style="display:block">Devuelta por ${esc(devs[0].nombre || '')}: ${esc(devs[0].motivo || '')}. El coordinador la corrige y la reenvía.</div>` : ''}
       ${h.estado === 'procesada' ? '<div class="inc-msg info" style="display:block">El periodo ya se procesó: esta hoja es de solo lectura. Las correcciones llegan como complemento.</div>' : ''}
       <div class="inc-msg" id="inc-r-msg"></div>
-      <div class="inc-chips" id="inc-r-firmas">${bloqueFirma('nomina', 'responsable_nomina_user', 'Nómina')}${bloqueFirma('rh', 'responsable_rh_user', 'RH')}</div>
+      <div class="inc-chips" id="inc-r-firmas">${bloqueFirma('rh', 'responsable_rh_user', 'RH')}${firma('firma_nomina') ? `<span class="inc-chip" data-firma-hoja-antigua>Firma anterior de Nómina por hoja: ${esc(firma('firma_nomina').nombre || '')} · ${esc(fechaHora(firma('firma_nomina').creado_en))} (ya no autoriza el periodo)</span>` : ''}<span class="inc-nota">Nómina firma el periodo completo en la pestaña «Concentrado» del periodo.</span></div>
 
       <h3 style="margin:18px 0 6px">Captura enviada</h3>
       <p class="inc-nota">Solo lectura: es la versión ${H.version.numero} tal como la envió el coordinador.</p>

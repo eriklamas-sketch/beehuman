@@ -9,7 +9,8 @@ Criterios definidos ANTES de ejecutar (12-nov-2026):
   R6  Esquema sin relación: «Sin sueldo», con motivo y aviso visible.
   R7  Aceptar y modificar un importe; el sueldo manual recalcula sin pisar lo modificado.
   R8  Aceptar todos los sugeridos pendientes.
-  R9  Firmas: solo el responsable designado ve el botón de su área.
+  R9  Firmas: solo el responsable designado ve el botón de su área. Opción B (23-nov): en la hoja solo firma RH; Nómina firma
+      el periodo completo en la pestaña «Concentrado».
   R10 Devolver exige motivo; el tablero y el procesado lo reflejan.
   R11 Reenvío → versión nueva. Procesar SOLO con todo completo (hojas enviadas, importes aceptados o
       modificados, firmas requeridas): dice exactamente qué falta y no hay forma de saltarlo (decisión de
@@ -201,15 +202,15 @@ with sync_playwright() as p:
     ok(btn is not None and not pend and 'aceptados' in texto(pg, '#inc-r-msg'), 'R8 Aceptar todos los sugeridos pendientes', f'{n_txt} → {texto(pg, "#inc-r-msg")}')
     ok(linea(pg, 'BENITO')[0]['origen'] == 'modificado', 'R8 «Aceptar todos» no toca lo modificado')
     # R9 firmas
-    ok(pg.query_selector('[data-firmar="nomina"]') is not None and pg.query_selector('[data-firmar="rh"]') is None,
-       'R9 Nómina (responsable de Nómina) ve solo su botón de firma', texto(pg, '#inc-r-firmas'))
-    pg.click('[data-firmar="nomina"]'); espera(pg, 1200)
-    ok('✓ Nómina' in texto(pg, '#inc-r-firmas'), 'R9 Firma de Nómina registrada sobre la versión vigente', texto(pg, '#inc-r-firmas'))
+    # Opción B (23-nov): Nómina ya no firma cada hoja; firma el periodo completo en la pestaña «Concentrado» (ver R11).
+    ok(pg.query_selector('[data-firmar="nomina"]') is None and pg.query_selector('[data-firmar="rh"]') is None
+       and 'Nómina firma el periodo completo' in texto(pg, '#inc-r-firmas'),
+       'R9 Nómina (responsable de Nómina) no tiene botón de firma por hoja; la hoja indica que firma el periodo en «Concentrado»', texto(pg, '#inc-r-firmas'))
     ctx.close()
     ctx, pg = abrir(b, 'rh'); abrir_hoja_revision(pg)
     ok(pg.query_selector('[data-firmar="rh"]') is not None and pg.query_selector('[data-firmar="nomina"]') is None, 'R9 El responsable de RH ve solo el botón de RH')
     pg.click('[data-firmar="rh"]'); espera(pg, 1200)
-    ok('✓ RH' in texto(pg, '#inc-r-firmas') and '✓ Nómina' in texto(pg, '#inc-r-firmas'), 'R9 Ambas firmas visibles', texto(pg, '#inc-r-firmas'))
+    ok('✓ RH' in texto(pg, '#inc-r-firmas') and pg.query_selector('[data-firmar]') is None, 'R9 Firma de RH registrada sobre la versión vigente', texto(pg, '#inc-r-firmas'))
     ctx.close()
     # R10 devolver
     ctx, pg = abrir(b, 'admin'); abrir_hoja_revision(pg)
@@ -229,25 +230,30 @@ with sync_playwright() as p:
     ctx, pg = abrir(b, 'nomina')
     incidencias(pg); pg.click('[data-inc-vista="revision"]'); espera(pg); pg.click('#inc-r-periodos [data-rev-per]'); espera(pg)
     fila = texto(pg, '#inc-r-tablero tbody tr[data-coord$="000000000001"]')
-    ok('v2' in fila and '— Nómina' in fila and '— RH' in fila, 'R11 Reenvío: versión 2 y firmas pendientes de nuevo', fila[:100])
+    ok('v2' in fila and '— RH' in fila and 'Nómina' not in fila, 'R11 Reenvío: versión 2 y firma de RH pendiente de nuevo (Nómina firma el periodo, no la hoja)', fila[:100])
     pg.click('#inc-r-tablero [data-rev-hoja]'); espera(pg, 1200)
     lc = linea(pg, 'CESAR')
     ok(all(l['origen'] != 'modificado' for per in ('BENITO',) for l in linea(pg, per)), 'R11 La versión 2 se decide de nuevo (las decisiones eran de la versión 1)')
     ok(len(lc) == 2 and all(l['cat'] == 'bruto' for l in lc), 'R11 La versión 2 trae su propio cálculo (HE de CESAR por esquema + turno por tarifa ligado a IMSS, B1.1)', ' | '.join(l['txt'][:50] for l in lc))
     pg.click('#inc-r-volver'); espera(pg)
     falta = texto(pg, '#inc-r-faltantes')
-    ok('EDER LOPEZ RUIZ: no ha abierto su hoja' in falta and 'importe por decidir' in falta and 'falta la firma de Nómina' in falta and 'falta la firma de RH' in falta
+    ok('EDER LOPEZ RUIZ: no ha abierto su hoja' in falta and 'importe por decidir' in falta and 'Falta la firma de Nómina del periodo' in falta and 'falta la firma de RH' in falta
        and pg.is_disabled('#inc-r-proc'), 'R11 Antes de procesar dice exactamente qué falta (hoja sin abrir, importes, firmas) y no deja procesar', falta[:160])
     botones = pg.eval_on_selector_all('#inc-r-proc-panel button', 'els => els.map(e => e.textContent.trim() + (e.disabled ? " (deshabilitado)" : ""))')
-    ok(botones == ['Marcar como procesado (deshabilitado)'], 'R11 No existe confirmación ni otro botón que permita saltarse la regla', str(botones))
-    # Se completa todo: EDER envía, Nómina acepta y firma en pantalla, RH firma
+    # Opción B: el único otro botón permitido es el acceso al concentrado (solo navega; no firma ni procesa).
+    ok([x for x in botones if x != 'Revisar y firmar en «Concentrado»'] == ['Marcar como procesado (deshabilitado)'],
+       'R11 No existe confirmación ni otro botón que permita saltarse la regla (solo el acceso al concentrado)', str(botones))
+    # Se completa todo: EDER envía, Nómina acepta en pantalla, RH firma sus hojas y Nómina firma el periodo en «Concentrado» (opción B)
     HE2 = sql(f"select public.inc_abrir_hoja('{PER}')", 'eder'); sql(f"select public.inc_enviar_hoja('{HE2}')", 'eder')
     pg.click('#inc-r-tablero tr[data-coord$="000000000001"] [data-rev-hoja]'); espera(pg, 1200)
     pg.click('#inc-r-aceptar-todos'); espera(pg, 1200)
-    pg.click('[data-firmar="nomina"]'); espera(pg, 1200)
-    sql(f"select public.inc_firmar_hoja('{HE2}','nomina')", 'nomina')
     for hh in (H, HE2): sql(f"select public.inc_firmar_hoja('{hh}','rh')", 'rh')
     pg.click('#inc-r-volver'); espera(pg)
+    ok(pg.query_selector('#inc-r-firmar-per') is None and pg.query_selector('#inc-r-ir-conc') is not None, 'R11 En «Hojas» no se firma como Nómina; hay acceso al concentrado')
+    pg.click('#inc-r-ir-conc'); pg.wait_for_selector('#inc-c', timeout=15000); espera(pg, 800)
+    pg.click('#inc-c-firma #inc-r-firmar-per'); espera(pg, 1500)
+    ok(pg.query_selector('#inc-c-firma [data-firma-estado="vigente"]') is not None, 'R11 Nómina firma el periodo en «Concentrado» (PostgREST real)', texto(pg, '#inc-c-firma')[:100])
+    pg.click('#inc-r-pestanas [data-r-pest="hojas"]'); pg.wait_for_selector('#inc-r-tablero', timeout=15000); espera(pg, 800)
     ok('Todo está completo' in texto(pg, '#inc-r-faltantes') and not pg.is_disabled('#inc-r-proc'), 'R11 Con todo completo, el botón se habilita', texto(pg, '#inc-r-faltantes')[:80])
     pg.click('#inc-r-proc'); espera(pg, 1500)
     ok('procesado' in texto(pg, '#inc-r-msg').lower() and pg.query_selector('#inc-r-proc') is None, 'R11 Periodo marcado como procesado', texto(pg, '#inc-r-msg'))

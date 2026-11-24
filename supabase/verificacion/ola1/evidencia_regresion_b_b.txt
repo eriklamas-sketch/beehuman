@@ -1,0 +1,19 @@
+Regresión B-b (con firma exclusiva en Concentrado) · 2026-11-23 16:33 · bases locales reconstruidas desde cero (bh para suites de base, bhui nueva por cada suite de pantalla)
+
+pruebas_ola1                       92 OK  0 FALLA
+pruebas_b2                         39 OK  0 FALLA
+pruebas_b1                         25 OK  0 FALLA
+pruebas_b1_1                       60 OK  0 FALLA
+pruebas_b5                        106 OK  0 FALLA
+pruebas_b5_fonacot                 30 OK  0 FALLA
+pruebas_mis_hojas                  42 OK  0 FALLA
+pruebas_sin_borrado_sin_where       3 OK  0 FALLA
+pruebas_firma_periodo              70 OK  0 FALLA
+pruebas_b3                         54 OK  0 FALLA
+pruebas_b3_volumen                  4 OK  0 FALLA
+ui_b1_2                            25 OK  0 FALLA
+ui_b5_grupos                       43 OK  0 FALLA
+ui_b5_tarjetas                     40 OK  0 FALLA
+ui_concentrado                     59 OK  0 FALLA
+
+Total: 692 OK, 0 FALLA (suma de las 15 suites de arriba)

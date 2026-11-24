@@ -1,0 +1,69 @@
+== C1 · Personas ==
+OK    C1 Las personas son exactamente las de relación en la empresa A durante el periodo (9)  [9 vs 9]
+OK    C1 Aparece quien no tuvo captura (A2), marcado sin incidencias
+OK    C1 No aparecen: persona solo de la empresa B (XB) ni la baja anterior al periodo (A5)
+OK    C1 Aparecen el alta y la baja de mitad de periodo (A3, A4)
+OK    C1 Persona multiempresa (M): en A sin el préstamo ni el movimiento de su relación en B  [[]]
+OK    C1 El concentrado de la empresa B tiene solo a XB y M
+OK    C1 Identificación: número BEH, número interno y registro patronal de la relación
+== C2 · Hojas incluidas ==
+OK    C2 Solo cuenta la hoja enviada de CA (no el borrador de CB)  [['PERSONA CA B3']]
+OK    C2 Lo capturado en el borrador (A6: 5 h y una F) no suma
+OK    C2 Se avisa la hoja sin enviar  [['PERSONA CB B3: no ha enviado su hoja']]
+== C5 · Importes por decidir (antes de decidir nada) ==
+OK    C5 Nada decidido todavía: ningún importe suma  [{}]
+OK    C5 Por decidir = 6, igual que en la base  [6]
+OK    C5 Las líneas por decidir no traen cifra final
+OK    C5 Sin esquema de pago (A7): «sin_sueldo», contado como por decidir  [[{"final": null, "estado": "por_decidir", "origen": "sin_sueldo", "hoja_id": "0c44c891-8eba-47cc-a1b]
+OK    C5 Concepto sin importe: solo cantidad (4 h de capacitación)
+== C6 · Modalidades ==
+OK    C6 Totales por modalidad = suma de la base, bruto y neto por separado  [{'neto': Decimal('55.5'), 'bruto': Decimal('575.0')}]
+OK    C6 A1 · Horas extra: una cifra bruta y una neta (modificada a $55.50), nunca sumadas  [{"neto": 55.5, "bruto": 250.0}]
+OK    C6 Total por concepto desglosado por modalidad (no hay un total mezclado)  [{"neto": 55.5, "bruto": 575.0}]
+OK    C6 Detalle por esquema: dos líneas de horas extra (IMSS y EFECTIVO)
+== C3 / C4 · Complemento enviado y ajuste ==
+OK    C3 El complemento enviado se incluye, como complemento
+OK    C4 Horas extra de A1: 2 capturadas − 1 de ajuste = 1 (valor vigente)  [1.0]
+OK    C4 El detalle por día suma el valor vigente (sin duplicar la línea original)
+OK    C3 Lo del complemento se suma una vez y muestra su origen (A2: 2 h y una V)  [[{"tipo": "complemento", "hoja_id": "56326fc5-4b0c-4821-9749-7e5b47899dbd", "version": 1, "posterior": false, "coordinad]
+OK    C4 Total de horas extra = captura + ajustes de las hojas incluidas (9.00)  [9.0]
+OK    C5 Los importes del complemento por decidir también se cuentan sin sumar
+== C7 · Días por código ==
+OK    C7 Totales de días por código = celdas de las hojas incluidas  [{'D': 1, 'F': 2, 'I': 1, 'V': 1} vs {'D': '1', 'F': '2', 'I': '1', 'V': '1'}]
+OK    C7 Por persona: A1 F=1 I=1, A3 D=1
+OK    C7 Proyecto predominante: A1 con 4 de 7 días en OBRA SUR; A2 el de su ficha
+== C8 · Descuentos ==
+OK    C8 Total decidido por tipo = cred_descuentos (préstamo $250)  [{"prestamo": 250.0}]
+OK    C8 FONACOT por decidir: identificado, sin sumar
+OK    C8 INFONAVIT: informativo, sin importe  [[{"tipo": "infonavit", "etiqueta": "INFONAVIT INF-A2", "credito_id": "9a2eda94-d33c-482d-b6d0-6a7c2e28af4b", "pension_fo]
+OK    C8 Por persona: A1 $250 decididos
+== C9 · Movimientos y días vigentes ==
+OK    C9 Alta a mitad del periodo (A3): ingreso con fecha y 5 días vigentes  [5 [{'tipo': 'ingreso', 'causa': None, 'fecha': '2026-12-02'}]]
+OK    C9 Baja a mitad del periodo (A4): baja con fecha y 4 días vigentes  [4 [{'tipo': 'baja', 'causa': '2', 'fecha': '2026-12-03'}]]
+OK    C9 Modificación de salario dentro del periodo; el cambio de puesto anterior no aparece
+OK    C9 Totales de movimientos del periodo  [{"baja": 1, "ingreso": 1, "modificacion_salario": 1}]
+== C10 · Estado ==
+OK    C10 Con 8 faltantes: preliminar (igual que inc_faltantes_procesar)  [preliminar]
+OK    C2 Al enviarse, la hoja de CB ya suma (A6: 5 h)
+OK    C10 Sin faltantes: listo  [listo / 0 / []]
+OK    C6 Sueldo manual: modalidad «manual», en su propio total  [{"neto": 18.0, "bruto": 1097.5, "manual": 150.0}]
+OK    C10 Se procesa el periodo
+OK    C10 Procesado: estado «procesado» y hojas procesadas incluidas
+== C3 · Complemento posterior al procesamiento ==
+OK    C3 El complemento posterior no altera los totales del periodo procesado
+OK    C3 Se avisa y se identifica como complemento posterior
+OK    C3 A2: sus 4 h posteriores se muestran aparte, marcadas, fuera del total vigente (2 h)
+== C14 · Permisos ==
+OK    C14 coordA: no consulta el concentrado  [ERROR:  BeeHuman: sin permiso.]
+OK    C14 consulta: no consulta el concentrado  [ERROR:  BeeHuman: sin permiso.]
+OK    C14 Administrador sí consulta
+OK    C14 Nómina de otro tenant: no ve el periodo  [ERROR:  BeeHuman: periodo no encontrado.]
+OK    C14 anon no ejecuta la función  [ERROR:  permission denied for function inc_concentrado_periodo]
+OK    C14 Sin permisos a anon ni PUBLIC
+== C16 · C17 · Esquemas y huella (opción B) ==
+OK    C16 El concentrado muestra los esquemas de pago vigentes de la persona (A1: IMSS bruto y EFECTIVO neto)  [[{"activo": true, "sueldo": 3500.0, "fecha_fin": null, "modalidad": "bruto", "dias_periodo": 7.0, "fecha_inicio": "2025-01-01", "clasificaci]
+OK    C17 La huella no cambia por nombre ni por proyecto de la ficha  [c123eca783977f88]
+== Solo lectura ==
+OK    La función es STABLE (no puede escribir)  [s]
+
+RESULTADO: 54 de 54 verificaciones OK

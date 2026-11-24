@@ -110,11 +110,10 @@ val(f"insert into public.inc_cantidades (hoja_id, personal_id, fecha, concepto_i
 val(f"select public.inc_enviar_hoja('{HB}')", 'coordB')
 val(f"update public.inc_parametros set responsable_nomina_user='{U['nomina']}', responsable_rh_user='{U['admin']}' where empresa_id='{E1}'", 'admin')
 f2 = falt()
-ok('PERSONA Z · Horas extra: importe por decidir' in f2 and 'PERSONA CA: falta la firma de Nómina' in f2 and 'PERSONA CB: falta la firma de RH' in f2,
-   'S5 Lista importes por decidir y cada firma faltante (Nómina y RH designados)', f2[:200])
+ok('PERSONA Z · Horas extra: importe por decidir' in f2 and 'Falta la firma de Nómina del periodo' in f2 and 'PERSONA CB: falta la firma de RH' in f2,
+   'S5 Lista importes por decidir y cada firma faltante (Nómina del periodo y RH por hoja; opción B)', f2[:200])
 val(f"select public.inc_aceptar_sugeridos((select id from public.inc_versiones where hoja_id='{HB}'))", 'nomina')
-for hh in (H, HB):
-    val(f"select public.inc_firmar_hoja('{hh}','nomina')", 'nomina')
+val(f"select public.inc_firmar_periodo('{PER}', public.inc_firma_periodo_estado('{PER}')->'huella_actual'->>'total')", 'nomina')   # opción B
 falla_con(f"select public.inc_marcar_procesado('{PER}')", 'nomina', 'falta la firma de RH', 'S5 Con firmas de RH pendientes: sigue sin procesar')
 for hh in (H, HB):
     val(f"select public.inc_firmar_hoja('{hh}','rh')", 'admin')

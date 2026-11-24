@@ -189,8 +189,8 @@ falla_con(f"update public.inc_versiones set datos='{{}}' where id='{V1}'", None,
 falla_con(f"delete from public.inc_eventos where hoja_id='{HA}'", None, 'registro histórico', 'Eventos: no se pueden borrar ni como dueño de la base')
 firmas = val(f"select string_agg(e.tipo||'@v'||v.numero, ',' order by e.creado_en) from public.inc_eventos e join public.inc_versiones v on v.id=e.version_id where e.hoja_id='{HA}' and e.tipo like 'firma%'")
 ok(firmas == 'firma_rh@v1', 'D3/E6: la firma de RH queda ligada a la versión 1 y no aparece en la 2', firmas)
-val(f"select public.inc_firmar_hoja('{HA}','nomina')", 'nomina')
-ok(val(f"select count(*) from public.inc_eventos where version_id='{V2}' and tipo='firma_nomina'") == '1', 'D4: Nómina firma la versión 2 de forma independiente')
+# Opción B (23-nov): Nómina ya no firma cada hoja; firma el periodo completo (RH sigue por hoja y versión).
+falla_con(f"select public.inc_firmar_hoja('{HA}','nomina')", 'nomina', 'firma el periodo completo', 'D4 (opción B): Nómina ya no firma cada versión; firma el periodo completo')
 # (b) persona-día en dos hojas normales: se prueba la restricción saltando el disparador
 falla_con(f"insert into public.inc_celdas (tenant_id, hoja_id, hoja_raiz_id, periodo_id, es_normal, personal_id, fecha, codigo) values ('{T}','{HB}','{HB}','{PER}',true,'{P['P2']}','{d(1)}','F')",
           None, 'inc_celdas_periodo_dia', '(b) Misma persona y día en dos hojas normales: la base lo rechaza aun sin disparador', replica=True)
@@ -257,7 +257,7 @@ ok(val("select count(*) from public.equipo_coordinador()", 'coordA') != '' , 'eq
 # =====================================================================
 print('\n== Separación de permisos ==')
 falla_con(f"select public.inc_decidir_importe('{iid}', 1)", 'coordA', 'sin permiso', 'I10: Coordinador no acepta ni modifica importes')
-falla_con(f"select public.inc_firmar_hoja('{HA}','nomina')", 'nomina2', 'solo el responsable designado', 'Nómina NO designada: puede ver importes pero no firmar')
+falla_con(f"select public.inc_firmar_periodo('{PER}', 'x')", 'nomina2', 'solo el responsable designado', 'Nómina NO designada: puede ver importes pero no firmar (el periodo, opción B)')
 ok(val("select count(*) from public.inc_importes", 'nomina2') != '0', 'Nómina NO designada: sí ve importes')
 falla_con(f"select public.inc_firmar_hoja('{HA}','rh')", 'nomina', 'solo el responsable designado', 'Responsable de Nómina no puede firmar como RH')
 falla_con(f"select public.inc_devolver_hoja('{HA}','x','nomina')", 'coordA', 'sin permiso', 'Coordinador no devuelve hojas')
@@ -278,9 +278,10 @@ pend = val(f"select string_agg(i.id::text||'/'||coalesce(i.sugerido::text,''), '
 for x in (pend.split(',') if pend else []):
     iid, sug = x.split('/'); val(f"select public.inc_decidir_importe('{iid}', {'null' if sug else "100, 'B1.1: motivo obligatorio'"})", 'nomina')
 for hh in (HA, HB):
-    for area, quien in (('nomina', 'nomina'), ('rh', 'rh')):
+    for area, quien in (('rh', 'rh'),):   # opción B: RH por hoja; Nómina firma el periodo al final
         if val(f"select count(*) from public.inc_eventos e join public.inc_hojas h on h.id=e.hoja_id join public.inc_versiones v on v.id=e.version_id and v.numero=h.version_actual where e.hoja_id='{hh}' and e.tipo='firma_{area}'") == '0':
             val(f"select public.inc_firmar_hoja('{hh}','{area}')", quien)
+val(f"select public.inc_firmar_periodo('{PER}', public.inc_firma_periodo_estado('{PER}')->'huella_actual'->>'total')", 'nomina')   # opción B: firma única de Nómina del periodo
 ok(val(f"select count(*) from public.inc_faltantes_procesar('{PER}')", 'nomina') == '0', 'B1: con todo decidido y firmado ya no falta nada')
 m1 = val(f"select public.inc_marcar_procesado('{PER}')", 'nomina')
 m2 = val(f"select public.inc_marcar_procesado('{PER}')", 'nomina')

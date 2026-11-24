@@ -5,6 +5,7 @@ con Ola 1 + fase 1 + B2 + B1 + B1.1(a,b) + B5 + la corrección, y datos FICTICIO
   M3 Periodo con personal: «Abrir hoja» funciona y el encabezado muestra la empresa.
   M4 Nómina → Revisión del periodo con la hoja vacía: «sin personas · no bloquea», sin «Falta por enviar»,
      mensaje «No hay pendientes que bloqueen…» sin contar la hoja como no enviada; el periodo se procesa.
+     Opción B (23-nov): la empresa tiene responsable de Nómina y Nómina firma el periodo en «Concentrado» antes de procesar.
   M1 también: la hoja vacía ofrece «Ver hoja», no «Capturar».
   Sin errores de JavaScript; el coordinador nunca lee la tabla empresas.
 Uso: python3 ui_mis_hojas.py <index.html> <carpeta_capturas>"""
@@ -100,7 +101,9 @@ SEM = '0e000000-0000-4000-8000-000000000007'
 E2, E3 = '0c000000-0000-4000-8000-0000000000e2', '0c000000-0000-4000-8000-0000000000e3'
 COORD = sql(f"select personal_id from public.usuarios_tenant where user_id = '{U['coord']}'")
 sql(f"""insert into public.empresas (id, tenant_id, nombre) values ('{E2}','{T}','EMPRESA AJENA UI'),('{E3}','{T}','EMPRESA HOJA VACIA UI');
-insert into public.inc_parametros (empresa_id, tenant_id, inicio_historial) values ('{E2}','{T}','2025-01-01'),('{E3}','{T}','2025-01-01')""", replica=True)
+insert into public.inc_parametros (empresa_id, tenant_id, inicio_historial) values ('{E2}','{T}','2025-01-01');
+-- Opción B (23-nov): designar al responsable de Nómina es obligatorio siempre; Nómina firma el periodo, aunque no tenga hojas enviadas.
+insert into public.inc_parametros (empresa_id, tenant_id, inicio_historial, responsable_nomina_user) values ('{E3}','{T}','2025-01-01','{U['nomina']}')""", replica=True)
 PER1 = sql(f"select public.inc_crear_periodo('{E1}','{SEM}','2026-11-02','2026-11-08')", 'nomina')
 PER2 = sql(f"select public.inc_crear_periodo('{E2}','{SEM}','2026-11-02','2026-11-08')", 'nomina')
 PER3 = sql(f"select public.inc_crear_periodo('{E3}','{SEM}','2026-11-02','2026-11-08')", 'nomina')
@@ -148,6 +151,13 @@ with sync_playwright() as p:
     pg.click(f'#inc-r-periodos [data-rev-per="{PER3}"]'); espera(pg, 1500)
     ok(pg.query_selector('[data-no-bloquea]') is not None, 'M4 Tablero: la hoja vacía aparece marcada «sin personas · no bloquea»')
     ok(not pg.query_selector('#inc-r-faltan'), 'M4 No aparece en «Falta por enviar»')
+    f0 = texto(pg, '#inc-r-faltantes')
+    ok('Falta la firma de Nómina del periodo' in f0 and 'no ha enviado' not in f0 and 'no ha abierto' not in f0,
+       'M4 Opción B: antes de firmar, solo falta la firma de Nómina del periodo; la hoja vacía no se cuenta', f0[:140])
+    pg.click('#inc-r-ir-conc'); pg.wait_for_selector('#inc-c', timeout=15000); espera(pg, 800)
+    pg.click('#inc-c-firma #inc-r-firmar-per'); espera(pg, 1500)
+    ok(pg.query_selector('#inc-c-firma [data-firma-estado="vigente"]') is not None, 'M4 Nómina firma el periodo en «Concentrado»', texto(pg, '#inc-c-firma')[:100])
+    pg.click('#inc-r-pestanas [data-r-pest="hojas"]'); pg.wait_for_selector('#inc-r-tablero', timeout=15000); espera(pg, 800)
     ok(texto(pg, '#inc-r-faltantes') == 'No hay pendientes que bloqueen el procesamiento. Las hojas sin personal asignado y sin capturas no requieren envío.',
        'M4 Mensaje: no hay pendientes que bloqueen; las hojas sin personal no requieren envío', texto(pg, '#inc-r-faltantes')[:120])
     chips = texto(pg, '#inc-r-resumen')

@@ -1,0 +1,21 @@
+Regresión local B-c · 2026-11-23 18:55 · bases locales reconstruidas desde cero (traductor rest_local.py en pantallas)
+
+pruebas_ola1                       92 OK  0 FALLA
+pruebas_b2                         39 OK  0 FALLA
+pruebas_b1                         25 OK  0 FALLA
+pruebas_b1_1                       60 OK  0 FALLA
+pruebas_b5                        106 OK  0 FALLA
+pruebas_b5_fonacot                 30 OK  0 FALLA
+pruebas_mis_hojas                  42 OK  0 FALLA
+pruebas_sin_borrado_sin_where       3 OK  0 FALLA
+pruebas_firma_periodo              70 OK  0 FALLA
+pruebas_b3                         54 OK  0 FALLA
+pruebas_b3_volumen                  4 OK  0 FALLA
+ui_b1_2                            25 OK  0 FALLA
+ui_b5_grupos                       43 OK  0 FALLA
+ui_b5_tarjetas                     40 OK  0 FALLA
+ui_concentrado                     63 OK  0 FALLA
+ui_concentrado_volumen              5 OK  0 FALLA
+
+Total local: 701 OK
+Con PostgREST real: ver evidencia_b_c_postgrest.txt

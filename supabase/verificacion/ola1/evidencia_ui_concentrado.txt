@@ -1,0 +1,99 @@
+ui_concentrado · 2026-11-23 18:55 · base local bhui · rest_local.py (modo por omisión)
+
+== K1 · Abrir el concentrado ==
+OK    K1 La pestaña «Concentrado» abre el concentrado del periodo
+OK    K1 Estado «Preliminar», igual a la base  [preliminar / Preliminar]
+== K2 · Pendientes agrupados ==
+OK    K2 «Impiden firmar y procesar» = inc_faltantes_bloqueantes (misma lista, una por una, con repeticiones)  [5 vs 5]
+OK    K2 «Impiden solo procesar» = el resto de los faltantes (firmas), sin duplicar  [Falta la firma de Nómina del periodo | PERSONA CA CONC: falta la firma de RH (versión 1)]
+OK    K2 Ningún pendiente se pierde ni se duplica  [7 de 7]
+OK    K2 Dos líneas idénticas de la base (A1, dos esquemas) se agrupan «× 2» con su explicación  [PERSONA A1 CONC · Horas extra: importe por decidir — hoja de PERSONA CA CONC × 2 (una línea por esquema de pago)]
+OK    K2 Los bloqueantes explican el motivo (importe por decidir, descuento FONACOT de A3)
+== K3 · K4 · Firma bloqueada y hojas no incluidas ==
+OK    K3 Con bloqueantes: botón deshabilitado, «Falta la firma» y la explicación  [Firma de Nómina del periodo
+Falta la firma de Nómina del periodo
+Firmar el periodo como Nómina
+Primero resuelve los pend]
+OK    K4 Hojas no incluidas: se avisan con el coordinador (CB sin enviar)  [1 hoja no incluida en estas cifras (solo cuentan las enviadas):
+PERSONA CB CONC: no ha enviado su hoja]
+== K5 · Totales ==
+OK    K5 Personas y personas con incidencias = base  [7 / 3]
+OK    K5 Días por código = base (F 1, V 1)  [{"F": 1, "V": 1}]
+OK    K5 Sin importes decididos todavía: la pantalla no muestra ninguna cifra de importes (igual a la base)  [[]]
+OK    K5 Importes por decidir: se cuentan sin cifra y se aclara que no se suman  [3 importes por decidir (no se suman)]
+== K6 · Tabla por persona ==
+OK    K6 Una fila por persona de la base, sin repetir  [7]
+OK    K6 Incluye a quien no tuvo captura (A4)
+OK    K6 Alta a mitad del periodo (A3): ingreso con fecha y días vigentes de la base  [PERSONA A3 CONC UC-A3 · NOI NA3 · UC12345678 	PERSONA CA CONC	5 de 7 días vigentes	1 h	—	—	por decidir (1)	1 por decidir	Ingreso 02/12	Detalle]
+OK    K6 Identificación (BEH, número interno, registro patronal) y cantidades por concepto  [PERSONA A1 CONC UC-A1 · NOI NA1 · UC12345678 	PERSONA CA CONC	—	2 h	—	—	por decidir (2)	—	—	Detalle]
+OK    K6 Importes por decidir de la persona marcados, sin cifra  [2]
+== K7 · Filtros ==
+OK    K7 «Solo con incidencias» = personas con incidencias de la base  [3]
+OK    K7 «Con movimientos»: solo A3
+OK    K7 «Con pendientes por decidir» = base
+OK    K7 Búsqueda por número de empleado
+== K8 · Detalle ==
+OK    K8 Detalle de A1: importes por esquema (IMSS bruto y EFECTIVO neto por separado) y observación  [Cantidades 30/11/2026 · Horas extra: 2 h Importes por esquema Horas extra · IMSS Bruto · cantidad 2 · sugerido $250.00 · Por decidir · PERSONA CA CONC]
+OK    K8 Detalle de A3: el descuento FONACOT por decidir  [Cantidades 03/12/2026 · Horas extra: 1 h Importes por esquema Horas extra · IMSS Bruto · cantidad 1 · sugerido $100.00 ·]
+OK    K8 Detalle de A2: días con código y crédito informativo sin importe  [Días 01/12/2026 · Falta 02/12/2026 · Vacaciones Créditos informativos (sin importe) INFONAVIT INF-A2 · cuota_fija 900 Esquemas de pago IMSS ]
+== K10 · Otro usuario de Nómina ==
+OK    K10 Otro usuario de Nómina: ve el estado, sin botón
+== K9 · Avisos que no bloquean ==
+OK    K9 Las líneas sin importe se avisan, sin bloquear  [Avisos que no bloquean
+1 línea sin importe: solo cuenta la cantidad; no se decide ni se suma.]
+OK    K9 Sin bloqueantes en la base ni en pantalla
+== K11 · Firmar desde el concentrado ==
+OK    K11 Sin bloqueantes, el botón se habilita (la firma de RH no bloquea)
+OK    K11 Firma vigente; un evento; la huella firmada es la que mostraba la pantalla  [bbf41439e2cc8ede]
+OK    K11 Las 9 secciones de la huella, todas «Sin cambios desde la firma»  [{"hojas": "igual", "personas": "igual", "dias": "igual", "cantidades": "igual", "importes": "igual", "esquemas": "igual", "descuentos": "igual", "informativos": "igual", "movimientos": "igual"}]
+OK    K11 Mensaje de firma registrada  [Firma de Nómina del periodo registrada.]
+== K12 · Cambio después de firmar ==
+OK    K12 Firma «invalidada» y botón «Volver a firmar»
+OK    K12 Secciones marcadas = secciones_cambiadas de la base (importes); el panel se abre solo  [{"hojas": "igual", "personas": "igual", "dias": "igual", "cantidades": "igual", "importes": "cambio", "esquemas": "igual", "descuentos": "igual", "informativos": "igual", "movimientos": "igual"}]
+OK    K12 El historial identifica la firma invalidada y qué cambió
+== K21 · Desde «Hojas» no se firma como Nómina ==
+OK    K21 Hojas, responsable de Nómina, sin bloqueantes y firma invalidada: no hay botón para firmar; solo el estado y el acceso al concentrado
+OK    K21 El acceso lleva a «Concentrado», donde sí está la firma; no se registró ninguna firma al navegar
+OK    K21 Celular, pestaña «Hojas»: sin botón de firma de Nómina, el acceso al concentrado visible y sin desplazamiento horizontal  [[390, 390]]
+== K13 · Huella desactualizada ==
+OK    K13 Si cambió mientras se veía, la firma se rechaza y no se registra  [el concentrado cambió mientras lo revisabas; vuelve a cargarlo antes de firmar.]
+== K14 · Listo para procesar ==
+OK    K14 Sin pendientes: «Listo para procesar», igual a la base; la firma anterior queda «reemplazada»  [listo]
+== K5b · Totales con importes decididos ==
+OK    K5b Un total por concepto y modalidad, los mismos de la base (hay bruto y neto)  [['1bb60000-0000-4000-8000-000000000001:bruto', '1bb60000-0000-4000-8000-000000000001:neto', '1bb60000-0000-4000-8000-000000000002:bruto']]
+OK    K5b Cada cifra es la de la base  [{"1bb60000-0000-4000-8000-000000000001:neto": 50.0, "1bb60000-0000-4000-8000-000000000001:bruto": 572.0, "1bb60000-0000-4000-8000-000000000002:bruto": 500.0}]
+OK    K5b Ningún total mezcla modalidades (cada cifra lleva una sola); ya no hay importes por decidir
+== K17 · Sin firma de Nómina por hoja ==
+OK    K17 Las hojas muestran solo la firma de RH; no hay firma de Nómina por hoja  [['✓ RH', '✓ RH']]
+== K18 · Pestaña Hojas ==
+OK    K18 La pestaña «Hojas» muestra el tablero con la misma firma vigente y permite procesar
+== K15 · Procesado ==
+OK    K15 Procesado: sin pendientes ni botón; firma vigente visible; sin aviso de cambios  [procesado]
+== K16 · Cambio después de procesar ==
+OK    K16 Aviso de cambio después de procesar con las secciones de la base (movimientos)  [El concentrado cambió después de procesarse (procesado el 23/11/2026, 06:54 p.m.). Cambió: movimientos laborales. El periodo sigue procesado: BeeHuman no lo rea]
+OK    K16 El periodo NO se reabre: sigue procesado, misma fecha, sin botones
+OK    K16 La firma se muestra invalidada (movimientos), igual a la base, explicando que autorizó lo procesado y que no se vuelve a firmar  [Firma de Nómina del periodo
+La firma de nomina.uicc@beehuman.invalid · 23/11/2026, 06:54 p.m. autorizó lo que se procesó; después cambió: mo]
+OK    K16 La sección marcada como «Cambió después de procesar» es solo movimientos
+== K22 · El código solo firma desde el concentrado ==
+OK    K22 Una sola llamada a inc_firmar_periodo, conectada solo en el concentrado; la pestaña «Hojas» usa el bloque en modo solo estado
+OK    K22 La hoja solo construye el botón de firma de RH (inc_firmar_hoja); no existe botón de firma de Nómina por hoja
+== K23 · Periodo procesado con la regla anterior (antes de B-a) ==
+OK    K23 Hojas: periodo procesado con la regla anterior; sin «Falta la firma», sin alerta roja y sin botón  [Procesado con la regla anterior: Nómina firmaba cada hoja. Este periodo no lleva firma de periodo y no hay nada pendiente.
+Historial de firm]
+OK    K23 Concentrado: «Procesado con la regla anterior», sin alerta, sin pendientes y sin aviso de cambios  [Firma de Nómina del periodo
+Procesado con la regla anterior: Nómina firmaba cada hoja. Este periodo no lleva firma de periodo y no hay nada ]
+OK    K23 Las 9 secciones dicen «Procesado con la regla anterior (firma por hoja)», no «Sin firmar»  [{"hojas": "regla_anterior", "personas": "regla_anterior", "dias": "regla_anterior", "cantidades": "regla_anterior", "importes": "regla_anterior", "esquemas": "regla_anterior", "descuentos": "regla_anterior", "informativos": "regla_anterior", "movimientos": "regla_anterior"}]
+OK    K23 El historial muestra la firma por hoja como la regla con la que se procesó  [Historial de firmas de Nómina (1)
+nomina antigua por hoja · 23/11/2026, 06:54 p.m. — firma por hoja (regla anterior, con la que se procesó)]
+== K19 · Celular ==
+OK    K19 Celular: sin desplazamiento horizontal (página y tabla)  [[390, 390, 'none', 'block', [334, 334]]]
+OK    K19 Celular: cada persona se muestra como tarjeta (sin encabezados de tabla)  [['none', 'block']]
+OK    K19 Celular: aviso y estado de la firma visibles  [invalidada]
+OK    K20 Sin errores de JavaScript
+== Red: ninguna conexión fuera del equipo ==
+OK    RED Las 252 peticiones dirigidas a la dirección de beehuman-pruebas se respondieron en local (base bhui); ninguna salió  [252]
+OK    RED Ninguna petición ni websocket se dejó pasar a internet  [[]]
+OK    RED Lo que no se intercepta son solo archivos locales (file://)
+
+RESULTADO: 63 de 63 verificaciones OK

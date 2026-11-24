@@ -141,7 +141,20 @@
   #panel-incidencias .inc-tabla th.inc-col-persona,#panel-incidencias .inc-tabla td.inc-col-persona{min-width:128px;max-width:140px}
   #panel-incidencias .inc-tabla td.inc-col-persona b{font-size:12px}
   #panel-incidencias .inc-tabla-wrap{max-height:none}
-}`;
+  #panel-incidencias .inc-e-acc{flex-wrap:wrap}
+  #panel-incidencias .inc-c-resp td.inc-e-sit{display:block;text-align:left}
+  #panel-incidencias .inc-c-resp td.inc-e-sit::before{display:block;margin-bottom:4px}
+}
+#panel-incidencias td.inc-e-sit .inc-chip{display:inline-block;margin:2px 4px 2px 0;max-width:100%;white-space:normal;box-sizing:border-box}
+#panel-incidencias .inc-e-grupo{margin:18px 0 6px;font-size:15px;color:var(--v21-texto,#1C2840)}
+#panel-incidencias .inc-e-grupo span{font-weight:500;color:#8690A6;font-size:13px}
+#panel-incidencias .inc-e-acc{display:flex;gap:6px;justify-content:flex-end;align-items:center}
+#panel-incidencias .inc-e-acc button{margin:0;white-space:nowrap}
+#panel-incidencias .inc-e-form{display:flex;flex-direction:column;gap:6px;margin-top:6px;text-align:left}
+#panel-incidencias .inc-e-form textarea{width:100%;min-height:54px;box-sizing:border-box;font:13px Inter,sans-serif;margin:0}
+#panel-incidencias .inc-sub .inc-cuenta{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:#B42318;color:#fff;font-size:11px;line-height:18px;text-align:center}
+nav.tabs button[data-tab="incidencias"] .inc-aviso{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:#B42318;color:#fff;font:700 11px/18px Inter,sans-serif;text-align:center;vertical-align:middle}
+nav.tabs button[data-tab="incidencias"] .inc-aviso[hidden]{display:none}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   // ---------- utilidades ----------
@@ -189,18 +202,102 @@
   async function abrir() {
     const raiz = $('inc-raiz'); if (!raiz) return;
     await contexto();
-    const vistas = rolActual === 'administrador' ? [['revision', 'Revisión'], ['periodos', 'Periodos'], ['config', 'Configuración']]
-      : rolActual === 'nomina' ? [['revision', 'Revisión'], ['periodos', 'Periodos'], ['config', 'Configuración']]
+    await actualizarAviso();
+    // B6: «Envíos» es la primera pestaña de Nómina y del Administrador; el número son los envíos que esperan a Nómina.
+    const envios = ['envios', 'Envíos' + (S.pendientes ? ` <span class="inc-cuenta" data-e-cuenta>${S.pendientes}</span>` : '')];
+    const vistas = rolActual === 'administrador' ? [envios, ['revision', 'Revisión'], ['periodos', 'Periodos'], ['config', 'Configuración']]
+      : rolActual === 'nomina' ? [envios, ['revision', 'Revisión'], ['periodos', 'Periodos'], ['config', 'Configuración']]
       : rolActual === 'coordinador' ? [['hojas', 'Mis hojas']] : [];
     if (!vistas.length) { raiz.innerHTML = '<div class="card"><p class="hint">Esta sección no está disponible para tu rol.</p></div>'; return; }
     if (!S.vista || !vistas.some(v => v[0] === S.vista)) S.vista = vistas[0][0];
     raiz.innerHTML = (vistas.length > 1 ? `<div class="inc-sub">${vistas.map(([k, n]) => `<button type="button" data-inc-vista="${k}" class="${k === S.vista ? 'activo' : ''}">${n}</button>`).join('')}</div>` : '')
       + '<div id="inc-vista"></div>';
     raiz.querySelectorAll('[data-inc-vista]').forEach(b => b.addEventListener('click', () => { S.vista = b.dataset.incVista; S.hoja = null; S.rev = {}; abrir(); }));
+    if (S.vista === 'envios') return vistaEnvios();
     if (S.vista === 'revision') return vistaRevision();
     if (S.vista === 'periodos') return vistaPeriodos();
     if (S.vista === 'config') return vistaConfig();
     if (S.vista === 'hojas') return S.hoja ? vistaHoja(S.hoja.id) : vistaMisHojas();
+  }
+
+  // =====================================================================
+  // B6 · Envíos recibidos (Nómina y Administrador)
+  // Estados de la base: nuevo · en_revision · atendido · reemplazado · devuelto · cerrado_procesado.
+  // Abrir registra la primera apertura (queda «En revisión») y NUNCA atiende; solo «Marcar como atendido» atiende.
+  // =====================================================================
+  const tipoEnvio = x => x.tipo_evento === 'complemento'
+    ? (x.posterior_procesamiento ? 'Complemento posterior al procesamiento' : 'Complemento') + (x.version_numero > 1 ? ` · reenvío v${x.version_numero}` : '')
+    : x.version_numero > 1 ? `Reenvío v${x.version_numero} (tras devolución)` : 'Hoja original';
+  function situacionEnvio(x) {
+    const c = [];
+    if (x.estado === 'atendido') c.push(x.atencion_tipo === 'automatica'
+      ? `<span class="inc-chip" data-e-auto>Atendido automáticamente · ${esc(x.motivo_atencion || '')}</span>`
+      : `<span class="inc-chip ok">✓ Atendido por ${esc(x.atendida_por || '')} · ${esc(fechaHora(x.atendida_en))}</span>${x.nota_atencion ? `<small>Nota: ${esc(x.nota_atencion)}</small>` : ''}`);
+    else if (x.estado === 'reemplazado') c.push(`<span class="inc-chip">Reemplazado por la versión ${esc(x.version_actual)}</span>`);
+    else if (x.estado === 'devuelto') c.push('<span class="inc-chip alerta">Devuelto; espera reenvío del coordinador</span>');
+    else if (x.estado === 'cerrado_procesado') c.push('<span class="inc-chip">Cerrado al procesar el periodo</span>');
+    else {
+      if (x.estado === 'en_revision') c.push(`<span class="inc-chip" data-e-abierta>Abierto por ${esc(x.abierta_por || '')} · ${esc(fechaHora(x.abierta_en))}</span>`);
+      c.push(x.lineas_por_decidir > 0 ? `<span class="inc-chip alerta" data-e-imp>${plural(x.lineas_por_decidir, 'importe por decidir', 'importes por decidir')}</span>`
+        : '<span class="inc-chip ok" data-e-imp>Importes resueltos</span>');
+      if (x.firma_rh_requerida && !x.firma_rh) c.push('<span class="inc-chip alerta">Falta firma de RH</span>');
+    }
+    if (x.periodo_procesado_en) c.push('<span class="inc-chip">Periodo procesado</span>');
+    return c.join(' ');
+  }
+  async function vistaEnvios() {
+    const cont = $('inc-vista');
+    const emps = (typeof empresas !== 'undefined' ? empresas : []).filter(e => e.activo !== false);
+    cont.innerHTML = `<div class="card">
+      <div class="inc-cab"><div><h2>Envíos recibidos</h2><p class="hint">Cada hoja que envía un coordinador —original, reenvío o complemento— llega aquí. Abrir un envío no lo marca como atendido: márcalo cuando termines.</p></div></div>
+      <div class="inc-c-filtros"><label for="inc-e-emp">Empresa</label><select id="inc-e-emp"><option value="">Todas</option>${emps.map(e => `<option value="${esc(e.id)}"${S.envEmp === e.id ? ' selected' : ''}>${esc(e.nombre)}</option>`).join('')}</select></div>
+      <div class="inc-msg" id="inc-e-msg"></div>
+      <div id="inc-e-lista"><p class="hint">Cargando…</p></div>
+    </div>`;
+    $('inc-e-emp').addEventListener('change', () => { S.envEmp = $('inc-e-emp').value || null; listarEnvios(); });
+    listarEnvios();
+  }
+  async function listarEnvios() {
+    const el = $('inc-e-lista'); if (!el) return;
+    const { data, error } = await sb.rpc('inc_bandeja_envios', { p_empresa: S.envEmp || null, p_dias_atendidos: 30 });
+    if (!$('inc-e-lista')) return;
+    if (error) { el.innerHTML = errHtml(error); return; }
+    const filas = data || [];
+    const grupo = (id, titulo, vacio, xs) => `<h3 class="inc-e-grupo" id="inc-e-g-${id}">${titulo} <span>(${xs.length})</span></h3>` + (xs.length
+      ? `<table class="inc-lista inc-c-resp" id="inc-e-${id}"><thead><tr><th>Empresa</th><th>Periodo</th><th>Coordinador</th><th>Envío</th><th>Versión</th><th>Recibido</th><th>Situación</th><th></th></tr></thead><tbody>${xs.map(x => {
+          const abierto = x.estado === 'nuevo' || x.estado === 'en_revision';
+          return `<tr data-evento="${esc(x.evento_id)}" data-estado="${esc(x.estado)}" data-hoja="${esc(x.hoja_id)}">
+          <td data-l="Empresa">${esc(x.empresa)}</td><td data-l="Periodo">${esc(fechaLarga(x.periodo_inicio))} – ${esc(fechaLarga(x.periodo_fin))}</td>
+          <td data-l="Coordinador">${esc(x.coordinador || '')}</td><td data-l="Envío">${esc(tipoEnvio(x))}</td><td data-l="Versión">v${esc(x.version_numero)}</td>
+          <td data-l="Recibido">${esc(fechaHora(x.enviado_en))}</td><td data-l="Situación" class="inc-e-sit">${situacionEnvio(x)}</td>
+          <td class="inc-c-acc"><div class="inc-e-acc">${abierto
+            ? `<button type="button" class="primary" data-e-abrir="${esc(x.evento_id)}">Abrir</button><button type="button" class="inc-sec" data-e-atender="${esc(x.evento_id)}">Marcar como atendido</button>`
+            : `<button type="button" class="inc-sec" data-e-ver="${esc(x.evento_id)}">Ver hoja</button>`}</div>
+            ${S.envAtendiendo === x.evento_id ? `<div class="inc-e-form"><label for="inc-e-nota">Nota (opcional)</label><textarea id="inc-e-nota" maxlength="500" placeholder="Qué se revisó o resolvió"></textarea>
+              <div class="inc-e-acc"><button type="button" class="inc-sec" id="inc-e-no">Cancelar</button><button type="button" class="primary" id="inc-e-si">Confirmar atendido</button></div></div>` : ''}</td></tr>`;
+        }).join('')}</tbody></table>` : `<p class="hint" id="inc-e-vacio-${id}">${vacio}</p>`);
+    el.innerHTML = grupo('nuevos', 'Nuevos', 'No hay envíos nuevos.', filas.filter(x => x.estado === 'nuevo'))
+      + grupo('revision', 'En revisión', 'Nadie tiene envíos abiertos sin atender.', filas.filter(x => x.estado === 'en_revision'))
+      + grupo('cerrados', 'Atendidos y cerrados · últimos 30 días', 'Sin envíos atendidos en los últimos 30 días.', filas.filter(x => !['nuevo', 'en_revision'].includes(x.estado)))
+      + '<p class="inc-nota">Un reenvío cierra la versión anterior («Reemplazado») sin borrar su historial. Abrir, atender o cerrar un envío no cambia firmas ni periodos.</p>';
+    const porId = new Map(filas.map(x => [x.evento_id, x]));
+    const irHoja = x => { S.vista = 'revision'; S.hoja = null; S.rev = { periodoId: x.periodo_id, hojaId: x.hoja_id }; abrir(); };
+    el.querySelectorAll('[data-e-abrir]').forEach(b => b.addEventListener('click', async () => {
+      const x = porId.get(b.dataset.eAbrir); b.disabled = true;
+      const { error: e } = await sb.rpc('inc_envio_abrir', { p_evento: x.evento_id });
+      if (e) { b.disabled = false; return msg('inc-e-msg', 'err', limpiarError(e)); }
+      irHoja(x);
+    }));
+    el.querySelectorAll('[data-e-ver]').forEach(b => b.addEventListener('click', () => irHoja(porId.get(b.dataset.eVer))));
+    el.querySelectorAll('[data-e-atender]').forEach(b => b.addEventListener('click', () => { S.envAtendiendo = b.dataset.eAtender; listarEnvios(); }));
+    if ($('inc-e-no')) $('inc-e-no').addEventListener('click', () => { S.envAtendiendo = null; listarEnvios(); });
+    if ($('inc-e-si')) { $('inc-e-nota').focus(); $('inc-e-si').addEventListener('click', async () => {
+      $('inc-e-si').disabled = true;
+      const { data: r, error: e } = await sb.rpc('inc_envio_atender', { p_evento: S.envAtendiendo, p_nota: $('inc-e-nota').value });
+      if (e) { $('inc-e-si').disabled = false; return msg('inc-e-msg', 'err', limpiarError(e)); }
+      S.envAtendiendo = null; msg('inc-e-msg', 'ok', r || 'Envío marcado como atendido.');
+      await actualizarAviso(); listarEnvios();
+    }); }
   }
 
   // =====================================================================
@@ -1335,7 +1432,7 @@
       <button type="button" class="inc-volver" id="inc-r-volver">← Periodo ${esc(fechaLarga(H.periodo.inicio))} – ${esc(fechaLarga(H.periodo.fin))}</button>
       <div class="inc-cab"><div><h2>${esc(H.coord ? H.coord.nombre_completo : 'Coordinador')}${h.tipo === 'complemento' ? ' · complemento' : ''}</h2>
         <p class="hint">${esc(nombreEmpresa(H.periodo.empresa_id))} · versión ${H.version.numero}${envio ? ' enviada el ' + esc(fechaHora(envio.creado_en)) + (envio.nombre ? ' por ' + esc(envio.nombre) : '') : ''}</p></div>
-        <div><span class="inc-estado ${esc(h.estado)}" id="inc-r-estado">${esc(ESTADO_TAB[h.estado] || h.estado)}</span></div></div>
+        <div><span class="inc-estado ${esc(h.estado)}" id="inc-r-estado" data-hoja="${esc(h.id)}" data-version="${esc(H.version.numero)}">${esc(ESTADO_TAB[h.estado] || h.estado)}</span></div></div>
       ${otrasHojas}
       ${H.datos.observacion_general ? `<div class="inc-panel"><b>Observación del coordinador</b><p style="margin:4px 0 0">${esc(H.datos.observacion_general)}</p></div>` : ''}
       ${h.estado === 'devuelta' && devs[0] ? `<div class="inc-msg err" style="display:block">Devuelta por ${esc(devs[0].nombre || '')}: ${esc(devs[0].motivo || '')}. El coordinador la corrige y la reenvía.</div>` : ''}
@@ -1416,8 +1513,36 @@
     });
   }
 
+  // ---------- B6 · aviso persistente en el botón «Incidencias» ----------
+  // Número de envíos nuevos y en revisión (inc_envios_pendientes). Se actualiza al entrar a la app, al abrir
+  // Incidencias, al volver a la pestaña del navegador y cada 2 minutos mientras está visible. Sin realtime.
+  async function actualizarAviso() {
+    if (!['administrador', 'nomina'].includes(typeof rolActual !== 'undefined' ? rolActual : null) || !document.body.classList.contains('ola1-activa')) return;
+    const { data, error } = await sb.rpc('inc_envios_pendientes');
+    if (error) return;   // sin B6 en la base: no hay aviso
+    S.pendientes = Number((data && data.total) || 0);
+    document.querySelectorAll('nav.tabs button[data-tab="incidencias"]').forEach(b => {
+      let a = b.querySelector('.inc-aviso');
+      if (!a) { a = document.createElement('span'); a.className = 'inc-aviso'; b.appendChild(a); }
+      a.textContent = S.pendientes > 99 ? '99+' : String(S.pendientes); a.hidden = !S.pendientes;
+      a.title = S.pendientes ? `${plural(S.pendientes, 'envío espera', 'envíos esperan')} a Nómina` : '';
+      a.setAttribute('aria-label', a.title);
+    });
+    const c = document.querySelector('#panel-incidencias [data-e-cuenta]');
+    if (c) { if (S.pendientes) c.textContent = S.pendientes; else c.remove(); }
+  }
+  (function vigilarAviso() {
+    let intentos = 0;
+    const esperar = setInterval(() => {   // el rol se conoce después de iniciar sesión
+      if (typeof rolActual !== 'undefined' && rolActual) { clearInterval(esperar); actualizarAviso(); }
+      else if (++intentos > 120) clearInterval(esperar);
+    }, 1000);
+    setInterval(() => { if (document.visibilityState === 'visible') actualizarAviso(); }, 120000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') actualizarAviso(); });
+  })();
+
   // ---------- conexión con el menú ----------
   const btn = document.querySelector('nav.tabs button[data-tab="incidencias"]');
   if (btn) btn.addEventListener('click', () => { if (typeof pestanaPermitida !== 'function' || pestanaPermitida('incidencias')) abrir(); });
-  window.beehumanIncidencias = { abrir };
+  window.beehumanIncidencias = { abrir, actualizarAviso };
 })();

@@ -1,0 +1,43 @@
+B6 · Bandeja de envíos · beehuman-pruebas (sflvpgkmtaxzogpgetxn) · 24-nov-2026 · autorización de Erik 10:32
+Producción no se tocó.
+
+1. Precheck (solo lectura, transaction_read_only = on)
+   PostgreSQL 17.11 aarch64 · no réplica · 0 transacciones colgadas · tenants: PILOTO SINTETICO 500, TENANT SINTETICO 7D6B, 7D6B-B
+   30 migraciones; última 20261124002324 b3_concentrado_firma_periodo · B6 no aplicada · B3 presente
+   Envíos: 5 originales en periodos procesados · 2 eventos de complemento posterior (una hoja, v1 y v2) · 1 original en periodo abierto · 0 complementos anteriores al procesamiento
+
+2. Respaldo dirigido (B6 solo agrega; se respaldan los datos que deben quedar intactos)
+   eventos 24 4d8a0f960c27fb3143d05d0a189f9bd9 · hojas 9 815c6b781e890c2756e53c83fc9a6e74 · periodos 10 f56253468ac09432ed749d045000023a
+   versiones 8 30a0b450fcd3c018b3935af83c255d1b · importes 22 a395a745585e6472a67f9aea6d606696
+   firmas de Nómina del periodo 5 b80ba9b604b25421ebae9ef811709521 · huellas del concentrado (10 periodos) 4d664f86db545d2ed76feb0664d4c7aa
+   5 periodos procesados con fecha y usuario de procesado (herramientas_prueba_bh/b6/respaldo_pruebas_20261124/)
+
+3. Ensayo en una transacción terminada en error forzado (nada quedó aplicado)
+   huella de esquema antes      e3072ea2d28aeed43697894401b9e3b3
+   huella con B6 (ensayo)       48a9c3a5f0ffe1e559f88dfa0b8b6294
+   huella tras la reversión     e3072ea2d28aeed43697894401b9e3b3   = antes
+   datos idénticos en las 3 etapas · carga inicial: 5 automáticas, sin usuario ni nombre · pendientes: 2 nuevos
+   permisos: 4 funciones de pantalla con authenticated; internas y disparadores solo postgres/service_role; tabla sin anon/authenticated, RLS activo
+
+4. Aplicación: versión 20261124163900 b6_bandeja_envios · md5 registrado 44c2c4f71b6d761cd097c4ca34d5496a = cuerpo del archivo (sin begin/commit)
+   archivo pendiente/20261124000000_b6_bandeja_envios.sql SHA-256 1c7b8c33e762e002ef2b5103ed22fc5409c50a47a615d5e3e390e700d9dc2237
+   índices, columnas, disparadores, restricciones, políticas y permisos de tablas = etapa «con B6» del ensayo
+   las 7 funciones B6 tienen la misma definición (md5 de pg_get_functiondef) que la base local
+   datos después de aplicar = respaldo · seguimiento: 5 automáticas «Periodo procesado antes de activar B6», sin usuario
+
+5. Verificación con las cuentas reales de prueba, en una transacción terminada en error forzado (no quedó nada)
+   E0 pendientes antes {"total": 2, "nuevos": 2, "en_revision": 0}
+   E1 abrir original => en_revision
+   E2 fila tras abrir => en_revision atendida_en=null abierta_por=nomina-prueba
+   E3 pendientes tras abrir {"total": 2, "nuevos": 1, "en_revision": 1}
+   E4 atender original => Envío marcado como atendido.
+   E5 registro => manual, usuario real nomina-prueba, nota «Verificación en pruebas», apertura conservada
+   E6 atender otra vez => Ya estaba atendido…; no se registró de nuevo.
+   E7/E8 complemento posterior: abrir => en_revision; atender (admin-prueba) => atendido
+   E9 pendientes final {"total": 0}
+   D1 datos, firmas, huellas del concentrado y estado de firma/procesado de los 10 periodos idénticos antes y después: true
+   S1–S4 coord-prueba y consulta-prueba: «sin permiso» en bandeja, abrir y atender
+   S5 TENANT 7D6B: 0 envíos, 0 pendientes · S6 abrir un envío ajeno: «envío no encontrado»
+   S7 anon: permission denied · S8 lectura directa de la tabla: permission denied · S9 función interna: permission denied
+   H1/H2 cambiar o borrar una atención (aun el dueño de la base): rechazado
+   Después: seguimiento con 5 filas automáticas, 0 manuales ni abiertas (el rollback se confirmó)

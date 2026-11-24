@@ -1,0 +1,45 @@
+Caso: {'total': 4, 'nuevos': 4, 'en_revision': 0}
+== U1–U4 · Nómina: aviso, pestaña y filas ==
+OK    U1 Aviso en el botón «Incidencias» al entrar, sin abrir la sección, igual a la base  [4 / {'total': 4, 'nuevos': 4, 'en_revision': 0}]
+OK    U2 «Envíos» es la primera pestaña (activa al entrar) y muestra el número  [Envíos 4]
+OK    U2 Grupos iguales a la base: 4 nuevos, ninguno en revisión; v1 reemplazada, original procesada y atendida automática en cerrados  [4 nuevos · 3 cerrados]
+OK    U3 Fila con empresa, periodo, coordinador, tipo, versión y fecha/hora  [EMPRESA A UI B6	13/09/2027 – 19/09/2027	PERSONA CA UI B6	Hoja original	v1	24/11/2026, 10:34 a.m.	1 importe por decidir Falta firma de RH	 | Abrir | Marcar como ]
+OK    U4 Indicador «1 importe por decidir»
+OK    U4 Reenvío v2 con «Importes resueltos» (no «Revisado»)  [EMPRESA A UI B6	20/09/2027 – 26/09/2027	PERSONA CA UI B6	Reenvío v2 (tras devolución)	v2	24/11/2026, 10:34 a.m.	Importes resueltos Falta fir]
+OK    U4 Versión sustituida: «Reemplazado por la versión 2»
+OK    U4 Complemento posterior identificado como tal
+OK    U4 Original procesada: «Cerrado al procesar el periodo»
+OK    U4 Carga inicial: «Atendido automáticamente · Periodo procesado antes de activar B6», sin usuario ni botón «Abrir»
+OK    +U4 La palabra «Revisado» no aparece como indicador
+== U5 · Abrir no atiende ==
+OK    U5 «Abrir» lleva a esa hoja (mismo id) y versión, en «Revisión»  [75222455-cb8f-446b-8bc7-9cc9248a48d4]
+OK    U5 En la base queda «En revisión» y NO atendido  [en_revision · nomina-b6@beehuman.invalid]
+OK    U5 El aviso no baja al abrir  [4]
+OK    U5 Al volver, la fila está en «En revisión» con quién la abrió
+== U6 · Marcar como atendido ==
+OK    U6 La base guarda quién (usuario real), cuándo y la nota  [nomina-b6@beehuman.invalid · Revisado con CA por teléfono]
+OK    U6 La fila pasa a «Atendidos y cerrados» con quién, cuándo y la nota
+OK    U6 El aviso del menú y el de la pestaña bajan en uno  [3]
+OK    U8 P1: abrir y atender no cambian firma, hojas, procesado ni huella
+== U7 · Complemento posterior ==
+OK    U7 «Abrir» del complemento lleva al complemento, no a la original  [PERSONA CA UI B6 · complemento]
+OK    U7 El complemento queda en revisión; la original procesada no cambia
+OK    U7 Atender sin nota: atendido, nota vacía
+OK    U8 P3 procesado: sigue procesado; firma, hojas y huella idénticas tras abrir y atender el complemento  [vigente]
+== U9 · Filtro por empresa ==
+OK    U9 Filtro por empresa: solo la empresa B  [1]
+== U11 · Aviso al volver a la pestaña ==
+OK    U11 Un envío nuevo aparece en el aviso al volver a la pestaña, sin recargar  [2 → 3]
+== U10 · Roles ==
+OK    U10 Administrador: ve el aviso  [3]
+OK    U10 Administrador: ve la bandeja
+OK    U10 coordA: sin aviso ni pestaña «Envíos»
+OK    U10 consulta: sin aviso ni pestaña «Envíos»
+== U12 · Celular ==
+OK    U12 Celular: filas como tarjetas, «Abrir» visible y sin desplazamiento horizontal  [[390, 390]]
+OK    U12 Celular: la nota y «Confirmar atendido» caben sin desplazamiento  [[390, 390]]
+OK    U13 Sin errores de JavaScript
+OK    RED Las 152 peticiones a la dirección de beehuman-pruebas se respondieron en local  [152]
+OK    RED Nada sale a internet
+
+RESULTADO: 34 de 34 verificaciones OK

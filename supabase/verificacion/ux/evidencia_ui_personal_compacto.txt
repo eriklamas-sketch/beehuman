@@ -1,0 +1,45 @@
+Personal compacto (25-nov-2026) — base LOCAL con 133 personas ficticias; antes = app/index.html de 111b82d, después = rediseño.
+
+== Lo nuevo ==
+OK    P1 «Alta de personal»: botón amarillo arriba y entrada en el menú lateral
+OK    P1 El botón de alta es amarillo  [rgb(255, 200, 44)]
+OK    P1 El botón abre «Alta de personal»
+OK    P2 Vencimientos (30 días) = fechas válidas entre hoy y hoy + 30 de los activos (la base dice 14)  [14]
+OK    P2 Los registros sin fecha no cuentan como próximos a vencer
+OK    +P2 La semilla tiene contratos ya vencidos (no deben contar)  [9]
+OK    P3 Aviso «Tipo de contrato no registrado» (con la explicación al pasar el ratón); no muestra «sin fecha»
+OK    P2 Indicadores Personas y Sin esquema de pago con cifra  [126]
+OK    P4 Percepciones registradas como dato secundario (letra menor)  [14 < 20]
+OK    P5 Filas compactas de una línea  [40 px]
+OK    P6 Proyecto editable en la fila, discreto (sin borde hasta pasar el ratón)  [rgba(0, 0, 0, 0)]
+OK    P7 Paginación visible con rango y páginas numeradas  [1–50 de 133 personas]
+OK    P7 Ir directo a la página 3  [Página 3 de 3]
+OK    P8 «Más filtros» se abre y se cierra
+OK    P8 «Más filtros · 1» cuenta los filtros aplicados que guarda  [Más filtros · 1]
+OK    P9 Laptop 1280×720: varias filas a la vista y la tabla cabe sin desplazar a los lados  [7 filas; [906, 906]]
+OK    P10 Celular: tarjetas, sin desborde, con el proyecto editable  [grid]
+OK    P1/P4 Consulta: sin botón de alta ni indicadores de pago; ve Personas
+OK    Sin errores de JavaScript  [[]]
+OK    PARIDAD Búsqueda, filtros, orden, paginación, exportaciones y edición dan lo mismo que antes
+OK    Sin errores de JavaScript (administrador)  [[]]
+
+RESULTADO: 21 de 21 verificaciones OK
+
+Regresión de pantallas con el rediseño (base local bhui + PostgREST, una suite por base nueva):
+== ui_b1: 46 OK / 0 FALLA 0 TB
+== ui_b1_1: 26 OK / 0 FALLA 0 TB
+== ui_b1_2: 25 OK / 0 FALLA 0 TB
+== ui_b5: 31 OK / 0 FALLA 0 TB
+== ui_b5_fonacot_salud: 10 OK / 0 FALLA 0 TB
+== ui_b5_grupos: 43 OK / 0 FALLA 0 TB
+== ui_b5_tarjetas: 40 OK / 0 FALLA 0 TB
+== ui_bandeja_envios: 34 OK / 0 FALLA 0 TB
+== ui_concentrado: 63 OK / 0 FALLA 0 TB
+== ui_periodos_navegacion: 32 OK / 0 FALLA 0 TB
+== ui_ola1: 33 OK / 0 FALLA 0 TB
+== ui_mis_hojas: 22 OK / 0 FALLA 0 TB
+== ui_excel_canonico: 37 OK / 0 FALLA
+== ui_sesion: 25 OK / 0 FALLA
+== ui_recuperacion: 24 OK / 0 FALLA
+
+Nota: ux_pruebas, ui_eventos, ui_reingreso, ui_historia_salario, ui_ficha_guardado y ui_aniversarios fallan igual con la versión ANTERIOR (necesitan el entorno de base de octubre/noviembre, que ya no arma montar_bhui.sh). Su ajuste al nuevo diseño se trata aparte (no va en este commit); la paridad de Personal la cubre ui_personal_compacto.py.

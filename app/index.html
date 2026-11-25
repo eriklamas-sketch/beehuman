@@ -1004,6 +1004,12 @@ body #modal-overlay .detail-modal #btn-guardar-detalle{border-radius:10px;paddin
 #login-screen #login-ver-pass{position:absolute;right:5px;bottom:4px;width:40px;height:40px;margin:0;padding:0;border:0;border-radius:9px;background:transparent;color:#8A94A6;display:flex;align-items:center;justify-content:center;cursor:pointer}
 #login-screen #login-ver-pass:hover{color:var(--v21-navy);background:#F2F4F8}
 #login-screen #login-ver-pass:focus-visible{outline:2px solid rgba(47,95,208,.35);outline-offset:1px}
+#login-screen .ver-pass{position:absolute;right:5px;bottom:4px;width:40px;height:40px;margin:0;padding:0;border:0;border-radius:9px;background:transparent;color:#8A94A6;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#login-screen .ver-pass:hover{color:var(--v21-navy);background:#F2F4F8}
+#login-screen .ver-pass:focus-visible{outline:2px solid rgba(47,95,208,.35);outline-offset:1px}
+#login-screen .ver-pass .ojo-cerrado,#login-screen .ver-pass[aria-pressed="true"] .ojo-abierto{display:none}
+#login-screen .ver-pass[aria-pressed="true"] .ojo-cerrado{display:block}
+#login-screen #nueva-pass,#login-screen #nueva-pass2{padding-right:48px}
 #login-screen #login-ver-pass .ojo-cerrado,#login-screen #login-ver-pass[aria-pressed="true"] .ojo-abierto{display:none}
 #login-screen #login-ver-pass[aria-pressed="true"] .ojo-cerrado{display:block}
 #login-screen.card::after{content:none}
@@ -1654,8 +1660,8 @@ body.rol-consulta #panel-lista .per-kpi{border-right:0}
       <div class="toast" id="toast-recuperar"></div>
     </form>
     <form id="form-nueva-pass" style="display:none" novalidate>
-      <div style="margin-bottom:12px;"><label for="nueva-pass">Nueva contraseña</label><input id="nueva-pass" type="password" autocomplete="new-password" minlength="8" required></div>
-      <div style="margin-bottom:12px;"><label for="nueva-pass2">Confirma la nueva contraseña</label><input id="nueva-pass2" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="login-campo-pass" style="margin-bottom:12px;"><label for="nueva-pass">Nueva contraseña</label><input id="nueva-pass" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver-pass" data-para="nueva-pass" aria-controls="nueva-pass" aria-label="Mostrar contraseña" aria-pressed="false"><svg class="ojo-abierto" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="ojo-cerrado" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button></div>
+      <div class="login-campo-pass" style="margin-bottom:12px;"><label for="nueva-pass2">Confirma la nueva contraseña</label><input id="nueva-pass2" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver-pass" data-para="nueva-pass2" aria-controls="nueva-pass2" aria-label="Mostrar contraseña" aria-pressed="false"><svg class="ojo-abierto" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="ojo-cerrado" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button></div>
       <p class="login-nota">Mínimo 8 caracteres.</p>
       <button type="submit" class="primary" id="btn-nueva-pass">Guardar contraseña</button>
       <div class="toast" id="toast-nueva-pass"></div>
@@ -7374,6 +7380,20 @@ document.getElementById('login-ver-pass').addEventListener('click', function(){
   this.setAttribute('aria-pressed', String(ver));
   this.setAttribute('aria-label', ver ? 'Ocultar contraseña' : 'Mostrar contraseña');
 });
+// Ojo en «Nueva contraseña» y su confirmación (25-nov): muestra u oculta cada campo para comparar lo escrito.
+function ocultarPassNueva(){
+  document.querySelectorAll('#form-nueva-pass .ver-pass').forEach(b => {
+    document.getElementById(b.dataset.para).type = 'password';
+    b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', 'Mostrar contraseña');
+  });
+}
+document.querySelectorAll('#form-nueva-pass .ver-pass').forEach(b => b.addEventListener('click', function(){
+  const campo = document.getElementById(this.dataset.para);
+  const ver = campo.type === 'password';
+  campo.type = ver ? 'text' : 'password';
+  this.setAttribute('aria-pressed', String(ver));
+  this.setAttribute('aria-label', ver ? 'Ocultar contraseña' : 'Mostrar contraseña');
+}));
 // ---------------------------------------------------------------------
 // D6: recuperación de contraseña. Los mensajes nunca dicen si un correo está
 // registrado. Al guardar la nueva contraseña se cierra la sesión de
@@ -7390,6 +7410,7 @@ function vistaLogin(cual){
   document.getElementById('form-login').style.display = cual === 'login' ? '' : 'none';
   document.getElementById('form-recuperar').style.display = cual === 'recuperar' ? '' : 'none';
   document.getElementById('form-nueva-pass').style.display = cual === 'nueva' ? '' : 'none';
+  ocultarPassNueva();
   document.getElementById('login-titulo').textContent = titulos[cual][0];
   document.getElementById('login-subtitulo').textContent = titulos[cual][1];
   ['toast-login', 'toast-recuperar', 'toast-nueva-pass'].forEach(id => toastLogin(id, '', ''));
@@ -7440,7 +7461,7 @@ document.getElementById('form-nueva-pass').addEventListener('submit', async func
   try { await sb.auth.signOut({ scope: 'global' }); } catch (ex) {}
   try { localStorage.removeItem(sb.auth.storageKey); localStorage.removeItem(CLAVE_ACTIVIDAD); localStorage.removeItem('bh_recuperacion_pendiente'); } catch (ex) {}
   btn.disabled = false;
-  document.getElementById('form-nueva-pass').reset();
+  document.getElementById('form-nueva-pass').reset(); ocultarPassNueva();
   vistaLogin('login');
   toastLogin('toast-login', 'ok', 'Tu contraseña se actualizó. Inicia sesión con la nueva contraseña.');
 });

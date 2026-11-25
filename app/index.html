@@ -1516,6 +1516,117 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
 #panel-catalogos .catnav-item[aria-current="true"]{background:var(--v21-hover);border-color:#C9D5EE}
 /* @@V22_FIN ============================================================ */
 
+
+/* =====================================================================
+   Personal compacto (25-nov-2026, propuesta aprobada por Erik).
+   Encabezado con acción principal, indicadores en una franja, filtros en
+   una fila con «Más filtros», tabla de una línea por persona, paginación
+   siempre visible y tarjetas en celular. Mismos datos y funciones.
+   ===================================================================== */
+.per-oculto{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important;padding:0!important;margin:-1px!important}
+#panel-lista>.card.per-card{padding:20px 22px 16px}
+#panel-lista .per-cabeza{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:12px}
+#panel-lista .per-titulo{flex:1 1 320px;min-width:0}
+#panel-lista .per-titulo h2{margin:0!important;font-size:24px;letter-spacing:-.02em}
+#panel-lista .per-sub{margin:2px 0 0;font-size:13px;color:var(--v21-texto-2)}
+#panel-lista .per-acciones{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#panel-lista .per-alta{height:40px;padding:0 16px!important;border:0;border-radius:10px!important;background:var(--v21-amarillo)!important;color:var(--v21-navy)!important;font:700 13.5px Inter,sans-serif!important;display:inline-flex!important;align-items:center;gap:8px;margin:0!important;box-shadow:none!important}
+#panel-lista .per-alta:hover{background:#FFD24F!important}
+#panel-lista .per-alta[hidden]{display:none!important}
+#panel-lista .per-exportar{position:relative}
+#panel-lista .per-exportar>summary{list-style:none;cursor:pointer;height:40px;padding:0 14px;border:1px solid #D5DBE6;border-radius:10px;background:#fff;color:var(--v21-navy);font:600 13.5px Inter,sans-serif;display:flex;align-items:center;gap:8px}
+#panel-lista .per-exportar>summary::-webkit-details-marker{display:none}
+#panel-lista .per-exportar>summary:focus-visible{outline:2px solid rgba(47,95,208,.35);outline-offset:1px}
+#panel-lista .per-exportar-menu{position:absolute;right:0;top:46px;z-index:30;min-width:240px;background:#fff;border:1px solid var(--v21-borde);border-radius:12px;box-shadow:0 12px 30px rgba(14,26,51,.14);padding:6px;display:flex;flex-direction:column;gap:2px}
+#panel-lista .per-exportar-menu button{display:block;width:100%;text-align:left;height:38px;padding:0 12px!important;margin:0!important;border:0!important;border-radius:8px!important;background:transparent!important;color:var(--v21-navy)!important;font:500 13.5px Inter,sans-serif!important}
+#panel-lista .per-exportar-menu button:hover:not(:disabled){background:var(--v21-fondo)!important}
+#panel-lista .per-exportar-menu button:disabled{color:var(--v21-texto-3)!important}
+/* Indicadores en una franja; percepciones como dato secundario */
+#panel-lista .per-kpis{display:flex;flex-wrap:wrap;background:#fff;border:1px solid var(--v21-borde);border-radius:12px;padding:10px 6px;margin:0 0 12px}
+#panel-lista .per-kpi{flex:1 1 180px;padding:2px 16px;border-right:1px solid var(--v21-borde-2);min-width:0}
+#panel-lista .per-kpi:last-child{border-right:0}
+#panel-lista .per-kpi small{display:block;font-size:11.5px;color:var(--v21-texto-2);text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+#panel-lista .per-kpi b{display:block;font-size:20px;font-weight:700;color:var(--v21-texto);line-height:1.25;font-variant-numeric:tabular-nums}
+#panel-lista .per-kpi b.per-kpi-alerta{color:#A8590B}
+#panel-lista .per-kpi em{display:block;font-style:normal;font-size:11.5px;color:var(--v21-texto-3);line-height:1.35}
+#panel-lista .per-kpi-sec small{text-transform:none;letter-spacing:0;font-size:12px}
+#panel-lista .per-kpi-sec b{font-size:14px;font-weight:600;color:var(--v21-texto-2)}
+#panel-lista .per-info{cursor:help;color:var(--v21-texto-3)}
+body.rol-consulta #panel-lista .per-kpi{border-right:0}
+/* Búsqueda y filtros en una fila */
+#panel-lista .filters.per-filtros{display:flex!important;flex-wrap:wrap;gap:8px;align-items:center;padding:0!important;margin:0 0 8px;background:transparent!important;border:0!important;box-shadow:none!important}
+#panel-lista .per-filtros #buscar-personal{flex:1 1 220px;height:40px;border-radius:10px;padding-left:12px}
+#panel-lista .per-filtros #filtro-empresa{flex:1 1 150px;min-width:150px;height:40px;width:auto;border-radius:10px}
+#panel-lista .per-estatus{display:flex;flex-wrap:wrap;background:#fff;border:1px solid #D5DBE6;border-radius:10px;padding:3px;gap:2px}
+#panel-lista .per-estatus button{height:32px;padding:0 9px!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;color:var(--v21-texto-2)!important;font:500 13px Inter,sans-serif!important}
+#panel-lista .per-estatus button.actual{background:var(--v21-navy)!important;color:#fff!important;font-weight:600!important}
+#panel-lista .per-mas{height:40px;padding:0 14px!important;margin:0!important;border:1px solid #D5DBE6!important;border-radius:10px!important;background:#fff!important;color:var(--v21-navy)!important;font:600 13.5px Inter,sans-serif!important;display:inline-flex!important;align-items:center;gap:8px}
+#panel-lista .per-mas.con-filtros{border-color:#1F4FB8!important;background:#EEF3FD!important;color:#1F4FB8!important}
+#panel-lista .per-mas-filtros{flex-basis:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;padding:10px;background:var(--v21-fondo);border:1px solid var(--v21-borde);border-radius:12px}
+#panel-lista .per-mas-filtros[hidden]{display:none}
+#panel-lista .per-mas-filtros select{height:38px;width:100%;border-radius:9px}
+#panel-lista .filtros-aplicados{background:transparent!important;border:0!important;padding:0 0 8px!important;margin:0!important;gap:6px}
+#panel-lista .filtros-aplicados-titulo{font-size:12.5px;color:var(--v21-texto-2);font-weight:500}
+/* Tabla: una línea por persona */
+#panel-lista .table-wrap{border:1px solid var(--v21-borde);border-radius:12px 12px 0 0;overflow-x:auto}
+#panel-lista .table-wrap>table{width:100%}
+#panel-lista thead th{position:sticky;top:0;z-index:3;background:#F3F5F9!important;padding:9px 8px!important}
+#panel-lista tbody tr.per-fila td{height:40px;padding:0 8px!important;white-space:nowrap;line-height:1.2}
+#panel-lista tbody tr.per-fila td.col-nombre{max-width:176px;overflow:hidden;text-overflow:ellipsis;min-width:0!important}
+#panel-lista tbody tr.per-fila td.col-nombre a{font-weight:600!important;font-size:13.5px!important}
+#panel-lista tbody tr.per-fila td.col-empresa,#panel-lista tbody tr.per-fila td.col-coord{max-width:110px;overflow:hidden;text-overflow:ellipsis}
+#panel-lista tbody tr.per-fila td.col-puesto{max-width:140px;overflow:hidden;text-overflow:ellipsis}
+#panel-lista tbody tr.per-fila td.col-proyecto{padding:0 4px!important}
+#panel-lista tbody select.per-proy{height:30px;min-height:30px;width:136px;min-width:136px!important;max-width:136px;padding:0 24px 0 6px;border:1px solid transparent!important;background-color:transparent!important;color:var(--v21-texto-2);font-size:12.5px;cursor:pointer;box-shadow:none}
+#panel-lista tbody tr.per-fila:hover select.per-proy,#panel-lista tbody select.per-proy:focus{border-color:#C9D2E3!important;background-color:#fff!important}
+#panel-lista td.col-esquemas{min-width:0!important;text-align:right}
+#panel-lista th:nth-last-child(2){text-align:right}
+#panel-lista .per-esq{display:inline-flex;align-items:center;gap:6px;cursor:default}
+#panel-lista .per-esq .esq-monto{font-weight:600}
+#panel-lista .per-esq-mas{font-size:12px;color:var(--v21-texto-2);font-weight:600}
+#panel-lista .per-sin-esquema{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:7px;background:#FFF4E5;color:#8A4B00;font-size:12px;font-weight:600}
+#panel-lista td.col-acc,#panel-lista th.col-acc{width:36px;padding:0 6px!important;text-align:center}
+#panel-lista .per-abrir{width:30px;height:30px;padding:0!important;margin:0!important;border:0!important;border-radius:7px!important;background:transparent!important;color:var(--v21-texto-2)!important;font-size:18px!important;line-height:1}
+#panel-lista .per-abrir:hover{background:var(--v21-fondo)!important;color:var(--v21-navy)!important}
+/* Paginación siempre visible */
+#panel-lista .paginador.per-paginador{justify-content:space-between;margin:0!important;padding:10px 14px;border:1px solid var(--v21-borde);border-top:0;border-radius:0 0 12px 12px;background:#fff}
+#panel-lista .per-rango b{color:var(--v21-texto)}
+#panel-lista .per-pag-controles{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#panel-lista .per-pag-controles label{display:flex;align-items:center;gap:6px;margin:0}
+#panel-lista .per-pag-numeros{display:flex;gap:4px;align-items:center}
+#panel-lista .per-pag-controles button{height:32px;min-width:32px;padding:0 8px!important;margin:0!important;border:1px solid #D5DBE6!important;border-radius:8px!important;background:#fff!important;color:var(--v21-texto)!important;font:500 13px Inter,sans-serif!important}
+#panel-lista .per-pag-controles button.actual{background:var(--v21-navy)!important;border-color:var(--v21-navy)!important;color:#fff!important;font-weight:600!important}
+#panel-lista .per-pag-gap{padding:0 2px;color:var(--v21-texto-3)}
+@media(max-width:1499px){#panel-lista th:nth-child(5),#panel-lista tbody tr.per-fila td.col-puesto{display:none}}
+#panel-lista .per-nota-pie{margin:10px 0 0!important;font-size:12px!important;color:var(--v21-texto-3)}
+@media(max-width:900px){
+  #panel-lista .lista-barra::after{content:none}
+  #panel-lista table th:nth-child(2),#panel-lista table td.col-nombre{width:auto;min-width:0!important}
+  #panel-lista table td.col-nombre a{white-space:nowrap}
+}
+/* Celular: tarjetas en lugar de tabla */
+@media(max-width:720px){
+  #panel-lista>.card.per-card{padding:14px 12px}
+  #panel-lista .per-kpi{flex:1 1 45%;border-right:0;padding:4px 8px}
+  #panel-lista .per-estatus{overflow-x:auto;flex-wrap:nowrap;width:100%}
+  #panel-lista .per-filtros #filtro-empresa,#panel-lista .per-mas{flex:1 1 45%}
+  #panel-lista .table-wrap{border:0;background:none!important;overflow:visible}
+  #panel-lista .table-wrap>table{min-width:0!important;display:block}
+  #panel-lista .table-wrap thead{display:none}
+  #panel-lista .table-wrap tbody{display:flex;flex-direction:column;gap:8px}
+  #panel-lista tbody tr.per-fila{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"n n e" "i em em" "p p s";align-items:center;column-gap:8px;row-gap:4px;background:#fff!important;border:1px solid var(--v21-borde);border-radius:12px;padding:10px 12px}
+  #panel-lista tbody tr.per-fila td{height:auto;padding:0!important;border:0!important;background:transparent!important;position:static!important;box-shadow:none!important;width:auto!important;max-width:none!important}
+  #panel-lista tbody tr.per-fila td.col-nombre{grid-area:n;white-space:normal}
+  #panel-lista tbody tr.per-fila td.col-nombre a{white-space:normal;font-size:14px!important}
+  #panel-lista tbody tr.per-fila td.col-estatus{grid-area:e;justify-self:end}
+  #panel-lista tbody tr.per-fila td.col-id{grid-area:i}
+  #panel-lista tbody tr.per-fila td.col-empresa{grid-area:em}
+  #panel-lista tbody tr.per-fila td.col-proyecto{grid-area:p}
+  #panel-lista tbody tr.per-fila td.col-esquemas{grid-area:s;text-align:right}
+  #panel-lista tbody tr.per-fila td.col-puesto,#panel-lista tbody tr.per-fila td.col-coord,#panel-lista tbody tr.per-fila td.col-acc{display:none}
+  #panel-lista tbody select.per-proy{border-color:#E1E6EF!important;height:34px;max-width:100%}
+  #panel-lista .paginador.per-paginador{border:1px solid var(--v21-borde);border-radius:12px;margin-top:8px!important}
+}
 </style>
 </head>
 <body>
@@ -1760,18 +1871,40 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
   </section>
 
   <section class="panel" id="panel-lista">
-    <div class="card">
-      <h2>Personal registrado</h2>
-      <p class="hint">Cambia el proyecto directamente en la fila: se guarda al momento.</p>
-      <div class="kpis-personal" id="kpis-personal" aria-live="polite">
-        <div class="kpi-personal kpi-azul"><div class="kpi-cabeza"><span class="kpi-icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.1 2.8-5 5.5-5s4.9 1.9 5.5 5"/><path d="M16 4.9a3.1 3.1 0 0 1 0 6.2"/><path d="M17.5 14.3c1.7.6 2.8 2.3 3.1 4.7"/></svg></span><small>Personas</small></div><b id="kpi-personas">—</b><em id="kpi-personas-sub">En el resultado filtrado</em></div>
-        <div class="kpi-personal kpi-verde kpi-importe"><div class="kpi-cabeza"><span class="kpi-icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="4" y="7.5" width="16" height="11.5" rx="2.5"/><path d="M15.5 13.2h2"/></svg></span><small>Total de percepciones</small></div><b id="kpi-percepciones">—</b><em id="kpi-percepciones-sub"></em></div>
-        <div class="kpi-personal kpi-dorado kpi-importe"><div class="kpi-cabeza"><span class="kpi-icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9.5" r="5"/><path d="M15.2 5.8a5 5 0 1 1-5.4 12.4"/><path d="M9 7.6v3.8"/></svg></span><small>Sueldo base (IMSS)</small></div><b id="kpi-imss">—</b><em id="kpi-imss-sub"></em></div>
+    <div class="card per-card">
+      <div class="per-cabeza">
+        <div class="per-titulo">
+          <h2>Personal</h2>
+          <p class="per-sub" id="lista-subtitulo" aria-live="polite"></p>
+        </div>
+        <div class="per-acciones">
+          <details class="per-exportar" id="per-exportar">
+            <summary>Exportar <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="per-exportar-menu">
+              <button type="button" id="exportar-personal" disabled>Exportar</button>
+              <button type="button" id="exportar-esquemas" disabled title="Una fila por esquema de pago activo de las personas del resultado">Exportar esquemas (CSV)</button>
+              <button type="button" id="exportar-noi" disabled title="Archivo de altas de trabajadores para importar en Aspel NOI 11">Exportar a NOI</button>
+            </div>
+          </details>
+          <button type="button" class="primary quick-primary per-alta" id="per-btn-alta" onclick="cambiarPestana('alta')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Alta de personal</button>
+        </div>
       </div>
-      <div class="kpi-nota kpi-importe" id="kpi-nota">Suma los importes registrados en los esquemas de pago activos de las personas del resultado. Puede mezclar periodicidades (semanal, quincenal, mensual…) y modalidades bruto/neto: no es un costo mensual ni un total homogéneo.</div>
-      <div class="filters">
+      <div class="per-kpis" id="kpis-personal" aria-live="polite">
+        <div class="per-kpi"><small>Personas</small><b id="kpi-personas">—</b><em id="kpi-personas-sub"></em></div>
+        <div class="per-kpi kpi-importe"><small>Sin esquema de pago</small><b id="kpi-sinesquema">—</b><em id="kpi-sinesquema-sub"></em></div>
+        <div class="per-kpi kpi-importe"><small>Vencimientos registrados (30 días)</small><b id="kpi-vence">—</b><em id="kpi-vence-sub"></em></div>
+        <div class="per-kpi per-kpi-sec kpi-importe"><small>Percepciones registradas <span class="per-info" tabindex="0" title="Suma de los importes de los esquemas de pago activos de las personas del resultado. Puede mezclar periodicidades (semanal, quincenal, mensual…) y modalidades bruto/neto: no es un costo mensual ni un total homogéneo.">ⓘ</span></small><b id="kpi-percepciones">—</b><em id="kpi-percepciones-sub"></em></div>
+      </div>
+      <div class="filters per-filtros">
         <input type="search" id="buscar-personal" placeholder="Buscar por nombre, ID, RFC, CURP o NSS" autocomplete="off" aria-label="Buscar personas">
-        <select id="filtro-estatus" aria-label="Estatus">
+        <div class="per-estatus" role="group" aria-label="Estatus" id="per-estatus">
+          <button type="button" data-est="Activo">Activos</button>
+          <button type="button" data-est="__vigentes__">Vigentes</button>
+          <button type="button" data-est="Suspendido">Suspendidos</button>
+          <button type="button" data-est="Baja">Bajas</button>
+          <button type="button" data-est="">Todos</button>
+        </div>
+        <select id="filtro-estatus" class="per-oculto" tabindex="-1" aria-label="Estatus">
           <option value="Activo">Activos</option>
           <option value="__vigentes__">Vigentes (activos y suspendidos)</option>
           <option value="">Todos los estatus</option>
@@ -1779,10 +1912,12 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
           <option value="Baja">Bajas</option>
         </select>
         <select id="filtro-empresa" aria-label="Empresa"><option value="">Todas las empresas</option></select>
-        <select id="filtro-proyecto" aria-label="Proyecto"><option value="">Todos los proyectos</option></select>
-        <select id="filtro-coordinador" aria-label="Coordinador"><option value="">Todos los coordinadores</option></select>
-        <select id="filtro-clasificacion" aria-label="Clasificación de pago"><option value="">Todas las clasificaciones</option></select>
-        <select id="filtro-pendiente" aria-label="Pendientes de RH">
+        <button type="button" class="per-mas" id="per-mas" aria-expanded="false" aria-controls="per-mas-filtros"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span id="per-mas-texto">Más filtros</span></button>
+        <div class="per-mas-filtros" id="per-mas-filtros" hidden>
+          <select id="filtro-proyecto" aria-label="Proyecto"><option value="">Todos los proyectos</option></select>
+          <select id="filtro-coordinador" aria-label="Coordinador"><option value="">Todos los coordinadores</option></select>
+          <select id="filtro-clasificacion" aria-label="Clasificación de pago"><option value="">Todas las clasificaciones</option></select>
+          <select id="filtro-pendiente" aria-label="Pendientes de RH">
           <option value="">Pendientes de RH: todos</option>
           <option value="sin_esquema">Sin esquema de pago activo</option>
           <option value="requisitos">Falta un dato que exige su clasificación</option>
@@ -1790,16 +1925,14 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
           <option value="aniversario">Aniversario para revisar SBC (±30 días)</option>
           <option value="sin_fecha_aniversario">Sin fecha de antigüedad, alta IMSS ni ingreso</option>
         </select>
+        </div>
       </div>
       <div class="filtros-aplicados" id="filtros-aplicados" style="display:none;">
-        <span class="filtros-aplicados-titulo">Filtros aplicados</span>
+        <span class="filtros-aplicados-titulo">Filtros:</span>
         <span id="filtros-chips" class="filtros-chips"></span>
-        <button type="button" id="limpiar-filtros" class="filtros-limpiar">Limpiar todos</button>
+        <button type="button" id="limpiar-filtros" class="filtros-limpiar">Limpiar</button>
       </div>
-      <div class="lista-barra">
-        <span id="lista-conteo"></span>
-        <span class="lista-exportar"><button type="button" id="exportar-personal" disabled>Exportar</button><button type="button" id="exportar-esquemas" disabled title="Una fila por esquema de pago activo de las personas del resultado">Exportar esquemas (CSV)</button><button type="button" id="exportar-noi" disabled title="Archivo de altas de trabajadores para importar en Aspel NOI 11">Exportar a NOI</button></span>
-      </div>
+      <span id="lista-conteo" class="per-oculto"></span>
       <div class="table-wrap">
         <table>
           <thead><tr id="encabezado-personal"></tr></thead>
@@ -1807,13 +1940,17 @@ body.rol-consulta #panel-resumen .res-bloque-comp,body.rol-consulta #panel-resum
         </table>
       </div>
       <div class="empty" id="lista-vacia" style="display:none;">Sin personal registrado todavía.</div>
-      <div class="paginador" id="lista-paginador" style="display:none;">
-        <label>Filas por página <select id="lista-tamano"><option>50</option><option>100</option></select></label>
-        <button type="button" id="pagina-anterior">Anterior</button>
-        <span id="pagina-texto"></span>
-        <button type="button" id="pagina-siguiente">Siguiente</button>
+      <div class="paginador per-paginador" id="lista-paginador" style="display:none;">
+        <span class="per-rango" id="pagina-rango"></span>
+        <div class="per-pag-controles">
+          <label>Filas <select id="lista-tamano"><option>50</option><option>100</option><option>25</option></select></label>
+          <button type="button" id="pagina-anterior" aria-label="Página anterior">‹</button>
+          <span id="pagina-numeros" class="per-pag-numeros"></span>
+          <span id="pagina-texto" class="per-oculto"></span>
+          <button type="button" id="pagina-siguiente" aria-label="Página siguiente">›</button>
+        </div>
       </div>
-      <p class="hint" style="margin:12px 0 0;">El coordinador y el jefe directo se asignan desde el detalle de cada persona.</p>
+      <p class="hint per-nota-pie">El proyecto se cambia directamente en la fila. El coordinador y el jefe directo se asignan desde el detalle de cada persona.</p>
       <div class="loading" id="lista-cargando">Cargando…</div>
     </div>
   </section>
@@ -2678,6 +2815,22 @@ function resumenEsquemasPersonaHTML(p){
     (personaEnBaja(p) ? '<span class="pill esq-revisar">revisar: persona en Baja</span>' : '');
 }
 
+// Personal compacto: una línea con el primer esquema y «+n»; el detalle completo queda en el título.
+function resumenEsquemasCompactoHTML(p){
+  if (registrosPagoGlobalEstado === 'cargando') return '<span class="rp-sub">Cargando…</span>';
+  if (registrosPagoGlobalEstado === 'error') return '<span class="rp-sub">No disponible</span>';
+  const esquemas = esquemasActivosDe(p.id).slice().sort((a, b) =>
+    String(a.clasificacion_nombre || '').localeCompare(String(b.clasificacion_nombre || ''), 'es') || String(a.id).localeCompare(String(b.id)));
+  if (!esquemas.length) return '<span class="per-sin-esquema">Sin esquema</span>';
+  let centavos = 0;
+  const titulo = esquemas.map(r => { centavos += Math.round(Number(r.sueldo) * 100); return `${r.clasificacion_nombre || 'Sin clasificación'}: ${money(r.sueldo)}`; });
+  titulo.push(`Total percepciones: ${money(centavos / 100)}`);
+  const r0 = esquemas[0];
+  return `<span class="per-esq" title="${escapeHtml(titulo.join('\n'))}">${badgeEsquemaHTML(r0.clasificacion_nombre)}<span class="esq-monto">${escapeHtml(money(r0.sueldo))}</span>`
+    + (esquemas.length > 1 ? `<span class="per-esq-mas">+${esquemas.length - 1}</span>` : '') + '</span>'
+    + (personaEnBaja(p) ? ' <span class="pill esq-revisar">revisar: persona en Baja</span>' : '');
+}
+
 // UX · Presentación de clasificaciones y estatus. Las clasificaciones son
 // catálogo de cada empresa: IMSS, Efectivo y Transferencia tienen color
 // propio y cualquier otra usa un badge neutro. No cambia ningún dato.
@@ -2759,7 +2912,7 @@ const COLUMNAS_PERSONAL = [
   { clave: 'puesto',      titulo: 'Puesto',      valor: p => nombreCatalogoPersona('puestos', p.puesto_id) },
   { clave: 'coordinador', titulo: 'Coordinador', valor: p => nombreCoordinador(p) },
   { clave: 'estatus',     titulo: 'Estatus',     valor: p => estatusPersona(p) },
-  { clave: 'esquemas',    titulo: 'Esquemas de pago', valor: null } // no ordenable
+  { clave: 'esquemas',    titulo: 'Esquema de pago', valor: null } // no ordenable
 ];
 let listaOrden = { clave: 'nombre', sentido: 1 };
 let listaPagina = 1;
@@ -2897,13 +3050,38 @@ function renderEncabezadoPersonal(){
     const activa = c.clave === listaOrden.clave;
     const flecha = activa ? (listaOrden.sentido === 1 ? ' ▲' : ' ▼') : '';
     return `<th class="ordenable" onclick="ordenarPersonalPor('${c.clave}')" title="Ordenar por ${escapeHtml(c.titulo)}"${activa ? ` aria-sort="${listaOrden.sentido === 1 ? 'ascending' : 'descending'}"` : ''}>${escapeHtml(c.titulo)}${flecha}</th>`;
-  }).join('');
+  }).join('') + '<th class="col-acc"><span class="per-oculto">Abrir</span></th>';
 }
 function ordenarPersonalPor(clave){
   listaOrden = { clave, sentido: listaOrden.clave === clave ? -listaOrden.sentido : 1 };
   listaPagina = 1; renderTabla();
 }
 function alCambiarFiltrosPersonal(){ listaPagina = 1; renderTabla(); }
+// Páginas a mostrar: primera, última y dos alrededor de la actual.
+function numerosPaginaPersonal(actual, total){
+  const set = new Set([1, total, actual - 1, actual, actual + 1].filter(n => n >= 1 && n <= total));
+  const lista = [...set].sort((a, b) => a - b), out = [];
+  lista.forEach((n, i) => { if (i && n - lista[i - 1] > 1) out.push('…'); out.push(n); });
+  return out;
+}
+// Encabezado de Personal: subtítulo, botón de alta según el rol, estatus en botones y conteo de «Más filtros».
+function actualizarCabezaPersonal(total){
+  const empresasRes = new Set(listaFiltrada.map(p => p.empresa_id).filter(Boolean)).size;
+  const sub = document.getElementById('lista-subtitulo');
+  if (sub) sub.textContent = personal.length
+    ? `Mostrando ${total.toLocaleString('es-MX')} de ${personal.length.toLocaleString('es-MX')} personas · ${empresasRes.toLocaleString('es-MX')} ${empresasRes === 1 ? 'empresa' : 'empresas'}` : '';
+  const navAlta = document.querySelector('nav.tabs button[data-tab="alta"]');
+  const btnAlta = document.getElementById('per-btn-alta');
+  if (btnAlta) btnAlta.hidden = !navAlta || getComputedStyle(navAlta).display === 'none';
+  const est = document.getElementById('filtro-estatus').value;
+  document.querySelectorAll('#per-estatus button').forEach(b => {
+    const act = b.dataset.est === est; b.classList.toggle('actual', act); b.setAttribute('aria-pressed', String(act));
+  });
+  const ocultos = ['filtro-proyecto', 'filtro-coordinador', 'filtro-clasificacion', 'filtro-pendiente']
+    .filter(id => { const el = document.getElementById(id); return el && el.value && !(esConsulta() && (id === 'filtro-clasificacion' || id === 'filtro-pendiente')); }).length;
+  document.getElementById('per-mas-texto').textContent = ocultos ? `Más filtros · ${ocultos}` : 'Más filtros';
+  document.getElementById('per-mas').classList.toggle('con-filtros', ocultos > 0);
+}
 
 // ---------------------------------------------------------------------
 // Filtros aplicados (rediseño Personal V2.0): cada filtro que restringe el
@@ -2963,46 +3141,45 @@ function quitarFiltroPersonal(id){
 // ---------------------------------------------------------------------
 function actualizarIndicadoresPersonal(filas){
   const poner = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  const plural = (k, s, pl) => `${k.toLocaleString('es-MX')} ${k === 1 ? s : pl}`;
   const n = filas.length;
   poner('kpi-personas', n.toLocaleString('es-MX'));
   poner('kpi-personas-sub', personal.length ? `de ${personal.length.toLocaleString('es-MX')} en tu ámbito` : 'En el resultado filtrado');
   if (esConsulta()) return;
+  // Vencimientos registrados: solo fechas válidas de personas no dadas de baja, entre hoy y hoy + 30 días.
+  // Sin fecha no cuenta. BeeHuman todavía no captura el tipo de contrato: no se afirma que sean temporales.
+  const hoy = fechaLocalHoy(), limite = sumarDias(hoy, DIAS_AVISO_CONTRATO);
+  const noBaja = filas.filter(p => !personaEnBaja(p));
+  const vencen = noBaja.filter(p => { const f = fechaISOValida(p.fecha_vencimiento_contrato); return !!f && f >= hoy && f <= limite; }).length;
+  poner('kpi-vence', vencen.toLocaleString('es-MX'));
+  const conTipo = noBaja.some(p => String(p.tipo_contrato || '').trim());
+  poner('kpi-vence-sub', conTipo ? 'Solo fechas de vencimiento registradas' : 'Tipo de contrato no registrado');
+  const subV = document.getElementById('kpi-vence-sub');
+  if (subV) subV.title = 'Cuenta fechas de vencimiento válidas entre hoy y dentro de 30 días, de personas que no están de baja. '
+    + 'Quien no tiene fecha no cuenta. BeeHuman todavía no captura el tipo de contrato, así que no distingue contratos temporales de los de planta.';
   if (registrosPagoGlobalEstado !== 'ok') {
     const t = registrosPagoGlobalEstado === 'error' ? 'No disponible' : '…';
-    poner('kpi-percepciones', t); poner('kpi-imss', t);
-    poner('kpi-percepciones-sub', registrosPagoGlobalEstado === 'error' ? 'No se pudieron cargar los esquemas de pago' : 'Cargando esquemas de pago');
-    poner('kpi-imss-sub', '');
+    const sub = registrosPagoGlobalEstado === 'error' ? 'No se pudieron cargar los esquemas de pago' : 'Cargando esquemas de pago';
+    poner('kpi-sinesquema', t); poner('kpi-sinesquema-sub', sub);
+    poner('kpi-percepciones', t); poner('kpi-percepciones-sub', '');
     return;
   }
-  const exigeNss = new Map(clasificaciones.map(c => [c.id, !!c.requiere_nss]));
-  let centTotal = 0, centImss = 0, esquemas = 0, esquemasImss = 0, esquemasBaja = 0, sinClasif = 0;
-  const personasImss = new Set(), periodicidades = new Set(), modalidades = new Set();
+  const sinEsquema = noBaja.filter(p => esquemasActivosDe(p.id).length === 0).length;
+  poner('kpi-sinesquema', sinEsquema.toLocaleString('es-MX'));
+  poner('kpi-sinesquema-sub', sinEsquema ? 'Vigentes sin esquema activo' : 'Todas tienen esquema activo');
+  document.getElementById('kpi-sinesquema').classList.toggle('per-kpi-alerta', sinEsquema > 0);
+  let centTotal = 0, esquemas = 0;
+  const periodicidades = new Set(), modalidades = new Set();
   filas.forEach(p => esquemasActivosDe(p.id).forEach(r => {
-    const c = Math.round(Number(r.sueldo) * 100);   // centavos: sin errores de decimales
-    centTotal += c; esquemas += 1;
+    centTotal += Math.round(Number(r.sueldo) * 100); esquemas += 1;   // centavos: sin errores de decimales
     if (r.periodicidad_nombre) periodicidades.add(r.periodicidad_nombre);
     if (r.modalidad_sueldo) modalidades.add(r.modalidad_sueldo);
-    if (personaEnBaja(p)) esquemasBaja += 1;
-    if (!exigeNss.has(r.clasificacion_id)) sinClasif += 1;
-    if (exigeNss.get(r.clasificacion_id)) { centImss += c; esquemasImss += 1; personasImss.add(p.id); }
   }));
-  const plural = (k, s, pl) => `${k.toLocaleString('es-MX')} ${k === 1 ? s : pl}`;
   poner('kpi-percepciones', money(centTotal / 100));
   const detalle = [plural(esquemas, 'esquema activo', 'esquemas activos')];
   if (periodicidades.size > 1) detalle.push(`${periodicidades.size} periodicidades`);
   if (modalidades.size > 1) detalle.push('bruto y neto');
-  if (esquemasBaja) detalle.push(`incluye ${plural(esquemasBaja, 'de persona en Baja', 'de personas en Baja')}`);
   poner('kpi-percepciones-sub', detalle.join(' · '));
-  if (clasificacionesError || (sinClasif && esquemas)) {
-    // Sin las banderas de clasificación no se puede saber qué es IMSS: no se estima.
-    poner('kpi-imss', 'No disponible');
-    poner('kpi-imss-sub', 'No se pudieron leer las clasificaciones');
-    return;
-  }
-  poner('kpi-imss', money(centImss / 100));
-  poner('kpi-imss-sub', esquemasImss
-    ? `${plural(esquemasImss, 'esquema', 'esquemas')} de ${plural(personasImss.size, 'persona', 'personas')}`
-    : 'Sin esquemas IMSS en el resultado');
 }
 
 function limpiarFiltrosPersonal(){
@@ -3040,8 +3217,14 @@ function renderTabla(){
   const btnNOI = document.getElementById('exportar-noi');
   btnNOI.disabled = !total;
   btnNOI.textContent = total ? `Exportar a NOI (${total.toLocaleString('es-MX')})` : 'Exportar a NOI';
-  document.getElementById('lista-paginador').style.display = total > 50 ? 'flex' : 'none';
+  document.getElementById('lista-paginador').style.display = total ? 'flex' : 'none';
   document.getElementById('pagina-texto').textContent = `Página ${listaPagina} de ${paginas}`;
+  const desde = total ? (listaPagina - 1) * tamano + 1 : 0, hasta = Math.min(total, listaPagina * tamano);
+  document.getElementById('pagina-rango').innerHTML = total ? `<b>${desde.toLocaleString('es-MX')}–${hasta.toLocaleString('es-MX')}</b> de ${total.toLocaleString('es-MX')} ${total === 1 ? 'persona' : 'personas'}` : '';
+  document.getElementById('pagina-numeros').innerHTML = numerosPaginaPersonal(listaPagina, paginas)
+    .map(n => n === '…' ? '<span class="per-pag-gap">…</span>'
+      : `<button type="button" data-pag="${n}"${n === listaPagina ? ' class="actual" aria-current="page"' : ''} aria-label="Página ${n}">${n}</button>`).join('');
+  actualizarCabezaPersonal(total);
   document.getElementById('pagina-anterior').disabled = listaPagina <= 1;
   document.getElementById('pagina-siguiente').disabled = listaPagina >= paginas;
 
@@ -3055,21 +3238,24 @@ function renderTabla(){
     const nombreMostrar = (p.nombre_completo && p.nombre_completo.trim())
       ? escapeHtml(p.nombre_completo)
       : '<em>(sin nombre — clic para corregir)</em>';
+    const nombreTitulo = escapeHtml(p.nombre_completo || '');
+    const proyectoTxt = p.proyecto_id ? proyectoNombre(p.proyecto_id) : '';
     return `
-    <tr>
+    <tr class="per-fila">
       <td class="col-id">${escapeHtml(p.empleado_id||'—')}</td>
-      <td class="col-nombre"><a href="#" onclick="abrirDetalle('${p.id}');return false;" style="color:var(--accent);text-decoration:none;font-weight:500;">${nombreMostrar}</a></td>
-      <td class="col-sec">${escapeHtml(empresaNombre(p.empresa_id))}</td>
-      <td class="col-sec">${puedeEscribirPersonal() ? `
-        <select class="inline-select" onchange="actualizarCampo('${p.id}','proyecto_id',this.value)">
+      <td class="col-nombre"><a href="#" onclick="abrirDetalle('${p.id}');return false;" title="${nombreTitulo}">${nombreMostrar}</a></td>
+      <td class="col-sec col-empresa" title="${escapeHtml(empresaNombre(p.empresa_id))}">${escapeHtml(empresaNombre(p.empresa_id))}</td>
+      <td class="col-sec col-proyecto">${puedeEscribirPersonal() ? `
+        <select class="inline-select per-proy" aria-label="Proyecto de ${nombreTitulo}" title="Cambiar proyecto (se guarda al momento)" onchange="actualizarCampo('${p.id}','proyecto_id',this.value)">
           ${(!p.proyecto_id || !proyectos.some(pr => pr.id === p.proyecto_id)) ? '<option value="" selected disabled>Sin proyecto</option>' : ''}
           ${proyectos.map(pr=>`<option value="${escapeHtml(pr.id)}" ${pr.id===p.proyecto_id?'selected':''}>${escapeHtml(pr.nombre)}</option>`).join('')}
-        </select>` : escapeHtml(p.proyecto_id ? proyectoNombre(p.proyecto_id) : '—')}
+        </select>` : `<span title="${escapeHtml(proyectoTxt)}">${escapeHtml(proyectoTxt || '—')}</span>`}
       </td>
-      <td class="col-sec">${escapeHtml(nombreCatalogoPersona('puestos', p.puesto_id) || '—')}</td>
-      <td class="col-sec">${escapeHtml(nombreCoordinador(p))}</td>
+      <td class="col-sec col-puesto">${escapeHtml(nombreCatalogoPersona('puestos', p.puesto_id) || '—')}</td>
+      <td class="col-sec col-coord" title="${escapeHtml(nombreCoordinador(p))}">${escapeHtml(nombreCoordinador(p))}</td>
       <td class="col-estatus"><span class="pill estatus-pill ${claseEstatusPersona(estatusPersona(p))}">${escapeHtml(estatusPersona(p))}</span></td>
-      ${esConsulta() ? '' : `<td class="col-esquemas">${resumenEsquemasPersonaHTML(p)}</td>`}
+      ${esConsulta() ? '' : `<td class="col-esquemas">${resumenEsquemasCompactoHTML(p)}</td>`}
+      <td class="col-acc"><button type="button" class="per-abrir" onclick="abrirDetalle('${p.id}')" aria-label="Abrir ficha de ${nombreTitulo}" title="Abrir ficha">›</button></td>
     </tr>
   `;
   }).join('');
@@ -4281,6 +4467,25 @@ document.getElementById('noi-ninguna').addEventListener('click', () => { if (!no
 document.getElementById('noi-descargar').addEventListener('click', descargarExportarNOI);
 document.getElementById('noi-cerrar').addEventListener('click', cerrarExportarNOI);
 document.getElementById('pagina-anterior').addEventListener('click', () => { listaPagina -= 1; renderTabla(); });
+document.getElementById('pagina-numeros').addEventListener('click', e => {
+  const b = e.target.closest('button[data-pag]'); if (!b) return;
+  listaPagina = Number(b.dataset.pag); renderTabla();
+});
+document.getElementById('per-estatus').addEventListener('click', e => {
+  const b = e.target.closest('button[data-est]'); if (!b) return;
+  document.getElementById('filtro-estatus').value = b.dataset.est; alCambiarFiltrosPersonal();
+});
+document.getElementById('per-mas').addEventListener('click', function(){
+  const panel = document.getElementById('per-mas-filtros');
+  panel.hidden = !panel.hidden; this.setAttribute('aria-expanded', String(!panel.hidden));
+});
+document.getElementById('per-exportar').addEventListener('click', e => {
+  if (e.target.closest('.per-exportar-menu button')) document.getElementById('per-exportar').open = false;
+});
+document.addEventListener('click', e => {
+  const m = document.getElementById('per-exportar');
+  if (m && m.open && !m.contains(e.target)) m.open = false;
+});
 document.getElementById('pagina-siguiente').addEventListener('click', () => { listaPagina += 1; renderTabla(); });
 
 function actualizarModoCoordinadorAlta(){

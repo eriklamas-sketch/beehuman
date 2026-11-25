@@ -146,7 +146,11 @@ with sync_playwright() as p:
     pg.click('.detail-head-actions > button'); espera(pg, 600)
     abrir_ficha(pg, 'ADELA PALACIOS GALVAN')
     fi = fila_cred(pg, '1234567890')
-    ok(fi and 'Informativo para NOI' in fi['txt'] and fi['txt'].count('$') == 0, 'F2 INFONAVIT: informativo para NOI, sin importe por periodo', fi['txt'][:110] if fi else '')
+    # Desde la presentación en tarjetas (b02f288) la etiqueta es «Informativo NOI · Sin descuento en BeeHuman» y la tarjeta
+    # muestra el valor informativo del INFONAVIT (p. ej. cuota fija en $), por lo que ya no se exige que no haya «$»:
+    # se exige que BeeHuman no genere descuento por periodo.
+    ok(fi and 'Informativo NOI' in fi['txt'] and 'Sin descuento en BeeHuman' in fi['txt'] and 'DESCUENTO EN BEEHUMAN No genera' in fi['txt']
+       and 'por periodo' not in fi['txt'], 'F2 INFONAVIT: informativo para NOI, sin importe por periodo', fi['txt'][:110] if fi else '')
     ok(not pg.errores, 'Administrador: sin errores de JavaScript', str(pg.errores[:2]))
     pg.click('.detail-head-actions > button'); espera(pg, 500)
     pg.click('nav.tabs button[data-tab="alta"]'); espera(pg, 600)

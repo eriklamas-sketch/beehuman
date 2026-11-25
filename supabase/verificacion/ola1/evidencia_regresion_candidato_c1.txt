@@ -1,0 +1,12 @@
+Regresión de pantalla de candidato/main (C1, 25-nov-2026). Copia local de prueba de app/ con la configuración apuntada a la base local (PostgREST) y OLA1_ACTIVA = true; el index.html publicado no cambia.
+ui_b5: RESULTADO: 31 de 31 OK
+ui_b5_tarjetas: RESULTADO: 40 de 40 OK
+ui_b5_grupos: RESULTADO: 43 de 43 OK
+ui_excel_canonico: RESULTADO: 37 de 37 verificaciones OK
+ui_concentrado: RESULTADO: 63 de 63 verificaciones OK
+ui_bandeja_envios: RESULTADO: 34 de 34 verificaciones OK
+ui_ola1: RESULTADO: 33 de 33 OK
+ui_b1: RESULTADO: 46 de 46 OK
+ui_b1_2: RESULTADO: 25 de 25 verificaciones OK
+ui_mis_hojas: RESULTADO: 22 de 22 OK
+ui_periodos_navegacion: RESULTADO: 32 de 32 verificaciones OK

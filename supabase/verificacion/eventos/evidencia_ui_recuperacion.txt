@@ -1,0 +1,30 @@
+== C1–C3 · Solicitud ==
+OK    C1 El inicio de sesión muestra «¿Olvidaste tu contraseña?»
+OK    C1 Abre «Recuperar contraseña» y conserva el correo escrito
+OK    C2 Correo con formato inválido: aviso y no se llama al servidor
+OK    C2 Llama a /recover con el correo y redirect_to = la URL de la aplicación  [file:///home/claude/beehuman/app/index.html]
+OK    C2 Mensaje que no revela si el correo existe  [Si el correo está registrado, te enviamos un enlace para crear una nue]
+OK    C3 Correo inexistente: exactamente el mismo mensaje
+OK    C1 «Volver a iniciar sesión» regresa al login
+OK    C3 Límite de envíos (429): pide esperar, sin revelar nada  [Ya se solicitó un enlace hace poco. Espera unos minutos antes de pedir otro.]
+OK    C3 Falla de red: mensaje de reintento  [No se pudo enviar la solicitud en este momento. Revisa tu conexión e intenta de nuevo.]
+== C4–C6 · Retorno desde el enlace con la sesión inactiva hace 2 horas ==
+OK    C4 El enlace abre «Nueva contraseña» aunque la última actividad sea de hace 2 h; la aplicación no se abre
+OK    C4 La regla de inactividad no cierra la sesión de recuperación
+OK    C4 La URL queda sin tokens  [e:///home/claude/beehuman/app/index.html]
+OK    C4 No se consulta ningún dato de la aplicación  [[]]
+OK    C5 Menos de 8 caracteres: aviso, sin llamar al servidor
+OK    C5 Confirmación distinta: aviso, sin llamar al servidor
+OK    C5 Igual a la anterior (same_password): mensaje claro y sigue en la pantalla
+OK    C6 Guarda con PUT /user y la contraseña nueva
+OK    C6 Cierra la sesión en todos los dispositivos y no queda sesión guardada  [[{'scope': ['global']}]]
+OK    C6 Vuelve al login con «Tu contraseña se actualizó…»  [Tu contraseña se actualizó. Inicia sesión con la nueva contraseña.]
+OK    C6 No queda marca de recuperación pendiente
+== C7 · Enlace vencido ==
+OK    C7 Enlace vencido: vuelve a la solicitud con aviso y la URL limpia  [El enlace venció o ya se usó. Solicita uno nuevo.]
+== C8 · Recuperación abandonada ==
+OK    C8 Con una recuperación abandonada, la siguiente visita pide iniciar sesión y descarta la sesión del enlace
+OK    C9 Sin errores de JavaScript
+OK    C9 Nada sale a internet  [[]]
+
+RESULTADO: 24 de 24 verificaciones OK

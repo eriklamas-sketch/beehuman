@@ -1,0 +1,7 @@
+Ojo en «Nueva contraseña» (25-nov-2026) — ui_recuperacion_ojo.py, página local:
+1280 ['text', 'password', 'Ocultar contraseña', 'text', 'Prueba124', 'password', 'password'] ojo dentro del campo: True errores: []
+390 ['text', 'password', 'Ocultar contraseña', 'text', 'Prueba124', 'password', 'password'] ojo dentro del campo: True errores: []
+
+Esperado por ancho: [text, password, Ocultar contraseña, text, Prueba124, password, password]; el botón queda dentro del campo; sin errores de JavaScript.
+Regresión: ui_recuperacion.py 24 de 24 verificaciones OK con este cambio.
+Prueba real en beehuman-pruebas (25-nov 17:31–17:37, correo real): solicitar enlace, abrirlo, guardar contraseña nueva, cerrar sesión del enlace, entrar con la nueva y reutilizar el enlace (rechazado). Los pasos hasta el inicio de sesión con la nueva contraseña constan en los registros de Auth (recover 17:31:46, verify 17:32:08, PUT user 17:32:47, logout 17:32:48, token 17:32:58); la reutilización la confirmó Erik.

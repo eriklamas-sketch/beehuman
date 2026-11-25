@@ -1,0 +1,45 @@
+Estados: ['preliminar', 'listo', 'procesado', 'listo', 'preliminar', 'preliminar']
+== X1–X3 · Preliminar ==
+OK    X1 En preliminar: solo «Descargar reporte preliminar», con el texto de B08
+OK    X2 Nombre PRELIMINAR_BeeHuman_…_AAAAMMDD-HHMM.xlsx  [PRELIMINAR_BeeHuman_EMPRESA-AGUILA-UI-XL_2028-06-19_2028-06-25_20261125-0916.xlsx]
+OK    X2 Hojas «PRELIM …» y «PRELIM Faltantes»  [['PRELIM Resumen', 'PRELIM Personas', 'PRELIM Esquemas', 'PRELIM Incidencias', 'PRELIM Cantidades', 'PRELIM Importes', 'PRELIM Descuentos', 'PRELIM Movimientos', 'PRELIM Catálogos', 'PRELIM Faltantes']]
+OK    X2 Primera fila del Resumen: aviso PRELIMINAR — NO AUTORIZADO
+OK    X2 Encabezado de impresión, título del documento y color de pestaña de preliminar  ['&B PRELIMINAR — NO AUTORIZADO']
+OK    X3 Por decidir: importe vacío, estado, motivo y sugerido  [5 filas]
+OK    X3 Lo por decidir no se suma en el Resumen
+OK    X10 Preliminar: un evento «preliminar»; firma, huella y estado intactos
+OK    +X10b El evento no guarda nombres ni RFC
+== X4–X8 · Oficial en listo ==
+OK    X4 En listo: solo «Exportar Excel oficial»  [listo]
+OK    X5 Nombre BeeHuman_…_exp-1.xlsx y mensaje  [BeeHuman_EMPRESA-AGUILA-UI-XL_2028-06-26_2028-07-02_exp-1.xlsx]
+OK    X5 Las 10 hojas en el orden del diseño  [['Resumen', 'Personas', 'Esquemas', 'Incidencias', 'Cantidades', 'Importes', 'Descuentos', 'Movimientos', 'Catálogos', 'Validaciones']]
+OK    X5 Encabezados = contrato del servidor en todas las hojas
+OK    X5 Cada encabezado lleva su nota (descripción)
+OK    X6 Texto que empieza con «=»: celda de texto (no fórmula), en NFC  ['=HOLA()+1 JOSÉ']
+OK    X6 Número interno e identificadores como texto
+OK    X6 Número interno «0042» conserva los ceros a la izquierda
+OK    X6 Fecha como fecha de Excel dd/mm/yyyy
+OK    X6 Booleano lógico y fecha vacía = celda vacía
+OK    X6 Importes numéricos con formato #,##0.00
+OK    X6 Cantidad 1.5 numérica con formato 0.####
+OK    X6 Ninguna fórmula en todo el archivo
+OK    X7 huella_archivo recalculada en Python sobre lo leído del .xlsx = la del servidor (= la del Resumen)
+OK    X7 Cada celda de las 8 hojas de datos = la fila del servidor
+OK    X7 Suma de Importes por concepto y modalidad = totales del Resumen (bruto y neto separados)  [{('e3600000-0000-4000-8000-000000000001', 'neto'): 50.0, ('e3600000-0000-4000-8000-000000000001', 'bruto'): 562.5, ('e3600000-0000-4000-8000-000000000002', 'bruto'): 150.0}]
+OK    X10 Oficial: un evento «oficial»; firma, huella y estado intactos
+OK    X7b Cambia solo el RFC: firma vigente, exp-2 y aviso «Los datos descriptivos cambiaron desde la exportación 1»  [Excel oficial descargado (BeeHuman_EMPRESA-AGUILA-UI-XL_2028-06-26_2028-07-02_exp-2.xlsx). Exportación número 2 de esta firma. Los datos descriptivos cambiaron desde la exportación 1.]
+OK    X8 Celda alterada en tránsito: B06 y no se descarga  [El archivo no cuadra con el concentrado firmado; no se generó. (B06)]
+== X9 · Procesado que cambió después ==
+OK    X9 Procesado con cambio posterior: explicación B07 y botón deshabilitado
+OK    +X9b …y la base también lo bloquea (B07)
+== X11 · 500 personas (CA16) ==
+OK    X11 500 personas (+ su coordinador, empleado de la empresa): 501 filas en Personas, 500 en Cantidades; huella_archivo coincide
+OK    CA16 Oficial · de clic a archivo descargado con 500 personas: 1.0 s (límite 5 s)  [159 KB]
+OK    CA16 Preliminar · de clic a archivo descargado con 500 personas: 0.7 s (límite 5 s); 500 importes por decidir  [178 KB]
+== X13 · Sin cambios desde el preliminar (CA27) ==
+OK    CA27 Firmado con la misma huella del último preliminar: «Sin cambios desde el preliminar del …»  [Sin cambios desde el preliminar del 25/11/2026, 09:17 a.m.]
+OK    CA27 Sin preliminar previo: no se muestra la nota
+OK    X12 Sin errores de JavaScript
+OK    RED Nada sale a internet (Supabase, supabase-js y ExcelJS servidos localmente)  [[]]
+
+RESULTADO: 37 de 37 verificaciones OK

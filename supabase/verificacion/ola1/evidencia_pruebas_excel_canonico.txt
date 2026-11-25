@@ -1,0 +1,86 @@
+OK    +S0 Semilla: el nombre de Z tiene la «é» descompuesta (NFD)
+== P · Reporte preliminar ==
+OK    +P0 Periodo en preliminar y sin firma  [preliminar sin_firma]
+OK    CA19/CA22 Preliminar sin firma: se genera, formato beehuman.preliminar, nombre PRELIMINAR_…, sin huella_archivo  [PRELIMINAR_BeeHuman_EMPRESA-ANGEL-EXCEL_2028-01-31_2028-02-06_20261125-0915.xlsx]
+OK    CA22 Hojas con prefijo «PRELIM » y hoja final «PRELIM Faltantes»
+OK    CA22 Primera fila del Resumen: aviso «PRELIMINAR — NO AUTORIZADO»  [PRELIMINAR — NO AUTORIZADO. Los datos pu]
+OK    P1 Resumen preliminar: sin huella_firma; huella_concentrado_actual = huella actual; firma_estado informativo
+OK    CA23 Importes por decidir: importe vacío, estado, motivo e importe sugerido  [7 por decidir]
+OK    CA23 Descuento pendiente: importe vacío, estado y sugerido 300.00
+OK    CA23 Lo por decidir no se suma: sin totales de importes mientras nada está decidido
+OK    P2 Faltantes: hoja sin enviar, importes, descuentos y firma (tipos del concentrado)  [['advertencia', 'descuento', 'firma', 'hoja', 'importe', 'informativo']]
+OK    25N-F Faltantes con nombre, persona_id y número interno (la firma de Nómina del periodo, sin persona)
+OK    25N-F2 Dos importes de la misma persona y concepto se distinguen por esquema (IMSS / bruto y EFECTIVO / neto)  [PERSONA X EXCEL · Horas extra — EFECTIVO / neto: importe por decidir — hoja de PERSONA CA EXCEL | PERSONA X EXCEL · Horas extra — IMSS / bruto: importe por decidir — hoja de PERSONA CA EXCEL]
+OK    25N-F2 Un faltante de importe por línea por decidir (mismo número que el concentrado)
+OK    25N-F Columnas de PRELIM Faltantes
+OK    +P2b El faltante de hoja nombra al coordinador con la hoja pendiente  [['PERSONA CB EXCEL: no ha enviado su hoja']]
+OK    CA2 Oficial en preliminar → B08
+OK    CA12 Preliminar no cambia firma, huella, estado, hojas, eventos ni la bandeja B6
+OK    CA25 Evento preliminar: modalidad, huella_concentrado y huella_datos_exportados; sin huella_firma ni huella_archivo
+OK    P3 El evento no guarda RFC, CURP, NSS ni nombres
+OK    CA26 Dos preliminares sin cambios: misma huella; número 2
+OK    P4 huella_datos_exportados del preliminar reproducida con otra implementación (Python)
+OK    CA26 Después de que un coordinador envía una hoja, la huella del preliminar cambia
+OK    CA13/BP1/B05 coordA: no exporta ninguna modalidad
+OK    CA13/BP1/B05 consulta: no exporta ninguna modalidad
+OK    CA13 anon: sin acceso
+OK    CA13 Otro tenant: «periodo no encontrado»
+OK    CA13 Funciones internas no expuestas a authenticated
+== R · Firma vigente con RH pendiente ==
+OK    +R0 Nómina firma el periodo
+OK    +R1 Firma vigente y RH pendiente: sigue en preliminar  [['firma', 'firma']]
+OK    CA20 Oficial con firma vigente y RH pendiente → B08
+OK    CA20 Preliminar disponible; informa la firma vigente y lista la firma de RH pendiente
+== O · Excel oficial ==
+OK    +O0 Con las firmas de RH el periodo queda listo
+OK    CA21 Preliminar en listo → BP2 (remite al oficial)
+OK    CA1 Oficial en listo: formato beehuman.canonico y nombre BeeHuman_…_exp-1.xlsx  [BeeHuman_EMPRESA-ANGEL-EXCEL_2028-01-31_2028-02-06_exp-1.xlsx]
+OK    CA1 Las 10 hojas en orden, con las columnas exactas del diseño
+OK    CA4 huella_concentrado = huella_firma = huella actual  [886bedf5bfc052c6]
+OK    CA11/CA15 huella_archivo y huella_datos_exportados reproducidas con otra implementación (serialización determinista)
+OK    CA17 Texto que empieza con «=» se entrega como texto, normalizado a NFC  [=SUMA(1;2) JOSÉ]
+OK    V-1 Relación principal: número interno, registro patronal, fecha de ingreso y relación (regla rel_pri)
+OK    +V-1b numero_interno igual al del concentrado para todas las personas
+OK    CA9 Persona con 2 esquemas: 1 fila en Personas y 2 en Esquemas
+OK    CA15 Esquema sin registro patronal: vacío (null), no cero
+OK    CA9 Una línea de importe por esquema (bruto y neto)
+OK    CA15 Importe decidido en 0 = «0.00» (distinto de vacío)
+OK    +O1 El oficial solo trae importes decididos, sin columnas de estado
+OK    O2 Concepto de descuento = deducción; bono = percepción
+OK    CA7 Cantidades sin dinero: sin BON ni DES (unidad importe) y sin columna de importe
+OK    CA7 Importes sin cantidades
+OK    CA5/CA6 Total de importes por concepto y modalidad (bruto y neto separados) igual al concentrado
+OK    CA10 FONACOT = 1 fila descuento con referencia; INFONAVIT = 1 fila informativa sin importe
+OK    CA10 Ninguna llave se repite en ninguna hoja  [None]
+OK    CA14 Catálogos con los valores usados y clave_externa vacía
+OK    O3 Validaciones en listo: B01–B08 superadas, salvo B07 «no_aplica: el periodo aún no ha sido procesado»
+OK    25N-A05 A05 con el nombre de la persona  [PERSONA W EXCEL — sin número interno.]
+OK    25N-A07 A07 solo por percepciones fuera de bruto; la deducción sin esquema no es A07  [['Tiene percepciones en el esquema neto: no van a la nómina fiscal (esquema bruto).']]
+OK    25N-A11 Deducción sin esquema: A11 si la persona no tiene exactamente un esquema bruto (S: 0); X (1 bruto): sin aviso
+OK    25N-V Validaciones: advertencias, informativos y al final los 8 bloqueos superados
+OK    25N-V Validaciones con nombre_completo de la persona
+OK    O4 Advertencias A02, A05, A06, A07, A08 e informativos I01, I02  [['A02', 'A05', 'A06', 'A07', 'A08', 'A11', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'I01', 'I02']]
+OK    CA12 Exportar el oficial no cambia firma, huella, estado, hojas, eventos ni B6
+OK    CA11 Misma firma y mismos datos: mismas huellas; número 2 y huella anterior
+OK    CA11 Cambia solo el RFC: la firma sigue vigente, cambian las dos huellas de datos y sube el número
+OK    O5 Eventos: 3 oficiales con huella_firma y huella_archivo; los 4 preliminares contados aparte
+== C · Ciclo: cambio material → preliminar → nueva firma (CA3) ==
+OK    CA3 Cambio material: la firma se invalida y el periodo vuelve a preliminar
+OK    CA3 Oficial bloqueado (B08) y preliminar disponible
+OK    CA3 Nueva firma: el oficial vuelve a funcionar con huellas nuevas (número 1 de la nueva firma)
+== K · Complementos y procesado ==
+OK    CA8 Complemento anterior al procesamiento: incluido
+OK    +K0 Periodo procesado
+OK    CA8 Procesado con complemento posterior: oficial disponible, sin sus líneas y con A01
+OK    BP2 Preliminar en procesado → BP2
+OK    O3b Validaciones en procesado: B07 superada «Sin cambios después del procesamiento.»
+OK    CA18 Procesado que cambió después → B07
+OK    CA18 Preliminar tampoco disponible (BP2, mensaje de cambio posterior)
+== L · Procesado con la regla anterior (sin firma de periodo) → B01 ==
+OK    CA2/B01 Periodo procesado sin firma de periodo (regla anterior) → B01
+OK    +L1 …y el preliminar → BP2
+== V · Concepto «importe» + «sin importe» (V-3) → B06 en el oficial; aviso en el preliminar ==
+OK    V-3 Preliminar: lo lista en Faltantes como «configuracion»
+OK    V-3 Oficial bloqueado con B06 (su dinero no llegaría al archivo)
+
+RESULTADO: 77 de 77 verificaciones OK

@@ -1051,6 +1051,128 @@ nav.tabs button[data-tab="incidencias"] .inc-aviso[hidden]{display:none}`;
   // Pendientes que bloquean la firma (misma regla que inc_faltantes_bloqueantes): hojas, importes, descuentos y falta de responsable.
   const bloqueaFirma = f => f.tipo !== 'firma' || String(f.detalle).startsWith('Designa al responsable de Nómina');
 
+  // ---------- Excel canónico V1 (oficial) y reporte preliminar de acumulado ----------
+  // Diseño: Excel-canonico-V1-diseno-funcional-24nov. La base valida (B01–B08, BP1–BP3), arma las filas,
+  // calcula las huellas y registra el evento; esta pantalla solo escribe el .xlsx con tipos explícitos.
+  // El oficial vuelve a calcular huella_archivo aquí y no descarga nada si no es igual a la del servidor (B06).
+  const EXCELJS_URL = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+  const EXCELJS_SRI = 'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz';
+  let excelJsPromesa = null;
+  function cargarExcelJS() {
+    if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
+    if (!excelJsPromesa) excelJsPromesa = new Promise((ok, mal) => {
+      const sc = document.createElement('script');
+      sc.src = EXCELJS_URL; sc.integrity = EXCELJS_SRI; sc.crossOrigin = 'anonymous';
+      sc.onload = () => window.ExcelJS ? ok(window.ExcelJS) : mal(new Error('El generador de Excel no se cargó.'));
+      sc.onerror = () => { excelJsPromesa = null; mal(new Error('No se pudo cargar el generador de Excel. Revisa tu conexión e intenta de nuevo.')); };
+      document.head.appendChild(sc);
+    });
+    return excelJsPromesa;
+  }
+  // Descripción de cada encabezado (nota de Excel; no forma parte del contrato).
+  const EXP_DESC = {
+    numero_interno: 'Número interno de la persona en su relación laboral principal', nombre_completo: 'Nombre de la persona (informativo)',
+    rfc: 'RFC (informativo, fuera de la firma)', curp: 'CURP (informativo, fuera de la firma)', nss: 'NSS (informativo, fuera de la firma)',
+    registro_patronal: 'Registro patronal', fecha_ingreso: 'Fecha de ingreso de la relación principal', fecha_baja: 'Fecha de baja de la relación principal',
+    alta_en_periodo: 'Alta dentro del periodo', baja_en_periodo: 'Baja dentro del periodo', dias_vigentes: 'Días vigentes en el periodo',
+    relaciones_en_periodo: 'Relaciones laborales vigentes en el periodo', esquemas_en_periodo: 'Esquemas de pago vigentes en el periodo',
+    proyecto: 'Proyecto', coordinadores: 'Coordinadores de la persona en el periodo', con_incidencias: 'Tiene incidencias en el periodo',
+    persona_id: 'Identificador BeeHuman de la persona', relacion_laboral_id: 'Identificador de la relación laboral', clasificacion: 'Clasificación del esquema',
+    modalidad: 'Modalidad del sueldo (bruto o neto); nunca se suman entre sí', sueldo: 'Sueldo del esquema', dias_periodo: 'Días del periodo del esquema',
+    fecha_inicio: 'Inicio de vigencia', fecha_fin: 'Fin de vigencia', activo: 'Esquema activo', registro_pago_id: 'Identificador del esquema de pago',
+    fecha: 'Fecha', codigo: 'Clave', codigo_nombre: 'Nombre de la clave del día', centro_costo: 'Centro de costo', hoja_tipo: 'original o complemento',
+    version_hoja: 'Versión vigente de la hoja', hoja_id: 'Identificador de la hoja', periodo_origen_id: 'Periodo donde se capturó la línea',
+    concepto_clave: 'Abreviatura del concepto', unidad: 'Unidad', cantidad: 'Cantidad capturada', tipo_linea: 'Tipo de línea', concepto_id: 'Identificador del concepto',
+    naturaleza: 'percepcion o deduccion', importe: 'Importe decidido; vacío = no decidido o no aplica, 0.00 = decidido en cero',
+    clase: 'descuento (con importe) o informativo', tipo_credito: 'Tipo de crédito', etiqueta: 'Etiqueta del crédito', referencia_credito: 'Referencia del crédito',
+    infonavit_tipo: 'Tipo de descuento INFONAVIT', infonavit_valor: 'Valor del descuento INFONAVIT', pension_forma: 'Forma de la pensión', pension_valor: 'Valor de la pensión',
+    credito_id: 'Identificador del crédito', descuento_id: 'Identificador del descuento del periodo', tipo: 'Tipo', fecha_efectiva: 'Fecha efectiva', causa: 'Causa',
+    evento_id: 'Identificador del evento', catalogo: 'Catálogo', clave_beehuman: 'Clave en BeeHuman', abreviatura: 'Abreviatura', nombre: 'Nombre', modo: 'Modo de cálculo',
+    sistema_externo: 'Sistema externo (lo llena un adaptador)', clave_externa: 'Clave en el sistema externo (lo llena un adaptador)',
+    estado: 'Estado de la línea en el reporte preliminar', motivo_pendiente: 'Por qué sigue pendiente', importe_sugerido: 'Importe sugerido por BeeHuman (no decidido)',
+    seccion: 'Sección', clave: 'Dato', valor: 'Valor', nivel: 'bloqueo, advertencia o informativo', resultado: 'Resultado', hoja: 'Hoja relacionada',
+    referencia_id: 'Identificador relacionado', mensaje: 'Explicación'
+  };
+  const EXP_NUM = /^-?\d+(\.\d+)?$/;
+  const expLinea = a => '[' + a.map(v => JSON.stringify(typeof v === 'string' ? v.normalize('NFC') : v)).join(',') + ']';
+  async function expHuellaArchivo(x) {
+    let t = expLinea([x.formato, x.version_formato]) + '\n';
+    for (const h of x.hojas) {
+      t += expLinea(['#hoja', h.nombre]) + '\n' + expLinea(h.columnas.map(c => c.n)) + '\n';
+      for (const r of h.filas) t += expLinea(r) + '\n';
+    }
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+    return Array.from(new Uint8Array(b)).map(n => n.toString(16).padStart(2, '0')).join('');
+  }
+  function expCelda(cell, v, t, unidad) {
+    if (v === null || v === undefined || v === '') return;
+    if (t === 'booleano') { cell.value = v === true || v === 'true'; return; }
+    if (t === 'fecha') { const [a, m, d] = String(v).split('-').map(Number); cell.value = new Date(Date.UTC(a, m - 1, d)); cell.numFmt = 'dd/mm/yyyy'; return; }
+    if (t === 'importe') { cell.value = Number(v); cell.numFmt = '#,##0.00'; return; }
+    if (t === 'numero') { cell.value = Number(v); cell.numFmt = '0.####'; return; }
+    if (t === 'entero') { cell.value = Number(v); cell.numFmt = '0'; return; }
+    if (t === 'mixto' && unidad && EXP_NUM.test(String(v))) { cell.value = Number(v); cell.numFmt = unidad === 'MXN' ? '#,##0.00' : '0.####'; return; }
+    cell.value = String(v);                                   // texto explícito: «=», «+», «-» o «@» no se evalúan
+  }
+  function expHoja(wb, h, pre) {
+    const ws = wb.addWorksheet(h.nombre, { properties: { tabColor: { argb: pre ? 'FFF79009' : 'FF16264A' } }, views: [{ state: 'frozen', ySplit: 1 }] });
+    if (pre) { ws.headerFooter.oddHeader = '&C&B PRELIMINAR — NO AUTORIZADO'; ws.headerFooter.oddFooter = '&L&8 Los datos pueden cambiar; no usar para alimentar sistemas de nómina.'; }
+    const cols = h.columnas, iu = cols.findIndex(c => c.n === 'unidad');
+    ws.columns = cols.map(c => ({ width: Math.min(Math.max(c.n.length + 2, c.t === 'texto' ? 14 : 12), 40) }));
+    const cab = ws.getRow(1);
+    cols.forEach((c, i) => { const cell = cab.getCell(i + 1); cell.value = c.n; cell.font = { bold: true };
+      if (EXP_DESC[c.n]) cell.note = EXP_DESC[c.n]; });
+    h.filas.forEach((r, j) => { const row = ws.getRow(j + 2); r.forEach((v, i) => expCelda(row.getCell(i + 1), v, cols[i].t, iu >= 0 ? r[iu] : null)); });
+    if (h.filas.length) ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
+  }
+  async function exportarExcel(periodoId, modalidad, msgId) {
+    const pre = modalidad === 'preliminar';
+    msg(msgId, 'info', pre ? 'Armando el reporte preliminar…' : 'Validando la firma y armando el Excel oficial…');
+    let ExcelJS;
+    try { ExcelJS = await cargarExcelJS(); } catch (e) { return msg(msgId, 'err', e.message); }
+    const { data: x, error } = await sb.rpc(pre ? 'inc_exportacion_preliminar' : 'inc_exportacion_canonica', { p_periodo: periodoId });
+    if (error) return msg(msgId, 'err', limpiarError(error));
+    if (!pre) {
+      const h = await expHuellaArchivo(x);
+      if (h !== x.huella_archivo) return msg(msgId, 'err', 'El archivo no cuadra con el concentrado firmado; no se generó. (B06)');
+    }
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'BeeHuman'; wb.created = new Date(); wb.title = pre ? 'PRELIMINAR — NO AUTORIZADO' : 'Excel canónico BeeHuman';
+    wb.subject = pre ? `PRELIMINAR — no autorizado · ${x.formato} ${x.version_formato}` : `${x.formato} ${x.version_formato}`;
+    wb.keywords = pre ? 'PRELIMINAR NO AUTORIZADO' : 'beehuman.canonico'; wb.category = 'Confidencial';
+    wb.description = 'huella_datos_exportados ' + x.huella_datos_exportados + (x.huella_archivo ? ' · huella_archivo ' + x.huella_archivo : '');
+    [x.resumen, ...x.hojas, x.validaciones].forEach(h => expHoja(wb, h, pre));
+    const buf = await wb.xlsx.writeBuffer();
+    const url = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    const a = document.createElement('a'); a.href = url; a.download = x.nombre_archivo; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    msg(msgId, 'ok', pre ? `Reporte preliminar descargado (${x.nombre_archivo}). No está autorizado: no lo uses para alimentar la nómina.`
+      : `Excel oficial descargado (${x.nombre_archivo}). Exportación número ${x.exportacion_numero} de esta firma.`
+        + (x.huella_datos_exportados_anterior && x.huella_datos_exportados_anterior !== x.huella_datos_exportados
+          ? ` Los datos descriptivos cambiaron desde la exportación ${x.exportacion_numero - 1}.` : ''));
+  }
+  function htmlExportar(C, prelim) {
+    const post = C.avisos && C.avisos.cambio_posterior_procesado;
+    if (C.estado === 'preliminar') return `<div class="inc-panel" id="inc-c-exportar" data-modo="preliminar"><b>Exportar</b>
+      <p class="hint" id="inc-c-exp-b08">El periodo sigue en preparación. Puedes descargar el reporte preliminar, pero el Excel canónico oficial estará disponible cuando el periodo esté listo y tenga la firma de Nómina vigente.</p>
+      <div class="inc-acciones"><button type="button" class="inc-sec" id="inc-c-exp-pre">Descargar reporte preliminar</button></div>
+      <p class="inc-nota">El preliminar no está autorizado: sus datos pueden cambiar y lo por decidir va con el importe vacío.</p>
+      <div class="inc-msg" id="inc-c-exp-msg"></div></div>`;
+    if (C.estado === 'listo' || C.estado === 'procesado') return `<div class="inc-panel" id="inc-c-exportar" data-modo="oficial"><b>Exportar</b>
+      ${post ? `<p class="hint" id="inc-c-exp-b07">El periodo se procesó y después cambió. La versión 1 no puede reproducir lo procesado, así que no hay exportación disponible.</p>`
+        : `<p class="hint">Reproduce exactamente el concentrado firmado. Es el archivo válido para alimentar la nómina.</p>`}
+      ${!post && prelim && C.huella && prelim.huella && prelim.huella.huella_concentrado === C.huella.total
+        ? `<p class="inc-nota" id="inc-c-exp-sin-cambios">Sin cambios desde el preliminar del ${esc(fechaHora(prelim.creado_en))}</p>` : ''}
+      <div class="inc-acciones"><button type="button" id="inc-c-exp-of"${post ? ' disabled' : ''}>Exportar Excel oficial</button></div>
+      <div class="inc-msg" id="inc-c-exp-msg"></div></div>`;
+    return '';
+  }
+  function conectarExportar(periodoId) {
+    [['inc-c-exp-pre', 'preliminar'], ['inc-c-exp-of', 'oficial']].forEach(([id, m]) => { const b = $(id); if (!b) return;
+      b.addEventListener('click', async () => { b.disabled = true; try { await exportarExcel(periodoId, m, 'inc-c-exp-msg'); }
+        catch (e) { msg('inc-c-exp-msg', 'err', 'No se pudo generar el archivo: ' + (e && e.message || e)); } finally { b.disabled = false; } }); });
+  }
+
   async function revConcentrado() {
     const cont = $('inc-vista'), periodoId = S.rev.periodoId;
     cont.innerHTML = '<div class="card"><p class="hint">Armando el concentrado del periodo…</p></div>';
@@ -1060,10 +1182,13 @@ nav.tabs button[data-tab="incidencias"] .inc-aviso[hidden]{display:none}`;
     if (cc.error) { cont.innerHTML = `<div class="card"><button type="button" class="inc-volver" id="inc-r-volver">← Periodos</button>${errHtml(cc.error)}</div>`;
       $('inc-r-volver').addEventListener('click', () => { S.rev = {}; vistaRevision(); }); return; }
     const C = cc.data, pe = C.periodo;
-    const [prm, hist, tb] = await Promise.all([
+    const [prm, hist, tb, prel] = await Promise.all([
       sb.from('inc_parametros').select('responsable_nomina_user').eq('empresa_id', pe.empresa_id).maybeSingle(),
       sb.from('inc_eventos').select('id, hoja_id, version_id, nombre, creado_en').eq('periodo_id', pe.id).eq('tipo', 'firma_nomina').order('creado_en', { ascending: false }),
-      sb.rpc('inc_tablero_periodo', { p_periodo: pe.id })
+      sb.rpc('inc_tablero_periodo', { p_periodo: pe.id }),
+      // CA27: último reporte preliminar, para decir si nada cambió desde entonces (comparación de huellas, informativa).
+      sb.from('inc_eventos').select('huella, creado_en').eq('periodo_id', pe.id).eq('tipo', 'exportacion')
+        .eq('huella->>modalidad', 'preliminar').order('creado_en', { ascending: false }).limit(1)
     ]);
     const procesado = C.estado === 'procesado';
     const faltan = C.faltantes || [];
@@ -1217,6 +1342,7 @@ nav.tabs button[data-tab="incidencias"] .inc-aviso[hidden]{display:none}`;
       <div class="inc-panel" id="inc-c-firma"><b>Firma de Nómina del periodo</b>
         ${htmlFirmaPeriodo({ firmaEst: firma, hist: hist.data || [], procesado, resp: prm.data ? prm.data.responsable_nomina_user : null, bloquean: bloquean.length })}
         ${hist.error ? `<p class="inc-nota">No se pudo leer el historial de firmas: ${esc(limpiarError(hist.error))}</p>` : ''}</div>
+      ${htmlExportar(C, (prel && prel.data && prel.data[0]) || null)}
       ${htmlPendientes}
       ${htmlSecciones}
       ${htmlTotales}
@@ -1233,6 +1359,7 @@ nav.tabs button[data-tab="incidencias"] .inc-aviso[hidden]{display:none}`;
     $('inc-r-volver').addEventListener('click', () => { S.rev = {}; vistaRevision(); });
     conectarPestanas(pe.id);
     conectarFirmaPeriodo(pe.id, C.huella && C.huella.total, revConcentrado);
+    conectarExportar(pe.id);
     $('inc-c-q').addEventListener('input', e => { F.q = e.target.value; pintarTabla(); });
     if ($('inc-c-coord')) $('inc-c-coord').addEventListener('change', e => { F.coord = e.target.value; pintarTabla(); });
     [['inc-c-f-inc', 'inc'], ['inc-c-f-pend', 'pend'], ['inc-c-f-mov', 'mov']].forEach(([id, k]) => $(id).addEventListener('change', e => { F[k] = e.target.checked; pintarTabla(); }));

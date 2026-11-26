@@ -64,7 +64,9 @@
   .imp-acciones button:disabled{opacity:.5;cursor:not-allowed;}
   .imp-tipo{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0 0;display:grid;gap:6px;font-size:13px;}
   .imp-tipo legend{font-weight:600;padding:0 4px;}
-  .imp-tipo label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;}
+  .imp-tipo label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-weight:400;margin:0;}
+  .imp-tipo label input[type=radio]{width:16px!important;height:16px;min-width:16px;flex:none;margin:2px 0 0!important;padding:0;box-shadow:none;}
+  .imp-tipo label span{flex:1;text-align:left;line-height:1.45;}
   .imp-tipo-elegido{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;margin:0 0 10px;}
   .imp-err{color:var(--danger);}
   .imp-adv{color:var(--text-secondary);}
@@ -1726,8 +1728,8 @@ body.rol-consulta #panel-lista .per-kpi{border-right:0}
       <p class="hint" style="margin-top:-10px;">En Excel, guarda el archivo como «CSV UTF-8 (delimitado por comas)» y da formato de Texto a las columnas NSS y CP fiscal para que no pierdan los ceros iniciales.</p>
       <fieldset class="imp-tipo" id="imp-tipo-carga">
         <legend>Tipo de carga</legend>
-        <label><input type="radio" name="imp-tipo-carga" value="carga_inicial" checked> <b>Carga inicial</b> — personal que ya está dado de alta en el IMSS. No genera altas IMSS.</label>
-        <label><input type="radio" name="imp-tipo-carga" value="altas_nuevas"> <b>Altas nuevas</b> — personas que ingresan ahora. Genera el alta IMSS (08) pendiente en la bandeja IDSE para cada persona con registro patronal.</label>
+        <label><input type="radio" name="imp-tipo-carga" value="carga_inicial" checked><span><b>Carga inicial</b> — personal que ya está dado de alta en el IMSS. No genera altas IMSS.</span></label>
+        <label><input type="radio" name="imp-tipo-carga" value="altas_nuevas"><span><b>Altas nuevas</b> — personas que ingresan ahora. Genera el alta IMSS (08) pendiente en la bandeja IDSE para cada persona con registro patronal.</span></label>
       </fieldset>
       <div class="imp-acciones" id="imp-inicio">
         <button type="button" class="secundario" id="imp-plantilla">Descargar plantilla</button>

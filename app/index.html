@@ -62,6 +62,10 @@
   .imp-acciones button.secundario,.imp-acciones label.secundario{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:500;}
   .imp-acciones button.primary{margin-top:0;}
   .imp-acciones button:disabled{opacity:.5;cursor:not-allowed;}
+  .imp-tipo{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0 0;display:grid;gap:6px;font-size:13px;}
+  .imp-tipo legend{font-weight:600;padding:0 4px;}
+  .imp-tipo label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;}
+  .imp-tipo-elegido{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;margin:0 0 10px;}
   .imp-err{color:var(--danger);}
   .imp-adv{color:var(--text-secondary);}
   #imp-detalle td{vertical-align:top;font-size:13px;}
@@ -1718,8 +1722,13 @@ body.rol-consulta #panel-lista .per-kpi{border-right:0}
   <section class="panel" id="panel-alta">
     <div class="card" id="imp-card">
       <h2>Importar personas desde un archivo CSV</h2>
-      <p class="hint">Sirve para dar de alta a varias personas nuevas a la vez. No modifica a quienes ya están registrados y no captura esquemas de pago. Las empresas, proyectos y demás catálogos deben existir antes de importar. Máximo 1,000 personas por archivo.</p>
+      <p class="hint">Sirve para dar de alta a varias personas nuevas a la vez, con su relación laboral y hasta dos formas de pago. No modifica a quienes ya están registrados. Las empresas, registros patronales, formas de pago, periodicidades y demás catálogos deben existir antes de importar. Máximo 1,000 personas por archivo.</p>
       <p class="hint" style="margin-top:-10px;">En Excel, guarda el archivo como «CSV UTF-8 (delimitado por comas)» y da formato de Texto a las columnas NSS y CP fiscal para que no pierdan los ceros iniciales.</p>
+      <fieldset class="imp-tipo" id="imp-tipo-carga">
+        <legend>Tipo de carga</legend>
+        <label><input type="radio" name="imp-tipo-carga" value="carga_inicial" checked> <b>Carga inicial</b> — personal que ya está dado de alta en el IMSS. No genera altas IMSS.</label>
+        <label><input type="radio" name="imp-tipo-carga" value="altas_nuevas"> <b>Altas nuevas</b> — personas que ingresan ahora. Genera el alta IMSS (08) pendiente en la bandeja IDSE para cada persona con registro patronal.</label>
+      </fieldset>
       <div class="imp-acciones" id="imp-inicio">
         <button type="button" class="secundario" id="imp-plantilla">Descargar plantilla</button>
         <label class="secundario" for="imp-archivo">Seleccionar archivo CSV</label>
@@ -6600,14 +6609,16 @@ function mensajeErrorGuardarPersonal(error){
 }
 
 // ---------------------------------------------------------------------
-// Fase 3: importación masiva de personas NUEVAS desde CSV.
-//   Archivo -> lectura -> validación -> vista previa -> confirmar -> importar.
-// Solo inserta en `personal` (el tenant lo asigna la base con la sesión del
-// usuario). No actualiza personas existentes, no crea catálogos y no captura
-// esquemas de pago. Mientras se valida no se escribe nada.
+// Importación masiva de personas NUEVAS desde CSV (F3, ampliada el 26-nov-2026).
+//   Archivo -> lectura -> validación local -> simulación en BeeHuman (no guarda)
+//   -> vista previa -> confirmar -> alta por fila (persona + relación laboral +
+//   hasta 2 formas de pago, todo o nada) -> reporte.
+// La base hace el alta con imp_alta_personas (RLS y permisos del usuario).
+// No actualiza personas existentes ni crea catálogos. Un archivo con las 21
+// columnas anteriores sigue siendo válido (solo crea la persona, como antes).
 // ---------------------------------------------------------------------
 const IMP_MAX_FILAS = 1000;
-const IMP_TAMANO_BLOQUE = 100;
+const IMP_TAMANO_BLOQUE = 50;
 const IMP_TIPOS_EMPLEADO = ['Confianza', 'Sindicalizado', 'Base', 'Honorarios'];
 const IMP_TURNOS = ['Matutino', 'Vespertino', 'Nocturno', 'Mixto'];
 const IMP_COLUMNAS = [
@@ -6615,7 +6626,7 @@ const IMP_COLUMNAS = [
   { clave: 'apellido1', titulo: 'Primer apellido', obligatoria: true },
   { clave: 'apellido2', titulo: 'Segundo apellido' },
   { clave: 'empresa', titulo: 'Empresa', obligatoria: true },
-  { clave: 'proyecto', titulo: 'Proyecto', obligatoria: true },
+  { clave: 'proyecto', titulo: 'Proyecto' },
   { clave: 'rfc', titulo: 'RFC' },
   { clave: 'curp', titulo: 'CURP' },
   { clave: 'nss', titulo: 'NSS' },
@@ -6631,9 +6642,26 @@ const IMP_COLUMNAS = [
   { clave: 'tipo', titulo: 'Tipo de empleado' },
   { clave: 'turno', titulo: 'Turno' },
   { clave: 'inicio', titulo: 'Fecha de inicio de contrato' },
-  { clave: 'vence', titulo: 'Fecha de vencimiento de contrato' }
+  { clave: 'vence', titulo: 'Fecha de vencimiento de contrato' },
+  // Relación laboral (nuevas): con «Fecha de ingreso» se crea la relación.
+  { clave: 'ingreso', titulo: 'Fecha de ingreso' },
+  { clave: 'antig', titulo: 'Fecha de antigüedad' },
+  { clave: 'numInt', titulo: 'Número interno' },
+  { clave: 'sdi', titulo: 'SDI' },
+  { clave: 'tt', titulo: 'Tipo de trabajador' },
+  { clave: 'ts', titulo: 'Tipo de salario' },
+  { clave: 'jo', titulo: 'Jornada IMSS' },
+  { clave: 'umf', titulo: 'UMF' },
+  // Formas de pago (nuevas): hasta dos; una tercera se agrega en Compensación.
+  ...[1, 2].flatMap(n => [
+    { clave: `fp${n}`, titulo: `Forma de pago ${n}` }, { clave: `per${n}`, titulo: `Periodicidad ${n}` },
+    { clave: `mod${n}`, titulo: `Modalidad ${n}` }, { clave: `imp${n}`, titulo: `Importe ${n}` }])
 ];
-let impEstado = null;     // { archivo, filas: [...] } de la vista previa en curso
+const IMP_TIPOS_CARGA = {
+  carga_inicial: { nombre: 'Carga inicial', texto: 'personal que ya está dado de alta en el IMSS. No genera altas IMSS.' },
+  altas_nuevas: { nombre: 'Altas nuevas', texto: 'personas que ingresan ahora. Genera el alta IMSS (08) pendiente en la bandeja IDSE para cada persona con registro patronal.' }
+};
+let impEstado = null;     // { archivo, tipoCarga, filas: [...], simulada } de la vista previa en curso
 let impEnviando = false;
 
 function impClave(t){ return normalizarBusqueda(t).replace(/\s+/g, ' ').trim(); }
@@ -6641,6 +6669,10 @@ function impToast(msg, tipo){
   const t = document.getElementById('imp-toast');
   if (!msg) { t.style.display = 'none'; return; }
   t.textContent = msg; t.className = 'toast ' + tipo; t.style.display = 'block';
+}
+function impTipoCargaElegido(){
+  const r = document.querySelector('input[name="imp-tipo-carga"]:checked');
+  return r && IMP_TIPOS_CARGA[r.value] ? r.value : 'carga_inicial';
 }
 
 // Lee el archivo como UTF-8 y, si no lo es (CSV "clásico" de Excel), como Windows-1252.
@@ -6678,6 +6710,14 @@ function impFecha(valor){
   const f = new Date(a, mes - 1, d);
   if (f.getFullYear() !== a || f.getMonth() !== mes - 1 || f.getDate() !== d || a < 1900 || a > 2100) return null;
   return `${a}-${String(mes).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+// Importe: 1234.5 · 1,234.50 · $1,234.50 · 1234,50 (coma decimal). Hasta 2 decimales. Devuelve número o NaN.
+function impImporte(valor){
+  let t = String(valor || '').replace(/[\s$]/g, '');
+  if (/^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(t)) t = t.replace(/,/g, '');
+  else if (/^\d+,\d{1,2}$/.test(t)) t = t.replace(',', '.');
+  if (!/^\d+(\.\d{1,2})?$/.test(t)) return NaN;
+  return Number(t);
 }
 // Busca un nombre en un catálogo ya cargado del tenant. Nunca crea nada.
 function impBuscarEnCatalogo(lista, valor, etiqueta, errores){
@@ -6718,113 +6758,274 @@ function impValidar(matriz){
     ['rfc', 'curp', 'nss'].forEach(c => { if (p[c]) existentes[c].set(String(p[c]).toUpperCase(), p); });
     if (p.nombre_completo) nombresExistentes.add(impClave(p.nombre_completo));
   });
-  const porEmpleadoId = new Map(personal.filter(p => p.empleado_id).map(p => [String(p.empleado_id).toUpperCase(), p]));
   const hoy = fechaLocalHoy();
+  const celda = (f, clave) => (posicion[clave] === undefined ? '' : (f.celdas[posicion[clave]] || ''));
+  // CURP de cada fila del archivo (para coordinadores que vienen en el mismo archivo).
+  const curpsArchivo = new Map();
+  datos.forEach(f => { const r = validarCURP(celda(f, 'curp')); if (r.valido && r.valor) {
+    const k = String(r.valor).toUpperCase(); if (!curpsArchivo.has(k)) curpsArchivo.set(k, []); curpsArchivo.get(k).push(f.linea); } });
 
   const filas = datos.map(f => {
-    const v = clave => (posicion[clave] === undefined ? '' : (f.celdas[posicion[clave]] || ''));
+    const v = clave => celda(f, clave);
     const errores = [], advertencias = [];
     IMP_COLUMNAS.filter(c => c.obligatoria && !v(c.clave)).forEach(c => errores.push({ tipo: 'Campo obligatorio vacío', msg: `Falta ${c.titulo}.` }));
-    const payload = {
-      id: crypto.randomUUID(),
+    const persona = {
       nombres: v('nombres'), primer_apellido: v('apellido1'), segundo_apellido: v('apellido2') || null,
       nombre_completo: [v('nombres'), v('apellido1'), v('apellido2')].filter(Boolean).join(' ')
     };
     [['rfc', validarRFCPersona, 'rfc'], ['curp', validarCURP, 'curp'], ['nss', validarNSS, 'nss'], ['cp', validarCPFiscal, 'cp_fiscal']].forEach(([clave, validar, campo]) => {
       const r = validar(v(clave));
       if (!r.valido) errores.push({ tipo: 'Formato inválido', msg: r.error });
-      payload[campo] = r.valido ? r.valor : null;
+      persona[campo] = r.valido ? r.valor : null;
     });
-    payload.empresa_id = v('empresa') ? impBuscarEnCatalogo(empresas, v('empresa'), 'La empresa', errores) : null;
-    payload.proyecto_id = v('proyecto') ? impBuscarEnCatalogo(proyectos, v('proyecto'), 'El proyecto', errores) : null;
+    persona.empresa_id = v('empresa') ? impBuscarEnCatalogo(empresas, v('empresa'), 'La empresa', errores) : null;
+    // Proyecto opcional: si viene, debe existir; si no, se guarda vacío.
+    persona.proyecto_id = v('proyecto') ? impBuscarEnCatalogo(proyectos, v('proyecto'), 'El proyecto', errores) : null;
     IMP_COLUMNAS.filter(c => c.catalogo).forEach(c => {
-      payload[c.campo] = v(c.clave) ? impBuscarEnCatalogo(catalogosData[c.catalogo], v(c.clave), c.titulo, errores) : null;
+      persona[c.campo] = v(c.clave) ? impBuscarEnCatalogo(catalogosData[c.catalogo], v(c.clave), c.titulo, errores) : null;
     });
-    payload.registro_patronal_id = null;
+    persona.registro_patronal_id = null;
     if (v('registro')) {
       const rp = v('registro').toUpperCase();
       const candidatos = registrosPatronales.filter(r => String(r.registro_patronal).toUpperCase() === rp);
-      const deLaEmpresa = candidatos.filter(r => r.empresa_id === payload.empresa_id && r.activo !== false);
-      if (deLaEmpresa.length === 1) payload.registro_patronal_id = deLaEmpresa[0].id;
-      else if (payload.empresa_id || !v('empresa')) errores.push({ tipo: 'Catálogo inexistente', msg: candidatos.length
+      const deLaEmpresa = candidatos.filter(r => r.empresa_id === persona.empresa_id && r.activo !== false);
+      if (deLaEmpresa.length === 1) persona.registro_patronal_id = deLaEmpresa[0].id;
+      else if (persona.empresa_id || !v('empresa')) errores.push({ tipo: 'Catálogo inexistente', msg: candidatos.length
         ? `El registro patronal «${v('registro')}» no pertenece a la empresa de la fila o está inactivo.`
         : `El registro patronal «${v('registro')}» no existe.` });
     }
-    payload.coordinador_id = null; payload.coordinador_externo = null;
+    // Coordinador: ID BEH- o CURP de alguien registrado o de otra fila del archivo.
+    let coordinadorRef = null, coordEnArchivo = null;
+    persona.coordinador_externo = null;
     if (v('coordinador') && v('coordinadorExterno')) errores.push({ tipo: 'Dato ambiguo', msg: 'La fila trae Coordinador y Coordinador externo; solo puede llevar uno.' });
     else if (v('coordinador')) {
-      const c = porEmpleadoId.get(v('coordinador').toUpperCase());
-      if (!c) errores.push({ tipo: 'Catálogo inexistente', msg: `El coordinador «${v('coordinador')}» no existe. Debe ser el ID de empleado (BEH-…) de alguien ya registrado.` });
-      else if (personaEnBaja(c)) errores.push({ tipo: 'Catálogo inexistente', msg: `El coordinador «${v('coordinador')}» está dado de baja.` });
-      else payload.coordinador_id = c.id;
-    } else if (v('coordinadorExterno')) payload.coordinador_externo = v('coordinadorExterno');
+      const ref = v('coordinador').toUpperCase();
+      const enBase = personal.filter(p => String(p.empleado_id || '').toUpperCase() === ref || String(p.curp || '').toUpperCase() === ref);
+      const enArchivo = (curpsArchivo.get(ref) || []).filter(l => l !== f.linea);
+      if (persona.curp && String(persona.curp).toUpperCase() === ref && !enBase.length && !enArchivo.length)
+        errores.push({ tipo: 'Dato ambiguo', msg: 'La persona no puede ser su propio coordinador.' });
+      else if (!enBase.length && !enArchivo.length)
+        errores.push({ tipo: 'Catálogo inexistente', msg: `El coordinador «${v('coordinador')}» no existe. Usa el ID de empleado (BEH-…) o la CURP de una persona registrada o de otra fila del archivo.` });
+      else if (enBase.length + enArchivo.length > 1)
+        errores.push({ tipo: 'Dato ambiguo', msg: `El coordinador «${v('coordinador')}» coincide con ${enBase.length + enArchivo.length} personas (${[...enBase.map(p => p.empleado_id), ...enArchivo.map(l => 'fila ' + l)].join(', ')}).` });
+      else if (enBase.length && personaEnBaja(enBase[0]))
+        errores.push({ tipo: 'Catálogo inexistente', msg: `El coordinador «${v('coordinador')}» está dado de baja.` });
+      else { coordinadorRef = ref; coordEnArchivo = enArchivo.length ? enArchivo[0] : null; }
+    } else if (v('coordinadorExterno')) persona.coordinador_externo = v('coordinadorExterno');
     [['tipo', IMP_TIPOS_EMPLEADO, 'tipo_empleado', 'Tipo de empleado'], ['turno', IMP_TURNOS, 'turno', 'Turno']].forEach(([clave, lista, campo, titulo]) => {
-      if (!v(clave)) { payload[campo] = lista[0]; return; }
+      if (!v(clave)) { persona[campo] = lista[0]; return; }
       const encontrado = lista.find(x => impClave(x) === impClave(v(clave)));
       if (!encontrado) errores.push({ tipo: 'Formato inválido', msg: `${titulo} «${v(clave)}» no es válido. Valores permitidos: ${lista.join(', ')}.` });
-      payload[campo] = encontrado || null;
+      persona[campo] = encontrado || null;
     });
     [['inicio', 'fecha_inicio_contrato', 'Fecha de inicio de contrato'], ['vence', 'fecha_vencimiento_contrato', 'Fecha de vencimiento de contrato']].forEach(([clave, campo, titulo]) => {
-      payload[campo] = null;
+      persona[campo] = null;
       if (!v(clave)) return;
-      payload[campo] = impFecha(v(clave));
-      if (!payload[campo]) errores.push({ tipo: 'Formato inválido', msg: `${titulo} «${v(clave)}» no es una fecha válida. Usa AAAA-MM-DD o DD/MM/AAAA.` });
+      persona[campo] = impFecha(v(clave));
+      if (!persona[campo]) errores.push({ tipo: 'Formato inválido', msg: `${titulo} «${v(clave)}» no es una fecha válida. Usa AAAA-MM-DD o DD/MM/AAAA.` });
     });
-    if (payload.fecha_inicio_contrato && payload.fecha_vencimiento_contrato && payload.fecha_vencimiento_contrato < payload.fecha_inicio_contrato)
+    if (persona.fecha_inicio_contrato && persona.fecha_vencimiento_contrato && persona.fecha_vencimiento_contrato < persona.fecha_inicio_contrato)
       errores.push({ tipo: 'Formato inválido', msg: 'La fecha de vencimiento de contrato es anterior a la de inicio.' });
-    else if (payload.fecha_vencimiento_contrato && payload.fecha_vencimiento_contrato < hoy) advertencias.push('La fecha de vencimiento de contrato ya pasó.');
+    else if (persona.fecha_vencimiento_contrato && persona.fecha_vencimiento_contrato < hoy) advertencias.push('La fecha de vencimiento de contrato ya pasó.');
+
+    // ---- Relación laboral ----
+    let relacion = null;
+    const conRP = !!persona.registro_patronal_id;
+    if (!v('ingreso')) {
+      if (['antig', 'numInt', 'sdi', 'tt', 'ts', 'jo', 'umf'].some(k => v(k)))
+        errores.push({ tipo: 'Campo obligatorio vacío', msg: 'La fila trae datos de relación laboral pero no la Fecha de ingreso.' });
+    } else {
+      relacion = { empresa_id: persona.empresa_id, registro_patronal_id: persona.registro_patronal_id, fecha_ingreso: impFecha(v('ingreso')),
+        fecha_antiguedad: null, numero_interno: v('numInt') || null, sdi: null, tipo_trabajador: null, tipo_salario: null, jornada: null, umf: null };
+      if (!relacion.fecha_ingreso) errores.push({ tipo: 'Formato inválido', msg: `Fecha de ingreso «${v('ingreso')}» no es una fecha válida. Usa AAAA-MM-DD o DD/MM/AAAA.` });
+      else if (relacion.fecha_ingreso > hoy) advertencias.push('La fecha de ingreso es posterior a hoy.');
+      if (v('antig')) {
+        relacion.fecha_antiguedad = impFecha(v('antig'));
+        if (!relacion.fecha_antiguedad) errores.push({ tipo: 'Formato inválido', msg: `Fecha de antigüedad «${v('antig')}» no es una fecha válida. Usa AAAA-MM-DD o DD/MM/AAAA.` });
+      }
+      if (relacion.numero_interno && relacion.numero_interno.length > 10) errores.push({ tipo: 'Formato inválido', msg: 'El número interno lleva de 1 a 10 caracteres.' });
+      if (conRP) {
+        const sdi = v('sdi') ? impImporte(v('sdi')) : null;
+        if (sdi == null) errores.push({ tipo: 'Campo obligatorio vacío', msg: 'Falta el SDI: la relación lleva registro patronal.' });
+        else if (isNaN(sdi) || sdi <= 0) errores.push({ tipo: 'Formato inválido', msg: `El SDI «${v('sdi')}» debe ser un importe mayor a cero, con hasta 2 decimales.` });
+        else relacion.sdi = sdi;
+        [['tt', 'tipo_trabajador', 'Tipo de trabajador', ['1', '2', '3', '4']], ['ts', 'tipo_salario', 'Tipo de salario', ['0', '1', '2']],
+         ['jo', 'jornada', 'Jornada IMSS', ['0', '1', '2', '3', '4', '5', '6']]].forEach(([k, campo, titulo, lista]) => {
+          if (!v(k)) errores.push({ tipo: 'Campo obligatorio vacío', msg: `Falta ${titulo}: la relación lleva registro patronal.` });
+          else if (!lista.includes(v(k))) errores.push({ tipo: 'Formato inválido', msg: `${titulo} «${v(k)}» no es válido. Valores permitidos: ${lista.join(', ')}.` });
+          else relacion[campo] = v(k);
+        });
+        if (v('umf')) { if (/^\d{3}$/.test(v('umf'))) relacion.umf = v('umf'); else errores.push({ tipo: 'Formato inválido', msg: `La UMF «${v('umf')}» lleva 3 dígitos.` }); }
+      } else if (['sdi', 'tt', 'ts', 'jo', 'umf'].some(k => v(k))) {
+        advertencias.push('Sin registro patronal: no se usan SDI, tipo de trabajador, tipo de salario, jornada IMSS ni UMF.');
+      }
+    }
+    // ---- Formas de pago (hasta 2) ----
+    const esquemas = [];
+    [1, 2].forEach(n => {
+      const vals = [v(`fp${n}`), v(`per${n}`), v(`mod${n}`), v(`imp${n}`)];
+      if (!vals.some(Boolean)) return;
+      if (!vals.every(Boolean)) { errores.push({ tipo: 'Campo obligatorio vacío', msg: `La forma de pago ${n} está incompleta: lleva forma de pago, periodicidad, modalidad e importe.` }); return; }
+      if (!relacion) { errores.push({ tipo: 'Campo obligatorio vacío', msg: `La forma de pago ${n} requiere la Fecha de ingreso (relación laboral).` }); return; }
+      const nErr = errores.length;
+      const clsId = impBuscarEnCatalogo(clasificaciones, vals[0], `La forma de pago ${n}`, errores);
+      const perId = impBuscarEnCatalogo(periodicidades, vals[1], `La periodicidad ${n}`, errores);
+      const mod = ['bruto', 'neto'].find(x => x === impClave(vals[2]));
+      if (!mod) errores.push({ tipo: 'Formato inválido', msg: `La modalidad ${n} «${vals[2]}» no es válida. Valores permitidos: Bruto, Neto.` });
+      const importe = impImporte(vals[3]);
+      if (isNaN(importe) || importe <= 0) errores.push({ tipo: 'Formato inválido', msg: `El importe ${n} «${vals[3]}» debe ser mayor a cero, con hasta 2 decimales.` });
+      const cls = clasificaciones.find(c => c.id === clsId);
+      if (cls) {
+        if (cls.requiere_nss && !conRP) errores.push({ tipo: 'Dato ambiguo', msg: `La forma de pago ${n} («${cls.nombre}») es de nómina IMSS: la fila necesita registro patronal.` });
+        const faltan = [['requiere_rfc', 'rfc', 'RFC'], ['requiere_curp', 'curp', 'CURP'], ['requiere_nss', 'nss', 'NSS'], ['requiere_cp_fiscal', 'cp_fiscal', 'CP fiscal']]
+          .filter(([req, campo]) => cls[req] && !persona[campo]).map(x => x[2]);
+        if (faltan.length) errores.push({ tipo: 'Campo obligatorio vacío', msg: `La forma de pago ${n} («${cls.nombre}») requiere ${faltan.join(', ')} completos y válidos.` });
+      }
+      if (errores.length === nErr) esquemas.push({ clasificacion_id: clsId, periodicidad_id: perId, modalidad: mod, sueldo: importe });
+    });
+    if (relacion && !esquemas.length && ![1, 2].some(n => v(`fp${n}`))) advertencias.push('Sin forma de pago: no tendrá sueldo en Incidencias. Agrégala después en Compensación.');
+    if (!relacion) advertencias.push('Sin Fecha de ingreso: no se crea relación laboral; no aparecerá en Incidencias ni en IDSE hasta registrar su ingreso.');
 
     // Posible persona existente: mismo RFC, CURP o NSS que alguien ya registrado. No se crea.
     [['rfc', 'RFC'], ['curp', 'CURP'], ['nss', 'NSS']].forEach(([campo, titulo]) => {
-      const ex = payload[campo] && existentes[campo].get(payload[campo]);
-      if (ex) errores.push({ tipo: 'Posible persona existente', msg: `El ${titulo} ${payload[campo]} ya está registrado: ${ex.empleado_id || 'sin ID'} ${ex.nombre_completo || ''}.` });
+      const ex = persona[campo] && existentes[campo].get(String(persona[campo]).toUpperCase());
+      if (ex) errores.push({ tipo: 'Posible persona existente', msg: `El ${titulo} ${persona[campo]} ya está registrado: ${ex.empleado_id || 'sin ID'} ${ex.nombre_completo || ''}.` });
     });
-    if (!payload.rfc && !payload.curp && !payload.nss && !v('rfc') && !v('curp') && !v('nss'))
+    if (!persona.rfc && !persona.curp && !persona.nss && !v('rfc') && !v('curp') && !v('nss'))
       advertencias.push('Sin RFC, CURP ni NSS: no se puede comprobar si esta persona ya está registrada.');
-    if (payload.nombre_completo && nombresExistentes.has(impClave(payload.nombre_completo)))
+    if (persona.nombre_completo && nombresExistentes.has(impClave(persona.nombre_completo)))
       advertencias.push('Ya hay una persona registrada con el mismo nombre completo.');
-    return { linea: f.linea, payload, errores, advertencias, estado: null, detalle: '', empleadoId: '' };
+    const payload = { id: crypto.randomUUID(), linea: f.linea, coordinador_ref: coordinadorRef, persona, relacion, esquemas };
+    return { linea: f.linea, payload, coordEnArchivo, errores, advertencias, estado: null, detalle: '', empleadoId: '' };
   });
 
   // Duplicados dentro del propio archivo: todas las filas involucradas quedan con error.
   [['rfc', 'RFC'], ['curp', 'CURP'], ['nss', 'NSS']].forEach(([campo, titulo]) => {
     const vistos = new Map();
-    filas.forEach(f => { const x = f.payload[campo]; if (x) { if (!vistos.has(x)) vistos.set(x, []); vistos.get(x).push(f); } });
+    filas.forEach(f => { const x = f.payload.persona[campo]; if (x) { if (!vistos.has(x)) vistos.set(x, []); vistos.get(x).push(f); } });
     vistos.forEach((grupo, valor) => {
       if (grupo.length > 1) grupo.forEach(f => f.errores.push({ tipo: 'Duplicado en el archivo', msg: `El ${titulo} ${valor} aparece en las filas ${grupo.map(g => g.linea).join(', ')}.` }));
     });
   });
+  // Número interno: único por registro patronal entre las relaciones vigentes.
+  const numInternoClave = f => (f.payload.relacion && f.payload.relacion.registro_patronal_id && f.payload.relacion.numero_interno)
+    ? f.payload.relacion.registro_patronal_id + '|' + String(f.payload.relacion.numero_interno).trim().toUpperCase() : null;
+  const numExistentes = new Map(personal.filter(p => p.registro_patronal_id && p.numero_interno_trabajador && !personaEnBaja(p))
+    .map(p => [p.registro_patronal_id + '|' + String(p.numero_interno_trabajador).trim().toUpperCase(), p]));
+  const numArchivo = new Map();
+  filas.forEach(f => { const k = numInternoClave(f); if (!k) return;
+    const ex = numExistentes.get(k);
+    if (ex) f.errores.push({ tipo: 'Posible persona existente', msg: `El número interno ${f.payload.relacion.numero_interno} ya está en uso en ese registro patronal: ${ex.empleado_id || ''} ${ex.nombre_completo || ''}.` });
+    if (!numArchivo.has(k)) numArchivo.set(k, []); numArchivo.get(k).push(f); });
+  numArchivo.forEach(grupo => { if (grupo.length > 1) grupo.forEach(f => f.errores.push({ tipo: 'Duplicado en el archivo', msg: `El número interno ${f.payload.relacion.numero_interno} se repite en el mismo registro patronal (filas ${grupo.map(g => g.linea).join(', ')}).` })); });
   const nombresArchivo = new Map();
-  filas.forEach(f => { const k = impClave(f.payload.nombre_completo); if (k) { if (!nombresArchivo.has(k)) nombresArchivo.set(k, []); nombresArchivo.get(k).push(f); } });
+  filas.forEach(f => { const k = impClave(f.payload.persona.nombre_completo); if (k) { if (!nombresArchivo.has(k)) nombresArchivo.set(k, []); nombresArchivo.get(k).push(f); } });
   nombresArchivo.forEach(grupo => { if (grupo.length > 1) grupo.forEach(f => f.advertencias.push(`El mismo nombre completo aparece en las filas ${grupo.map(g => g.linea).join(', ')}.`)); });
+  impPropagarCoordinadores(filas);
   return { filas };
+}
+// Una fila cuyo coordinador viene en el archivo y tiene error tampoco se puede crear.
+// También detecta referencias circulares (A coordina a B y B a A).
+function impPropagarCoordinadores(filas){
+  const porLinea = new Map(filas.map(f => [f.linea, f]));
+  let cambio = true;
+  while (cambio) {
+    cambio = false;
+    filas.forEach(f => {
+      if (f.errores.length || !f.coordEnArchivo) return;
+      const c = porLinea.get(f.coordEnArchivo);
+      if (c && c.errores.length) {
+        f.errores.push({ tipo: 'Coordinador con error', msg: `Su coordinador viene en la fila ${c.linea}, que tiene error; corrígela primero.` });
+        cambio = true;
+      }
+    });
+  }
+  filas.forEach(f => {
+    if (f.errores.length || !f.coordEnArchivo) return;
+    const vistos = new Set([f.linea]); let x = porLinea.get(f.coordEnArchivo);
+    while (x && x.coordEnArchivo && !vistos.has(x.linea)) { vistos.add(x.linea); x = porLinea.get(x.coordEnArchivo); }
+    if (x && vistos.has(x.linea)) f.errores.push({ tipo: 'Dato ambiguo', msg: 'Referencia circular de coordinadores dentro del archivo.' });
+  });
+}
+// Orden de envío: primero quien coordina a otras filas del archivo.
+function impOrdenar(filas){
+  const porLinea = new Map(filas.map(f => [f.linea, f]));
+  const nivel = f => { let n = 0, x = f; const v = new Set(); while (x && x.coordEnArchivo && !v.has(x.linea)) { v.add(x.linea); x = porLinea.get(x.coordEnArchivo); n++; } return n; };
+  return filas.map(f => [nivel(f), f]).sort((a, b) => a[0] - b[0] || a[1].linea - b[1].linea).map(x => x[1]);
+}
+
+async function impRpc(filas, confirmar, curpsPendientes){
+  try {
+    const { data, error } = await sb.rpc('imp_alta_personas', { p_filas: filas.map(f => f.payload), p_tipo_carga: impEstado.tipoCarga,
+      p_confirmar: confirmar, p_curps_pendientes: curpsPendientes || [] });
+    return { data, error };
+  } catch (e) { return { data: null, error: e }; }
+}
+// Simulación en BeeHuman: ejecuta el alta completa y la deshace. Agrega a cada fila los
+// errores que solo detecta la base (SBC fuera de rango, requisitos, duplicados recientes…).
+async function impSimular(){
+  const validas = impOrdenar(impEstado.filas.filter(f => !f.errores.length));
+  const curps = validas.map(f => f.payload.persona.curp).filter(Boolean).map(c => String(c).toUpperCase());
+  const porId = new Map(validas.map(f => [f.payload.id, f]));
+  for (let i = 0; i < validas.length; i += IMP_TAMANO_BLOQUE) {
+    document.getElementById('imp-contenido').innerHTML = `<p class="hint" style="margin-top:16px;">Validando en BeeHuman (no se guarda nada)… ${i.toLocaleString('es-MX')} de ${validas.length.toLocaleString('es-MX')}.</p>`;
+    const r = await impRpc(validas.slice(i, i + IMP_TAMANO_BLOQUE), false, curps);
+    if (r.error) return { error: impErrorDeRed(r.error) ? 'Se perdió la conexión durante la validación. Vuelve a seleccionar el archivo.' : 'No se pudo validar en BeeHuman: ' + traducirErrorSupabase(r.error) };
+    (r.data || []).forEach(x => {
+      const f = porId.get(x.id); if (!f) return;
+      if (x.estado === 'error') f.errores.push({ tipo: 'Rechazada por BeeHuman', msg: x.mensaje });
+      else if (x.estado === 'ya_estaba') f.errores.push({ tipo: 'Posible persona existente', msg: 'Ya existe una persona con el mismo identificador interno.' });
+      else f.simulacion = x;
+    });
+  }
+  impPropagarCoordinadores(impEstado.filas);
+  impEstado.simulada = true;
+  return {};
 }
 
 function impStat(n, etiqueta){ return `<div class="stat"><div class="num">${Number(n).toLocaleString('es-MX')}</div><div class="lbl">${escapeHtml(etiqueta)}</div></div>`; }
+function impConteos(filas){
+  const t = IMP_TIPOS_CARGA[impEstado.tipoCarga];
+  return {
+    relaciones: filas.filter(f => f.payload.relacion).length,
+    esquemas: filas.reduce((s, f) => s + f.payload.esquemas.length, 0),
+    altas08: impEstado.tipoCarga === 'altas_nuevas' ? filas.filter(f => f.payload.relacion && f.payload.relacion.registro_patronal_id).length : 0,
+    coordinadores: filas.filter(f => f.payload.coordinador_ref).length,
+    tipo: t
+  };
+}
 function impTablaDetalle(filas, columnaEstado){
   if (!filas.length) return '';
   return `<div class="table-wrap" style="margin-top:14px;"><table id="imp-detalle">
     <thead><tr><th>Fila</th><th>Persona</th><th>${columnaEstado ? 'Resultado' : 'Situación'}</th><th>Detalle</th></tr></thead>
     <tbody>${filas.map(f => `<tr>
       <td>${f.linea}</td>
-      <td>${escapeHtml(f.payload.nombre_completo || '(sin nombre)')}</td>
+      <td>${escapeHtml(f.payload.persona.nombre_completo || '(sin nombre)')}</td>
       <td>${columnaEstado ? escapeHtml(f.estado) : (f.errores.length ? '<span class="imp-err">No se importará</span>' : 'Se importará, con advertencia')}</td>
       <td>${columnaEstado ? escapeHtml(f.detalle) : (
           f.errores.map(e => `<div class="imp-err"><b>${escapeHtml(e.tipo)}:</b> ${escapeHtml(e.msg)}</div>`).join('') +
           f.advertencias.map(a => `<div class="imp-adv"><b>Advertencia:</b> ${escapeHtml(a)}</div>`).join(''))}</td>
     </tr>`).join('')}</tbody></table></div>`;
 }
+function impBannerTipo(){
+  const t = IMP_TIPOS_CARGA[impEstado.tipoCarga];
+  return `<p class="imp-tipo-elegido" id="imp-tipo-elegido" data-tipo="${impEstado.tipoCarga}"><b>Tipo de carga: ${escapeHtml(t.nombre)}</b> — ${escapeHtml(t.texto)}</p>`;
+}
 function impRenderVistaPrevia(){
   const filas = impEstado.filas;
   const validas = filas.filter(f => !f.errores.length), conError = filas.length - validas.length;
   const conAdv = validas.filter(f => f.advertencias.length).length;
   const problemas = filas.filter(f => f.errores.length || f.advertencias.length);
+  const c = impConteos(validas);
   document.getElementById('imp-inicio').style.display = 'none';
+  document.getElementById('imp-tipo-carga').style.display = 'none';
   document.getElementById('imp-contenido').innerHTML = `
     <h3 style="margin:18px 0 10px;">Vista previa de «${escapeHtml(impEstado.archivo)}»</h3>
-    <p class="hint">Todavía no se ha guardado nada. Revisa el resumen y confirma.</p>
+    ${impBannerTipo()}
+    <p class="hint">Todavía no se ha guardado nada. El archivo ya se validó en BeeHuman: lo que ves es lo que se creará.</p>
     <div class="summary-grid">${impStat(filas.length, 'Filas en el archivo')}${impStat(validas.length, 'Personas nuevas que se crearán')}${impStat(conError, 'Filas con error (no se importan)')}${impStat(conAdv, 'Se importan con advertencia')}</div>
-    <p class="hint" style="margin-top:12px;">Se crearán ${validas.length.toLocaleString('es-MX')} personas en Personal, con estatus Activo y sin esquema de pago. No se modifica ninguna persona existente ni ningún catálogo.</p>
+    <div class="summary-grid" id="imp-resumen-alta" style="margin-top:10px;">${impStat(c.relaciones, 'Relaciones laborales')}${impStat(c.esquemas, 'Formas de pago')}${impStat(c.altas08, 'Altas IMSS (08) pendientes')}${impStat(c.coordinadores, 'Asignaciones de coordinador')}</div>
+    <p class="hint" style="margin-top:12px;">Se crearán ${validas.length.toLocaleString('es-MX')} personas en Personal con estatus Activo. Cada fila se guarda completa (persona, relación y formas de pago) o no se guarda. No se modifica ninguna persona existente ni ningún catálogo.</p>
     ${impTablaDetalle(problemas, false)}
     <div class="imp-acciones">
       <button type="button" class="primary" id="imp-confirmar" ${validas.length ? '' : 'disabled'}>${validas.length ? `Importar ${validas.length.toLocaleString('es-MX')} ${validas.length === 1 ? 'persona' : 'personas'}` : 'No hay personas que importar'}</button>
@@ -6841,6 +7042,7 @@ function impReiniciar(){
   document.getElementById('imp-archivo').value = '';
   document.getElementById('imp-contenido').innerHTML = '';
   document.getElementById('imp-inicio').style.display = 'flex';
+  document.getElementById('imp-tipo-carga').style.display = '';
   impToast('');
 }
 async function impAlElegirArchivo(ev){
@@ -6852,44 +7054,49 @@ async function impAlElegirArchivo(ev){
   catch (e) { console.error(e); ev.target.value = ''; impToast('No se pudo leer el archivo. Comprueba que sea un CSV.', 'err'); return; }
   const r = impValidar(matriz);
   if (r.errorArchivo) { ev.target.value = ''; impToast(r.errorArchivo, 'err'); return; }
-  impEstado = { archivo: archivo.name, filas: r.filas };
+  impEstado = { archivo: archivo.name, tipoCarga: impTipoCargaElegido(), filas: r.filas, simulada: false };
+  impEnviando = true;
+  document.getElementById('imp-inicio').style.display = 'none';
+  document.getElementById('imp-tipo-carga').style.display = 'none';
+  const s = await impSimular();
+  impEnviando = false;
+  if (s.error) { impReiniciar(); impToast(s.error, 'err'); return; }
   impRenderVistaPrevia();
 }
 
 function impErrorDeRed(error){ return !error.code && /fetch|network|red|conexi/i.test(String(error.message || error)); }
-function impEsIdYaGuardado(error){ return error.code === '23505' && /personal_pkey/.test(String(error.message || '') + String(error.details || '')); }
-async function impInsertar(filas){
-  try {
-    const { data, error } = await sb.from('personal').insert(filas.map(f => f.payload)).select('id,empleado_id');
-    return { data, error };
-  } catch (e) { return { data: null, error: e }; }
-}
-function impMarcarCreadas(filas, data){
-  const ids = new Map((data || []).map(d => [d.id, d.empleado_id]));
-  filas.forEach(f => { f.estado = 'Creada'; f.empleadoId = ids.get(f.payload.id) || ''; f.detalle = f.empleadoId ? `ID ${f.empleadoId}` : ''; });
-}
 async function impImportar(){
-  if (impEnviando || !impEstado) return;
-  const validas = impEstado.filas.filter(f => !f.errores.length);
+  if (impEnviando || !impEstado || !impEstado.simulada) return;
+  const validas = impOrdenar(impEstado.filas.filter(f => !f.errores.length));
   if (!validas.length) return;
   impEnviando = true;
   impEstado.filas.filter(f => f.errores.length).forEach(f => { f.estado = 'Rechazada'; f.detalle = f.errores.map(e => `${e.tipo}: ${e.msg}`).join(' | '); });
   const cont = document.getElementById('imp-contenido');
+  const porId = new Map(validas.map(f => [f.payload.id, f]));
   let sinConexion = false;
   for (let i = 0; i < validas.length && !sinConexion; i += IMP_TAMANO_BLOQUE) {
-    const bloque = validas.slice(i, i + IMP_TAMANO_BLOQUE);
+    // Si el coordinador de una fila venía en el archivo y no se pudo guardar, la fila tampoco se envía.
+    const bloque = validas.slice(i, i + IMP_TAMANO_BLOQUE).filter(f => {
+      const c = f.coordEnArchivo && impEstado.filas.find(x => x.linea === f.coordEnArchivo);
+      if (c && c.estado && c.estado !== 'Creada') { f.estado = 'No se pudo guardar'; f.detalle = `Su coordinador (fila ${c.linea}) no se pudo guardar.`; return false; }
+      return true;
+    });
+    if (!bloque.length) continue;
     cont.innerHTML = `<p class="hint" style="margin-top:16px;">Importando… ${i.toLocaleString('es-MX')} de ${validas.length.toLocaleString('es-MX')}. No cierres esta página.</p>`;
-    const r = await impInsertar(bloque);
-    if (!r.error) { impMarcarCreadas(bloque, r.data); continue; }
-    if (impErrorDeRed(r.error)) { sinConexion = true; break; }
-    // La base rechazó el bloque completo: se guarda fila por fila para aislar la que falla.
-    for (const f of bloque) {
-      const u = await impInsertar([f]);
-      if (!u.error) impMarcarCreadas([f], u.data);
-      else if (impEsIdYaGuardado(u.error)) { f.estado = 'Creada'; f.detalle = 'Ya estaba guardada.'; }
-      else if (impErrorDeRed(u.error)) { sinConexion = true; break; }
-      else { f.estado = 'No se pudo guardar'; f.detalle = traducirErrorSupabase(u.error); console.error(u.error); }
+    const r = await impRpc(bloque, true);
+    if (r.error) {
+      if (impErrorDeRed(r.error)) { sinConexion = true; break; }
+      bloque.forEach(f => { f.estado = 'No se pudo guardar'; f.detalle = traducirErrorSupabase(r.error); });
+      console.error(r.error); continue;
     }
+    (r.data || []).forEach(x => {
+      const f = porId.get(x.id); if (!f) return;
+      if (x.estado === 'creada') { f.estado = 'Creada'; f.empleadoId = x.empleado_id || ''; f.resultado = x;
+        f.detalle = [f.empleadoId ? `ID ${f.empleadoId}` : '', x.relacion ? 'con relación laboral' : 'sin relación laboral',
+          `${x.esquemas || 0} forma(s) de pago`, x.movimiento_08 ? 'alta IMSS (08) pendiente' : ''].filter(Boolean).join(' · '); }
+      else if (x.estado === 'ya_estaba') { f.estado = 'Creada'; f.empleadoId = x.empleado_id || ''; f.detalle = 'Ya estaba guardada.'; }
+      else { f.estado = 'No se pudo guardar'; f.detalle = x.mensaje || 'Error sin detalle.'; }
+    });
   }
   // Si se cortó la conexión, se pregunta a la base cuáles de las pendientes sí quedaron
   // guardadas, para que el resultado diga la verdad. No se reintenta nada automáticamente.
@@ -6917,11 +7124,14 @@ function impRenderResultado(){
   const creadas = cuenta('Creada'), rechazadas = cuenta('Rechazada'), fallidas = cuenta('No se pudo guardar');
   const pendientes = cuenta('Pendiente') + cuenta('Sin confirmar');
   const advertencias = filas.filter(f => f.estado === 'Creada' && f.advertencias.length).length;
+  const res = filas.filter(f => f.resultado).map(f => f.resultado);
   filas.forEach(f => { if (f.estado === 'Creada' && f.advertencias.length) f.detalle = [f.detalle, 'Advertencia: ' + f.advertencias.join(' ')].filter(Boolean).join(' | '); });
   document.getElementById('imp-contenido').innerHTML = `
     <h3 style="margin:18px 0 10px;">Resultado de la importación de «${escapeHtml(impEstado.archivo)}»</h3>
+    ${impBannerTipo()}
     <div class="summary-grid">${impStat(creadas, 'Personas creadas')}${impStat(rechazadas, 'Rechazadas en la validación')}${impStat(fallidas, 'No se pudieron guardar')}${impStat(advertencias, 'Creadas con advertencia')}${pendientes ? impStat(pendientes, 'Pendientes por pérdida de conexión') : ''}</div>
-    ${pendientes ? '<p class="hint imp-err" style="margin-top:12px;">Se perdió la conexión antes de terminar. Descarga el reporte: indica qué personas quedaron creadas y cuáles no. Antes de volver a importar las pendientes, comprueba en Personal que no existan ya.</p>' : ''}
+    <div class="summary-grid" id="imp-resumen-resultado" style="margin-top:10px;">${impStat(res.filter(x => x.relacion).length, 'Relaciones laborales')}${impStat(res.reduce((s, x) => s + (x.esquemas || 0), 0), 'Formas de pago')}${impStat(res.filter(x => x.movimiento_08).length, 'Altas IMSS (08) pendientes')}${impStat(res.filter(x => x.coordinador).length, 'Asignaciones de coordinador')}</div>
+    ${pendientes ? '<p class="hint imp-err" style="margin-top:12px;">Se perdió la conexión antes de terminar. Descarga el reporte: indica qué personas quedaron creadas y cuáles no. Al volver a importar el archivo, las ya creadas se detectan como existentes y no se duplican.</p>' : ''}
     ${impTablaDetalle(filas.filter(f => f.estado !== 'Creada'), true)}
     <div class="imp-acciones">
       <button type="button" class="secundario" id="imp-reporte">Descargar reporte de resultados</button>
@@ -6942,11 +7152,11 @@ function impDescargarCSV(nombre, lineas){
 function impDescargarPlantilla(){ impDescargarCSV('plantilla_importacion_personal.csv', [IMP_COLUMNAS.map(c => c.titulo)]); }
 function impDescargarReporte(){
   if (!impEstado) return;
-  const lineas = [['Fila', 'Nombre completo', 'Resultado', 'ID de empleado', 'Detalle']];
+  const lineas = [['Fila', 'Nombre completo', 'Resultado', 'ID de empleado', 'Detalle', 'Tipo de carga']];
   impEstado.filas.forEach(f => {
     const previo = f.errores.length ? 'Con error (no se importa)' : 'Lista para importar';
     const detallePrevio = f.errores.map(e => `${e.tipo}: ${e.msg}`).concat(f.advertencias.map(a => 'Advertencia: ' + a)).join(' | ');
-    lineas.push([f.linea, f.payload.nombre_completo, f.estado || previo, f.empleadoId, f.estado ? f.detalle : detallePrevio]);
+    lineas.push([f.linea, f.payload.persona.nombre_completo, f.estado || previo, f.empleadoId, f.estado ? f.detalle : detallePrevio, IMP_TIPOS_CARGA[impEstado.tipoCarga].nombre]);
   });
   impDescargarCSV(`resultado_importacion_${fechaLocalHoy()}.csv`, lineas);
 }

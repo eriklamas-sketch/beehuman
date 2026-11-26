@@ -1,0 +1,21 @@
+Archivo imp_v2_errores.csv: filas 2..22 con error (una por caso), 10 válidas de control al final.
+- RP de otra empresa
+- RP inexistente
+- SBC menor al salario mínimo
+- IMSS sin SDI
+- Clasificación IMSS sin NSS
+- CURP con formato inválido
+- CURP duplicada en el archivo (2 filas)
+- CURP ya registrada en BeeHuman
+- Coordinador inexistente
+- Coordinador y coordinador externo a la vez
+- Periodicidad inexistente
+- Forma de pago inexistente
+- Modalidad inválida
+- Importe cero
+- Esquema incompleto (falta periodicidad 2)
+- Fecha de ingreso vacía
+- Fecha de ingreso inválida
+- Tipo de trabajador inválido
+- UMF inválida
+- Empresa inexistente

@@ -1,0 +1,66 @@
+Importación masiva v2 (26-nov-2026). Evidencias. Datos 100 % ficticios.
+
+== Pantalla real contra base local (esquema de pruebas + migración, statement_timeout 8 s)
+OK    Tipo de carga predeterminado: Carga inicial
+OK    I1 Vista previa: 450 filas, 450 se crearán, 0 con error  [[450, 450, 0, 0, 450, 526, 0, 430]]
+OK    I1 Huella de datos (6 tablas + secuencia BEH) antes = después de la simulación  [af08509e / af08509e]
+OK    I1 La simulación envió 450 filas, todas con p_confirmar = false  [9]
+OK    I1 La vista previa muestra el tipo de carga elegido
+OK    I1 Resumen: relaciones, formas de pago, 0 altas IMSS, asignaciones  [[450, 526, 0, 430]]
+OK    I2 Carga inicial: 450 personas, 450 relaciones vigentes, formas de pago del archivo, 0 altas 08, 450 eventos de importación, asignaciones  [{"personas": 450, "relaciones": 450, "esquemas": 526, "idse08": 0, "ev_import": 450, "asignaciones": 430}]
+OK    I2 Resultado en pantalla: 450 creadas  [[450, 0, 0, 0, 450, 526, 0, 430]]
+OK    I2 Ninguna persona importada sin relación laboral
+OK    I2 Cada forma de pago ligada a su relación y a la misma empresa
+OK    I2 Coordinadores del mismo archivo resueltos por CURP  [430]
+OK    I2 Ningún ID de simulación quedó guardado
+OK    I10 Tiempo: simulación y carga de 450 en menos de 2 minutos cada una  [simulación 3.0 s · carga 4.4 s]
+OK    I2 Bloques de 50 filas como máximo  [[50, 50, 50, 50, 50, 50, 50, 50, 50]]
+OK    I3 Vista previa: 31 filas, 10 se crearán, 21 con error  [[31, 10, 21, 0, 10, 12, 0, 0]]
+OK    I3 Cada caso de error rechazado con su mensaje (20 casos, 21 filas)
+OK    I3 El SBC bajo el mínimo lo detecta la simulación en la base (no la pantalla)
+OK    I3 Solo se guardan las 10 filas de control  [{"personas": 10, "relaciones": 10, "esquemas": 12, "idse08": 0, "ev_import": 10, "asignaciones": 0}]
+OK    I3 Ninguna persona a medias (persona sin relación)
+OK    I4 Reimportar 450: 0 nuevas, 450 «ya está registrado»  [[450, 0, 450]]
+OK    I4 No hay nada que importar y la base no cambió
+OK    I5 Corte en el 2.º bloque: 50 creadas y 70 pendientes, reportadas con exactitud  [50 creadas · pantalla [50, 0, 0, 0, 70]]
+OK    I5 Reintento: las 50 ya creadas se detectan como existentes; 70 por crear  [[120, 70, 50]]
+OK    I5 Tras el reintento: 120 en total y ninguna CURP duplicada
+OK    I6 La vista previa muestra «Altas nuevas»
+OK    I6 Vista previa: 10 altas IMSS (08) pendientes  [[10, 10, 0, 0, 10, 13, 10, 0]]
+OK    I6 Altas nuevas: 10 personas y 10 movimientos 08 pendientes  [{"personas": 10, "relaciones": 10, "esquemas": 13, "idse08": 10, "ev_import": 10, "asignaciones": 0}]
+OK    I7 Archivo anterior (21 columnas) válido: 5 personas, sin relación ni formas de pago  [[5, 5, 0, 5, 0, 0, 0, 0]]
+OK    I7 Se crean como antes (solo la persona)  [{"personas": 5, "relaciones": 0, "esquemas": 0, "idse08": 0, "ev_import": 0, "asignaciones": 0}]
+OK    I7 Proyecto vacío se guarda vacío (sin crear ni asignar proyecto)
+OK    I7 No se creó ningún proyecto
+OK    Sin errores de JavaScript en la página
+OK    Plantilla con 37 columnas (21 anteriores + 16 nuevas)  [37]
+
+33 OK · 0 FALLA
+
+== SQL local I7–I9
+PASA I7 Ingreso desde pantalla con RP genera su 08 (antes 10, después 11)
+PASA I7 El evento del ingreso desde pantalla conserva origen «pantalla»
+PASA I7 El núcleo rechaza un origen no permitido
+PASA I8 Un importado tiene forma de pago vigente para Incidencias (1)
+PASA I8 La hoja del coordinador importado muestra a sus personas importadas de la empresa (8 de 8)
+PASA I8 Un importado con carga inicial no tenía 08 y su baja genera el 02 en IDSE (08 previos: 0, 02: 1)
+PASA I9 consulta no puede importar («BeeHuman: solo Administrador o Nómina pueden importar person»)
+PASA I9 coordinador no puede importar («BeeHuman: solo Administrador o Nómina pueden importar person»)
+PASA I9 anon no tiene permiso de ejecutar la importación ni el núcleo
+PASA I9 Otro tenant no ve personas del primero (0 visibles)
+PASA I9 Otro tenant no puede usar como coordinador a una persona del primero («El coordinador FEML810202MDFFRPB1 no existe: usa e»)
+PASA I9 Otro tenant no puede usar una empresa del primero («insert or update on table "personal" violates foreign key constraint "»)
+
+== beehuman-pruebas (prueba_pruebas_compacta.sql, bloque revertido)
+PASA I1 Simulación de 450: 450 se crearían, 0 con error
+PASA I1 Huella antes = después de la simulación (c3e357de seq=585 / c3e357de seq=585)
+PASA I10 Carga de 450 en beehuman-pruebas: 7 s en total; envío más lento de 50 filas: 0.91 s (límite por envío de la API: 8 s)
+PASA I2 Carga inicial: 450 creadas · 450 relaciones · 526 de 526 formas de pago ligadas · 0 movimientos IDSE · 450 eventos de importación · 430 asignaciones
+PASA I2 Coordinadores del mismo archivo resueltos por CURP (430) y ninguna persona sin relación (0)
+PASA I3 La base rechaza: SBC bajo el mínimo · NSS ya registrado · número interno en uso
+PASA I4 Reimportación: 450 «ya estaba» (mismos id) · 450 rechazadas como existentes (id nuevos) · 450 personas en total
+PASA I6 Altas nuevas: 10 movimientos 08 pendientes
+PASA I9 Consulta no puede importar
+Huella de datos de beehuman-pruebas antes y después: 8e7645857bfd49351822e0bfdc30716f · seq=585 · personal=525 · auth.users=7
+md5 de funciones (local = pruebas): imp_alta_personas f59ccd1f… · laboral__ingreso_nucleo b49105a9… · laboral_registrar_ingreso 2915e055…
+Reversión probada en local: laboral_registrar_ingreso vuelve a md5 37d1510a… (= producción) y las 2 funciones nuevas se eliminan.
